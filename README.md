@@ -7,4 +7,4 @@ Caterina Bosi - 300214914
 
 
 ## Détails de projet
-Voir onglet [Wiki](https://github.com/MelinaRochon/Capstone_Group24/wiki).
+Voir onglet [Wiki](https://github.com/MelinaRochon/Capstone_Group24/wiki/%C3%80-Propos).
