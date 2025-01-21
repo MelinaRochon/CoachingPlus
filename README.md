@@ -1,4 +1,4 @@
-## Students
+## Team Members
 Mélina Rochon - 300238765
 <br/>mroch072@uottawa.ca
 
