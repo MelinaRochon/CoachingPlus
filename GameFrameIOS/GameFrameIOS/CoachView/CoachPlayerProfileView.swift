@@ -2,7 +2,7 @@
 //  CoachPlayerProfileView.swift
 //  GameFrameIOS
 //  Coach views the player's profile!
-//
+//  Testing something!
 //  Created by Mélina Rochon on 2025-02-05.
 //
 
