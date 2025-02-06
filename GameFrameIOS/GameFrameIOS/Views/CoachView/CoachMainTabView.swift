@@ -59,16 +59,16 @@ struct CoachMainTabView: View {
         }
     }
 
-    // Helper function for tab items (changes icon fill when selected)
+    // Helper function for ta/Users/caterinabosi/Desktop/Capstone 2025/CoachingPlus/GameFrameIOS/GameFrameIOS/Views/CoachView/CoachMainTabView.swiftb items (changes icon fill when selected)
     private func tabBarItem(image: String, filledImage: String, label: String, tabIndex: Int) -> some View {
         VStack {
             Image(systemName: selectedTab == tabIndex ? filledImage : image) // Change icon when selected
                 .resizable()
                 .frame(width: 24, height: 24)
-                .foregroundColor(selectedTab == tabIndex ? Color.black : Color(.darkGray))// Highlight selected tab
+                .foregroundColor(selectedTab == tabIndex ? Color(.darkGray) : Color(.darkGray))// Highlight selected tab
             Text(label)
                 .font(.caption)
-                .foregroundColor(selectedTab == tabIndex ? Color.black : Color(.darkGray))
+                .foregroundColor(selectedTab == tabIndex ? Color(.darkGray) : Color(.darkGray))
         }
         .padding()
         .onTapGesture {
