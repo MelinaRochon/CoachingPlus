@@ -9,29 +9,42 @@ struct PlayerMainTabView: View {
     }
 
     var body: some View {
-        VStack {
-            Spacer()
+        NavigationView {
+            VStack {
+                Group {
+                    switch selectedTab {
+                    case 0: PlayerHomePageView()
+                    case 1: PlayerNotificationView()
+                    case 2: PlayerMyTeamView()
+                    case 3: PlayerProfileView()
+                    default: PlayerHomePageView()
+                    }
+                }
+                .navigationTitle(getPageTitle()) // Set the title dynamically
 
-            // Custom Tab Bar
-            HStack {
                 Spacer()
-                tabBarItem(image: "house", filledImage: "house.fill", label: "Home", tabIndex: 0)
-                Spacer()
-                tabBarItem(image: "bell", filledImage: "bell.fill", label: "Activity", tabIndex: 1)
-                Spacer()
-                tabBarItem(image: "tshirt", filledImage: "tshirt.fill", label: "Teams", tabIndex: 2)
-                Spacer()
-                tabBarItem(image: "person", filledImage: "person.fill", label: "Profile", tabIndex: 3)
-                Spacer()
+
+                // Custom Tab Bar
+                HStack {
+                    Spacer()
+                    tabBarItem(image: "house", filledImage: "house.fill", label: "Home", tabIndex: 0)
+                    Spacer()
+                    tabBarItem(image: "bell", filledImage: "bell.fill", label: "Activity", tabIndex: 1)
+                    Spacer()
+                    tabBarItem(image: "tshirt", filledImage: "tshirt.fill", label: "Teams", tabIndex: 2)
+                    Spacer()
+                    tabBarItem(image: "person", filledImage: "person.fill", label: "Profile", tabIndex: 3)
+                    Spacer()
+                }
+                .frame(height: 80)
+                .background(Color.white) // Tab bar background
+                .overlay(
+                    Rectangle()
+                        .frame(height: 1) // Top border height
+                        .foregroundColor(.gray), // Line color
+                    alignment: .top // Places the line at the top
+                )
             }
-            .frame(height: 80)
-            .background(Color.white) // Tab bar background
-            .overlay(
-                Rectangle()
-                    .frame(height: 1) // Top border height
-                    .foregroundColor(.gray), // Line color
-                alignment: .top // Places the line at the top
-            )
         }
     }
 
@@ -49,6 +62,17 @@ struct PlayerMainTabView: View {
         .padding()
         .onTapGesture {
             selectedTab = tabIndex // Change selected tab
+        }
+    }
+
+    // Helper function to set navigation title based on selected tab
+    private func getPageTitle() -> String {
+        switch selectedTab {
+        case 0: return "Home"
+        case 1: return "Activity"
+        case 2: return "Teams"
+        case 3: return "Profile"
+        default: return "Home"
         }
     }
 }
