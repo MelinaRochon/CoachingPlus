@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct CoachMainTabView: View {
-    @State private var showCoachRecording = false // Switch to coach recording page
+    @State private var showCoachRecording = false // Controls modal visibility
     @State private var selectedTab: Int = 0 // Track selected tab
 
     init() {
@@ -11,6 +11,24 @@ struct CoachMainTabView: View {
 
     var body: some View {
         ZStack {
+            Group {
+                switch selectedTab {
+                case 0: CoachHomePageView()
+                case 1: CoachNotificationView()
+                case 2: CoachMyTeamView()
+                case 3: CoachProfileView(profile: .constant(.init(
+                    name: "John Doe",
+                    dob: Date(),
+                    email: "example@example.com",
+                    phone: "613-555-5555",
+                    country: "Canada",
+                    timezone: "America/New_York"
+                )))
+                default: CoachHomePageView()
+                }
+            }
+            .edgesIgnoringSafeArea(.bottom) // Ensures full-screen usage
+
             VStack {
                 Spacer()
                 
@@ -59,7 +77,7 @@ struct CoachMainTabView: View {
         }
     }
 
-    // Helper function for ta/Users/caterinabosi/Desktop/Capstone 2025/CoachingPlus/GameFrameIOS/GameFrameIOS/Views/CoachView/CoachMainTabView.swiftb items (changes icon fill when selected)
+    // Helper function for items (changes icon fill when selected)
     private func tabBarItem(image: String, filledImage: String, label: String, tabIndex: Int) -> some View {
         VStack {
             Image(systemName: selectedTab == tabIndex ? filledImage : image) // Change icon when selected
