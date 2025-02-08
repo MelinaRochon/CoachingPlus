@@ -7,12 +7,62 @@
 
 import SwiftUI
 
+/***
+ This structure shows all the Teams listed on the coache's profile. The coach can create a new team along with accessing the desired team through
+ this page.
+ The player also has a similar Teams page, showing all teams that they are registered in.
+ */
 struct CoachAllTeamsView: View {
+    @State private var showCreateNewTeam = false // Switch to coach recording page
+    @State var team: Team;
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationView {
+            VStack {
+                
+                Divider() // This adds a divider after the title
+                
+                List {
+                    Section(header: HStack {
+                        Text("My Teams") // Section header text
+                            
+                        Spacer() // Push the button to the right
+                        Button(action: addTeam) {
+                            
+                             // Open create new team form
+                            Text("Add +")
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "tshirt")
+                            Text("Team 1")
+                        }
+                        
+                        HStack {
+                            Image(systemName: "tshirt") // SF Symbol for teams
+                                                           
+                            Text("Team 2")
+                        }
+                    }
+                }
+                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
+                .background(Color.white) // Set background color to white for the List
+                
+            }
+            .background(Color.white)
+            .navigationTitle(Text("Teams"))
+            
+        }.fullScreenCover(isPresented: $showCreateNewTeam) {
+            CoachCreateTeamView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
+        }
+    }
+    
+    private func addTeam() {
+        withAnimation {
+            showCreateNewTeam.toggle()
+        }
     }
 }
 
 #Preview {
-    CoachAllTeamsView()
+    CoachAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
 }
