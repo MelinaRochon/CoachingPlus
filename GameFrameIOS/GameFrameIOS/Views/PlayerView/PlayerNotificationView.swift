@@ -67,7 +67,6 @@ struct PlayerNotificationView: View {
         
     }
 }
-
 #Preview {
     PlayerNotificationView()
 }

@@ -15,12 +15,11 @@ struct PlayerMainTabView: View {
                     switch selectedTab {
                     case 0: PlayerHomePageView()
                     case 1: PlayerNotificationView()
-                    case 2: PlayerMyTeamView()
-                    case 3: PlayerProfileView()
+                    case 2: PlayerAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
+                    case 3: PlayerProfileView(player: .init(name: "Mel Rochon", dob: Date(), jersey: 34, gender: 0, email: "mroch@uottawa.ca", profilePicture: nil, guardianName: "Jane Doe", guardianEmail: "jane@g.com", guardianPhone: "613-098-9999"))
                     default: PlayerHomePageView()
                     }
                 }
-                .navigationTitle(getPageTitle()) // Set the title dynamically
 
                 Spacer()
 
@@ -65,16 +64,6 @@ struct PlayerMainTabView: View {
         }
     }
 
-    // Helper function to set navigation title based on selected tab
-    private func getPageTitle() -> String {
-        switch selectedTab {
-        case 0: return "Home"
-        case 1: return "Activity"
-        case 2: return "Teams"
-        case 3: return "Profile"
-        default: return "Home"
-        }
-    }
 }
 
 #Preview {
