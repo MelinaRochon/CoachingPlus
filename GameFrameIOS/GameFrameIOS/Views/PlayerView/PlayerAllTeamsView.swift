@@ -10,6 +10,7 @@ import SwiftUI
 struct PlayerAllTeamsView: View {
     @State private var showCreateNewTeam = false // Switch to coach recording page
     @State var team: Team;
+    @State private var groupCode: String = ""
     var body: some View {
         NavigationView {
             VStack {
@@ -52,7 +53,32 @@ struct PlayerAllTeamsView: View {
         }.fullScreenCover(isPresented: $showCreateNewTeam) {
             CoachCreateTeamView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
         }
+        VStack(spacing: 8) {
+                            HStack {
+                                Text("Have a Group Code?")
+                                    .font(.footnote)
+//                                TextField("Enter Code", text: $groupCode)
+//                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                
+                                Button(action: {
+                                    // Handle group code submission
+                                }) {
+                                    HStack{
+                                        Text("Enter Code")
+                                        Image(systemName: "arrow.right")
+                                    }
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(Color.black)
+                                        .cornerRadius(40)
+//                                        .frame(maxWidth: .infinity)
+                                }.padding()
+                            }
+                            .padding(.horizontal, 16)
+                        }
+                        .padding(.bottom, 16)
     }
+    
     
     private func addTeam() {
         withAnimation {
