@@ -8,8 +8,63 @@
 import SwiftUI
 
 struct CoachAllTranscriptsView: View {
+    @State private var searchText: String = ""
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationView {
+            List  {
+                Section {
+                    HStack (alignment: .top) {
+                        VStack {
+                            HStack (alignment: .top) {
+                                Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
+                                Spacer()
+                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
+                                Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                            }
+                            Divider().padding(.vertical, 2)
+                        }
+                    }
+                        
+                    HStack (alignment: .top) {
+                        VStack {
+                            HStack (alignment: .top) {
+                                Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
+                                Spacer()
+                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
+                                Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                            }
+                            Divider().padding(.vertical, 2)
+                        }
+                    }
+                    
+                    HStack (alignment: .top) {
+                        VStack {
+                            HStack (alignment: .top) {
+                                Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
+                                Spacer()
+                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
+                                Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                            }
+                            Divider().padding(.vertical, 2)
+                        }
+                    }
+                    
+                    HStack (alignment: .top) {
+                        VStack {
+                            HStack (alignment: .top) {
+                                Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
+                                Spacer()
+                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
+                                Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                            }
+                            Divider().padding(.vertical, 2)
+                        }
+                    }
+                    
+                }
+            }
+            .listStyle(PlainListStyle()) // Optional: Make the list style more simple
+        }.searchable(text: $searchText)
     }
 }
 

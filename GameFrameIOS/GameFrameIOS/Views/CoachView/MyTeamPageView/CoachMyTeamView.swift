@@ -31,16 +31,18 @@ struct CoachMyTeamView: View {
                         Section(header: HStack {
                             Text("This week") // Section header text
                         }) {
-                            HStack (alignment: .top) {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 110, height: 60)
-                                    .cornerRadius(10)
-                                
-                                VStack {
-                                    Text("Game A vs C").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                            NavigationLink(destination: CoachSpecificFootageView()) {
+                                HStack (alignment: .top) {
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.3))
+                                        .frame(width: 110, height: 60)
+                                        .cornerRadius(10)
                                     
-                                    Text("mm/dd/yyyy").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                    VStack {
+                                        Text("Game A vs C").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                        
+                                        Text("mm/dd/yyyy").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                    }
                                 }
                             }
                             
@@ -100,7 +102,7 @@ struct CoachMyTeamView: View {
                     }
                     
                 }.listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                    .background(Color.white) // Set background color to white for the List
+                    //.background(Color.white) // Set background color to white for the List
                   
             }.navigationTitle(Text(teamName))
             
