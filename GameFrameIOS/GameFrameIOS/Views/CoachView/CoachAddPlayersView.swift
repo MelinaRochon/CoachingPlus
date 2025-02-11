@@ -11,6 +11,7 @@ struct CoachAddPlayersView: View {
     @Environment(\.dismiss) var dismiss // Go back to the create Team view
     @State var player: Player
     let genders = ["Female", "Male", "Other"]
+    //@Binding var path = NavigationPath // Stores the navigation history
     //@Environment(\.modelContext) private var modelContext
     
     var dateRange: ClosedRange<Date> {
@@ -78,11 +79,17 @@ struct CoachAddPlayersView: View {
                             TextField("XXX-XXX-XXXX", text: $player.guardianPhone).foregroundStyle(.secondary).multilineTextAlignment(.trailing).keyboardType(.phonePad)
                         }
                     }
+                    
+                    Button(action: {
+                        dismiss() // Dismiss the full-screen cover
+                    }) {
+                        Text("Done")
+                    }
                 }
                 
                 
             }.toolbar {
-                ToolbarItem(placement: .topBarLeading) { // Back button on the top left
+                /*ToolbarItem(placement: .topBarLeading) { // Back button on the top left
                                     Button(action: {
                                         dismiss() // Dismiss the full-screen cover
                                     }) {
@@ -91,14 +98,14 @@ struct CoachAddPlayersView: View {
                                             Text("Back")
                                         }
                                     }
-                                }
-                ToolbarItem(placement: .topBarTrailing) {
+                                }*/
+                /*ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         //modelContext.insert(player)
                         // Player's state is added to database
                         // Go back to the Creating new team page -> new player should be shown in the list
                     }
-                }
+                }*/
             }
         }
         

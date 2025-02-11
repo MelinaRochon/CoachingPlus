@@ -18,7 +18,6 @@ import SwiftData
 struct CoachCreateTeamView: View {
     @State var team: Team
     @Environment(\.dismiss) var dismiss // To go back to the Teams page, if needed
-    @State private var showAddPlayersSection = false
     //@State var player: Player
     //@Query private var players: [Player]
     //@Environment(\.modelContext) private var modelContext
@@ -89,7 +88,7 @@ struct CoachCreateTeamView: View {
                         HStack {
                             Text("Adding Players").font(.headline).bold()
                             Spacer()
-                        Button(action: {showAddPlayersSection.toggle()}) {
+                        NavigationLink(destination: CoachAddPlayersView(player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))) {
                                 
                                  // Open create new team form
                                 Text("Add +")
@@ -126,10 +125,6 @@ struct CoachCreateTeamView: View {
                     }
                 }
             }
-            .fullScreenCover(isPresented: $showAddPlayersSection) {
-                CoachAddPlayersView(player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))
-                    
-            }.transition(.move(edge: .trailing))
                 
         }
     }

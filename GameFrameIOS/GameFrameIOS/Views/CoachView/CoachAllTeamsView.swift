@@ -32,15 +32,18 @@ struct CoachAllTeamsView: View {
                             Text("Add +")
                         }
                     }) {
-                        HStack {
-                            Image(systemName: "tshirt")
-                            Text("Team 1")
+                        NavigationLink(destination: CoachMyTeamView(teamName: "Team 1").navigationBarBackButtonHidden(true)) {
+                            HStack {
+                                Image(systemName: "tshirt")
+                                Text("Team 1")
+                            }
                         }
                         
-                        HStack {
-                            Image(systemName: "tshirt") // SF Symbol for teams
-                                                           
-                            Text("Team 2")
+                        NavigationLink(destination: CoachMyTeamView(teamName: "Team 2").navigationBarBackButtonHidden(true)) {
+                            HStack {
+                                Image(systemName: "tshirt")
+                                Text("Team 2")
+                            }
                         }
                     }
                 }
