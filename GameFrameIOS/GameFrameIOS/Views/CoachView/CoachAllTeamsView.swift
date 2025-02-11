@@ -48,10 +48,10 @@ struct CoachAllTeamsView: View {
                     }
                 }
                 .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                .background(Color.white) // Set background color to white for the List
+                //.background(Color.white) // Set background color to white for the List
                 
             }
-            .background(Color.white)
+            //.background(Color.white)
             .navigationTitle(Text("Teams"))
             
         }.fullScreenCover(isPresented: $showCreateNewTeam) {
