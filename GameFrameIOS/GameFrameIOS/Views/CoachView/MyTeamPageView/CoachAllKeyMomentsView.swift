@@ -10,88 +10,53 @@ import SwiftUI
 /*** Shows all recorded key moments from a specific game. */
 struct CoachAllKeyMomentsView: View {
     @State private var searchText: String = ""
+    @State private var showFilterSelector = false
+    
     var body: some View {
         NavigationView {
-            VStack {
-                List  {
-                    Section {
-                        HStack (alignment: .top) {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 110, height: 60)
-                                .cornerRadius(10)
-                            
-                            VStack {
-                                HStack {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                }
-                                
-                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                
-                            }
-                        }
-                        
-                        HStack (alignment: .top) {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 110, height: 60)
-                                .cornerRadius(10)
-                            
-                            VStack {
-                                HStack {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                }
-                                
-                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        
-                        HStack (alignment: .top) {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 110, height: 60)
-                                .cornerRadius(10)
-                            
-                            VStack {
-                                HStack {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                }
-                                
-                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                
-                            }
-                        }
-                        
-                        HStack (alignment: .top) {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 110, height: 60)
-                                .cornerRadius(10)
-                            
-                            VStack {
-                                HStack {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                }
-                                
-                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                
-                            }
-                        }
-                        
-                    }
-                }
-                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-            }
             
-        }.searchable(text: $searchText)
+            VStack (alignment: .leading) {
+                VStack (alignment: .leading) {
+                    HStack(spacing: 0) {
+                        Text("Game X VS Y")
+                            .font(.title2)
+                        Spacer()
+                        Button (action: {
+                            showFilterSelector.toggle()
+                        }) {
+                            Image(systemName: "line.3.horizontal.decrease.circle").resizable().frame(width: 20, height: 20)
+                        }
+                    }
+                    
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("Team 1").font(.subheadline).foregroundStyle(.black.opacity(0.9))
+                            Text("dd/mm/yyyy hh:mm:ss").font(.subheadline).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        // Edit Icon
+                        Button(action: {}) {
+                            Image(systemName: "pencil.and.outline")
+                                .foregroundColor(.blue) // Adjust color
+                        }
+                        // Share Icon
+                        Button(action: {}) {
+                            Image(systemName: "square.and.arrow.up")
+                                .foregroundColor(.blue) // Adjust color
+                        }
+                    }
+                }.padding(.leading).padding(.trailing).padding(.top, 3)
+                
+                Divider().padding(.vertical, 2)
+                
+                SearchKeyMomentsView()
+                  
+            }// Show filters
+            .sheet(isPresented: $showFilterSelector, content: {
+                FilterTranscriptsListView().presentationDetents([.medium])
+            })
+            
+        }
     }
 }
 

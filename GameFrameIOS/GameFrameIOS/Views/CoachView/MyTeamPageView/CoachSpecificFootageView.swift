@@ -51,12 +51,12 @@ struct CoachSpecificFootageView: View {
                         }.padding(.bottom, 4)
                         
                         HStack (alignment: .top) {
-                            
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 110, height: 60)
-                                .cornerRadius(10)
                             NavigationLink(destination: CoachSpecificKeyMomentView()) {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 110, height: 60)
+                                    .cornerRadius(10)
+                                
                                 VStack {
                                     HStack {
                                         Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2).foregroundStyle(.black)
@@ -65,49 +65,9 @@ struct CoachSpecificFootageView: View {
                                     }
                                     
                                     Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black)
-                                    Divider().padding(.vertical, 2)
                                 }
                             }
                         }
-                        
-                        HStack (alignment: .top) {
-                            
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 110, height: 60)
-                                .cornerRadius(10)
-                            
-                            VStack {
-                                HStack {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                }
-                                
-                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Divider().padding(.vertical, 2)
-                            }
-                        }
-                        
-                        HStack (alignment: .top) {
-                            
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 110, height: 60)
-                                .cornerRadius(10)
-                            
-                            VStack {
-                                HStack {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Image(systemName: "person.2.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                }
-                                
-                                Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Divider().padding(.vertical, 2)
-                            }
-                        }
-                        
                     }.padding()
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
                         .padding(.horizontal).padding(.top)
@@ -127,37 +87,32 @@ struct CoachSpecificFootageView: View {
                         }.padding(.bottom, 4)
                         
                         HStack (alignment: .top) {
-                            VStack {
-                                HStack (alignment: .top) {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
-                                    Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                            NavigationLink(destination: CoachSpecificTranscriptView()) {
+                                VStack {
+                                    HStack (alignment: .top) {
+                                        Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
+                                        Spacer()
+                                        Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
+                                        Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                                    }
+                                    Divider().padding(.vertical, 2)
                                 }
-                                Divider().padding(.vertical, 2)
-                            }
+                            }.foregroundStyle(.black)
                         }
                         HStack (alignment: .top) {
-                            VStack {
-                                HStack (alignment: .top) {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
-                                    Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                }
-                                Divider().padding(.vertical, 2)
+                            NavigationLink(destination: CoachSpecificTranscriptView()) {
+                                VStack {
+                                    
+                                    HStack (alignment: .top) {
+                                        Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
+                                        Spacer()
+                                        Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
+                                        Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                                    }
+                                }.foregroundStyle(.black)
                             }
                         }
-                        HStack (alignment: .top) {
-                            VStack {
-                                HStack (alignment: .top) {
-                                    Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
-                                    Spacer()
-                                    Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
-                                    Image(systemName: "person.2.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                }
-                            }
-                        }
+                        
                     }.padding()
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
                         .padding(.horizontal).padding(.top)

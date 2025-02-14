@@ -16,7 +16,7 @@ struct CoachAllTeamsView: View {
     @State private var showCreateNewTeam = false // Switch to coach recording page
     @State var team: Team;
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 
                 Divider() // This adds a divider after the title

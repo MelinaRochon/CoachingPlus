@@ -15,7 +15,7 @@ struct CoachMyTeamView: View {
     @State var teamName: String = "";
     //@State private var path = NavigationPath() // Stores the navigation history
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Divider()
                 
