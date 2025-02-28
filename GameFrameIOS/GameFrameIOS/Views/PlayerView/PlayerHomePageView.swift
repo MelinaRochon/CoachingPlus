@@ -17,7 +17,7 @@ struct PlayerHomePageView: View {
                     
                     // Scheduled Games Section
                     VStack(alignment: .leading, spacing: 10) {
-                        NavigationLink(destination: CoachAllScheduledGamesView()) {
+                        NavigationLink(destination: PlayerAllScheduledGamesView()) {
                             Text("Scheduled Games")
                                 .font(.headline)
                                 .foregroundColor(.blue)
@@ -51,7 +51,7 @@ struct PlayerHomePageView: View {
                     
                     // Recent Footage Section
                     VStack(alignment: .leading, spacing: 10) {
-                        NavigationLink(destination: CoachAllRecentFootageView()) {
+                        NavigationLink(destination: PlayerAllRecentFootageView()) {
                             Text("Recent Footage")
                                 .font(.headline)
                                 .foregroundColor(.blue)

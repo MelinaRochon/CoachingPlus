@@ -8,11 +8,13 @@
 import SwiftUI
 
 struct PlayerAllTeamsView: View {
-    @State private var showCreateNewTeam = false // Switch to coach recording page
     @State var team: Team;
-    @State private var groupCode: String = ""
+    @State private var showTextField = false // Controls visibility of text field
+    @State private var groupCode: String = "" // Stores entered text
+    @State private var showInitialView = true // Tracks if "Have a Group Code?" and "Enter Code" should be shown
+
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 
                 Divider() // This adds a divider after the title
@@ -22,20 +24,19 @@ struct PlayerAllTeamsView: View {
                         Text("My Teams") // Section header text
                             
                         Spacer() // Push the button to the right
-                        Button(action: addTeam) {
-                            
-                             // Open create new team form
-                            Text("Add +")
-                        }
                     }) {
-                        NavigationLink(destination: CoachMyTeamView(teamName: "Team 1").navigationBarBackButtonHidden(true)) {
+                        NavigationLink(destination: PlayerMyTeamView(teamName: "Team 1")
+//                            .navigationBarBackButtonHidden(true)
+                        ) {
                             HStack {
                                 Image(systemName: "tshirt")
                                 Text("Team 1")
                             }
                         }
                         
-                        NavigationLink(destination: CoachMyTeamView(teamName: "Team 2").navigationBarBackButtonHidden(true)) {
+                        NavigationLink(destination: PlayerMyTeamView(teamName: "Team 2")
+//                            .navigationBarBackButtonHidden(true)
+                        ) {
                             HStack {
                                 Image(systemName: "tshirt")
                                 Text("Team 2")
@@ -50,40 +51,63 @@ struct PlayerAllTeamsView: View {
             .background(Color.white)
             .navigationTitle(Text("Teams"))
             
-        }.fullScreenCover(isPresented: $showCreateNewTeam) {
-            CoachCreateTeamView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
-        }
-        VStack(spacing: 8) {
+            VStack(spacing: 8) {
+                        // Show initial text & button if `showInitialView` is true
+                        if showInitialView {
                             HStack {
                                 Text("Have a Group Code?")
                                     .font(.footnote)
-//                                TextField("Enter Code", text: $groupCode)
-//                                    .textFieldStyle(RoundedBorderTextFieldStyle())
                                 
                                 Button(action: {
-                                    // Handle group code submission
+                                    withAnimation {
+                                        showTextField = true  // Show input field
+                                        showInitialView = false // Hide initial view
+                                    }
                                 }) {
-                                    HStack{
+                                    HStack {
                                         Text("Enter Code")
                                         Image(systemName: "arrow.right")
                                     }
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.black)
+                                    .cornerRadius(40)
+                                }
+                                .padding()
+                            }
+                            .padding(.horizontal, 16)
+                        }
+
+                        // Show text field & submit button when `showTextField` is true
+                        if showTextField {
+                            HStack {
+                                TextField("Your Code", text: $groupCode)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .padding(.horizontal, 16)
+                                    .cornerRadius(40)
+
+                                Button(action: {
+                                    withAnimation {
+                                        showTextField = false  // Hide input field
+                                        showInitialView = true // Bring back initial text & button
+                                        groupCode = "" // Reset input field
+                                    }
+                                    print("Submitted Code: \(groupCode)") // Handle submission
+                                }) {
+                                    Text("Submit")
                                         .foregroundColor(.white)
                                         .padding()
                                         .background(Color.black)
                                         .cornerRadius(40)
-//                                        .frame(maxWidth: .infinity)
-                                }.padding()
+                                }
                             }
                             .padding(.horizontal, 16)
+                            .transition(.opacity) // Smooth fade-in/out effect
                         }
-                        .padding(.bottom, 16)
-    }
-    
-    
-    private func addTeam() {
-        withAnimation {
-            showCreateNewTeam.toggle()
-        }
+                    }
+                    .padding(.bottom, 16)
+            
+        }        
     }
 }
 

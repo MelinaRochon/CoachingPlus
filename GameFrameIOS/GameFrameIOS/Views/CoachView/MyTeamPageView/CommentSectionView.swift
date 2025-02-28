@@ -52,7 +52,7 @@ struct CommentSectionView: View {
         // Write a comment
         VStack {
             HStack {
-                MessageInputView(messageHolder: "Write a comment...")
+//                MessageInputView(messageHolder: "Write a comment...")
             }
             
         }
