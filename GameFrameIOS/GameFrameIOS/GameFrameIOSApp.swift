@@ -7,9 +7,17 @@
 
 import SwiftUI
 import SwiftData
+import FirebaseCore
 
 @main
 struct GameFrameIOSApp: App {
+    
+//    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
+    init(){
+        FirebaseApp.configure()
+    }
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self,
@@ -26,7 +34,17 @@ struct GameFrameIOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.font, Font.custom("WorkSans", size: 16))
+//                .workSansFont(size: 16) // Apply work sans globally
         }
         .modelContainer(sharedModelContainer)
     }
+}
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+    FirebaseApp.configure()
+      print("Configured Firebase!")
+    return true
+  }
 }
