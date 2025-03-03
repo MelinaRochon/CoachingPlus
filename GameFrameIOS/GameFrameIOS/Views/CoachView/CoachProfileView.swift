@@ -7,14 +7,40 @@
 
 import SwiftUI
 
+@MainActor
+/** Observable object to be called when the coach wants to perform one of the following action: logOut, reset password. */
+final class CoachProfileViewModel: ObservableObject {
+    
+    /** To log out the user */
+    func logOut() throws {
+        try AuthenticationManager.shared.signOut()
+    }
+    
+    /** To reset the user's password **/
+    func resetPassword() async throws {
+        let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+        
+        guard let email = authUser.email else {
+            throw URLError(.fileDoesNotExist) // TO DO - Create error
+        }
+        
+        // Make sure the DISPLAY_NAME of the app on firebase to the public is set properly
+        try await AuthenticationManager.shared.resetPassword(email: email) // NEED TO VERIFY USER GETS EMAIL
+    }
+}
+
 /***
  * This structure will show the coach's profile.
  */
 struct CoachProfileView: View {
     @Binding var profile: CoachProfile;
+    
     @State private var showImagePicker: Bool = false
     @State private var inputImage: UIImage?
     @State private var selectedImage: UIImage?
+    
+    @StateObject private var viewModel = CoachProfileViewModel()
+    @Binding var showLandingPageView: Bool
     
     // Country and region
     let countryCodes = Locale.isoRegionCodes
@@ -30,11 +56,13 @@ struct CoachProfileView: View {
             return min...max
         }
     
-    init(profile: Binding<CoachProfile>) {
+    init(profile: Binding<CoachProfile>, showLandingPageView: Binding<Bool>) {
         self._profile = profile
         self.countryNames = countryCodes.compactMap { code in
             Locale.current.localizedString(forRegionCode: code)
         }.sorted()
+        
+        self._showLandingPageView = showLandingPageView
     }
     
     var body: some View {
@@ -106,6 +134,34 @@ struct CoachProfileView: View {
                             Text("Group Memberships")
                         }
                     }
+                    
+                    Section {
+                        
+                        // Reset password button
+                        Button("Reset password") {
+                            Task {
+                                do {
+                                    try await viewModel.resetPassword()
+                                    print("Password reset")
+                                } catch {
+                                    print(error)
+                                }
+                            }
+                        }
+                        
+                        // Logout button
+                        Button("Log out") {
+                            Task {
+                                do {
+                                    try viewModel.logOut()
+                                    showLandingPageView = true
+                                } catch {
+                                    print(error)
+                                }
+                            }
+                        }
+                        
+                    }
                 }
                 //.listStyle(PlainListStyle()) // Optional: Make the list style more simple
                     .background(Color.white) // Set background color to white for the List
@@ -124,5 +180,5 @@ struct CoachProfileView: View {
 
 
 #Preview {
-    CoachProfileView(profile: .constant(.init(name: "John Doe", dob: Date(), email: "example@example.com", phone: "613-555-5555", country: "Canada", timezone: "America/New_York")))
+    CoachProfileView(profile: .constant(.init(name: "John Doe", dob: Date(), email: "example@example.com", phone: "613-555-5555", country: "Canada", timezone: "America/New_York")), showLandingPageView: .constant(false))
 }

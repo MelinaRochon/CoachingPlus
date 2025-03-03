@@ -10,59 +10,37 @@ struct PlayerCreateAccountView: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var showPassword: Bool = false
-
+    
+    @Binding var showSignInView: Bool
+    
     let countries = ["United States", "Canada", "United Kingdom", "Australia"]
-
+    
     var body: some View {
         NavigationView{
             VStack(spacing: 20) {
-                // HEADER
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("GameFrame")
-                            .font(.title)
-                            .fontWeight(.bold)
-                        
-                        Text("leveling up your game")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer()
-                    
-                    NavigationLink(destination: LoginChoiceView()){
-                        HStack {
-                            Text("Log in").foregroundColor(.gray)
-                            
-                            Image(systemName: "person.circle")
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-                .padding(.horizontal)
+                
                 ScrollView {
-                    
-                    Spacer().frame(height: 10)
+                    Spacer().frame(height: 20)
                     
                     // Title
                     VStack(spacing: 5) {
                         Text("Hey Champ!")
-                            .font(.title).bold()
-                        NavigationLink(destination: PlayerLoginView()) {
+                            .font(.title3).bold()
+                        HStack {
                             Text("I already have an account!")
                                 .foregroundColor(.gray)
                                 .font(.footnote)
-                            Text("Log in")
-                                .foregroundColor(.blue)
-                                .font(.footnote)
-                                .underline()
+                            NavigationLink(destination: PlayerLoginView(showSignInView: $showSignInView)) {
+                                Text("Log in")
+                                    .foregroundColor(.blue)
+                                    .font(.footnote)
+                                    .underline()
+                            }
                         }
                     }
-                                        
+                    
                     // Form Fields with Uniform Style
-                    VStack(spacing: 15) {
+                    VStack(spacing: 10) {
                         // Team Access Code with Help Button
                         HStack {
                             TextField("Team Access Code", text: $teamAccessCode)
@@ -73,7 +51,7 @@ struct PlayerCreateAccountView: View {
                                     .foregroundColor(.gray)
                             }
                         }
-                        .frame(height: 50)
+                        .frame(height: 45)
                         .padding(.horizontal)
                         .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                         
@@ -88,7 +66,7 @@ struct PlayerCreateAccountView: View {
                             DatePicker("", selection: $dateOfBirth, displayedComponents: .date)
                                 .labelsHidden()
                         }
-                        .frame(height: 50)
+                        .frame(height: 45)
                         .padding(.horizontal)
                         .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                         
@@ -110,7 +88,7 @@ struct PlayerCreateAccountView: View {
                                     .foregroundColor(country.isEmpty ? .gray : .black)
                             }
                         }
-                        .frame(height: 50)
+                        .frame(height: 45)
                         .padding(.horizontal)
                         .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                         
@@ -128,43 +106,39 @@ struct PlayerCreateAccountView: View {
                                     .foregroundColor(.gray)
                             }
                         }
-                        .frame(height: 50)
+                        .frame(height: 45)
                         .padding(.horizontal)
                         .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                     }
                     .padding(.horizontal)
                     
-                    //            Spacer().frame(height: 20)
                     
                     // "Get coached!" Button
                     Button(action: {
-                        print("Create account tapped")
+                        print("Create player account tapped")
                     }) {
-                        NavigationLink(destination: PlayerMainTabView()){
-                            HStack {
-                                Text("Get coached!")
-                                    .font(.body).bold()
-                                Image(systemName: "arrow.right")
-                            }
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.black)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        HStack {
+                            Text("Create Account")
+                                .font(.body).bold()
+                            //Image(systemName: "arrow.right")
                         }
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                         .padding(.horizontal)
                         
-                        Spacer()
                     }
                 }
             }
         }
     }
-
+    
     // Custom TextField for Uniform Style
     private func customTextField(_ placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
-            .frame(height: 50)
+            .frame(height: 45)
             .padding(.horizontal)
             .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
             .foregroundColor(.black)
@@ -172,5 +146,5 @@ struct PlayerCreateAccountView: View {
 }
 
 #Preview {
-    PlayerCreateAccountView()
+    PlayerCreateAccountView(showSignInView: .constant(false))
 }

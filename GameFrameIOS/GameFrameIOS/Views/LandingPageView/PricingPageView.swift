@@ -16,7 +16,7 @@ struct PricingPageView: View {
             VStack(spacing: 20) {
                 
                 // HEADER
-                HStack {
+                /*HStack {
                     VStack(alignment: .leading) {
                         Text("GameFrame")
                             .font(.title)
@@ -40,7 +40,8 @@ struct PricingPageView: View {
                         }
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal)*/
+                
                 ScrollView {
                     Spacer().frame(height: 50)
                     VStack(spacing: 10) {

@@ -8,48 +8,25 @@
 import SwiftUI
 
 struct LoginChoiceView: View {
+    
+    @Binding var showSignInView: Bool
+    
     var body: some View {
         NavigationView {
             
             VStack(spacing: 20) {
-                
-                // HEADER
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("GameFrame")
-                            .font(.title)
-                            .fontWeight(.bold)
-                        
-                        Text("leveling up your game")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer()
-                    
-                    NavigationLink(destination: CreateAccountChoiceView()){
-                        HStack {
-                            Text("Create account").foregroundColor(.gray)
-                            
-                            Image(systemName: "person.crop.circle.badge.plus")
-                                .resizable()
-                                .frame(width: 28, height: 24)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-                .padding(.horizontal)
+                                
                 ScrollView {
                     Spacer().frame(height: 50)
                     
                     // CALL TO ACTION
                     VStack(spacing: 10) {
                         Text("Log in as a..")
-                            .font(.title2)
+                            .font(.title3)
                             .fontWeight(.bold)
                         
                         HStack(spacing: 10) {
-                            NavigationLink(destination: CoachLoginView()) {
+                            NavigationLink(destination: CoachAuthenticationView(showSignInView: $showSignInView)) {
                                 Text("Coach")
                                     .font(.headline)
                                     .padding()
@@ -59,7 +36,7 @@ struct LoginChoiceView: View {
                                     .clipShape(Capsule())
                             }
                             
-                            NavigationLink(destination: PlayerLoginView()) {
+                            NavigationLink(destination: PlayerLoginView(showSignInView: $showSignInView)) {
                                 Text("Player")
                                     .font(.headline)
                                     .padding()
@@ -78,5 +55,5 @@ struct LoginChoiceView: View {
 }
 
 #Preview {
-    LoginChoiceView()
+    LoginChoiceView(showSignInView: .constant(false))
 }

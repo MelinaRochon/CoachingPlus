@@ -9,61 +9,39 @@ struct CoachCreateAccountView: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var showPassword: Bool = false
-
+    
+    @Binding var showSignInView: Bool
+    
     let countries = ["United States", "Canada", "United Kingdom", "Australia"]
-
+    
     var body: some View {
         NavigationView{
             VStack(spacing: 20) {
-                // HEADER
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("GameFrame")
-                            .font(.title)
-                            .fontWeight(.bold)
-                        
-                        Text("leveling up your game")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer()
-                    
-                    NavigationLink(destination: LoginChoiceView()){
-                        HStack {
-                            Text("Log in").foregroundColor(.gray)
-                            
-                            Image(systemName: "person.circle")
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-                .padding(.horizontal)
                 
                 ScrollView {
                     Spacer().frame(height: 20)
-
+                    
                     // Title
                     VStack(spacing: 5) {
                         Text("Hey Coach!")
-                            .font(.title).bold()
-                        NavigationLink(destination: CoachLoginView()) {
-                                            Text("I already have an account!")
-                                                .foregroundColor(.gray)
-                                                .font(.footnote)
-                            Text("Log in.")
-                                .foregroundColor(.blue)
+                            .font(.title3).bold()
+                        HStack {
+                            Text("I already have an account!")
+                                .foregroundColor(.gray)
                                 .font(.footnote)
-                                .underline()
-                                        }
+                            
+                            NavigationLink(destination: CoachAuthenticationView(showSignInView: $showSignInView)) {
+                                
+                                Text("Log in.")
+                                    .foregroundColor(.blue)
+                                    .font(.footnote)
+                                    .underline()
+                            }
+                        }
                     }
                     
-                    //            Spacer().frame(height: 20)
-                    
                     // Form Fields with Uniform Style
-                    VStack(spacing: 15) {
+                    VStack (spacing: 10) {
                         customTextField("First Name", text: $firstName)
                         customTextField("Last Name", text: $lastName)
                         
@@ -72,37 +50,55 @@ struct CoachCreateAccountView: View {
                             Text("Date of Birth")
                                 .foregroundColor(.gray)
                             Spacer()
-                            DatePicker("", selection: $dateOfBirth, displayedComponents: .date)
-                                .labelsHidden()
+                            DatePicker(
+                                "",
+                                selection: $dateOfBirth,
+                                displayedComponents: .date
+                            )
+                            .labelsHidden().frame(height: 40)
                         }
-                        .frame(height: 50)
+                        .frame(height: 45)
                         .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
                         
                         customTextField("Phone", text: $phone)
                         
                         // Country Picker Styled Like Other Fields
                         HStack {
                             Text("Country")
-                                .foregroundColor(country.isEmpty ? .gray : .black)
+                                .foregroundColor(
+                                    country.isEmpty ? .gray : .black
+                                )
                             Spacer()
                             Menu {
-                                ForEach(countries, id: \.self) { countryOption in
-                                    Button(action: { country = countryOption }) {
-                                        Text(countryOption)
-                                    }
+                                ForEach(
+                                    countries,
+                                    id: \.self
+                                ) { countryOption in
+                                    Button(
+                                        action: { country = countryOption
+                                        }) {
+                                            Text(countryOption)
+                                        }
                                 }
                             } label: {
                                 Text(country.isEmpty ? "Select" : country)
-                                    .foregroundColor(country.isEmpty ? .gray : .black)
+                                    .foregroundColor(
+                                        country.isEmpty ? .gray : .black
+                                    )
                             }
                         }
-                        .frame(height: 50)
+                        .frame(height: 45)
                         .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
                         
                         customTextField("Email", text: $email)
-                        
                         // Password Field Styled Like Other Fields
                         HStack {
                             if showPassword {
@@ -111,45 +107,48 @@ struct CoachCreateAccountView: View {
                                 SecureField("Password", text: $password)
                             }
                             Button(action: { showPassword.toggle() }) {
-                                Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .foregroundColor(.gray)
+                                Image(
+                                    systemName: showPassword ? "eye.slash" : "eye"
+                                )
+                                .foregroundColor(.gray)
                             }
                         }
-                        .frame(height: 50)
+                        .frame(height: 45)
                         .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
                     }
                     .padding(.horizontal)
-                    
-                    //            Spacer().frame(height: 20)
                     
                     // "Let's go!" Button
                     Button(action: {
                         print("Create account tapped")
                     }) {
-                        NavigationLink(destination: CoachMainTabView()){
+                        //NavigationLink(destination: CoachMainTabView(showLandingPageView: $showSignInView)){
                             HStack {
-                                Text("Let's go!")
+                                Text("Create Account")
                                     .font(.body).bold()
-                                Image(systemName: "arrow.right")
                             }
                             .foregroundColor(.white)
                             .padding()
                             .frame(maxWidth: .infinity)
                             .background(Color.black)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
+                        //}
                         .padding(.horizontal)
                     }
                     Spacer()
-                }}
+                }
+            }
         }
     }
-
+    
     // Custom TextField for Uniform Style
     private func customTextField(_ placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
-            .frame(height: 50)
+            .frame(height: 45)
             .padding(.horizontal)
             .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
             .foregroundColor(.black)
@@ -157,5 +156,5 @@ struct CoachCreateAccountView: View {
 }
 
 #Preview {
-    CoachCreateAccountView()
+    CoachCreateAccountView(showSignInView: .constant(false))
 }

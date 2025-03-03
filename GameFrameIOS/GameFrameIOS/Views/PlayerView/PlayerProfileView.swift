@@ -7,10 +7,37 @@
 
 import SwiftUI
 
+@MainActor
+final class PlayerProfileViewModel: ObservableObject {
+    
+    /** To log out the user */
+    func logOut() throws {
+        try AuthenticationManager.shared.signOut()
+    }
+    
+    /** To reset the user's password **/
+    func resetPassword() async throws {
+        let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+        
+        guard let email = authUser.email else {
+            throw URLError(.fileDoesNotExist) // TO DO - Create error
+        }
+        
+        // Make sure the DISPLAY_NAME of the app on firebase to the public is set properly
+        try await AuthenticationManager.shared.resetPassword(email: email) // NEED TO VERIFY USER GETS EMAIL
+    }
+}
 /*** Player profile */
 struct PlayerProfileView: View {
-    @State var player: Player
+    @Binding var showLandingPageView: Bool
+    @StateObject private var viewModel = PlayerProfileViewModel()
+    
+    @Binding var player: Player
     let genders = ["Female", "Male", "Other"]
+    init(player: Binding<Player>, showLandingPageView: Binding<Bool>) {
+        self._player = player
+        self._showLandingPageView = showLandingPageView
+    }
     
     var body: some View {
         NavigationStack {
@@ -106,6 +133,34 @@ struct PlayerProfileView: View {
                             }
                         }
                     }
+                    
+                    Section {
+                        
+                        // Reset password button
+                        Button("Reset password") {
+                            Task {
+                                do {
+                                    try await viewModel.resetPassword()
+                                    print("Password reset")
+                                } catch {
+                                    print(error)
+                                }
+                            }
+                        }
+                        
+                        // Logout button
+                        Button("Log out") {
+                            Task {
+                                do {
+                                    try viewModel.logOut()
+                                    showLandingPageView = true
+                                } catch {
+                                    print(error)
+                                }
+                            }
+                        }
+                        
+                    }
                 }
             }
             
@@ -114,5 +169,5 @@ struct PlayerProfileView: View {
 }
 
 #Preview {
-    PlayerProfileView(player: .init(name: "Mel Rochon", dob: Date(), jersey: 34, gender: 0, email: "mroch@uottawa.ca", profilePicture: nil, guardianName: "Jane Doe", guardianEmail: "jane@g.com", guardianPhone: "613-098-9999"))
+    PlayerProfileView(player: .constant(.init(name: "Mel Rochon", dob: Date(), jersey: 34, gender: 0, email: "mroch@uottawa.ca", profilePicture: nil, guardianName: "Jane Doe", guardianEmail: "jane@g.com", guardianPhone: "613-098-9999")), showLandingPageView: .constant(false))
 }

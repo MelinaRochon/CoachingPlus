@@ -2,10 +2,12 @@ import SwiftUI
 
 struct PlayerMainTabView: View {
     @State private var selectedTab: Int = 0 // Track selected tab
-
-    init() {
+    @Binding var showLandingPageView: Bool
+    
+    init(showLandingPageView: Binding<Bool>) {
         // Remove the default bottom shadow/line from the tab bar
         UITabBar.appearance().scrollEdgeAppearance = UITabBarAppearance()
+        self._showLandingPageView = showLandingPageView
     }
 
     var body: some View {
@@ -16,7 +18,7 @@ struct PlayerMainTabView: View {
                     case 0: PlayerHomePageView()
                     case 1: PlayerNotificationView()
                     case 2: PlayerAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
-                    case 3: PlayerProfileView(player: .init(name: "Mel Rochon", dob: Date(), jersey: 34, gender: 0, email: "mroch@uottawa.ca", profilePicture: nil, guardianName: "Jane Doe", guardianEmail: "jane@g.com", guardianPhone: "613-098-9999"))
+                    case 3: PlayerProfileView(player: .constant(.init(name: "Mel Rochon", dob: Date(), jersey: 34, gender: 0, email: "mroch@uottawa.ca", profilePicture: nil, guardianName: "Jane Doe", guardianEmail: "jane@g.com", guardianPhone: "613-098-9999")), showLandingPageView: $showLandingPageView)
                     default: PlayerHomePageView()
                     }
                 }
@@ -67,5 +69,5 @@ struct PlayerMainTabView: View {
 }
 
 #Preview {
-    PlayerMainTabView()
+    PlayerMainTabView(showLandingPageView: .constant(false))
 }

@@ -13,43 +13,17 @@ struct CreateAccountChoiceView: View {
             
             VStack(spacing: 20) {
                 
-                // HEADER
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("GameFrame")
-                            .font(.title)
-                            .fontWeight(.bold)
-                        
-                        Text("leveling up your game")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer()
-                    
-                    NavigationLink(destination: LoginChoiceView()){
-                        HStack {
-                            Text("Log in").foregroundColor(.gray)
-                            
-                            Image(systemName: "person.circle")
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-                .padding(.horizontal)
                 ScrollView {
                     Spacer().frame(height: 50)
-                    
+                    Text("This page should not be used! ")
                     // CALL TO ACTION
                     VStack(spacing: 10) {
                         Text("Create an account as a..")
-                            .font(.title2)
+                            .font(.title3)
                             .fontWeight(.bold)
                         
                         HStack(spacing: 10) {
-                            NavigationLink(destination: CoachCreateAccountView()) {
+                            NavigationLink(destination: CoachCreateAccountView(showSignInView: .constant(false))) {
                                 Text("Coach")
                                     .font(.headline)
                                     .padding()
@@ -59,7 +33,7 @@ struct CreateAccountChoiceView: View {
                                     .clipShape(Capsule())
                             }
                             
-                            NavigationLink(destination: PlayerCreateAccountView()) {
+                            NavigationLink(destination: PlayerCreateAccountView(showSignInView: .constant(false))) {
                                 Text("Player")
                                     .font(.headline)
                                     .padding()

@@ -1,10 +1,14 @@
 import SwiftUI
 
 struct LandingPageView: View {
+    
+    @Binding var showSignInView: Bool
+    
     var body: some View {
+        ZStack(alignment: .top) {
         NavigationView {
             
-            VStack(spacing: 20) {
+            VStack {
                 
                 // HEADER
                 HStack {
@@ -20,7 +24,7 @@ struct LandingPageView: View {
                     
                     Spacer()
                     
-                    NavigationLink(destination: LoginChoiceView()){
+                    NavigationLink(destination: LoginChoiceView(showSignInView: $showSignInView)){
                         HStack {
                             Text("Log in").foregroundColor(.gray)
                             
@@ -32,8 +36,9 @@ struct LandingPageView: View {
                     }
                 }
                 .padding(.horizontal)
+                
+                Spacer().frame(height: 20)
                 ScrollView {
-                    Spacer().frame(height: 20)
                     
                     // HOW WE ROLL SECTION
                     NavigationLink(destination: AboutPageView()){
@@ -61,7 +66,7 @@ struct LandingPageView: View {
                     // CALL TO ACTION
                     VStack(spacing: 10) {
                         Text("Get started with GameFrame!")
-                            .font(.title2)
+                            .font(.title3)
                             .fontWeight(.bold)
                         
                         Text("I am a...")
@@ -69,7 +74,7 @@ struct LandingPageView: View {
                             .foregroundColor(.gray)
                         
                         HStack(spacing: 10) {
-                            NavigationLink(destination: CoachCreateAccountView()) {
+                            NavigationLink(destination: CoachCreateAccountView(showSignInView: $showSignInView)) {
                                 Text("Coach")
                                     .font(.headline)
                                     .padding()
@@ -79,7 +84,7 @@ struct LandingPageView: View {
                                     .clipShape(Capsule())
                             }
                             
-                            NavigationLink(destination: PlayerCreateAccountView()) {
+                            NavigationLink(destination: PlayerCreateAccountView(showSignInView: $showSignInView)) {
                                 Text("Player")
                                     .font(.headline)
                                     .padding()
@@ -105,16 +110,44 @@ struct LandingPageView: View {
                                 .foregroundColor(.gray)
                         }
                     }
-
-                    
-                    Spacer()
                 }
             }
+            /*.toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("GameFrame")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Text("leveling up your game")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                        }
+                        
+                        
+                    }.frame(height: 80)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: LoginChoiceView(showSignInView: $showSignInView)) {
+                        HStack {
+                            Text("Log in")
+                                .foregroundColor(.gray)
+                            
+                            Image(systemName: "person.circle")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.gray)
+                        }.padding(.top)
+                    }.frame(height: 80)
+                }
+            }*/
+            }.frame(maxWidth: .infinity)
         }
     }
 }
 
 
 #Preview {
-    LandingPageView()
+    LandingPageView(showSignInView: .constant(false))
 }

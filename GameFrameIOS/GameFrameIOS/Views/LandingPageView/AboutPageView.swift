@@ -14,7 +14,7 @@ struct AboutPageView: View {
             VStack(spacing: 20) {
                 
                 // HEADER
-                HStack {
+                /*HStack {
                     VStack(alignment: .leading) {
                         Text("GameFrame")
                             .font(.title)
@@ -38,9 +38,10 @@ struct AboutPageView: View {
                         }
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal)*/
+                
                 ScrollView {
-                    Spacer().frame(height: 20)
+                    //Spacer().frame(height: 20)
                     Text("Hey there!")
                         .font(.title2)
                         .fontWeight(.bold)

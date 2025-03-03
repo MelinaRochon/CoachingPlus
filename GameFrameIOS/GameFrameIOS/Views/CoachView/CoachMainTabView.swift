@@ -3,10 +3,12 @@ import SwiftUI
 struct CoachMainTabView: View {
     @State private var showCoachRecording = false // Controls modal visibility
     @State private var selectedTab: Int = 0 // Track selected tab
+    @Binding var showLandingPageView: Bool
 
-    init() {
+    init(showLandingPageView: Binding<Bool>) {
         // Remove the default bottom shadow/line from the tab bar
         UITabBar.appearance().scrollEdgeAppearance = UITabBarAppearance()
+        self._showLandingPageView = showLandingPageView
     }
 
     var body: some View {
@@ -23,7 +25,7 @@ struct CoachMainTabView: View {
                     phone: "613-555-5555",
                     country: "Canada",
                     timezone: "America/New_York"
-                )))
+                )),  showLandingPageView: $showLandingPageView)
                 default: CoachHomePageView()
                 }
             }
@@ -96,5 +98,5 @@ struct CoachMainTabView: View {
 }
 
 #Preview {
-    CoachMainTabView()
+    CoachMainTabView(showLandingPageView: .constant(false))
 }
