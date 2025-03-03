@@ -65,28 +65,29 @@ struct CoachProfileView: View {
         self._showLandingPageView = showLandingPageView
     }
     
-    var body: some View {
+    /*var body: some View {
         NavigationStack {
             VStack{
-                // profile picture
-                if let selectedImage = inputImage {
-                    Image(uiImage: selectedImage).profileImageStyle()
-                } else {
-                    profile.defaultProfilePicture
-                        .profileImageStyle()
-                        .onTapGesture {
-                            showImagePicker = true
-                        }
-                    //.onChange(of: inputImage) {_ in loadImage()}
-                        .sheet(isPresented: $showImagePicker) {
-                            ImagePicker(image: $inputImage)
-                        }
+                VStack {// profile picture
+                    if let selectedImage = inputImage {
+                        Image(uiImage: selectedImage).profileImageStyle()
+                    } else {
+                        profile.defaultProfilePicture
+                            .profileImageStyle()
+                            .onTapGesture {
+                                showImagePicker = true
+                            }
+                        //.onChange(of: inputImage) {_ in loadImage()}
+                            .sheet(isPresented: $showImagePicker) {
+                                ImagePicker(image: $inputImage)
+                            }
+                    }
+                    
+                    Text(profile.name).font(.title)
+                    Text("Coach").font(.subheadline)
+                    Text(profile.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
+                    
                 }
-                
-                Text(profile.name).font(.title)
-                Text("Coach").font(.subheadline)
-                Text(profile.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
-                
                 
                 // Profile information
                 List {
@@ -138,39 +139,161 @@ struct CoachProfileView: View {
                     Section {
                         
                         // Reset password button
-                        Button("Reset password") {
-                            Task {
-                                do {
-                                    try await viewModel.resetPassword()
-                                    print("Password reset")
-                                } catch {
-                                    print(error)
+                        HStack {
+                            Button("Reset password") {
+                                Task {
+                                    do {
+                                        try await viewModel.resetPassword()
+                                        print("Password reset")
+                                    } catch {
+                                        print(error)
+                                    }
                                 }
                             }
                         }
                         
                         // Logout button
-                        Button("Log out") {
-                            Task {
-                                do {
-                                    try viewModel.logOut()
-                                    showLandingPageView = true
-                                } catch {
-                                    print(error)
+                        HStack {
+                            Button("Log out") {
+                                Task {
+                                    do {
+                                        try viewModel.logOut()
+                                        showLandingPageView = true
+                                    } catch {
+                                        print(error)
+                                    }
                                 }
                             }
                         }
                         
                     }
+                    //Spacer().padding(.bottom, 130).listStyle(PlainListStyle())
+                }.safeAreaInset(edge: .bottom) { // Pushes list content above the tab bar
+                    Color.clear.frame(height: 130) // Adjust height based on your tab bar size
                 }
+                
                 //.listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                    .background(Color.white) // Set background color to white for the List
+                    //.background(Color.white) // Set background color to white for the List
             }
             .toolbar {
                 EditButton(); // button to edit the profile page
             }
+        } }*/
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack {
+                    VStack { // Profile Picture & Details
+                        if let selectedImage = inputImage {
+                            Image(uiImage: selectedImage).profileImageStyle()
+                        } else {
+                            profile.defaultProfilePicture
+                                .profileImageStyle()
+                                .onTapGesture {
+                                    showImagePicker = true
+                                }
+                                .sheet(isPresented: $showImagePicker) {
+                                    ImagePicker(image: $inputImage)
+                                }
+                        }
+
+                        Text(profile.name).font(.title)
+                        Text("Coach").font(.subheadline)
+                        Text(profile.email).font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .padding(.bottom)
+                    }
+                    .frame(maxWidth: .infinity) // Ensures full width for better alignment
+                    
+                    // Profile information
+                    List {
+                        Section {
+                            HStack {
+                                Text("Name")
+                                Spacer()
+                                TextField("Name", text: $profile.name)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.trailing)
+                            }.disabled(true)
+
+                            DatePicker(selection: $profile.dob, in: dateRange, displayedComponents: .date) {
+                                Text("Date of birth")
+                            }.disabled(true)
+
+                            HStack {
+                                Text("Email")
+                                Spacer()
+                                TextField("Email", text: $profile.email)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.trailing)
+                            }.disabled(true)
+
+                            HStack {
+                                Text("Phone")
+                                Spacer()
+                                TextField("Phone", text: $profile.phone)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.trailing)
+                            }.disabled(true)
+                        }
+
+                        Section {
+                            Picker("Country or region", selection: $profile.country) {
+                                ForEach(countryNames, id: \.self) { c in
+                                    Text(c).tag(c)
+                                }
+                            }
+
+                            Picker("Time Zone", selection: $profile.timezone) {
+                                ForEach(timeZones, id: \.self) { timezone in
+                                    Text(timezone).tag(timezone)
+                                }
+                            }
+                        }
+
+                        Section(header: Text("Membership Details")) {
+                            HStack {
+                                Text("Group Memberships")
+                            }
+                        }
+
+                        Section {
+                            Button("Reset password") {
+                                Task {
+                                    do {
+                                        try await viewModel.resetPassword()
+                                        print("Password reset")
+                                    } catch {
+                                        print(error)
+                                    }
+                                }
+                            }
+
+                            Button("Log out") {
+                                Task {
+                                    do {
+                                        try viewModel.logOut()
+                                        showLandingPageView = true
+                                    } catch {
+                                        print(error)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .frame(minHeight: 700) // Ensure the list has enough height
+                }
+            }
+            .toolbar {
+                EditButton()
+            }
         }
     }
+
+    
+    
+    
     
     func loadImage() {
         guard let inputImage = inputImage else {return}
