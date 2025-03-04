@@ -1,5 +1,23 @@
 import SwiftUI
 
+@MainActor
+final class CreateAccountView: ObservableObject {
+    
+    @Published var email = ""
+    @Published var password = ""
+    
+    func createAccountCoach() async throws {
+        guard !email.isEmpty, !password.isEmpty else {
+            // TO DO!
+            // Need to add some guards and better validation for the user to see
+            print("No email or password found.")
+            return
+        }
+        
+        let authDataResult = try await AuthenticationManager.shared.signInUser(email: email, password: password)
+        try await UserManager.shared.createNewUser(auth: authDataResult, userType: "Coach")
+    }
+}
 struct CoachCreateAccountView: View {
     @State private var firstName: String = ""
     @State private var lastName: String = ""
@@ -9,6 +27,8 @@ struct CoachCreateAccountView: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var showPassword: Bool = false
+    
+    @StateObject private var viewModel = CreateAccountView()
     
     @Binding var showSignInView: Bool
     

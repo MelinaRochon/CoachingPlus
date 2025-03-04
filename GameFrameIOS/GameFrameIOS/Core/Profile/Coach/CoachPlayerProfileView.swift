@@ -11,26 +11,30 @@ import SwiftUI
 /*** Player profile */
 struct CoachPlayerProfileView: View {
     @State var player: Player
+    
+    
     let genders = ["Female", "Male", "Other"]
     
     var body: some View {
         NavigationStack {
             
             VStack{
+                
+                
                 // profile picture
                 /*if let selectedImage = inputImage {
-                    Image(uiImage: selectedImage).profileImageStyle()
-                } else {
-                    profile.defaultProfilePicture
-                        .profileImageStyle()
-                        .onTapGesture {
-                            showImagePicker = true
-                        }
-                    //.onChange(of: inputImage) {_ in loadImage()}
-                        .sheet(isPresented: $showImagePicker) {
-                            ImagePicker(image: $inputImage)
-                        }
-                }*/
+                 Image(uiImage: selectedImage).profileImageStyle()
+                 } else {
+                 profile.defaultProfilePicture
+                 .profileImageStyle()
+                 .onTapGesture {
+                 showImagePicker = true
+                 }
+                 //.onChange(of: inputImage) {_ in loadImage()}
+                 .sheet(isPresented: $showImagePicker) {
+                 ImagePicker(image: $inputImage)
+                 }
+                 }*/
                 
                 // Header
                 VStack {
@@ -39,12 +43,12 @@ struct CoachPlayerProfileView: View {
                         .clipped()
                         .overlay(){
                             ZStack{
-                               
+                                
                                 // border
                                 RoundedRectangle(cornerRadius: 100).stroke(.white, lineWidth: 4)
                             }
                         }
-                        
+                    
                     Text(player.name).font(.title)
                     Text("# \(player.jersey)").font(.subheadline)
                     Text(player.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
@@ -64,10 +68,10 @@ struct CoachPlayerProfileView: View {
                             Text("Gender")
                             Spacer()
                             switch player.gender {
-                                case 0: Text("Female").foregroundStyle(.secondary)
-                                case 1: Text("Male").foregroundStyle(.secondary)
-                                case 2: Text("Other").foregroundStyle(.secondary)
-                                default: Text("Unknown").foregroundStyle(.secondary)
+                            case 0: Text("Female").foregroundStyle(.secondary)
+                            case 1: Text("Male").foregroundStyle(.secondary)
+                            case 2: Text("Other").foregroundStyle(.secondary)
+                            default: Text("Unknown").foregroundStyle(.secondary)
                             }
                         }.disabled(true)
                         
@@ -92,7 +96,7 @@ struct CoachPlayerProfileView: View {
                             Spacer()
                             Text(player.guardianPhone).foregroundStyle(.secondary)
                         }.disabled(true)
-                       
+                        
                     }
                     
                     // Feedback section
