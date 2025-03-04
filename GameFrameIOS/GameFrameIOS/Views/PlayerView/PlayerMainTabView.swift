@@ -9,22 +9,23 @@ struct PlayerMainTabView: View {
         UITabBar.appearance().scrollEdgeAppearance = UITabBarAppearance()
         self._showLandingPageView = showLandingPageView
     }
-
+    
     var body: some View {
-        NavigationView {
-            VStack {
-                Group {
-                    switch selectedTab {
-                    case 0: PlayerHomePageView()
-                    case 1: PlayerNotificationView()
-                    case 2: PlayerAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
-                    case 3: PlayerProfileView(player: .constant(.init(name: "Mel Rochon", dob: Date(), jersey: 34, gender: 0, email: "mroch@uottawa.ca", profilePicture: nil, guardianName: "Jane Doe", guardianEmail: "jane@g.com", guardianPhone: "613-098-9999")), showLandingPageView: $showLandingPageView)
-                    default: PlayerHomePageView()
-                    }
+        ZStack {
+            Group {
+                switch selectedTab {
+                case 0: PlayerHomePageView()
+                case 1: PlayerNotificationView()
+                case 2: PlayerAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
+                case 3: PlayerProfileView(player: .constant(.init(name: "Mel Rochon", dob: Date(), jersey: 34, gender: 0, email: "mroch@uottawa.ca", profilePicture: nil, guardianName: "Jane Doe", guardianEmail: "jane@g.com", guardianPhone: "613-098-9999")), showLandingPageView: $showLandingPageView)
+                default: PlayerHomePageView()
                 }
-
+            }.edgesIgnoringSafeArea(.bottom) // Ensures full-screen usage
+            
+            
+            VStack {
+                
                 Spacer()
-
                 // Custom Tab Bar
                 HStack {
                     Spacer()
@@ -48,7 +49,7 @@ struct PlayerMainTabView: View {
             }
         }
     }
-
+    
     // Helper function for tab items (changes icon color and fill when selected)
     private func tabBarItem(image: String, filledImage: String, label: String, tabIndex: Int) -> some View {
         VStack {
@@ -65,7 +66,7 @@ struct PlayerMainTabView: View {
             selectedTab = tabIndex // Change selected tab
         }
     }
-
+    
 }
 
 #Preview {

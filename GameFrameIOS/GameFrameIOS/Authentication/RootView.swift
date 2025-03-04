@@ -20,9 +20,10 @@ struct RootView: View {
                 //if (userType == "Coach") {
                     //CoachProfileView(profile: .constant(.init(name: "Testing", dob: Date(), email: "example@example.com", phone: "613-555-5555", country: "Canada", timezone: "America/New_York")), showLandingPageView: $showSignInView)
                 //} else if (userType == "Player") {
-                    //PlayerMainTabView(showLandingPageView: $showSignInView)
-                CoachMainTabView(showLandingPageView: $showSignInView)
+                PlayerMainTabView(showLandingPageView: $showSignInView)
+                //CoachMainTabView(showLandingPageView: $showSignInView)
                 //}
+                //TestingView()
             }
         }.onAppear(){
             let authUser = try? AuthenticationManager.shared.getAuthenticatedUser()
