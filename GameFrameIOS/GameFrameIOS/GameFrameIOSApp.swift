@@ -11,6 +11,7 @@ import FirebaseCore
 
 @main
 struct GameFrameIOSApp: App {
+//    @StateObject private var authViewModel = AuthViewModel() // Manage user authentication state
     
 //    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
@@ -33,12 +34,22 @@ struct GameFrameIOSApp: App {
 
     var body: some Scene {
         WindowGroup {
+//            if authViewModel.isLoggedIn {
+//                            if authViewModel.userRole == .coach {
+//                                CoachMainTabView(showLandingPageView: .constant(false))
+//                            } else {
+//                                PlayerMainTabView(showLandingPageView: .constant(false))
+//                            }
+//                        } else {
+//                            LoginChoiceView(authViewModel: authViewModel) // Redirect to login if not authenticated
+//                        }
+            PlayerMainTabView(showLandingPageView: .constant(false))
             //ContentView()
                 //.environment(\.font, Font.custom("WorkSans", size: 16))
 //                .workSansFont(size: 16) // Apply work sans globally
             //NavigationStack {
             //AuthenticationView()
-            RootView().environment(\.font, Font.custom("WorkSans", size: 16)) //.environment(\.font, Font.custom("WorkSans", size: 16))
+            /*RootView().environment(\.font, Font.custom("WorkSans", size: 16))*/ //.environment(\.font, Font.custom("WorkSans", size: 16))
                 //.workSansFont(size: 16) // Apply work sans globally
             //}
         }
