@@ -43,7 +43,8 @@ struct GameFrameIOSApp: App {
 //                        } else {
 //                            LoginChoiceView(authViewModel: authViewModel) // Redirect to login if not authenticated
 //                        }
-            PlayerMainTabView(showLandingPageView: .constant(false))
+            //PlayerMainTabView(showLandingPageView: .constant(false))
+            RootView()
             //ContentView()
                 //.environment(\.font, Font.custom("WorkSans", size: 16))
 //                .workSansFont(size: 16) // Apply work sans globally

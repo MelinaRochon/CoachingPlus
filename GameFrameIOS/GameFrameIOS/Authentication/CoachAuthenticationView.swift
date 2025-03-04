@@ -11,7 +11,7 @@ import SwiftUI
 
 struct CoachAuthenticationView: View {
     
-    @StateObject private var viewModel = coachAuthenticationViewModel()
+    @StateObject private var viewModel = authenticationViewModel()
     @State private var showPassword: Bool = false
     //@Binding var userType: String
     @Binding var showSignInView: Bool
@@ -44,15 +44,15 @@ struct CoachAuthenticationView: View {
                     // Form Fields
                     VStack {
                         TextField("Email", text: $viewModel.email).frame(height: 40).padding(.horizontal)
-                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1)).autocapitalization(.none)
                         
                         // Password Field with Eye Toggle
                         HStack {
                             //TextField("Password", text: $viewModel.password)
                             if (showPassword == true) {
-                                TextField("Password", text: $viewModel.password)
+                                TextField("Password", text: $viewModel.password).autocapitalization(.none)
                             } else {
-                                SecureField("Password", text: $viewModel.password)
+                                SecureField("Password", text: $viewModel.password).autocapitalization(.none)
                             }
                             Button(action: { showPassword.toggle() }) {
                                 Image(systemName: showPassword ? "eye.slash" : "eye")
@@ -66,18 +66,18 @@ struct CoachAuthenticationView: View {
                     
                     // "Let's go!" Button
                     Button {
-                        print("Create account tapped")
+                        print("Sign In account tapped")
                         Task {
-                            do {
+                            /*do {
                                 try await viewModel.signUpCoach() // to sign up
                                 showSignInView = false
                                 return
                             } catch {
                                 print(error)
-                            }
+                            }*/
                             
                             do {
-                                try await viewModel.signInCoach() // to sign in
+                                try await viewModel.signIn() // to sign in
                                 showSignInView = false
                                 return
                             } catch {

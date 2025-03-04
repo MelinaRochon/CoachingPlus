@@ -10,6 +10,8 @@ import Foundation
 /** Observable object to be called when the coach wants to perform one of the following action: logOut, reset password. */
 final class CoachProfileViewModel: ObservableObject {
     
+    @Published private(set) var user: DBUser? = nil
+    
     /** To log out the user */
     func logOut() throws {
         try AuthenticationManager.shared.signOut()
@@ -24,13 +26,15 @@ final class CoachProfileViewModel: ObservableObject {
         }
         
         // Make sure the DISPLAY_NAME of the app on firebase to the public is set properly
-        try await AuthenticationManager.shared.resetPassword(email: email) // NEED TO VERIFY USER GETS EMAIL
+        try await AuthenticationManager.shared.resetPassword(email: email) // TO DO - NEED TO VERIFY USER GETS EMAIL
     }
     
-    @Published private(set) var user: DBUser? = nil
-    
     func loadCurrentUser() async throws {
+        //Task {
         let authDataResult = try AuthenticationManager.shared.getAuthenticatedUser() // get user profile
+        
+        print("This is from the loadCurrentUser function: userid = \(authDataResult.uid)")
         self.user = try await UserManager.shared.getUser(userId: authDataResult.uid)
+        //}
     }
 }

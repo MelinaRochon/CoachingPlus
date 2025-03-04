@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PlayerLoginView: View {
     
-    @StateObject private var viewModel = playerAuthenticationViewModel()
+    @StateObject private var viewModel = authenticationViewModel()
     
     @Binding var showSignInView: Bool
     
@@ -45,14 +45,19 @@ struct PlayerLoginView: View {
                     
                     // Form Fields
                     VStack(spacing: 10) {
-                        customTextField("Email", text: $viewModel.email)
+                        TextField("Email", text: $viewModel.email)
+                            .frame(height: 45)
+                            .padding(.horizontal)
+                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                            .foregroundColor(.black).autocapitalization(.none)
+                            .autocapitalization(.none)
                         
                         // Password Field with Eye Toggle
                         HStack {
                             if showPassword {
-                                TextField("Password", text: $viewModel.password)
+                                TextField("Password", text: $viewModel.password).autocapitalization(.none)
                             } else {
-                                SecureField("Password", text: $viewModel.password)
+                                SecureField("Password", text: $viewModel.password).autocapitalization(.none)
                             }
                             Button(action: { showPassword.toggle() }) {
                                 Image(systemName: showPassword ? "eye.slash" : "eye")
@@ -72,20 +77,20 @@ struct PlayerLoginView: View {
                         
                         Task {
                             do {
-                                try await viewModel.signUpPlayer() // to sign up
+                                try await viewModel.signIn() // to sign up
                                 showSignInView = false
                                 return
                             } catch {
                                 print(error)
                             }
                             
-                            do {
+                            /*do {
                                 try await viewModel.signInPlayer() // to sign in
                                 showSignInView = false
                                 return
                             } catch {
                                 print(error)
-                            }
+                            }*/
                         }
                         
                     } label: {

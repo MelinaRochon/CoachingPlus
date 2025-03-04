@@ -45,131 +45,186 @@ struct CoachProfileView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        //NavigationStack {
             ScrollView {
                 VStack {
-                    
-                    VStack { // Profile Picture & Details
-                        
-                        
-                        
-                        if let selectedImage = inputImage {
-                            Image(uiImage: selectedImage).profileImageStyle()
-                        } else {
-                            profile.defaultProfilePicture
-                                .profileImageStyle()
-                                .onTapGesture {
-                                    showImagePicker = true
-                                }
-                                .sheet(isPresented: $showImagePicker) {
-                                    ImagePicker(image: $inputImage)
-                                }
-                        }
-
-                        Text(profile.name).font(.title)
-                        Text("Coach").font(.subheadline)
-                        Text(profile.email).font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .padding(.bottom)
-                    }
-                    .frame(maxWidth: .infinity) // Ensures full width for better alignment
-                    
-                    // Profile information
-                    List {
-                        Section {
-                            HStack {
-                                Text("Name")
-                                Spacer()
-                                TextField("Name", text: $profile.name)
-                                    .foregroundStyle(.secondary)
-                                    .multilineTextAlignment(.trailing)
-                            }.disabled(true)
-
-                            DatePicker(selection: $profile.dob, in: dateRange, displayedComponents: .date) {
-                                Text("Date of birth")
-                            }.disabled(true)
-
-                            HStack {
-                                Text("Email")
-                                Spacer()
-                                TextField("Email", text: $profile.email)
-                                    .foregroundStyle(.secondary)
-                                    .multilineTextAlignment(.trailing)
-                            }.disabled(true)
-
-                            HStack {
-                                Text("Phone")
-                                Spacer()
-                                TextField("Phone", text: $profile.phone)
-                                    .foregroundStyle(.secondary)
-                                    .multilineTextAlignment(.trailing)
-                            }.disabled(true)
-                        }
-
-                        Section {
-                            Picker("Country or region", selection: $profile.country) {
-                                ForEach(countryNames, id: \.self) { c in
-                                    Text(c).tag(c)
-                                }
+                    if let user = viewModel.user {
+                        VStack { // Profile Picture & Details
+                            
+                            
+                            
+                            if let selectedImage = inputImage {
+                                Image(uiImage: selectedImage).profileImageStyle()
+                            } else {
+                                profile.defaultProfilePicture
+                                    .profileImageStyle()
+                                    .onTapGesture {
+                                        showImagePicker = true
+                                    }
+                                    .sheet(isPresented: $showImagePicker) {
+                                        ImagePicker(image: $inputImage)
+                                    }
                             }
-
-                            Picker("Time Zone", selection: $profile.timezone) {
-                                ForEach(timeZones, id: \.self) { timezone in
-                                    Text(timezone).tag(timezone)
+                            
+                            Text("\(user.firstName) \(user.lastName)").font(.title)
+                            
+                            //if let userType = user.userType {
+                            Text(user.userType).font(.subheadline)
+                            //}
+                            
+                            if let email = user.email {
+                                Text(email).font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.bottom)
+                            }
+                            
+                        }
+                        .frame(maxWidth: .infinity) // Ensures full width for better alignment
+                        
+                        // Profile information
+                        List {
+                            Section {
+                                HStack {
+                                    Text("Name")
+                                    Spacer()
+                                    
+                                    //TextField("Name", text: $profile.name)
+                                    Text("\(user.firstName) \(user.lastName)")
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.trailing)
+                                }.disabled(true)
+                                
+                                if let dateOfBirth = user.dateOfBirth {
+                                    HStack {
+                                        Text("Date of birth")
+                                        Spacer()
+                                        
+                                        //TextField("Name", text: $profile.name)
+                                        Text("\(dateOfBirth.formatted(.dateTime.year().month(.twoDigits).day()))")
+                                            .foregroundStyle(.secondary)
+                                            .multilineTextAlignment(.trailing)
+                                    }.disabled(true)
+//                                DatePicker(selection: $profile.dob, in: dateRange, displayedComponents: .date) {
+//                                    DatePicker(selection: dateOfBirth, in: dateRange, displayedComponents: .date) {
+//
+//                                        Text("Date of birth")
+//                                    }.disabled(true)
                                 }
+                                
+                                
+                                
+                                
+                                HStack {
+                                    Text("Email")
+                                    Spacer()
+                                    if let email = user.email {
+                                        Text(email).foregroundStyle(.secondary)
+                                            .multilineTextAlignment(.trailing)
+                                    }
+                                    //TextField("Email", text: $profile.email)
+//                                        .foregroundStyle(.secondary)
+//                                        .multilineTextAlignment(.trailing)
+                                }.disabled(true)
+                                
+                                HStack {
+                                    Text("Phone")
+                                    Spacer()
+                                    //TextField("Phone", text: $profile.phone)
+                                    Text(user.phone)
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.trailing)
+                                }.disabled(true)
                             }
-                        }
-
-                        Section(header: Text("Membership Details")) {
-                            HStack {
-                                Text("Group Memberships")
-                            }
-                        }
-
-                        Section {
-                            Button("Reset password") {
-                                Task {
-                                    do {
-                                        try await viewModel.resetPassword()
-                                        print("Password reset")
-                                    } catch {
-                                        print(error)
+                            
+                            Section {
+                                HStack {
+                                    Text("Country or region")
+                                    Spacer()
+                                    //TextField("Phone", text: $profile.phone)
+                                    Text(user.country)
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.trailing)
+                                }.disabled(true)
+                                
+                                HStack {
+                                    Text("Time Zone")
+                                    Spacer()
+                                    //TextField("Phone", text: $profile.phone)
+                                    Text(user.timeZone)
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.trailing)
+                                }.disabled(true)
+                                /*Picker("Country or region", selection: $profile.country) {
+                                    ForEach(countryNames, id: \.self) { c in
+                                        Text(c).tag(c)
                                     }
                                 }
-                            }
-
-                            Button("Log out") {
-                                Task {
-                                    do {
-                                        try viewModel.logOut()
-                                        showLandingPageView = true
-                                    } catch {
-                                        print(error)
+                                
+                                 HStack {
+                                     Text("Phone")
+                                     Spacer()
+                                     //TextField("Phone", text: $profile.phone)
+                                     Text(user.phone)
+                                         .foregroundStyle(.secondary)
+                                         .multilineTextAlignment(.trailing)
+                                 }.disabled(true)
+                                Picker("Time Zone", selection: $profile.timezone) {
+                                    ForEach(timeZones, id: \.self) { timezone in
+                                        Text(timezone).tag(timezone)
                                     }
+                                }*/
+                            }
+                            
+                            Section(header: Text("Membership Details")) {
+                                HStack {
+                                    Text("Group Memberships")
                                 }
                             }
                             
-                            if let user = viewModel.user {
-                                Text("UserId: \(user.userId)")
-                                
-                                if let userType = user.userType {
-                                    
-                                    Text("User Tpe: \(userType)")
+                            Section {
+                                Button("Reset password") {
+                                    Task {
+                                        do {
+                                            try await viewModel.resetPassword()
+                                            print("Password reset")
+                                        } catch {
+                                            print(error)
+                                        }
+                                    }
                                 }
                                 
+                                Button("Log out") {
+                                    Task {
+                                        do {
+                                            try viewModel.logOut()
+                                            showLandingPageView = true
+                                        } catch {
+                                            print(error)
+                                        }
+                                    }
+                                }
+                                
+                                //if let user = viewModel.user {
+                                Text("UserId: \(user.userId)")
+                                
+                                
+                                
+                                //}
                             }
+                            
                         }
-                    }.task {
-                        try? await viewModel.loadCurrentUser()
+                        .frame(minHeight: 700) // Ensure the list has enough height
                     }
-                    .frame(minHeight: 700) // Ensure the list has enough height
+                }.task {
+                    print("Loading current user...")
+                    try? await viewModel.loadCurrentUser()
                 }
                 
             }
             .toolbar {
                 EditButton()
             }
-        }
+       // }
     }
 
     

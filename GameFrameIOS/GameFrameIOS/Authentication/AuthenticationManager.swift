@@ -38,13 +38,9 @@ final class AuthenticationManager {
         guard let user = Auth.auth().currentUser else { // is user authenticated or not
             throw URLError(.badServerResponse) // will need to create own error
         }
-        
+        print("The authenticated user is: \(user.uid)")
+
         return AuthDataResultModel(user: user)
-    }
-    
-    /** Get user type */
-    func getUserType() {
-        // returns the user type!
     }
     
     /** This function creates a user authentication, which is sent to Firebase **/

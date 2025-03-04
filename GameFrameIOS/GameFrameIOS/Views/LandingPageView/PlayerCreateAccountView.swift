@@ -2,16 +2,17 @@ import SwiftUI
 
 struct PlayerCreateAccountView: View {
     @State private var teamAccessCode: String = ""
-    @State private var firstName: String = ""
-    @State private var lastName: String = ""
-    @State private var dateOfBirth: Date = Date()
-    @State private var phone: String = ""
-    @State private var country: String = ""
-    @State private var email: String = ""
-    @State private var password: String = ""
+//    @State private var firstName: String = ""
+//    @State private var lastName: String = ""
+//    @State private var dateOfBirth: Date = Date()
+//    @State private var phone: String = ""
+//    @State private var country: String = ""
+//    @State private var email: String = ""
+//    @State private var password: String = ""
     @State private var showPassword: Bool = false
     
     @Binding var showSignInView: Bool
+    @StateObject private var viewModel = authenticationViewModel()
     
     let countries = ["United States", "Canada", "United Kingdom", "Australia"]
     
@@ -55,51 +56,54 @@ struct PlayerCreateAccountView: View {
                         .padding(.horizontal)
                         .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                         
-                        customTextField("First Name", text: $firstName)
-                        customTextField("Last Name", text: $lastName)
+                        customTextField("First Name", text: $viewModel.firstName)
+                        customTextField("Last Name", text: $viewModel.lastName)
                         
                         // Date Picker Styled Like Other Fields
                         HStack {
                             Text("Date of Birth")
                                 .foregroundColor(.gray)
                             Spacer()
-                            DatePicker("", selection: $dateOfBirth, displayedComponents: .date)
+                            DatePicker("", selection: $viewModel.dateOfBirth, displayedComponents: .date)
                                 .labelsHidden()
                         }
                         .frame(height: 45)
                         .padding(.horizontal)
                         .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                         
-                        customTextField("Phone", text: $phone)
+                        customTextField("Phone", text: $viewModel.phone) // TO DO - Make the phone number for the player optional?? Demands on his age
                         
                         // Country Picker Styled Like Other Fields
+                        // Country Picker Styled Like Other Fields
                         HStack {
-                            Text("Country")
-                                .foregroundColor(country.isEmpty ? .gray : .black)
-                            Spacer()
-                            Menu {
-                                ForEach(countries, id: \.self) { countryOption in
-                                    Button(action: { country = countryOption }) {
-                                        Text(countryOption)
-                                    }
+                            Picker(selection: $viewModel.country) {
+                                ForEach(countries, id: \.self) { country in
+                                    Text(country).tag(country)
                                 }
                             } label: {
-                                Text(country.isEmpty ? "Select" : country)
-                                    .foregroundColor(country.isEmpty ? .gray : .black)
+                                Text("Country or region")
+                                    .foregroundColor(.primary) // Ensures black text
                             }
-                        }
-                        .frame(height: 45)
-                        .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        }.pickerStyle(.navigationLink)
+                            .frame(height: 45)
+                            .padding(.horizontal)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray, lineWidth: 1)
+                            )
                         
-                        customTextField("Email", text: $email)
-                        
+                        TextField("Email", text: $viewModel.email)
+                            .frame(height: 45)
+                            .padding(.horizontal)
+                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                            .foregroundColor(.black).autocapitalization(.none)
+                            .autocapitalization(.none)
                         // Password Field Styled Like Other Fields
                         HStack {
                             if showPassword {
-                                TextField("Password", text: $password)
+                                TextField("Password", text: $viewModel.password).autocapitalization(.none)
                             } else {
-                                SecureField("Password", text: $password)
+                                SecureField("Password", text: $viewModel.password).autocapitalization(.none)
                             }
                             Button(action: { showPassword.toggle() }) {
                                 Image(systemName: showPassword ? "eye.slash" : "eye")
@@ -114,9 +118,21 @@ struct PlayerCreateAccountView: View {
                     
                     
                     // "Get coached!" Button
-                    Button(action: {
+                    Button {
                         print("Create player account tapped")
-                    }) {
+                        
+                        // create account is called!
+                        Task {
+                            do {
+                                try await viewModel.signUp(userType: "Player") // to sign up
+                                showSignInView = false
+                                return
+                            } catch {
+                                print(error)
+                            }
+                        }
+                        
+                    } label: {
                         HStack {
                             Text("Create Account")
                                 .font(.body).bold()

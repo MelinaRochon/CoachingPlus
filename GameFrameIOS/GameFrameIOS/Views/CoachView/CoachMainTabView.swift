@@ -2,7 +2,7 @@ import SwiftUI
 
 struct CoachMainTabView: View {
     @State private var showCoachRecording = false // Controls modal visibility
-    @State private var selectedTab: Int = 0 // Track selected tab
+    @State private var selectedTab: Int = 3 // Track selected tab
     @Binding var showLandingPageView: Bool
 
     init(showLandingPageView: Binding<Bool>) {
