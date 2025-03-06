@@ -18,14 +18,7 @@ struct CoachMainTabView: View {
                 case 0: CoachHomePageView()
                 case 1: CoachNotificationView()
                 case 2: CoachAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
-                case 3: CoachProfileView(profile: .constant(.init(
-                    name: "John Doe",
-                    dob: Date(),
-                    email: "example@example.com",
-                    phone: "613-555-5555",
-                    country: "Canada",
-                    timezone: "America/New_York"
-                )),  showLandingPageView: $showLandingPageView)
+                case 3: CoachProfileView(showLandingPageView: $showLandingPageView)
                 default: CoachHomePageView()
                 }
             }

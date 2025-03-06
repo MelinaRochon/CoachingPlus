@@ -37,4 +37,16 @@ final class CoachProfileViewModel: ObservableObject {
         self.user = try await UserManager.shared.getUser(userId: authDataResult.uid)
         //}
     }
+    
+    /** Update the coach's information on the database */
+    func updateCoachInformation(phone: String, membershipDetails: String) {
+        guard var user else { return }
+        
+        user.phone = phone
+        Task {
+            try await UserManager.shared.updateCoachProfile(user: user)
+            self.user = try await UserManager.shared.getUser(userId: user.userId)
+        }
+        
+    }
 }

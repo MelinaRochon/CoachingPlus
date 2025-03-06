@@ -108,6 +108,12 @@ struct DBUser: Codable {
     
 }
 
+struct GrpMembership {
+    let id: String
+    let paymentPlan: String
+    let dateJoined: Date
+}
+
 final class UserManager {
     
     static let shared = UserManager()
@@ -120,21 +126,7 @@ final class UserManager {
     private func userDocument(userId: String) -> DocumentReference {
         userCollection.document(userId)
     }
-    
-    /** Create an encoder to send data to the database, using the snake case convertion (ex. user_id) */
-//    private let encoder: Firestore.Encoder = {
-//        let encoder = Firestore.Encoder()
-//        encoder.keyEncodingStrategy = .convertToSnakeCase
-//        return encoder
-//    }()
-    
-    /** Create a decoder to fetch data from Database, using the snake case convertion */
-//    private let decoder: Firestore.Decoder = {
-//        let decoder = Firestore.Decoder()
-//        decoder.keyDecodingStrategy = .convertFromSnakeCase
-//        return decoder
-//    }()
-    
+        
     /** Get user type */
     func getUserType() async throws -> String {
         // returns the user type!
@@ -151,6 +143,15 @@ final class UserManager {
     /** Gets the user information from the database */
     func getUser(userId: String) async throws -> DBUser {
         try await userDocument(userId: userId).getDocument(as: DBUser.self)
+    }
+    
+    /** Update the coach profile on the user collection from the database */
+    func updateCoachProfile(user: DBUser) async throws {
+        let data: [String: Any] = [
+            DBUser.CodingKeys.phone.rawValue: user.phone
+        ]
+        
+        try await userDocument(userId: user.userId).updateData(data as [AnyHashable : Any])
     }
 
 }

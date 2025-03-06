@@ -77,20 +77,13 @@ struct PlayerLoginView: View {
                         
                         Task {
                             do {
-                                try await viewModel.signIn() // to sign up
+                                try await viewModel.signIn(userType: "Player") // to sign up
                                 showSignInView = false
                                 return
                             } catch {
                                 print(error)
                             }
                             
-                            /*do {
-                                try await viewModel.signInPlayer() // to sign in
-                                showSignInView = false
-                                return
-                            } catch {
-                                print(error)
-                            }*/
                         }
                         
                     } label: {

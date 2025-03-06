@@ -77,7 +77,7 @@ struct CoachAuthenticationView: View {
                             }*/
                             
                             do {
-                                try await viewModel.signIn() // to sign in
+                                try await viewModel.signIn(userType: "Coach") // to sign in
                                 showSignInView = false
                                 return
                             } catch {

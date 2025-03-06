@@ -17,7 +17,7 @@ struct PlayerMainTabView: View {
                 case 0: PlayerHomePageView()
                 case 1: PlayerNotificationView()
                 case 2: PlayerAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
-                case 3: PlayerProfileView(player: .constant(.init(name: "Mel Rochon", dob: Date(), jersey: 34, gender: 0, email: "mroch@uottawa.ca", profilePicture: nil, guardianName: "Jane Doe", guardianEmail: "jane@g.com", guardianPhone: "613-098-9999")), showLandingPageView: $showLandingPageView)
+                case 3: PlayerProfileView(showLandingPageView: $showLandingPageView)                    
                 default: PlayerHomePageView()
                 }
             }.edgesIgnoringSafeArea(.bottom) // Ensures full-screen usage

@@ -20,7 +20,7 @@ final class authenticationViewModel: ObservableObject {
     @Published var timeZone = ""
 
     
-    func signIn() async throws {
+    func signIn(userType: String) async throws {
         print("SignIn Test!")
         // validate email and password
         guard !email.isEmpty, !password.isEmpty else {
@@ -34,8 +34,11 @@ final class authenticationViewModel: ObservableObject {
         let authDataResult = try await AuthenticationManager.shared.signInUser(email: email, password: password)
         
         print("user id: \(authDataResult.uid)")
-        //let user = DBUser(userId: authDataResult.uid, email: authDataResult.email, photoUrl: authDataResult.photoUrl, dateCreated: Date(), userType: "Coach")
+
         try await UserManager.shared.getUser(userId: authDataResult.uid)
+        
+        // Following function should not be used! Should only be used for testing purpose
+        //try await createUserOfType(userType: userType, userId: authDataResult.uid)
     }
     
     func signUp(userType: String) async throws {
@@ -56,5 +59,22 @@ final class authenticationViewModel: ObservableObject {
         let authDataResult = try await AuthenticationManager.shared.createUser(email: email, password: password)
         let user = DBUser(userId: authDataResult.uid, email: authDataResult.email, photoUrl: authDataResult.photoUrl, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country, timeZone: timeZone)
         try await UserManager.shared.createNewUser(user: user)
+        
+        // create a new user, according to type
+        if (userType == "Player") {
+            let player = DBPlayer(playerId: authDataResult.uid)
+            try await PlayerManager.shared.createNewPlayer(player: player)
+        }
+        // TO DO - Create a new coach
+    }
+    
+    /** Should ONLY be used for testing purposes. */
+    func createUserOfType(userType: String, userId: String) async throws {
+        print ("--- Creating a new user of type player ")
+        
+        if (userType == "Player") {
+            let player = DBPlayer(playerId: userId)
+            try await PlayerManager.shared.createNewPlayer(player: player)
+        }
     }
 }

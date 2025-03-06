@@ -30,14 +30,7 @@ struct TestingView: View {
                     Text("Teams")
                 }
             
-            CoachProfileView(profile: .constant(.init(
-                name: "John Doe",
-                dob: Date(),
-                email: "example@example.com",
-                phone: "613-555-5555",
-                country: "Canada",
-                timezone: "America/New_York"
-            )), showLandingPageView: .constant(false))
+            CoachProfileView(showLandingPageView: .constant(false))
                 .tabItem {
                     Image(systemName: "person")
                     Text("Profile")
