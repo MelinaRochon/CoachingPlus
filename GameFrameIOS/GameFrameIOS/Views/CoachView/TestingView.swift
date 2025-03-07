@@ -18,6 +18,7 @@ struct TestingView: View {
                     Text("Home")
                 }
             
+            
             CoachNotificationView()
                 .tabItem {
                     Image(systemName: "bell")

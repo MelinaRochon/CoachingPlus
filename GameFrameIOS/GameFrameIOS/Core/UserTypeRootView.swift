@@ -20,6 +20,9 @@ struct UserTypeRootView: View {
             } else {
                 PlayerMainTabView(showLandingPageView: $showSignInView)
             }
+            HStack{
+                
+            }
         }
         .onAppear {
             Task {

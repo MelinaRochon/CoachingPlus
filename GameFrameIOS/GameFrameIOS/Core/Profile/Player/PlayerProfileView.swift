@@ -72,6 +72,7 @@ struct PlayerProfileView: View {
                                 // Show email, name and player number if the user is editing
                                 // Here you bind the `viewModel.player.jerseyNum` directly
                                 if isEditing {
+                                    
                                     HStack {
                                         Text("Name").foregroundStyle(.secondary)
                                         Spacer()

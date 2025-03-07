@@ -30,6 +30,7 @@ struct PlayerLoginView: View {
                             .font(.title3).bold()
                         
                         HStack {
+                            
                             Text("I don't have an account!")
                                 .foregroundColor(.gray)
                                 .font(.footnote)
