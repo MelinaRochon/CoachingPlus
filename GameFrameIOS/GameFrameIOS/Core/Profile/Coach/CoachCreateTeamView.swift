@@ -21,12 +21,15 @@ struct CoachCreateTeamView: View {
     //@State var player: Player
     //@Query private var players: [Player]
     //@Environment(\.modelContext) private var modelContext
+    @StateObject private var viewModel = CreateTeamViewModel()
     
+    let auth: AuthDataResultModel  // Pass the authenticated user
     let sports = ["Soccer", "Hockey", "Basketball"]
     let genders = ["Female", "Male", "Other"]
     let ageGroupes = ["U3", "U4", "U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12", "U13", "U14", "U15", "U16", "U17", "U18", "18+", "Senior"]
     @State private var icon = ""
     @State private var logoIsPresented = false
+    
     
     var body: some View {
         NavigationView {
@@ -38,10 +41,10 @@ struct CoachCreateTeamView: View {
                         HStack {
                             Text("Name")
                             Spacer()
-                            TextField("Team Name", text: $team.name).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                            TextField("Team Name", text: $viewModel.name).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
                         }
                         HStack {
-                            Picker("Sport", selection: $team.sport)
+                            Picker("Sport", selection: $viewModel.sport)
                             {
                                 ForEach(sports.indices, id: \.self) {i in
                                     Text(self.sports[i])
@@ -52,30 +55,30 @@ struct CoachCreateTeamView: View {
                             Text("Logo")
                             Spacer()
                             
-                            Button(action: { logoIsPresented.toggle()}) {
-                                Text("Choose").contentShape(Rectangle())
-                            }.sheet(isPresented: $logoIsPresented, content: {
-                                SymbolsPicker(selection: $team.icon, title: "Choose your team's logo", autoDismiss: true) {
-                                    Image(systemName: "xmark.diamond.fill")
-                                }
-                            })
+//                            Button(action: { logoIsPresented.toggle()}) {
+//                                Text("Choose").contentShape(Rectangle())
+//                            }.sheet(isPresented: $logoIsPresented, content: {
+//                                SymbolsPicker(selection: $viewModel.icon, title: "Choose your team's logo", autoDismiss: true) {
+//                                    Image(systemName: "xmark.diamond.fill")
+//                                }
+//                            })
                             
-                            Image(systemName: team.icon).foregroundStyle(team.color)
-                        }
-                        HStack {
-                            ColorPicker("Color", selection: $team.color)
-                        }
+//                            Image(systemName: viewModel.logoURL)//.foregroundStyle(team.color)
+//                        }
+//                        HStack {
+//                            ColorPicker("Color", selection: $viewModel.color)
+//                        }
                     }
                     
                     Section {
-                        Picker("Gender", selection: $team.gender)
+                        Picker("Gender", selection: $viewModel.gender)
                         {
                             ForEach(genders.indices, id: \.self) {i in
                                 Text(self.genders[i])
                             }
                         }
                         HStack {
-                            Picker("Age group", selection: $team.ageGrp)
+                            Picker("Age group", selection: $viewModel.ageGrp)
                             {
                                 ForEach(ageGroupes, id: \.self) {
                                     Text($0)
@@ -120,10 +123,14 @@ struct CoachCreateTeamView: View {
                                     }
                                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { /* Action will need to be added -> complete team form */}) {
+                    Button(action: { /* Action will need to be added -> complete team form */
+                        viewModel.createTeam(auth: auth)
+                    }) {
                         Text("Create")
-                    }
+                    }.disabled(viewModel.isLoading) // Disable if loading
                 }
+            }.alert(isPresented: $viewModel.showAlert) {
+                Alert(title: Text("Message"), message: Text(viewModel.alertMessage), dismissButton: .default(Text("OK")))
             }
                 
         }
