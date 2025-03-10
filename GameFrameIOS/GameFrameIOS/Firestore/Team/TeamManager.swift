@@ -106,8 +106,9 @@ final class TeamManager {
     static let shared = TeamManager()
     private init() { } // TO DO - Will need to use something else than singleton
     
-    private let teamCollection = Firestore.firestore().collection("team") // team collection
-    
+//    private let teamCollection = Firestore.firestore().collection("team") // team collection
+    let teamCollection = Firestore.firestore().collection("teams") // team collection
+
     /** Returns a specific team document */
     private func teamDocument(teamId: String) -> DocumentReference {
         teamCollection.document(teamId)
@@ -116,6 +117,12 @@ final class TeamManager {
     /** Returns the team's information from the database */
     func getTeam(teamId: String) async throws -> DBTeam {
         try await teamDocument(teamId: teamId).getDocument(as: DBTeam.self)
+    }
+    
+    /** Returns the team name's information from the database */
+    func getTeamName(teamId: String) async throws -> String {
+        let team = try await getTeam(teamId: teamId)
+        return team.teamId
     }
 
     func createNewTeam(auth: AuthDataResultModel, team: DBTeam) async throws {

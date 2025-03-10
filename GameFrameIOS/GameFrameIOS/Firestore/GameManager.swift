@@ -9,23 +9,23 @@ import Foundation
 import FirebaseFirestore
 
 struct DBGame: Codable {
-    let id: String
+    let gameId: String
     let title: String
-    let duration: Date?
+    let duration: Int
     let location: String?
-    let scheduledTime: Date?
+    let scheduledTimeReminder: Int // in minutes
     let startTime: Date?
-    let timeBeforeFeedback: Date
-    let timeAfterFeedback: Date
+    let timeBeforeFeedback: Int // in seconds
+    let timeAfterFeedback: Int // in seconds
     let recordingReminder: Bool
     let teamId: String
     
-    init(id: String, title: String, duration: Date? = nil, location: String? = nil, scheduledTime: Date? = nil, startTime: Date? = nil, timeBeforeFeedback: Date, timeAfterFeedback: Date, recordingReminder: Bool, teamId: String) {
-        self.id = id
+    init(gameId: String, title: String, duration: Int, location: String? = nil, scheduledTimeReminder: Int, startTime: Date? = nil, timeBeforeFeedback: Int, timeAfterFeedback: Int, recordingReminder: Bool, teamId: String) {
+        self.gameId = gameId
         self.title = title
         self.duration = duration
         self.location = location
-        self.scheduledTime = scheduledTime
+        self.scheduledTimeReminder = scheduledTimeReminder
         self.startTime = startTime
         self.timeBeforeFeedback = timeBeforeFeedback
         self.timeAfterFeedback = timeAfterFeedback
@@ -33,18 +33,62 @@ struct DBGame: Codable {
         self.teamId = teamId
     }
     
-    init(id: String, teamId: String) {
-        self.id = id
+    init(gameId: String, teamId: String) {
+        self.gameId = gameId
         self.title = ""
-        self.duration = nil
+        self.duration = 0 // by default, 0 seconds
         self.location = nil
-        self.scheduledTime = nil
+        self.scheduledTimeReminder = 0 // by default, 0 minutes
         self.startTime = nil
-        self.timeBeforeFeedback = Date()
-        self.timeAfterFeedback = Date()
+        self.timeBeforeFeedback = 10 // by default, 10 seconds
+        self.timeAfterFeedback = 10 // by default, 10 seconds
         self.recordingReminder = false
         self.teamId = teamId
     }
+    
+    enum CodingKeys: String, CodingKey {
+        case gameId = "game_id"
+        case title = "title"
+        case duration = "duration"
+        case location = "location"
+        case scheduledTimeReminder = "scheduled_time"
+        case startTime = "start_time"
+        case timeBeforeFeedback = "time_before_feedback"
+        case timeAfterFeedback = "time_after_feedback"
+        case recordingReminder = "recording_reminder"
+        case teamId = "team_id"
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.gameId = try container.decode(String.self, forKey: .gameId)
+        self.title = try container.decode(String.self, forKey: .title)
+        self.duration = try container.decode(Int.self, forKey: .duration)
+        self.location = try container.decodeIfPresent(String.self, forKey: .location)
+        self.scheduledTimeReminder = try container.decode(Int.self, forKey: .scheduledTimeReminder)
+        self.startTime = try container.decodeIfPresent(Date.self, forKey: .startTime)
+        self.timeBeforeFeedback = try container.decode(Int.self, forKey: .timeBeforeFeedback)
+        self.timeAfterFeedback = try container.decode(Int.self, forKey: .timeAfterFeedback)
+        self.recordingReminder = try container.decode(Bool.self, forKey: .recordingReminder)
+        self.teamId = try container.decode(String.self, forKey: .teamId)
+    }
+    
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.gameId, forKey: .gameId)
+        try container.encode(self.title, forKey: .title)
+        try container.encode(self.duration, forKey: .duration)
+        try container.encodeIfPresent(self.location, forKey: .location)
+        try container.encode(self.scheduledTimeReminder, forKey: .scheduledTimeReminder)
+        try container.encodeIfPresent(self.startTime, forKey: .startTime)
+        try container.encode(self.timeBeforeFeedback, forKey: .timeBeforeFeedback)
+        try container.encode(self.timeAfterFeedback, forKey: .timeAfterFeedback)
+        try container.encode(self.recordingReminder, forKey: .recordingReminder)
+        try container.encode(self.teamId, forKey: .teamId)
+    }
+    
+    
+    
 }
 
 final class GameManager {
@@ -52,15 +96,27 @@ final class GameManager {
     
     private init() {} // TO DO - Will need to use something else than singleton
     
-    private let gameCollection = Firestore.firestore().collection("games") // games collection
-    
+    //private let gameCollection = Firestore.firestore().collection("games") // games collection
+    private let gameCollection = TeamManager.shared.teamCollection// games collection
+
     /** Returns a specific game document */
-    private func gameDocument(gameId: String) -> DocumentReference {
-        gameCollection.document(gameId)
+    private func gameDocument(gameId: String, teamId: String) -> DocumentReference {
+        TeamManager.shared.teamCollection.document(teamId).collection("games").document(gameId)
+        //gameCollection.document(gameId)
+    }
+    
+    private func getTeamID(teamName: String) async throws -> String {
+        // TO DO - Fetch the team ID from the database
+        // return teamId
+        return "zzlZyozdFYaQeUR5gsr7"
+        // teams
+        // |_ games
     }
     
     /** Add a new game in the database */
     func addNewGame(game: DBGame) async throws {
         
+        // get the teamId
+        try gameDocument(gameId: game.gameId, teamId: game.teamId).setData(from: game, merge: false)
     }
 }

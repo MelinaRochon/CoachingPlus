@@ -37,6 +37,13 @@ final class authenticationViewModel: ObservableObject {
 
         try await UserManager.shared.getUser(userId: authDataResult.uid)
         
+        // just for test purpose
+//        let coach = DBCoach(coachId: authDataResult.uid)
+//        try await CoachManager.shared.addCoach(coach: coach)
+//        
+//        // add team - only for testing purpose
+//        try await CoachManager.shared.addTeamToCoach(coachId: authDataResult.uid, teamId: "zzlZyozdFYaQeUR5gsr7")
+        
         // Following function should not be used! Should only be used for testing purpose
         //try await createUserOfType(userType: userType, userId: authDataResult.uid)
     }
