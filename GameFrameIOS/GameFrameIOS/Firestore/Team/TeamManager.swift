@@ -135,10 +135,32 @@ final class TeamManager {
         try await teamDocument(teamId: teamId).updateData(data as [AnyHashable : Any])
     }
     
+    /** DELETE - Remove a player from the team */
+    func removePlayerFromTeam(playerId: String, teamId: String) async throws {
+        // find the team to remove
+        let data: [String: Any] = [
+            DBTeam.CodingKeys.players.rawValue: FieldValue.arrayRemove([playerId])
+        ]
+        
+        // Update the document asynchronously
+        try await teamDocument(teamId: teamId).updateData(data as [AnyHashable : Any])
+    }
+    
     /** PUT - Add a coach id to the 'coaches' array !NEEDS to be tested! */
     func addCoachToTeam(teamId: String, coachId: String) async throws {
         let data: [String: Any] = [
             DBTeam.CodingKeys.coaches.rawValue: FieldValue.arrayUnion([coachId])
+        ]
+        
+        // Update the document asynchronously
+        try await teamDocument(teamId: teamId).updateData(data as [AnyHashable : Any])
+    }
+    
+    /** DELETE - Remove a coach from the team */
+    func removeCoachFromTeam(coachId: String, teamId: String) async throws {
+        // find the team to remove
+        let data: [String: Any] = [
+            DBTeam.CodingKeys.coaches.rawValue: FieldValue.arrayRemove([coachId])
         ]
         
         // Update the document asynchronously

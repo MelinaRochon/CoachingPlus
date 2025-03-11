@@ -164,6 +164,17 @@ final class PlayerManager {
         try await playerDocument(playerId: playerId).updateData(data as [AnyHashable : Any])
     }
     
+    /** DELETE - Remove a team id in the  'teamsEnrolled' array */
+    func removeTeamFromPlayer(playerId: String, teamId: String) async throws {
+        // find the team to remove
+        let data: [String: Any] = [
+            DBPlayer.CodingKeys.teamsEnrolled.rawValue: FieldValue.arrayRemove([teamId])
+        ]
+        
+        // Update the document asynchronously
+        try await playerDocument(playerId: playerId).updateData(data as [AnyHashable : Any])
+    }
+    
     /** Remove the guardian name from the player's document */
     func removeGuardianInfoName(playerId: String) async throws {
         let data: [String:Any?] = [
