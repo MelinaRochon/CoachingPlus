@@ -94,18 +94,27 @@ final class GameManager {
     private init() {} // TO DO - Will need to use something else than singleton
     
     //private let gameCollection = Firestore.firestore().collection("games") // games collection
-    private let gameCollection = TeamManager.shared.teamCollection// games collection
-
+    //private let gameCollection = TeamManager.shared.teamCollection// games collection
+    
     /** Returns a specific game document */
     func gameDocument(teamId: String) -> DocumentReference {
-        return TeamManager.shared.teamCollection.document(teamId).collection("games").document()
+        return gameCollection(teamId: teamId).document()
+    }
+    
+    func gameCollection(teamId: String) -> CollectionReference {
+        return TeamManager.shared.teamCollection.document(teamId).collection("games")
     }
     
     /** Returns the ID of the new document created fir a game */
     func gameDocumentID(teamId: String) -> String {
         return gameDocument(teamId: teamId).documentID
     }
-        
+    
+    /** GET - Returns the game information from the database */
+    func getGame(gameId: String) async throws -> DBGame {
+        try await gameDocument(teamId: gameId).getDocument(as: DBGame.self)
+    }
+            
     private func getTeamID(teamName: String) async throws -> String {
         // TO DO - Fetch the team ID from the database
         return "zzlZyozdFYaQeUR5gsr7"

@@ -9,7 +9,6 @@ import SwiftUI
 import Firebase
 
 struct CoachAddingGameView: View {
-    @State var newGame: Game
     
     @StateObject private var viewModel = AddNewGameModel()
     @Environment(\.dismiss) var dismiss // To go back to the Teams page, if needed
@@ -56,16 +55,16 @@ struct CoachAddingGameView: View {
     @State private var feedbackBeforeTimeLabel = "10 seconds"
     @State private var feedbackAfterTimeLabel = "10 seconds"
     
-    private func formatTime() {
-        var timeFormatter : DateFormatter {
-            let formatter = DateFormatter()
-            formatter.timeStyle = .short
-            formatter.locale = Locale(identifier: "tr_TR") // your locale here
-            return formatter
-        }
-        
-        timeString = timeFormatter.string(from: newGame.duration)
-    }
+//    private func formatTime() {
+//        var timeFormatter : DateFormatter {
+//            let formatter = DateFormatter()
+//            formatter.timeStyle = .short
+//            formatter.locale = Locale(identifier: "tr_TR") // your locale here
+//            return formatter
+//        }
+//        
+//        timeString = timeFormatter.string(from: newGame.duration)
+//    }
     
     var body: some View {
         NavigationView {
@@ -245,5 +244,5 @@ struct CoachAddingGameView: View {
 }
 
 #Preview {
-    CoachAddingGameView(newGame: .init(title: "Game PSG VS Real Madrid", duration: Date(timeIntervalSinceNow: 3600), location: "Parc des Princes, Paris, France", scheduledTime: Date(), sport: "Soccer", timeBeforeFeedback: Date(timeIntervalSinceNow: 2000), timeAfterFeedback: Date(timeIntervalSinceNow: 2000), getRecordingReminder: true))
+    CoachAddingGameView()
 }
