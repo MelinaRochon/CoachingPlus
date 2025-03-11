@@ -86,9 +86,6 @@ struct DBGame: Codable {
         try container.encode(self.recordingReminder, forKey: .recordingReminder)
         try container.encode(self.teamId, forKey: .teamId)
     }
-    
-    
-    
 }
 
 final class GameManager {
@@ -100,23 +97,24 @@ final class GameManager {
     private let gameCollection = TeamManager.shared.teamCollection// games collection
 
     /** Returns a specific game document */
-    private func gameDocument(gameId: String, teamId: String) -> DocumentReference {
-        TeamManager.shared.teamCollection.document(teamId).collection("games").document(gameId)
-        //gameCollection.document(gameId)
+    func gameDocument(teamId: String) -> DocumentReference {
+        return TeamManager.shared.teamCollection.document(teamId).collection("games").document()
     }
     
+    /** Returns the ID of the new document created fir a game */
+    func gameDocumentID(teamId: String) -> String {
+        return gameDocument(teamId: teamId).documentID
+    }
+        
     private func getTeamID(teamName: String) async throws -> String {
         // TO DO - Fetch the team ID from the database
-        // return teamId
         return "zzlZyozdFYaQeUR5gsr7"
-        // teams
-        // |_ games
     }
     
     /** Add a new game in the database */
     func addNewGame(game: DBGame) async throws {
         
-        // get the teamId
-        try gameDocument(gameId: game.gameId, teamId: game.teamId).setData(from: game, merge: false)
+        // Create a new game
+        try gameDocument(teamId: game.teamId).setData(from: game, merge: false)
     }
 }

@@ -214,7 +214,14 @@ struct CoachAddingGameView: View {
                         
                         // Retrieve the duration
                         viewModel.duration = ((3600 * hours) + (60 * minutes))
-                        print(selectedTeamId)
+                        
+                        viewModel.teamId = selectedTeamId! // set the selected team id
+                        print(selectedTeamId!)
+                        
+                        Task {
+                            try await viewModel.addNewGame() // add new game to the database
+                        }
+                        
                         viewModel.test()
                     }) {
                         Text("Done")
