@@ -6,59 +6,40 @@
 //
 
 import Foundation
-@MainActor
 
+@MainActor
 final class CreateTeamViewModel: ObservableObject {
+    @Published var team: DBTeam? = nil
+    
     @Published var name = ""
     @Published var sport = ""
     @Published var logoURL = ""
-    @Published var color = ""
+    @Published var colour = ""
     @Published var gender = ""
     @Published var ageGrp = ""
     @Published var alertMessage = ""
     @Published var showAlert = false
-    @Published var isLoading = false
+    //@Published var isLoading = false
     
-    func createTeam(auth: AuthDataResultModel) {
-        isLoading = true
+    func createTeam(coachId: String) async throws {
         
         let newTeam = DBTeam(
             teamId: UUID().uuidString,
             name: name,
             sport: sport,
             logoUrl: logoURL.isEmpty ? nil : logoURL,
-            colour: color,
+            colour: colour,
             gender: gender,
             ageGrp: ageGrp,
             accessCode: nil,  // Optional access code for joining the team
-            coaches: [auth.uid],  // The coach creating the team
+            coaches: [coachId],  // The coach creating the team
             players: []
-        )
-
-        Task {
-            do {
-                try await TeamManager.shared.createNewTeam(auth: auth, team: newTeam)
-                DispatchQueue.main.async {
-                    self.alertMessage = "Team created successfully!"
-                    self.resetForm()
-                    self.showAlert = true
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.alertMessage = "Error: \(error.localizedDescription)"
-                    self.showAlert = true
-                }
-            }
-            self.isLoading = false
-        }
+            )
+            
+        try await TeamManager.shared.createNewTeam(coachId: coachId, team: newTeam)
     }
     
-    private func resetForm() {
-            name = ""
-            sport = ""
-            logoURL = ""
-            color = ""
-            gender = ""
-            ageGrp = ""
-        }
+    func test(){
+        print("name: \(name), sport: \(sport), logoUrl: \(logoURL), colour: \(colour), gender: \(gender), ageGrp: \(ageGrp)")
+    }
 }

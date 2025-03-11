@@ -108,6 +108,8 @@ final class TeamManager {
     
 //    private let teamCollection = Firestore.firestore().collection("team") // team collection
     let teamCollection = Firestore.firestore().collection("teams") // team collection
+    let userCollection = Firestore.firestore().collection("users") // team collection
+
 
     /** Returns a specific team document */
     private func teamDocument(teamId: String) -> DocumentReference {
@@ -168,10 +170,23 @@ final class TeamManager {
     }
     
 
-    func createNewTeam(auth: AuthDataResultModel, team: DBTeam) async throws {
-        // verifie coach valide
+    func createNewTeam(coachId:
+                       String, team: DBTeam) async throws {
+//        let coachID = auth.uid
+        do {
+            // verifie coach valide
+            let coach = try await UserManager.shared.getUser(userId: coachId)
+            
+            try teamDocument(teamId: team.teamId).setData(from: team, merge: false)
+            
+            let coachRef = Firestore.firestore().collection("users").document(coachId)
+                    try await coachRef.updateData([
+                        "teams_coaching": FieldValue.arrayUnion([team.teamId])
+                    ])
+        } catch let error as NSError {
+            print("Error creating team: \(error.localizedDescription)")
+        }
         
-        try teamDocument(teamId: team.teamId).setData(from: team, merge: false)
         
         // ajouter dans collection coach valeur teamId (dans array)
         
