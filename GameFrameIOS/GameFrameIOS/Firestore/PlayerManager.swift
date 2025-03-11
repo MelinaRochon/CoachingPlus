@@ -32,7 +32,7 @@ struct DBPlayer: Codable {
         guardianEmail: String? = nil,
         guardianPhone: String? = nil,
         profilePicture: String? = nil,
-        teamsEnrolled: [String]? = nil
+        teamsEnrolled: [String]
     ) {
         self.playerId = playerId
         self.jerseyNum = jerseyNum
@@ -79,7 +79,7 @@ struct DBPlayer: Codable {
         self.guardianEmail = try container.decodeIfPresent(String.self, forKey: .guardianEmail)
         self.guardianPhone = try container.decodeIfPresent(String.self, forKey: .guardianPhone)
         self.profilePicture = try container.decodeIfPresent(String.self, forKey: .profilePicture)
-        self.teamsEnrolled = try container.decodeIfPresent([String].self, forKey: .teamsEnrolled)
+        self.teamsEnrolled = try container.decode([String].self, forKey: .teamsEnrolled)
     }
     
     func encode(to encoder: any Encoder) throws {
