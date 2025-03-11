@@ -46,7 +46,7 @@ final class PlayerProfileModel: ObservableObject {
     func updatePlayerInformation(jersey: Int, nickname: String, guardianName: String, guardianEmail: String, guardianPhone: String) {
         guard let player else { return }
                 
-        let playerInfo = DBPlayer(playerId: player.playerId, jerseyNum: jersey, nickName: nickname, gender: player.gender, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
+        let playerInfo = DBPlayer(playerId: player.playerId, jerseyNum: jersey, nickName: nickname, gender: player.gender, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, teamsEnrolled: player.teamsEnrolled)
         
         Task {
             // Updating the player information on the database
