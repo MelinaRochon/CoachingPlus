@@ -14,8 +14,8 @@ struct GetTeam {
 
 @MainActor
 final class AddNewGameModel: ObservableObject {
-    @Published var game: DBGame? = nil // game information
     
+    @Published var teamId = ""
     @Published var title = ""
     @Published var duration: Int = 0 // in seconds
     @Published var location: LocationResult?
@@ -26,18 +26,6 @@ final class AddNewGameModel: ObservableObject {
     @Published var recordingReminder: Bool = false
     
     @Published var teamNames: [GetTeam] = []
-//    @Published var selectedTeamName: String?
-    
-//    let gameId: String
-//    let title: String
-//    let duration: Date?
-//    let location: String?
-//    let scheduledTime: Date?
-//    let startTime: Date?
-//    let timeBeforeFeedback: Date
-//    let timeAfterFeedback: Date
-//    let recordingReminder: Bool
-//    let teamId: String
     
     /** Loads all team names that the coach is coaching. Function only called if the teamId isn't passed as an
      argument when calling the addGameView page */
@@ -45,12 +33,23 @@ final class AddNewGameModel: ObservableObject {
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
         teamNames = try await CoachManager.shared.loadTeamsCoaching(coachId: authUser.uid)
-
     }
     
+    /** POST - Adds a new game to the database */
     func addNewGame() async throws {
-        //guard let
-        guard let game else { return }
+        
+        // get the generated gameId
+        let gameId = GameManager.shared.gameDocumentID(teamId: teamId)
+        
+        print("---- gameId = \(gameId)")
+        
+        // finalise the location
+        let finalLocation = (location!.title + location!.subtitle)
+        
+        print("finalLocation = \(finalLocation)")
+
+        // create a DBGame object to be sent to the database
+        let game = DBGame(gameId: gameId, title: title, duration: duration, location: finalLocation, scheduledTimeReminder: scheduledTimeReminder, startTime: startTime, timeBeforeFeedback: timeBeforeFeedback, timeAfterFeedback: timeAfterFeedback, recordingReminder: recordingReminder, teamId: teamId)
         
         // Add game to the database
         try await GameManager.shared.addNewGame(game: game)

@@ -14,6 +14,7 @@ struct DBPlayer: Codable {
     var nickName: String?
     let gender: String?
     let profilePicture: String?
+    let teamsEnrolled: [String] // TO DO - Think about leaving it as it is or putting it as optional
     
     
     // Guardian information - optional
@@ -30,7 +31,8 @@ struct DBPlayer: Codable {
         guardianName: String? = nil,
         guardianEmail: String? = nil,
         guardianPhone: String? = nil,
-        profilePicture: String? = nil
+        profilePicture: String? = nil,
+        teamsEnrolled: [String]
     ) {
         self.playerId = playerId
         self.jerseyNum = jerseyNum
@@ -40,6 +42,7 @@ struct DBPlayer: Codable {
         self.guardianEmail = guardianEmail
         self.guardianPhone = guardianPhone
         self.profilePicture = profilePicture
+        self.teamsEnrolled = teamsEnrolled
     }
     
     init(playerId: String) {
@@ -51,6 +54,7 @@ struct DBPlayer: Codable {
         self.guardianEmail = nil
         self.guardianPhone = nil
         self.profilePicture = nil
+        self.teamsEnrolled = []
     }
     
     enum CodingKeys: String, CodingKey {
@@ -62,6 +66,7 @@ struct DBPlayer: Codable {
         case guardianEmail = "guardian_email"
         case guardianPhone = "guardian_phone"
         case profilePicture = "profile_picture"
+        case teamsEnrolled = "teams_enrolled"
     }
     
     init(from decoder: any Decoder) throws {
@@ -74,7 +79,7 @@ struct DBPlayer: Codable {
         self.guardianEmail = try container.decodeIfPresent(String.self, forKey: .guardianEmail)
         self.guardianPhone = try container.decodeIfPresent(String.self, forKey: .guardianPhone)
         self.profilePicture = try container.decodeIfPresent(String.self, forKey: .profilePicture)
-
+        self.teamsEnrolled = try container.decode([String].self, forKey: .teamsEnrolled)
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -87,7 +92,7 @@ struct DBPlayer: Codable {
         try container.encodeIfPresent(self.guardianEmail, forKey: .guardianEmail)
         try container.encodeIfPresent(self.guardianPhone, forKey: .guardianPhone)
         try container.encodeIfPresent(self.profilePicture, forKey: .profilePicture)
-
+        try container.encodeIfPresent(self.teamsEnrolled, forKey: .teamsEnrolled)
     }
     
 //    mutating func updateGuardianName(name: String) {
@@ -147,6 +152,27 @@ final class PlayerManager {
         ]
         
         try await playerDocument(playerId: playerId).updateData(data as [AnyHashable: Any])
+    }
+    
+    /** PUT - Add to the 'teamsEnrolled' array the teamId */
+    func addTeamToPlayer(playerId: String, teamId: String) async throws {
+        let data: [String: Any] = [
+            DBPlayer.CodingKeys.teamsEnrolled.rawValue: FieldValue.arrayUnion([teamId])
+        ]
+        
+        // Update the document asynchronously
+        try await playerDocument(playerId: playerId).updateData(data as [AnyHashable : Any])
+    }
+    
+    /** DELETE - Remove a team id in the  'teamsEnrolled' array */
+    func removeTeamFromPlayer(playerId: String, teamId: String) async throws {
+        // find the team to remove
+        let data: [String: Any] = [
+            DBPlayer.CodingKeys.teamsEnrolled.rawValue: FieldValue.arrayRemove([teamId])
+        ]
+        
+        // Update the document asynchronously
+        try await playerDocument(playerId: playerId).updateData(data as [AnyHashable : Any])
     }
     
     /** Remove the guardian name from the player's document */
