@@ -61,7 +61,7 @@ struct CoachAllTeamsView: View {
             .navigationTitle(Text("Teams"))
             
         }.fullScreenCover(isPresented: $showCreateNewTeam) {
-            CoachCreateTeamView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
+            CoachCreateTeamView()
         }
     }
     

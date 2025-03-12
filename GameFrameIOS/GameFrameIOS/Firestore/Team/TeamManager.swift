@@ -174,6 +174,7 @@ final class TeamManager {
                        String, team: DBTeam) async throws {
 //        let coachID = auth.uid
         do {
+            print("Sending team to Firestore: \(team)")
             // verifie coach valide
             let coach = try await UserManager.shared.getUser(userId: coachId)
             
@@ -183,8 +184,10 @@ final class TeamManager {
                     try await coachRef.updateData([
                         "teams_coaching": FieldValue.arrayUnion([team.teamId])
                     ])
+            print("Team created!")
         } catch let error as NSError {
             print("Error creating team: \(error.localizedDescription)")
+            throw error
         }
         
         

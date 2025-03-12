@@ -16,20 +16,20 @@ import SwiftData
  Note: This form is only accessible to the coach.
  */
 struct CoachCreateTeamView: View {
-    @State var team: Team
+    //@State var team: Team
     @Environment(\.dismiss) var dismiss // To go back to the Teams page, if needed
     //@State var player: Player
     //@Query private var players: [Player]
     //@Environment(\.modelContext) private var modelContext
     @StateObject private var viewModel = CreateTeamViewModel()
     
-    let auth: AuthDataResultModel  // Pass the authenticated user
+    //    let auth: AuthDataResultModel  // Pass the authenticated user
     let sports = ["Soccer", "Hockey", "Basketball"]
     let genders = ["Female", "Male", "Other"]
     let ageGroupes = ["U3", "U4", "U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12", "U13", "U14", "U15", "U16", "U17", "U18", "18+", "Senior"]
-    @State private var icon = ""
-    @State private var logoIsPresented = false
     
+    @State private var icon = ""
+    @State private var logoIsPresented = false    
     
     var body: some View {
         NavigationView {
@@ -46,8 +46,8 @@ struct CoachCreateTeamView: View {
                         HStack {
                             Picker("Sport", selection: $viewModel.sport)
                             {
-                                ForEach(sports.indices, id: \.self) {i in
-                                    Text(self.sports[i])
+                                ForEach(sports, id: \.self) {sport in
+                                    Text(sport).tag(sport)
                                 }
                             }
                         }
@@ -55,88 +55,104 @@ struct CoachCreateTeamView: View {
                             Text("Logo")
                             Spacer()
                             
-//                            Button(action: { logoIsPresented.toggle()}) {
-//                                Text("Choose").contentShape(Rectangle())
-//                            }.sheet(isPresented: $logoIsPresented, content: {
-//                                SymbolsPicker(selection: $viewModel.icon, title: "Choose your team's logo", autoDismiss: true) {
-//                                    Image(systemName: "xmark.diamond.fill")
-//                                }
-//                            })
-                            
-//                            Image(systemName: viewModel.logoURL)//.foregroundStyle(team.color)
-//                        }
-//                        HStack {
-//                            ColorPicker("Color", selection: $viewModel.color)
-//                        }
-                    }
-                    
-                    Section {
-                        Picker("Gender", selection: $viewModel.gender)
-                        {
-                            ForEach(genders.indices, id: \.self) {i in
-                                Text(self.genders[i])
+//                                                        Button(action: { logoIsPresented.toggle()}) {
+//                                                            Text("Choose").contentShape(Rectangle())
+//                                                        }.sheet(isPresented: $logoIsPresented, content: {
+//                                                            SymbolsPicker(selection: $viewModel.icon, title: "Choose your team's logo", autoDismiss: true) {
+//                                                                Image(systemName: "xmark.diamond.fill")
+//                                                            }
+//                                                        })
+//                            
+//                                                        Image(systemName: viewModel.logoURL)//.foregroundStyle(team.color)
+//                                                    }
+                            HStack {
+                                ColorPicker("Colour", selection: Binding(
+                                    get: { viewModel.colour },
+                                    set: { newColor in viewModel.updateColour(from: newColor) }
+                                ))
+                                .labelsHidden()
                             }
                         }
-                        HStack {
-                            Picker("Age group", selection: $viewModel.ageGrp)
+                        
+                        Section {
+                            Picker("Gender", selection: $viewModel.gender)
                             {
-                                ForEach(ageGroupes, id: \.self) {
-                                    Text($0)
+                                ForEach(genders, id: \.self) {gender in
+                                    Text(gender).tag(gender)
                                 }
                             }
-                        }
-                    }
-                                        
-                    Section(header:
-                        HStack {
-                            Text("Adding Players").font(.headline).bold()
-                            Spacer()
-                        NavigationLink(destination: CoachAddPlayersView(player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))) {
-                                
-                                 // Open create new team form
-                                Text("Add +")
-                            }
-                    }){
-                        Text("John Dow")
-                        /*List {
-                            ForEach(players) { player in
-                                NavigationLink {
-                                    Text("Item at")
-                                } label: {
-                                    Text(player.name)
-                                }
-                            }
-                        }*/
-                    }
-                    /** Check if the list is scrollable!! Make sure it is. */
-                    
-                }
-            }.toolbar {
-                ToolbarItem(placement: .topBarLeading) { // Back button on the top left
-                                    Button(action: {
-                                        dismiss() // Dismiss the full-screen cover
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "chevron.left")
-                                            Text("Back")
-                                        }
+                            HStack {
+                                Picker("Age group", selection: $viewModel.ageGrp)
+                                {
+                                    ForEach(ageGroupes, id: \.self) {
+                                        Text($0)
                                     }
                                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { /* Action will need to be added -> complete team form */
-                        viewModel.createTeam(auth: auth)
-                    }) {
-                        Text("Create")
-                    }.disabled(viewModel.isLoading) // Disable if loading
+                            }
+                        }
+                        
+                        Section(header:
+                                    HStack {
+                            Text("Adding Players").font(.headline).bold()
+                            Spacer()
+                            NavigationLink(destination: CoachAddPlayersView(player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))) {
+                                
+                                // Open create new team form
+                                Text("Add +")
+                            }
+                        }){
+                            Text("John Doe")
+                            /*List {
+                             ForEach(players) { player in
+                             NavigationLink {
+                             Text("Item at")
+                             } label: {
+                             Text(player.name)
+                             }
+                             }
+                             }*/
+                        }
+                        /** Check if the list is scrollable!! Make sure it is. */
+                        
+                    }
+                }.toolbar {
+                    ToolbarItem(placement: .topBarLeading) { // Back button on the top left
+                        Button(action: {
+                            dismiss() // Dismiss the full-screen cover
+                        }) {
+                            HStack {
+                                Image(systemName: "chevron.left")
+                                Text("Back")
+                            }
+                        }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: { /* Action will need to be added -> complete team form */
+                            Task{
+                                do {
+                                    try await viewModel.test()
+                                    try await viewModel.createTeam()
+                                } catch {
+                                    viewModel.alertMessage = "Error: \(error.localizedDescription)"
+                                    viewModel.showAlert = true
+                                }
+                            }
+                            
+                        }) {
+                            Text("Create")
+                        }//.disabled(viewModel.isLoading) // Disable if loading
+                    }
+                }.alert(isPresented: $viewModel.showAlert) {
+                    Alert(title: Text("Message"), message: Text(viewModel.alertMessage), dismissButton: .default(Text("OK")))
                 }
-            }.alert(isPresented: $viewModel.showAlert) {
-                Alert(title: Text("Message"), message: Text(viewModel.alertMessage), dismissButton: .default(Text("OK")))
-            }
                 
+            }
         }
     }
 }
+    #Preview {
+        CoachCreateTeamView()
+        
+        //    CoachCreateTeamView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "U10", players: ""))
+    }
 
-#Preview {
-    CoachCreateTeamView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "U10", players: ""))
-}
