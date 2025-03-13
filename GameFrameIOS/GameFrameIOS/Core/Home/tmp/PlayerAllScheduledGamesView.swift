@@ -10,6 +10,7 @@ import SwiftUI
 /** Shows all the schedule games previously added by the coach. User can search for specific scheduled games using the search bar */
 struct PlayerAllScheduledGamesView: View {
     @State private var searchText: String = ""
+    @StateObject private var viewModel = ScheduledGamesViewModel()
 
     var body: some View {
         NavigationView {

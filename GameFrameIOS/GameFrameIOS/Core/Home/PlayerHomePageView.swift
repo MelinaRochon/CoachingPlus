@@ -22,7 +22,7 @@ struct PlayerHomePageView: View {
                         if !viewModel.futureGames.isEmpty {
                             
                             VStack(alignment: .leading, spacing: 10) {
-                                NavigationLink(destination: PlayerAllScheduledGamesView()) {
+                                NavigationLink(destination: CoachAllScheduledGamesView()) {
                                     Text("Scheduled Games")
                                         .font(.headline)
                                         .foregroundColor(.blue)
@@ -55,7 +55,7 @@ struct PlayerHomePageView: View {
                             
                             // Recent Footage Section
                             VStack(alignment: .leading, spacing: 10) {
-                                NavigationLink(destination: PlayerAllRecentFootageView()) {
+                                NavigationLink(destination: CoachAllRecentFootageView()) {
                                     Text("Recent Footage")
                                         .font(.headline)
                                         .foregroundColor(.blue)
