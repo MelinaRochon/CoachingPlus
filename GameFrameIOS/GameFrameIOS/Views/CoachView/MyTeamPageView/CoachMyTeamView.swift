@@ -83,7 +83,7 @@ struct CoachMyTeamView: View {
                                 //Text("Adding Players").font(.headline).bold()
                                 Spacer()
                             
-                                NavigationLink(destination: CoachAddPlayersView(player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))) {
+                                NavigationLink(destination: CoachAddPlayersView(teamId: "zzlZyozdFYaQeUR5gsr7")) {
                                 
                                     // Open create new team form
                                     Text("Add +")

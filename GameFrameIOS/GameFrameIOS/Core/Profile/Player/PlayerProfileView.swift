@@ -57,9 +57,9 @@ struct PlayerProfileView: View {
                                     
                                 }
                                 
-                                if let email = user.email {
-                                    Text(email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
-                                }
+                                //if let email = user.email {
+                                    Text(user.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
+                                //}
                             }
                             
                         }
@@ -94,9 +94,9 @@ struct PlayerProfileView: View {
                                     HStack {
                                         Text("Email").foregroundStyle(.secondary)
                                         Spacer()
-                                        if let email = user.email {
-                                            Text(email).foregroundStyle(.secondary)
-                                        }
+                                        //if let email = user.email {
+                                            Text(user.email).foregroundStyle(.secondary)
+                                        //}
                                     }
                                 }
                                 

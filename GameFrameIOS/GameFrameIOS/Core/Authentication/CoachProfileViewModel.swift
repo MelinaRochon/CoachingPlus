@@ -21,12 +21,9 @@ final class CoachProfileViewModel: ObservableObject {
     func resetPassword() async throws {
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
-        guard let email = authUser.email else {
-            throw URLError(.fileDoesNotExist) // TO DO - Create error
-        }
         
         // Make sure the DISPLAY_NAME of the app on firebase to the public is set properly
-        try await AuthenticationManager.shared.resetPassword(email: email) // TO DO - NEED TO VERIFY USER GETS EMAIL
+        try await AuthenticationManager.shared.resetPassword(email: authUser.email) // TO DO - NEED TO VERIFY USER GETS EMAIL
     }
     
     func loadCurrentUser() async throws {
@@ -41,11 +38,12 @@ final class CoachProfileViewModel: ObservableObject {
     /** Update the coach's information on the database */
     func updateCoachInformation(phone: String, membershipDetails: String) {
         guard var user else { return }
-        
+        guard let userId = user.userId else { return }
+
         user.phone = phone
         Task {
             try await UserManager.shared.updateCoachProfile(user: user)
-            self.user = try await UserManager.shared.getUser(userId: user.userId)
+            self.user = try await UserManager.shared.getUser(userId: userId)
         }
         
     }

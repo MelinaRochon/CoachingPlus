@@ -22,14 +22,17 @@ final class HomePageViewModel: ObservableObject {
         let authUser = try await AuthenticationManager.shared.getAuthenticatedUser()
         
         // get the user type
-        let userType = try await UserManager.shared.getUser(userId: authUser.uid).userType
+        let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
         
         var teamsId: [String] = []
         if (userType == "Coach") {
-            teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid).teamsCoaching ?? []
+            let test = try await CoachManager.shared.getCoach(coachId: authUser.uid)!
+            teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
+            
+            print("Coach is \(test)")
         } else {
             // player
-            teamsId = try await PlayerManager.shared.getPlayer(userId: authUser.uid).teamsEnrolled
+            teamsId = try await PlayerManager.shared.getPlayer(playerId: authUser.uid)!.teamsEnrolled
         }
         
         // Loop through each team ID

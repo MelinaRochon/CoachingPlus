@@ -105,7 +105,7 @@ final class GameManager {
         return TeamManager.shared.teamCollection.document(teamId).collection("games")
     }
     
-    /** Returns the ID of the new document created fir a game */
+    /** Returns the ID of the new document created for a game */
     func gameDocumentID(teamId: String) -> String {
         return gameDocument(teamId: teamId).documentID
     }

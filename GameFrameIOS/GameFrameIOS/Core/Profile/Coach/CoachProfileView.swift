@@ -74,11 +74,11 @@ struct CoachProfileView: View {
                                 
                                 Text(user.userType).font(.subheadline)
                                 
-                                if let email = user.email {
-                                    Text(email).font(.subheadline)
+//                                if let email = user.email {
+                                    Text(user.email).font(.subheadline)
                                         .foregroundStyle(.secondary)
                                         .padding(.bottom)
-                                }
+//                                }
                             }
                             
                         }
@@ -102,10 +102,10 @@ struct CoachProfileView: View {
                                     HStack {
                                         Text("Email").foregroundStyle(.secondary)
                                         Spacer()
-                                        if let email = user.email {
-                                            Text(email).foregroundStyle(.secondary)
+//                                        if let email = user.email {
+                                            Text(user.email).foregroundStyle(.secondary)
                                                 .multilineTextAlignment(.trailing)
-                                        }
+//                                        }
                                     }
                                 }
                                 
@@ -130,21 +130,23 @@ struct CoachProfileView: View {
                             }
                             
                             Section {
-                                HStack {
-                                    Text("Country or region").foregroundStyle(.secondary)
-                                    Spacer()
-                                    Text(user.country)
-                                        .foregroundStyle(.secondary)
-                                        .multilineTextAlignment(.trailing)
+                                if let country = user.country {
+                                    HStack {
+                                        Text("Country or region").foregroundStyle(.secondary)
+                                        Spacer()
+                                        Text(country)
+                                            .foregroundStyle(.secondary)
+                                            .multilineTextAlignment(.trailing)
+                                    }
                                 }
                                 
-                                HStack {
-                                    Text("Time Zone").foregroundStyle(.secondary)
-                                    Spacer()
-                                    Text(user.timeZone)
-                                        .foregroundStyle(.secondary)
-                                        .multilineTextAlignment(.trailing)
-                                }
+//                                HStack {
+//                                    Text("Time Zone").foregroundStyle(.secondary)
+//                                    Spacer()
+//                                    Text(user.timeZone)
+//                                        .foregroundStyle(.secondary)
+//                                        .multilineTextAlignment(.trailing)
+//                                }
                                  
                             }
                             
@@ -192,7 +194,9 @@ struct CoachProfileView: View {
                     
                     // Set the data to the one in the database
                     if let user = viewModel.user {
-                        phone = user.phone
+                        if let userPhone = user.phone {
+                            phone = userPhone
+                        }
                     }
                 }
                 
