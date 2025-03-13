@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct CoachMainTabView: View {
-    @State private var showCoachRecording = false // Controls modal visibility
+    @State private var showCoachRecordingConfig = false // Controls modal visibility
     @State private var selectedTab: Int = 3 // Track selected tab
     @Binding var showLandingPageView: Bool
 
@@ -53,7 +53,7 @@ struct CoachMainTabView: View {
             VStack {
                 Spacer()
                 Button(action: {
-                    showCoachRecording.toggle() // Open CoachRecordingView
+                    showCoachRecordingConfig.toggle() // Open CoachRecordingConfigView
                 }) {
                     Image(systemName: "plus.circle.fill")
                         .resizable()
@@ -67,8 +67,8 @@ struct CoachMainTabView: View {
             }
         }
         // Show CoachRecordingView when the plus button is clicked
-        .fullScreenCover(isPresented: $showCoachRecording) {
-            CoachRecordingView()
+        .fullScreenCover(isPresented: $showCoachRecordingConfig) {
+            CoachRecordingConfigView()
         }
     }
 
