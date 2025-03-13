@@ -25,6 +25,8 @@ final class RecentFootageViewModel: ObservableObject {
         } else {
             // player
             teamsId = try await PlayerManager.shared.getPlayer(playerId: authUser.uid)!.teamsEnrolled
+            
+            // TO DO - MAke the recent footage for the player only the ones that have comments assigned to the player in question???
         }
         
         // Loop through each team ID

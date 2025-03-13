@@ -1,16 +1,16 @@
 //
-//  CoachHomePageView.swift
+//  PlayerHomePageView.swift
 //  GameFrameIOS
 //
-//  Created by Mélina Rochon on 2025-02-05.
+//  Created by Caterina Bosi on 2025-02-05.
 //
 
 import SwiftUI
 
-struct CoachHomePageView: View {
+struct PlayerHomePageView: View {
     
     @StateObject private var viewModel = HomePageViewModel()
-
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -44,24 +44,24 @@ struct CoachHomePageView: View {
                                         
                                     }
                                 }
+                                
                             }
                             .padding()
                             .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 2))
                             .padding(.horizontal).padding(.top)
+                            
                         }
-                        
                         if !viewModel.pastGames.isEmpty {
                             
                             // Recent Footage Section
                             VStack(alignment: .leading, spacing: 10) {
                                 NavigationLink(destination: CoachAllRecentFootageView()) {
-                                    Text("Recent Games")
+                                    Text("Recent Footage")
                                         .font(.headline)
                                         .foregroundColor(.blue)
                                     
                                     Image(systemName: "chevron.right")
                                 }
-                                
                                 // Loop through games and show a preview of the past 3 games
                                 ForEach(viewModel.pastGames.prefix(3), id: \.game.gameId) { pastGame in
                                     
@@ -80,6 +80,7 @@ struct CoachHomePageView: View {
                                         }
                                     }
                                 }
+                                
                             }
                             .padding()
                             .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 2))
@@ -87,6 +88,7 @@ struct CoachHomePageView: View {
                         }
                     }
                 }
+                
                 // Show loader if the data is loading
                 if viewModel.futureGames.isEmpty || viewModel.pastGames.isEmpty {
                     VStack() {
@@ -102,7 +104,6 @@ struct CoachHomePageView: View {
                 // on load
                 do {
                     try await viewModel.loadGames()
-                    
                 } catch {
                     print("Error needs to be handled. \(error)") // TO DO - Handle error
                 }
@@ -112,5 +113,5 @@ struct CoachHomePageView: View {
 }
 
 #Preview {
-    CoachHomePageView()
+    PlayerHomePageView()
 }

@@ -130,17 +130,28 @@ struct PlayerCreateAccountView: View {
                                     if (accountExists == nil) {
                                         // There's a problem with the user's input.
                                         // Show alert to let them know
-                                    } else if (accountExists == true) {
+                                    } else {
+                                        //if (accountExists == true) {
                                         // Account exists inside the invite collection.
                                         // Load the next page to complete registration.
-                                        navigateToSignUp = true;
-                                    } else if (accountExists == false) {
-                                        // Account doesn't exist. Proceed as normal.
-                                        
-                                        //NavigationLink(destination: PlayerSignUpView(email: viewModel.email, teamId: viewModel.teamId, showSignInView: $showSignInView))
-                                        //                                    try await viewModel.signUp(userType: "Player") // to sign up
-                                        //                                    showSignInView = false
+                                        // Make sure the user id is not set yet, otherwise can't sign up with this email
+                                        let userIdExists = try await viewModel.checkIfUserIdExists()
+                                        if (userIdExists == true) {
+                                            // user id exists. Can't sign up with this email
+                                        } else {
+                                            // user id was not found.
+                                            navigateToSignUp = true;
+                                        }
                                     }
+                                        
+//                                    } else if (accountExists == false) {
+//                                        // Account doesn't exist. Proceed as normal.
+//                                        
+//                                        //NavigationLink(destination: PlayerSignUpView(email: viewModel.email, teamId: viewModel.teamId, showSignInView: $showSignInView))
+//                                        //                                    try await viewModel.signUp(userType: "Player") // to sign up
+//                                        //                                    showSignInView = false
+//                                        
+//                                    }
                                     
                                     return
                                 } catch {

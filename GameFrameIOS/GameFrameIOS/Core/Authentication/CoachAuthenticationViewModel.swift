@@ -70,8 +70,6 @@ final class authenticationViewModel: ObservableObject {
         //let docId = UserManager.shared.getUserDocumentID() // returns the UUID generated for the document
         let authDataResult = try await AuthenticationManager.shared.signInUser(email: email, password: password)
 
-        //let user = DBUser(id: UUID().uuidString, userId: authDataResult.uid, email: authDataResult.email, photoUrl: authDataResult.photoUrl, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country, timeZone: timeZone)
-//        let user = UserDTO(userId: "lS1ZWVKbPAcqkn5kPWjoDqSPMMe2", email: "player3@player.com", userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country, timeZone: timeZone)
         let user = UserDTO(userId: "lS1ZWVKbPAcqkn5kPWjoDqSPMMe2", email: "player3@player.com", userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
         try await UserManager.shared.createNewUser(userDTO: user)
         
@@ -113,6 +111,8 @@ final class authenticationViewModel: ObservableObject {
             return nil
         }
         
+        self.teamId = team.teamId
+
         // verify the email address.
         guard let user = try await UserManager.shared.getUserWithEmail(email: email) else {
             print("User does not exist")
@@ -127,8 +127,22 @@ final class authenticationViewModel: ObservableObject {
         }
         
         // an account already exists for that email address and that team
-        self.teamId = team.teamId
         return true
+    }
+    
+    func checkIfUserIdExists() async throws -> Bool {
+        guard let user = try await UserManager.shared.getUserWithEmail(email: email) else {
+            print("User does not exist")
+            return false
+        }
+        
+        // if user id -> return, otherwise continue
+        guard user.userId == nil else {
+            print("User id already exists. Trying to access a user that already exists. Abort")
+            return true
+        }
+
+        return false
     }
     
     func loadPlayerInfo(email: String, teamId: String) async throws {
@@ -155,15 +169,7 @@ final class authenticationViewModel: ObservableObject {
             return
         }
         self.teamName = team.name // set the team name
-        
-        // Retreive the player
-//        guard let player = try await PlayerManager.shared.findPlayerWithId(id: invite.playerDocId) else {
-//            print("Player could not be found. Aborting")
-//            return
-//        }
-        
-        print("LINEêeeeE")
-        
+                
         // Retrive the user document
         guard let user = try await UserManager.shared.findUserWithId(id: invite.userDocId) else {
             print("Error. Could not find the user document. Aborting")
@@ -202,13 +208,29 @@ final class authenticationViewModel: ObservableObject {
         
         // create a new authenticated user
         let authDataResult = try await AuthenticationManager.shared.createUser(email: email, password: password)
-        
-        //let user = DBUser(id: UUID().uuidString, userId: authDataResult.uid, email: authDataResult.email, photoUrl: authDataResult.photoUrl, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country, timeZone: timeZone)
-//        let user = UserDTO(userId: "lS1ZWVKbPAcqkn5kPWjoDqSPMMe2", email: "player3@player.com", userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country, timeZone: timeZone)
+
+        guard let team = try await TeamManager.shared.getTeam(teamId: teamId) else {
+            print("Team looking for does not exist. Abort. teamId: \(teamId)")
+            return
+        }
         
         guard let invite = try await InviteManager.shared.getInviteByEmailAndTeamId(email: email, teamId: teamId) else {
-            print("Invite for this player does not exists. Might be a problem.")
+            print("Invite for this player does not exists. Creating a new user.")
+            
+            // new user. Create a user and player, and add the playerId in the team
+            let user = UserDTO(userId: authDataResult.uid, email: email, userType: "Player", firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
+            let userDocId = try await UserManager.shared.createNewUser(userDTO: user)
+            print("UserManager created at user doc: \(userDocId)")
+
+            // create a new player,
+            let player = PlayerDTO(playerId: authDataResult.uid, jerseyNum: 0, nickName: nil, gender: team.gender, profilePicture: nil, teamsEnrolled: [teamId], guardianName: nil, guardianEmail: nil, guardianPhone: nil)
+                let playerDocId = try await PlayerManager.shared.createNewPlayer(playerDTO: player)
+            print("Player doc id was created! \(playerDocId)")
+            
+            // Add player to team
+            try await TeamManager.shared.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
             return  // TO DO - Might need to delete the existing user from the database otherwise, will never be able to create an account with that email
+            
         }
                 
         // update the user document

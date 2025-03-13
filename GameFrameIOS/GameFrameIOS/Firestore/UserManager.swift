@@ -140,25 +140,11 @@ final class UserManager {
     private func userDocument(id: String) -> DocumentReference {
         userCollection.document(id)
     }
-    
-//    /** Returns the ID of the user document */
-//    func getUserDocumentID() -> String {
-//        return userDocument().documentID
-//    }
-        
+            
     /** Get user type */
     func getUserType() async throws -> String {
         // returns the user type!
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-//
-        //try AuthenticationManager.shared.signOut()
-//        do {
-//            try await getUser(userId: authUser.uid)!.userType
-//        } catch {
-//            print("no working...")
-//            
-//            
-//        }
         return try await getUser(userId: authUser.uid)!.userType
     }
     
@@ -173,16 +159,7 @@ final class UserManager {
         
         return documentId
     }
-    
-//    func createNewUser(user: DBUser) async throws {
-//        let userDocument = Firestore.firestore().collection("users").document(user.id)
-//        //let documentId = userDocument.documentID
-//        
-//        // create a user object
-//        //let user = DBUser(id: documentId, userDTO: userDTO)
-//        try userDocument.setData(from: user, merge: false)
-//    }
-    
+        
     /** Gets the user information from the database */
     func getUser(userId: String) async throws -> DBUser? {
         //try await userDocument().getDocument(as: DBUser.self)
