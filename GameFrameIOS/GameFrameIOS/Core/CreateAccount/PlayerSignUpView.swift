@@ -10,8 +10,8 @@ struct PlayerSignUpView: View {
     @State private var teamAccessCode: String = ""
     var email: String // retreive the email address entered by the user in the previous view
     var teamId: String // retreive the team id from the team access code entered by the user in the previous view
-
-//    @State private var password: String = ""
+    
+    //    @State private var password: String = ""
     
     @State private var showPassword: Bool = false
     
@@ -21,151 +21,116 @@ struct PlayerSignUpView: View {
     let countries = ["United States", "Canada", "United Kingdom", "Australia"]
     
     var body: some View {
-        //NavigationView{
-            VStack(spacing: 20) {
+        VStack(spacing: 20) {
+            
+            ScrollView {
+                Spacer().frame(height: 20)
                 
-                ScrollView {
-                    Spacer().frame(height: 20)
+                
+                // Form Fields with Uniform Style
+                VStack(spacing: 10) {
+                    customTextField("First Name", text: $viewModel.firstName)
+                    customTextField("Last Name", text: $viewModel.lastName)
                     
-                    
-                    // Form Fields with Uniform Style
-                    VStack(spacing: 10) {
-                        // Team Access Code with Help Button
-//                        HStack {
-//                            TextField("Team Access Code", text: $teamAccessCode)
-//                            Button(action: {
-//                                print("Show help for Team Access Code")
-//                            }) {
-//                                Image(systemName: "questionmark.circle")
-//                                    .foregroundColor(.gray)
-//                            }
-//                        }
-//                        .frame(height: 45)
-//                        .padding(.horizontal)
-//                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-//                        
-                        customTextField("First Name", text: $viewModel.firstName)
-                        customTextField("Last Name", text: $viewModel.lastName)
-                        
-                        // Date Picker Styled Like Other Fields
-                        HStack {
-                            Text("Date of Birth")
-                                .foregroundColor(.gray)
-                            Spacer()
-                            DatePicker("", selection: $viewModel.dateOfBirth, displayedComponents: .date)
-                                .labelsHidden()
-                        }
-                        .frame(height: 45)
-                        .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-                        
-                        customTextField("Phone", text: $viewModel.phone) // TO DO - Make the phone number for the player optional?? Demands on his age
-                        
-                        // Country Picker Styled Like Other Fields
-                        // Country Picker Styled Like Other Fields
-                        HStack {
-                            Text("Country or region")
-                            Spacer()
-                            Picker("Country", selection: $viewModel.country) {
-                                ForEach(countries, id: \.self) { c in
-                                    Text(c).tag(c)
-                                }
-                            }
-                            //.pickerStyle(.automatic).frame(height: 45)
-                            
-//                            Picker("Before Feedback", selection: $feedbackBeforeTimeLabel) {
-//                                ForEach(feedbackBeforeTimeOptions, id: \.0) { option in
-//                                    Text(option.0)
-//                                }
-//                            }
-//                            label: {
-//                                Text("Country or region")
-//                                    .foregroundColor(.secondary) // Ensures black text
-//                            }
-                        }
-//
-                        .frame(height: 45)
-                        //.frame(maxWidth: .infinity)
-                        .pickerStyle(.automatic)
-                            .padding(.horizontal)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray, lineWidth: 1)
-                            )
-                            
-                        
-                        TextField("Email", text: $viewModel.email)
-                            .frame(height: 45)
-                            .padding(.horizontal)
-                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-                            .autocapitalization(.none).foregroundStyle(.secondary)
-                            .autocapitalization(.none).disabled(true)
-                        // Password Field Styled Like Other Fields
-                        HStack {
-                            if showPassword {
-                                TextField("Password", text: $viewModel.password).autocapitalization(.none)
-                            } else {
-                                SecureField("Password", text: $viewModel.password).autocapitalization(.none)
-                            }
-                            Button(action: { showPassword.toggle() }) {
-                                Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .foregroundColor(.gray)
-                            }
-                        }
-                        .frame(height: 45)
-                        .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                    // Date Picker Styled Like Other Fields
+                    HStack {
+                        Text("Date of Birth")
+                            .foregroundColor(.gray)
+                        Spacer()
+                        DatePicker("", selection: $viewModel.dateOfBirth, displayedComponents: .date)
+                            .labelsHidden()
                     }
+                    .frame(height: 45)
+                    .padding(.horizontal)
+                    .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                    
+                    customTextField("Phone", text: $viewModel.phone) // TO DO - Make the phone number for the player optional?? Demands on his age
+                    
+                    // Country Picker Styled Like Other Fields
+                    HStack {
+                        Text("Country or region")
+                        Spacer()
+                        Picker("Country", selection: $viewModel.country) {
+                            ForEach(countries, id: \.self) { c in
+                                Text(c).tag(c)
+                            }
+                        }
+                    }
+                    .frame(height: 45)
+                    .pickerStyle(.automatic)
+                    .padding(.horizontal)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray, lineWidth: 1)
+                    )
+        
+                    
+                    TextField("Email", text: $viewModel.email)
+                        .frame(height: 45)
+                        .padding(.horizontal)
+                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        .autocapitalization(.none).foregroundStyle(.secondary)
+                        .autocapitalization(.none).disabled(true)
+                    // Password Field Styled Like Other Fields
+                    HStack {
+                        if showPassword {
+                            TextField("Password", text: $viewModel.password).autocapitalization(.none)
+                        } else {
+                            SecureField("Password", text: $viewModel.password).autocapitalization(.none)
+                        }
+                        Button(action: { showPassword.toggle() }) {
+                            Image(systemName: showPassword ? "eye.slash" : "eye")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .frame(height: 45)
+                    .padding(.horizontal)
+                    .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                }
+                .padding(.horizontal)
+                
+                
+                // "Get coached!" Button
+                Button {
+                    print("Create player account tapped")
+                    
+                    //create account is called!
+                    Task {
+                        do {
+                            try await viewModel.playerSignUp() // to sign up
+                            showSignInView = false
+                            return
+                        } catch {
+                            print(error)
+                        }
+                    }
+                    
+                } label: {
+                    HStack {
+                        Text("Create Account")
+                            .font(.body).bold()
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.black)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                     .padding(.horizontal)
                     
-                    
-                    // "Get coached!" Button
-                    Button {
-                        print("Create player account tapped")
-                        
-                         //create account is called!
-                        Task {
-                            do {
-                                try await viewModel.playerSignUp() // to sign up
-                                showSignInView = false
-                                return
-                            } catch {
-                                print(error)
-                            }
-                        }
-                        
-                    } label: {
-                        HStack {
-                            Text("Create Account")
-                                .font(.body).bold()
-                            //Image(systemName: "arrow.right")
-                        }
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .padding(.horizontal)
-                        
-                    }
-                }
-                //.frame(maxWidth: .infinity)
-            }.task {
-                do {
-                    // load the player's information
-                    // If there there's more than one player with the same teamId and email --> Actually that can't happen because in the Authentication, we will have an issue. Can't have more than one email address that is the same for more than one account!!!
-                    try await viewModel.loadPlayerInfo(email: email, teamId: teamId)
-                    viewModel.email = email
-                    viewModel.teamId = teamId
-                    //country = viewModel.country
-                } catch {
-                    print("error.. Abort.. \(error)")
                 }
             }
-            //.padding(.horizontal)
-                //.frame(maxWidth: .infinity, maxHeight: .infinity)
-        //}
-        
+        }.task {
+            do {
+                // load the player's information
+                // If there there's more than one player with the same teamId and email --> Actually that can't happen because in the Authentication, we will have an issue. Can't have more than one email address that is the same for more than one account!!!
+                try await viewModel.loadPlayerInfo(email: email, teamId: teamId)
+                viewModel.email = email
+                viewModel.teamId = teamId
+                //country = viewModel.country
+            } catch {
+                print("error.. Abort.. \(error)")
+            }
+        }
     }
     
     // Custom TextField for Uniform Style
