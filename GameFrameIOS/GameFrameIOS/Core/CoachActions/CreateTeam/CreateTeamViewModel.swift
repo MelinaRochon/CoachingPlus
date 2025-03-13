@@ -35,7 +35,7 @@ final class CreateTeamViewModel: ObservableObject {
             print("OKAYY")
             let coachId = authUser.uid
             print("WOO")
-            let newTeam = DBTeam(
+            let newTeam = TeamDTO(
                 teamId: UUID().uuidString,
                 name: name,
                 sport: sport,
@@ -45,11 +45,14 @@ final class CreateTeamViewModel: ObservableObject {
                 ageGrp: ageGrp,
                 accessCode: nil,  // Optional access code for joining the team
                 coaches: [coachId],  // The coach creating the team
-                players: []
+                players: [],
+                invites: []
             )
             print("DISTHEONE")
             
-            try await TeamManager.shared.createNewTeam(coachId: coachId, team: newTeam)
+            try await TeamManager.shared.createNewTeam(coachId: coachId, teamDTO: newTeam)
+
+            //try await TeamManager.shared.createNewTeam(coachId: coachId, team: newTeam)
             print("NAHHH")
         } catch {
             print("Failed to create team: \(error.localizedDescription)")

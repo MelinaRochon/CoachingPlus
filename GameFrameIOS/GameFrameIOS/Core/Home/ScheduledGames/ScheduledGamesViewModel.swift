@@ -17,14 +17,14 @@ final class ScheduledGamesViewModel: ObservableObject {
         let authUser = try await AuthenticationManager.shared.getAuthenticatedUser()
         
         // get the user type
-        let userType = try await UserManager.shared.getUser(userId: authUser.uid).userType
+        let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
         
         var teamsId: [String] = []
         if (userType == "Coach") {
-            teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid).teamsCoaching ?? []
+            teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
         } else {
             // player
-            teamsId = try await PlayerManager.shared.getPlayer(userId: authUser.uid).teamsEnrolled
+            teamsId = try await PlayerManager.shared.getPlayer(playerId: authUser.uid)!.teamsEnrolled
         }
         
         // Loop through each team ID

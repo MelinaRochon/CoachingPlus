@@ -91,27 +91,27 @@ struct CoachCreateTeamView: View {
                             }
                         }
                         
-                        Section(header:
-                                    HStack {
-                            Text("Adding Players").font(.headline).bold()
-                            Spacer()
-                            NavigationLink(destination: CoachAddPlayersView(player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))) {
-                                
-                                // Open create new team form
-                                Text("Add +")
-                            }
-                        }){
-                            Text("John Doe")
-                            /*List {
-                             ForEach(players) { player in
-                             NavigationLink {
-                             Text("Item at")
-                             } label: {
-                             Text(player.name)
-                             }
-                             }
-                             }*/
-                        }
+//                        Section(header:
+//                                    HStack {
+//                            Text("Adding Players").font(.headline).bold()
+//                            Spacer()
+//                            NavigationLink(destination: CoachAddPlayersView(player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))) {
+//                                
+//                                // Open create new team form
+//                                Text("Add +")
+//                            }
+//                        }){
+//                            Text("John Doe")
+//                            /*List {
+//                             ForEach(players) { player in
+//                             NavigationLink {
+//                             Text("Item at")
+//                             } label: {
+//                             Text(player.name)
+//                             }
+//                             }
+//                             }*/
+//                        }
                         /** Check if the list is scrollable!! Make sure it is. */
                         
                     }

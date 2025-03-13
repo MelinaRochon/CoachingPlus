@@ -10,19 +10,20 @@ import FirebaseFirestore
 
 // Codable: Allows to convert and deconvert the structure
 struct DBUser: Codable {
-    let userId: String
-    let email: String?
+    let id: String
+    let userId: String?
+    let email: String
     var photoUrl: String?
-    let dateCreated: Date?
+    let dateCreated: Date
     let userType: String
     var firstName: String
     var lastName: String
     var dateOfBirth: Date?
-    var phone: String
-    var country: String
-    var timeZone: String
+    var phone: String?
+    var country: String?
     
     init(auth: AuthDataResultModel, userType: String) {
+        self.id = ""
         self.userId = auth.uid
         self.email = auth.email
         self.photoUrl = auth.photoUrl
@@ -31,24 +32,38 @@ struct DBUser: Codable {
         self.firstName = ""
         self.lastName = ""
         self.dateOfBirth = Date()
-        self.country = ""
-        self.phone = ""
-        self.timeZone = ""
+        self.country = nil
+        self.phone = nil
+    }
+    
+    init(id: String, userDTO: UserDTO) {
+        self.id = id
+        self.userId = userDTO.userId
+        self.email = userDTO.email
+        self.photoUrl = userDTO.photoUrl
+        self.dateCreated = Date()
+        self.userType = userDTO.userType
+        self.firstName = userDTO.firstName
+        self.lastName = userDTO.lastName
+        self.dateOfBirth = userDTO.dateOfBirth
+        self.country = userDTO.country
+        self.phone = userDTO.phone
     }
     
     init(
-        userId: String,
-        email: String? = nil,
+        id: String,
+        userId: String? = nil,
+        email: String,
         photoUrl: String? = nil,
-        dateCreated: Date? = nil,
+        dateCreated: Date,
         userType: String,
         firstName: String,
         lastName: String,
         dateOfBirth: Date? = nil,
-        phone: String,
-        country: String,
-        timeZone: String
+        phone: String? = nil,
+        country: String? = nil
     ) {
+        self.id = id
         self.userId = userId
         self.email = email
         self.photoUrl = photoUrl
@@ -59,10 +74,10 @@ struct DBUser: Codable {
         self.dateOfBirth = dateOfBirth
         self.country = country
         self.phone = phone
-        self.timeZone = timeZone
     }
     
     enum CodingKeys: String, CodingKey {
+        case id = "id"
         case userId = "user_id"
         case email = "email"
         case photoUrl = "photo_url"
@@ -73,37 +88,36 @@ struct DBUser: Codable {
         case dateOfBirth = "date_of_birth"
         case phone = "phone"
         case country = "country"
-        case timeZone = "time_zone"
     }
     
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.userId = try container.decode(String.self, forKey: .userId)
-        self.email = try container.decodeIfPresent(String.self, forKey: .email)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.userId = try container.decodeIfPresent(String.self, forKey: .userId)
+        self.email = try container.decode(String.self, forKey: .email)
         self.photoUrl = try container.decodeIfPresent(String.self, forKey: .photoUrl)
-        self.dateCreated = try container.decodeIfPresent(Date.self, forKey: .dateCreated)
+        self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
         self.userType = try container.decode(String.self, forKey: .userType)
         self.firstName = try container.decode(String.self, forKey: .firstName)
         self.lastName = try container.decode(String.self, forKey: .lastName)
         self.dateOfBirth = try container.decodeIfPresent(Date.self, forKey: .dateOfBirth)
-        self.phone = try container.decode(String.self, forKey: .phone)
-        self.country = try container.decode(String.self, forKey: .country)
-        self.timeZone = try container.decode(String.self, forKey: .timeZone)
+        self.phone = try container.decodeIfPresent(String.self, forKey: .phone)
+        self.country = try container.decodeIfPresent(String.self, forKey: .country)
     }
     
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.userId, forKey: .userId)
-        try container.encodeIfPresent(self.email, forKey: .email)
+        try container.encode(self.id, forKey: .id)
+        try container.encodeIfPresent(self.userId, forKey: .userId)
+        try container.encode(self.email, forKey: .email)
         try container.encodeIfPresent(self.photoUrl, forKey: .photoUrl)
-        try container.encodeIfPresent(self.dateCreated, forKey: .dateCreated)
+        try container.encode(self.dateCreated, forKey: .dateCreated)
         try container.encode(self.userType, forKey: .userType)
         try container.encode(self.firstName, forKey: .firstName)
         try container.encode(self.lastName, forKey: .lastName)
         try container.encodeIfPresent(self.dateOfBirth, forKey: .dateOfBirth)
-        try container.encode(self.phone, forKey: .phone)
-        try container.encode(self.country, forKey: .country)
-        try container.encode(self.timeZone, forKey: .timeZone)
+        try container.encodeIfPresent(self.phone, forKey: .phone)
+        try container.encodeIfPresent(self.country, forKey: .country)
     }
     
 }
@@ -123,35 +137,100 @@ final class UserManager {
     private let userCollection = Firestore.firestore().collection("users") // user collection
     
     /** Returns the user document */
-    private func userDocument(userId: String) -> DocumentReference {
-        userCollection.document(userId)
+    private func userDocument(id: String) -> DocumentReference {
+        userCollection.document(id)
     }
+    
+//    /** Returns the ID of the user document */
+//    func getUserDocumentID() -> String {
+//        return userDocument().documentID
+//    }
         
     /** Get user type */
     func getUserType() async throws -> String {
         // returns the user type!
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-        
-        return try await getUser(userId: authUser.uid).userType
+//
+        //try AuthenticationManager.shared.signOut()
+//        do {
+//            try await getUser(userId: authUser.uid)!.userType
+//        } catch {
+//            print("no working...")
+//            
+//            
+//        }
+        return try await getUser(userId: authUser.uid)!.userType
     }
     
     /** Creates a new user in the database */
-    func createNewUser(user: DBUser) async throws {
-        try userDocument(userId: user.userId).setData(from: user, merge: false)
+    func createNewUser(userDTO: UserDTO) async throws -> String {
+        let userDocument = userCollection.document()
+        let documentId = userDocument.documentID // get the document id
+        
+        // create a user object
+        let user = DBUser(id: documentId, userDTO: userDTO)
+        try userDocument.setData(from: user, merge: false)
+        
+        return documentId
     }
     
+//    func createNewUser(user: DBUser) async throws {
+//        let userDocument = Firestore.firestore().collection("users").document(user.id)
+//        //let documentId = userDocument.documentID
+//        
+//        // create a user object
+//        //let user = DBUser(id: documentId, userDTO: userDTO)
+//        try userDocument.setData(from: user, merge: false)
+//    }
+    
     /** Gets the user information from the database */
-    func getUser(userId: String) async throws -> DBUser {
-        try await userDocument(userId: userId).getDocument(as: DBUser.self)
+    func getUser(userId: String) async throws -> DBUser? {
+        //try await userDocument().getDocument(as: DBUser.self)
+        let snapshot = try await userCollection.whereField("user_id", isEqualTo: userId).getDocuments()
+        
+        guard let doc = snapshot.documents.first else { return nil }
+        return try doc.data(as: DBUser.self)
+
+    }
+    
+    func getUserWithEmail(email: String) async throws -> DBUser? {
+        let snapshot = try await userCollection.whereField("email", isEqualTo: email).getDocuments()
+        
+        guard let doc = snapshot.documents.first else { return nil }
+        return try doc.data(as: DBUser.self)
     }
     
     /** Update the coach profile on the user collection from the database */
     func updateCoachProfile(user: DBUser) async throws {
+//        let userDocument = Firestore.firestore().collection("users").document()
+
         let data: [String: Any] = [
             DBUser.CodingKeys.phone.rawValue: user.phone
         ]
         
-        try await userDocument(userId: user.userId).updateData(data as [AnyHashable : Any])
+//        try await userDocument().updateData(data as [AnyHashable : Any])
+
+//        try await userDocument(userId: user.userId).updateData(data as [AnyHashable : Any])
+    }
+    
+    func findUserWithId(id: String) async throws -> DBUser? {
+        return try await userDocument(id: id).getDocument(as: DBUser.self)
+    }
+    
+    func updateUserDTO(id: String, email: String, userTpe: String, firstName: String, lastName: String, dob: Date, phone: String?, country: String?, userId: String) async throws {
+        //let user = DBUser(id: id, userDTO: userDTO)
+
+        let data: [String: Any] = [
+            DBUser.CodingKeys.userId.rawValue: userId,
+            DBUser.CodingKeys.email.rawValue: email,
+            DBUser.CodingKeys.userType.rawValue: userTpe,
+            DBUser.CodingKeys.firstName.rawValue: firstName,
+            DBUser.CodingKeys.lastName.rawValue: lastName,
+            DBUser.CodingKeys.dateOfBirth.rawValue: dob,
+            DBUser.CodingKeys.phone.rawValue: phone ?? "",
+            DBUser.CodingKeys.country.rawValue: country ?? ""
+        ]
+        try await userDocument(id: id).updateData(data as [AnyHashable : Any])
     }
 
 }

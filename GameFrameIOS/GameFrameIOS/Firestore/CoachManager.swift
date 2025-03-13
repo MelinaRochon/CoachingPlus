@@ -10,32 +10,44 @@ import FirebaseFirestore
 
 
 struct DBCoach: Codable {
+    let id: String
     let coachId: String
     let teamsCoaching: [String]?
     
-    init(coachId: String, teamsCoaching: [String]? = nil) {
+    init(id: String, coachId: String, teamsCoaching: [String]? = nil) {
+        self.id = id
         self.coachId = coachId
         self.teamsCoaching = teamsCoaching
     }
     
-    init(coachId: String) {
+    init(id: String, coachId: String) {
+        self.id = id
         self.coachId = coachId
         self.teamsCoaching = []
     }
     
+    init(id: String, coachDTO: CoachDTO) {
+        self.id = id
+        self.coachId = coachDTO.coachId
+        self.teamsCoaching = coachDTO.teamsCoaching
+    }
+    
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
         self.coachId = try container.decode(String.self, forKey: .coachId)
         self.teamsCoaching = try container.decodeIfPresent([String].self, forKey: .teamsCoaching)
     }
     
     enum CodingKeys: String, CodingKey {
+        case id = "id"
         case coachId = "coach_id"
         case teamsCoaching = "teams_coaching"
     }
     
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.id, forKey: .id)
         try container.encode(self.coachId, forKey: .coachId)
         try container.encodeIfPresent(self.teamsCoaching, forKey: .teamsCoaching)
     }
@@ -54,13 +66,26 @@ final class CoachManager {
     }
     
     /** POST - Add a new coach in the database */
-    func addCoach(coach: DBCoach) async throws {
-        try coachDocument(coachId: coach.coachId).setData(from: coach, merge: false)
+    func addCoach(coachId: String) async throws {
+        let coachDoc = coachCollection.document()
+        let documentId = coachDoc.documentID
+        
+        let coach = DBCoach(id: documentId, coachId: coachId)
+        
+        try coachDoc.setData(from: coach, merge: false)
+    }
+    
+    func getCoachDocumentWithCoachId(coachId: String) async throws -> QuerySnapshot {
+        return try await coachCollection.whereField("coach_id", isEqualTo: coachId).getDocuments()
     }
     
     /** GET - Returns the coach's information from the database */
-    func getCoach(coachId: String) async throws -> DBCoach {
-        try await coachDocument(coachId: coachId).getDocument(as: DBCoach.self)
+    func getCoach(coachId: String) async throws -> DBCoach? {
+        //let snapshot = try await getCoachDocumentWithCoachId(coachId: coachId)
+        
+        guard let doc = try await getCoachDocumentWithCoachId(coachId: coachId).documents.first else { return nil }
+        return try doc.data(as: DBCoach.self)
+        //try await coachDocument(coachId: coachId).getDocument(as: DBCoach.self)
     }
     
     /** PUT - Add a new team id in the teamsCoaching array */
@@ -71,7 +96,17 @@ final class CoachManager {
         // TO DO - Make sure the teamId that we are adding isn't already in the database
         
         // Update the document asynchronously
-        try await coachDocument(coachId: coachId).updateData(data as [AnyHashable : Any])
+        //let snapshot = try await coachCollection.whereField("coach_id", isEqualTo: coachId).getDocuments()
+        
+        if let doc = try await getCoachDocumentWithCoachId(coachId: coachId).documents.first {
+            try await doc.reference.updateData(data as [AnyHashable : Any])// Assuming you have a `Coach` model
+            //print("Coach: \(coach)")
+        } else {
+            print("No coach found with that ID.")
+        }
+        //guard let doc = snapshot.documents.first else { return }
+
+        //try await coachDocument(coachId: coachId).updateData(data as [AnyHashable : Any])
     }
     
     /** DELETE - Remove a team id in the teamsCoaching array */
@@ -82,12 +117,20 @@ final class CoachManager {
         ]
         
         // Update the document asynchronously
-        try await coachDocument(coachId: coachId).updateData(data as [AnyHashable : Any])
+        
+        if let doc = try await getCoachDocumentWithCoachId(coachId: coachId).documents.first {
+            try await doc.reference.updateData(data as [AnyHashable : Any])// Assuming you have a `Coach` model
+            //print("Coach: \(coach)")
+        } else {
+            print("No coach found with that ID.")
+        }
+        
+        //try await coachDocument(coachId: coachId).updateData(data as [AnyHashable : Any])
     }
     
     func loadTeamsCoaching(coachId: String) async throws -> [GetTeam] {
         
-        let coach = try await getCoach(coachId: coachId)
+        let coach = try await getCoach(coachId: coachId)!
         print("coach: \(coach)")
         
         // Fetch the team documents with the IDs from the user's itemsArray

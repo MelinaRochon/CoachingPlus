@@ -1,61 +1,49 @@
+//
+//  PlayerCreateAccount2View.swift
+//  GameFrameIOS
+//
+//  Created by Mélina Rochon on 2025-03-12.
+//
 import SwiftUI
 
-struct PlayerCreateAccountView: View {
+struct PlayerSignUpView: View {
     @State private var teamAccessCode: String = ""
-//    @State private var firstName: String = ""
-//    @State private var lastName: String = ""
-//    @State private var dateOfBirth: Date = Date()
-//    @State private var phone: String = ""
-//    @State private var country: String = ""
-//    @State private var email: String = ""
+    var email: String // retreive the email address entered by the user in the previous view
+    var teamId: String // retreive the team id from the team access code entered by the user in the previous view
+
 //    @State private var password: String = ""
+    
     @State private var showPassword: Bool = false
     
     @Binding var showSignInView: Bool
     @StateObject private var viewModel = authenticationViewModel()
-    
+    @State private var country = "Canada"
     let countries = ["United States", "Canada", "United Kingdom", "Australia"]
     
     var body: some View {
-        NavigationView{
+        //NavigationView{
             VStack(spacing: 20) {
                 
                 ScrollView {
                     Spacer().frame(height: 20)
                     
-                    // Title
-                    VStack(spacing: 5) {
-                        Text("Hey Champ!")
-                            .font(.title3).bold()
-                        HStack {
-                            Text("I already have an account!")
-                                .foregroundColor(.gray)
-                                .font(.footnote)
-                            NavigationLink(destination: PlayerLoginView(showSignInView: $showSignInView)) {
-                                Text("Log in")
-                                    .foregroundColor(.blue)
-                                    .font(.footnote)
-                                    .underline()
-                            }
-                        }
-                    }
                     
                     // Form Fields with Uniform Style
                     VStack(spacing: 10) {
                         // Team Access Code with Help Button
-                        HStack {
-                            TextField("Team Access Code", text: $teamAccessCode)
-                            Button(action: {
-                                print("Show help for Team Access Code")
-                            }) {
-                                Image(systemName: "questionmark.circle")
-                                    .foregroundColor(.gray)
-                            }
-                        }
-                        .frame(height: 45)
-                        .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-                        
+//                        HStack {
+//                            TextField("Team Access Code", text: $teamAccessCode)
+//                            Button(action: {
+//                                print("Show help for Team Access Code")
+//                            }) {
+//                                Image(systemName: "questionmark.circle")
+//                                    .foregroundColor(.gray)
+//                            }
+//                        }
+//                        .frame(height: 45)
+//                        .padding(.horizontal)
+//                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+//                        
                         customTextField("First Name", text: $viewModel.firstName)
                         customTextField("Last Name", text: $viewModel.lastName)
                         
@@ -76,28 +64,42 @@ struct PlayerCreateAccountView: View {
                         // Country Picker Styled Like Other Fields
                         // Country Picker Styled Like Other Fields
                         HStack {
-                            Picker(selection: $viewModel.country) {
-                                ForEach(countries, id: \.self) { country in
-                                    Text(country).tag(country)
+                            Text("Country or region")
+                            Spacer()
+                            Picker("Country", selection: $viewModel.country) {
+                                ForEach(countries, id: \.self) { c in
+                                    Text(c).tag(c)
                                 }
-                            } label: {
-                                Text("Country or region")
-                                    .foregroundColor(.primary) // Ensures black text
                             }
-                        }.pickerStyle(.navigationLink)
-                            .frame(height: 45)
+                            //.pickerStyle(.automatic).frame(height: 45)
+                            
+//                            Picker("Before Feedback", selection: $feedbackBeforeTimeLabel) {
+//                                ForEach(feedbackBeforeTimeOptions, id: \.0) { option in
+//                                    Text(option.0)
+//                                }
+//                            }
+//                            label: {
+//                                Text("Country or region")
+//                                    .foregroundColor(.secondary) // Ensures black text
+//                            }
+                        }
+//
+                        .frame(height: 45)
+                        //.frame(maxWidth: .infinity)
+                        .pickerStyle(.automatic)
                             .padding(.horizontal)
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.gray, lineWidth: 1)
                             )
+                            
                         
                         TextField("Email", text: $viewModel.email)
                             .frame(height: 45)
                             .padding(.horizontal)
                             .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-                            .foregroundColor(.black).autocapitalization(.none)
-                            .autocapitalization(.none)
+                            .autocapitalization(.none).foregroundStyle(.secondary)
+                            .autocapitalization(.none).disabled(true)
                         // Password Field Styled Like Other Fields
                         HStack {
                             if showPassword {
@@ -121,10 +123,10 @@ struct PlayerCreateAccountView: View {
                     Button {
                         print("Create player account tapped")
                         
-                        // create account is called!
+                         //create account is called!
                         Task {
                             do {
-                                try await viewModel.signUp(userType: "Player") // to sign up
+                                try await viewModel.playerSignUp() // to sign up
                                 showSignInView = false
                                 return
                             } catch {
@@ -147,8 +149,23 @@ struct PlayerCreateAccountView: View {
                         
                     }
                 }
+                //.frame(maxWidth: .infinity)
+            }.task {
+                do {
+                    // load the player's information
+                    // If there there's more than one player with the same teamId and email --> Actually that can't happen because in the Authentication, we will have an issue. Can't have more than one email address that is the same for more than one account!!!
+                    try await viewModel.loadPlayerInfo(email: email, teamId: teamId)
+                    viewModel.email = email
+                    viewModel.teamId = teamId
+                    //country = viewModel.country
+                } catch {
+                    print("error.. Abort.. \(error)")
+                }
             }
-        }
+            //.padding(.horizontal)
+                //.frame(maxWidth: .infinity, maxHeight: .infinity)
+        //}
+        
     }
     
     // Custom TextField for Uniform Style
@@ -162,5 +179,5 @@ struct PlayerCreateAccountView: View {
 }
 
 #Preview {
-    PlayerCreateAccountView(showSignInView: .constant(false))
+    PlayerSignUpView(email: "", teamId: "", showSignInView: .constant(false))
 }
