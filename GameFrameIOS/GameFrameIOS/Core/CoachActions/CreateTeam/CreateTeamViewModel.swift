@@ -29,12 +29,10 @@ final class CreateTeamViewModel: ObservableObject {
     
     func createTeam() async throws {
         do {
-            print("HEYY")
             let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
             print(authUser)
-            print("OKAYY")
             let coachId = authUser.uid
-            print("WOO")
+//            let coachId = "2vMxk5PUPUSbiTtYmkvKOyGBUNN2"
             let newTeam = DBTeam(
                 teamId: UUID().uuidString,
                 name: name,
@@ -47,10 +45,7 @@ final class CreateTeamViewModel: ObservableObject {
                 coaches: [coachId],  // The coach creating the team
                 players: []
             )
-            print("DISTHEONE")
-            
             try await TeamManager.shared.createNewTeam(coachId: coachId, team: newTeam)
-            print("NAHHH")
         } catch {
             print("Failed to create team: \(error.localizedDescription)")
             alertMessage = "Error: \(error.localizedDescription)"

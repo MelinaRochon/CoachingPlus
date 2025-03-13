@@ -24,13 +24,16 @@ struct CoachCreateTeamView: View {
     @StateObject private var viewModel = CreateTeamViewModel()
     
     //    let auth: AuthDataResultModel  // Pass the authenticated user
-    let sports = ["Soccer", "Hockey", "Basketball"]
-    let genders = ["Female", "Male", "Other"]
-    let ageGroupes = ["U3", "U4", "U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12", "U13", "U14", "U15", "U16", "U17", "U18", "18+", "Senior"]
+    let sportOptions = ["Soccer", "Hockey", "Basketball"]
+    let genderOptions = ["Female", "Male", "Mixed", "Other"]
+    let ageGroupOptions = ["U3", "U4", "U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12", "U13", "U14", "U15", "U16", "U17", "U18", "18+", "Senior", "None"]
     
     @State private var icon = ""
-    @State private var logoIsPresented = false    
-    
+    @State private var logoIsPresented = false
+    @State private var selectedSportLabel = "Soccer"
+    @State private var selectedGenderLabel = "Mixed"
+    @State private var selectedAgeGroupLabel = "None"
+
     var body: some View {
         NavigationView {
             VStack {
@@ -44,9 +47,9 @@ struct CoachCreateTeamView: View {
                             TextField("Team Name", text: $viewModel.name).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
                         }
                         HStack {
-                            Picker("Sport", selection: $viewModel.sport)
+                            Picker("Sport", selection: $selectedSportLabel)
                             {
-                                ForEach(sports, id: \.self) {sport in
+                                ForEach(sportOptions, id: \.self) {sport in
                                     Text(sport).tag(sport)
                                 }
                             }
@@ -55,36 +58,40 @@ struct CoachCreateTeamView: View {
                             Text("Logo")
                             Spacer()
                             
-//                                                        Button(action: { logoIsPresented.toggle()}) {
-//                                                            Text("Choose").contentShape(Rectangle())
-//                                                        }.sheet(isPresented: $logoIsPresented, content: {
-//                                                            SymbolsPicker(selection: $viewModel.icon, title: "Choose your team's logo", autoDismiss: true) {
-//                                                                Image(systemName: "xmark.diamond.fill")
-//                                                            }
-//                                                        })
-//                            
-//                                                        Image(systemName: viewModel.logoURL)//.foregroundStyle(team.color)
-//                                                    }
+                            //                                                        Button(action: { logoIsPresented.toggle()}) {
+                            //                                                            Text("Choose").contentShape(Rectangle())
+                            //                                                        }.sheet(isPresented: $logoIsPresented, content: {
+                            //                                                            SymbolsPicker(selection: $viewModel.icon, title: "Choose your team's logo", autoDismiss: true) {
+                            //                                                                Image(systemName: "xmark.diamond.fill")
+                            //                                                            }
+                            //                                                        })
+                            //
+                            //                                                        Image(systemName: viewModel.logoURL)//.foregroundStyle(team.color)
+                            //                                                    }
                             HStack {
-                                ColorPicker("Colour", selection: Binding(
+                                ColorPicker("Team Colour", selection: Binding(
                                     get: { viewModel.colour },
-                                    set: { newColor in viewModel.updateColour(from: newColor) }
+                                    set: { newColor in
+                                        DispatchQueue.main.async {
+                                            viewModel.updateColour(from: newColor)
+                                        }
+                                    }
                                 ))
                                 .labelsHidden()
                             }
                         }
                         
                         Section {
-                            Picker("Gender", selection: $viewModel.gender)
+                            Picker("Gender", selection: $selectedGenderLabel)
                             {
-                                ForEach(genders, id: \.self) {gender in
+                                ForEach(genderOptions, id: \.self) {gender in
                                     Text(gender).tag(gender)
                                 }
                             }
                             HStack {
-                                Picker("Age group", selection: $viewModel.ageGrp)
+                                Picker("Age group", selection: $selectedAgeGroupLabel)
                                 {
-                                    ForEach(ageGroupes, id: \.self) {
+                                    ForEach(ageGroupOptions, id: \.self) {
                                         Text($0)
                                     }
                                 }
@@ -115,6 +122,7 @@ struct CoachCreateTeamView: View {
                         /** Check if the list is scrollable!! Make sure it is. */
                         
                     }
+                }
                 }.toolbar {
                     ToolbarItem(placement: .topBarLeading) { // Back button on the top left
                         Button(action: {
@@ -128,15 +136,23 @@ struct CoachCreateTeamView: View {
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: { /* Action will need to be added -> complete team form */
+                            
+                            viewModel.sport = selectedSportLabel
+                            viewModel.gender = selectedGenderLabel
+                            viewModel.ageGrp = selectedAgeGroupLabel
+                            print(selectedSportLabel)
+                            print(selectedGenderLabel)
+                            print(selectedAgeGroupLabel)
+
                             Task{
                                 do {
-                                    try await viewModel.test()
                                     try await viewModel.createTeam()
                                 } catch {
                                     viewModel.alertMessage = "Error: \(error.localizedDescription)"
                                     viewModel.showAlert = true
                                 }
                             }
+                            viewModel.test()
                             
                         }) {
                             Text("Create")
@@ -146,7 +162,6 @@ struct CoachCreateTeamView: View {
                     Alert(title: Text("Message"), message: Text(viewModel.alertMessage), dismissButton: .default(Text("OK")))
                 }
                 
-            }
         }
     }
 }
