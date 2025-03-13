@@ -139,7 +139,7 @@ final class TeamManager {
     
     func getTeamWithAccessCode(accessCode: String) async throws -> DBTeam? {
         let snapshot = try await teamCollection.whereField("access_code", isEqualTo: accessCode).getDocuments()
-
+        print("passe bien ici")
         guard let doc = snapshot.documents.first else { return nil }
         return try doc.data(as: DBTeam.self)
     }

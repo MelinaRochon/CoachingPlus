@@ -135,18 +135,17 @@ final class CoachManager {
         
         // Fetch the team documents with the IDs from the user's itemsArray
         let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: coach.teamsCoaching ?? []).getDocuments()
-        
         // Map the documents to Team objects and get their names
-            var teams: [GetTeam] = []
-            for document in snapshot.documents {
-                if let team = try? document.data(as: DBTeam.self) {
-                    // Add a Team object with the teamId and team name
-                    let teamObject = GetTeam(teamId: team.teamId, name: team.name)
-                    teams.append(teamObject)
-                    print("Loaded team: \(team.name) with ID: \(team.teamId)")
-                }
+        var teams: [GetTeam] = []
+        for document in snapshot.documents {
+            if let team = try? document.data(as: DBTeam.self) {
+                // Add a Team object with the teamId and team name
+                let teamObject = GetTeam(teamId: team.teamId, name: team.name)
+                teams.append(teamObject)
+                print("Loaded team: \(team.name) with ID: \(team.teamId)")
             }
+        }
             
-            return teams
+        return teams
     }
 }

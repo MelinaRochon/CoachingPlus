@@ -12,44 +12,35 @@ struct PlayerAllTeamsView: View {
     @State private var showTextField = false // Controls visibility of text field
     @State private var groupCode: String = "" // Stores entered text
     @State private var showInitialView = true // Tracks if "Have a Group Code?" and "Enter Code" should be shown
+    @StateObject private var viewModel = AllTeamsViewModel()
 
     var body: some View {
         NavigationView {
             VStack {
                 
                 Divider() // This adds a divider after the title
-                
-                List {
-                    Section(header: HStack {
-                        Text("My Teams") // Section header text
-                        
-                        Spacer() // Push the button to the right
-                    }) {
-                        NavigationLink(destination: PlayerMyTeamView(teamName: "Team 1")
-                                       //                            .navigationBarBackButtonHidden(true)
-                        ) {
-                            HStack {
-                                Image(systemName: "tshirt")
-                                Text("Team 1")
-                            }
-                        }
-                        
-                        NavigationLink(destination: PlayerMyTeamView(teamName: "Team 2")
-                                       //                            .navigationBarBackButtonHidden(true)
-                        ) {
-                            HStack {
-                                Image(systemName: "tshirt")
-                                Text("Team 2")
+//                if !viewModel.teams.isEmpty {
+                    List {
+                        Section(header: HStack {
+                            Text("My Teams") // Section header text
+                            Spacer() // Push the button to the right
+                        }) {
+                            ForEach(viewModel.teams, id: \.name) { team in
+                                NavigationLink(destination: PlayerMyTeamView(teamName: team.name)
+                                ) {
+                                    HStack {
+                                        Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
+                                        Text(team.name)
+                                    }
+                                }
                             }
                         }
                     }
-                }
-                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                //.background(Color.white) // Set background color to white for the List
+                    .listStyle(PlainListStyle()) // Optional: Make the list style more simple
                 
                 
                 
-                VStack(spacing: 8) {
+                VStack {
                     // Show initial text & button if `showInitialView` is true
                     if showInitialView {
                         HStack {
@@ -63,13 +54,13 @@ struct PlayerAllTeamsView: View {
                                 }
                             }) {
                                 HStack {
-                                    Text("Enter Code")
+                                    Text("Enter Code").font(.subheadline)
                                     Image(systemName: "arrow.right")
                                 }
                                 .foregroundColor(.white)
                                 .padding()
                                 .background(Color.black)
-                                .cornerRadius(40)
+                                .cornerRadius(30)
                             }
                             .padding()
                         }
@@ -80,36 +71,62 @@ struct PlayerAllTeamsView: View {
                     if showTextField {
                         HStack {
                             TextField("Your Code", text: $groupCode)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .padding(.horizontal, 16)
-                                .cornerRadius(40)
+                                .padding(.horizontal, 8)
+                                .cornerRadius(40).frame(width: 190)
+                                .frame(height: 40)
+                                .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                                .foregroundColor(.black).autocapitalization(.none)
+
                             
                             Button(action: {
                                 withAnimation {
                                     showTextField = false  // Hide input field
                                     showInitialView = true // Bring back initial text & button
-                                    groupCode = "" // Reset input field
                                 }
                                 print("Submitted Code: \(groupCode)") // Handle submission
+                                // check accesscode entered
+                                Task {
+                                    do {
+                                        try await viewModel.validateAccessCode(accessCode: groupCode)
+                                        groupCode = "" // Reset input field
+
+                                    } catch {
+                                        print("Error when submitting a team's access code. \(error)")
+                                    }
+                                }
+                                
                             }) {
-                                Text("Submit")
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(Color.black)
-                                    .cornerRadius(40)
-                            }
+                                HStack {
+                                    Text("Submit").font(.subheadline)
+                                    Image(systemName: "arrow.right")
+                                }
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.black)
+                                .cornerRadius(30)
+                                
+                            }.padding(.horizontal, 8)
                         }
-                        .padding(.horizontal, 16)
+                        .padding()
                         .transition(.opacity) // Smooth fade-in/out effect
                     }
                 }
-                .padding(.bottom, 86)
+                .padding(.bottom, 85)
+//                }
                 
             }.transaction { $0.animation = nil }
         }
         //.background(Color.white)
         .navigationTitle(Text("Teams"))
         .transaction { $0.animation = nil } // Prevents title animation
+        .task {
+            do {
+                try await viewModel.loadAllTeams()
+                
+            } catch {
+                print("Error. Aborting... \(error)")
+            }
+        }
     }
 }
 

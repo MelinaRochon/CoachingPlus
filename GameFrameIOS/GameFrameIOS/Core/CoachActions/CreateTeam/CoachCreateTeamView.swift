@@ -37,7 +37,7 @@ struct CoachCreateTeamView: View {
     var body: some View {
         NavigationView {
             VStack {
-                Text("Creating a New Team").font(.title3).bold().padding(.bottom)
+//                Text("Creating a New Team").font(.title3).bold().padding(.bottom)
                 
                 Form {
                     Section {
@@ -140,34 +140,32 @@ struct CoachCreateTeamView: View {
                             viewModel.sport = selectedSportLabel
                             viewModel.gender = selectedGenderLabel
                             viewModel.ageGrp = selectedAgeGroupLabel
-                            print(selectedSportLabel)
-                            print(selectedGenderLabel)
-                            print(selectedAgeGroupLabel)
 
                             Task{
                                 do {
-                                    try await viewModel.createTeam()
+                                    let canWeDismiss = try await viewModel.createTeam()
+                                    if (canWeDismiss) {
+                                        dismiss() // Dismiss the full-screen cover
+                                    }
                                 } catch {
                                     viewModel.alertMessage = "Error: \(error.localizedDescription)"
                                     viewModel.showAlert = true
                                 }
                             }
                             viewModel.test()
-                            
                         }) {
                             Text("Create")
-                        }//.disabled(viewModel.isLoading) // Disable if loading
+                        }
                     }
                 }.alert(isPresented: $viewModel.showAlert) {
                     Alert(title: Text("Message"), message: Text(viewModel.alertMessage), dismissButton: .default(Text("OK")))
-                }
+                }.navigationTitle(Text("Creating a New Team")).navigationBarTitleDisplayMode(.inline)
                 
-        }
+        }.navigationBarBackButtonHidden(true)
     }
 }
-    #Preview {
-        CoachCreateTeamView()
-        
-        //    CoachCreateTeamView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "U10", players: ""))
-    }
+
+#Preview {
+    CoachCreateTeamView()
+}
 
