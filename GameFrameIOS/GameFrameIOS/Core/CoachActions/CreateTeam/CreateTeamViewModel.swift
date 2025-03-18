@@ -27,17 +27,22 @@ final class CreateTeamViewModel: ObservableObject {
             return Color(hex: colourHex) ?? .blue
         }
     
-    func createTeam() async throws {
+    func createTeam() async throws -> Bool{
         do {
             let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
             print(authUser)
             let coachId = authUser.uid
 //            let coachId = "2vMxk5PUPUSbiTtYmkvKOyGBUNN2"
+            guard !name.isEmpty, !sport.isEmpty, !gender.isEmpty, !ageGrp.isEmpty else {
+                print("Not all fields are filled. Cannot proceed,")
+                return false
+            }
+            
             let newTeam = TeamDTO(
                 teamId: UUID().uuidString,
                 name: name,
                 sport: sport,
-                logoUrl: logoURL.isEmpty ? nil : logoURL,
+                logoUrl: logoURL.isEmpty ? "" : logoURL,
                 colour: colourHex,
                 gender: gender,
                 ageGrp: ageGrp,
@@ -50,10 +55,13 @@ final class CreateTeamViewModel: ObservableObject {
             try await TeamManager.shared.createNewTeam(coachId: coachId, teamDTO: newTeam)
             //try await TeamManager.shared.createNewTeam(coachId: coachId, team: newTeam)
             
+            return true
+            
         } catch {
             print("Failed to create team: \(error.localizedDescription)")
             alertMessage = "Error: \(error.localizedDescription)"
             showAlert = true
+            return false
         }
     }
     

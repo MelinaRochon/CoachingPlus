@@ -267,4 +267,39 @@ final class PlayerManager {
         ]
         try await playerDocument(id: id).updateData(data as [AnyHashable: Any])
     }
+    
+    func getTeamsEnrolled(playerId: String) async throws -> [GetTeam] {
+        
+        let player = try await getPlayer(playerId: playerId)!
+        print("player info: \(player)")
+        
+        // Fetch the team documents with the IDs from the user's itemsArray
+        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled ?? []).getDocuments()
+
+        // Map the documents to Team objects and get their names
+        var teams: [GetTeam] = []
+        for document in snapshot.documents {
+            if let team = try? document.data(as: DBTeam.self) {
+                // Add a Team object with the teamId and team name
+                let teamObject = GetTeam(teamId: team.teamId, name: team.name)
+                teams.append(teamObject)
+                print("Loaded team: \(team.name) with ID: \(team.teamId)")
+            }
+        }
+            
+        return teams
+    }
+    
+    func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
+        let player = try await getPlayer(playerId: playerId)!
+        print("player info: \(player)")
+        // Check if the player exists
+//            guard let player = player else {
+//                throw NSError(domain: "PlayerManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "Player not found"])
+//            }
+//
+        // Check if the player is enrolled in the specific team by matching teamId in teamsEnrolled
+        return player.teamsEnrolled.contains(teamId)
+
+    }
 }

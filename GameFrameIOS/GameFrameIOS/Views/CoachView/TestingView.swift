@@ -25,7 +25,7 @@ struct TestingView: View {
                     Text("Notifications")
                 }
             
-            CoachAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
+            CoachAllTeamsView()
                 .tabItem {
                     Image(systemName: "tshirt")
                     Text("Teams")
