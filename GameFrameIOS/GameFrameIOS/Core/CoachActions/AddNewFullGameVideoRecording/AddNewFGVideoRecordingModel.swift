@@ -12,5 +12,5 @@ import SwiftUI
 final class AddNewFGVideoRecordingModel: ObservableObject {
     @Published var fullGameVideoRecording: DBFullGameVideoRecording? = nil
     
-    @Published var 
+    //@Published var 
 }

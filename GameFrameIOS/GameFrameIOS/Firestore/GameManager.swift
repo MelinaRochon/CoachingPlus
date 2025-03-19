@@ -46,6 +46,19 @@ struct DBGame: Codable {
         self.teamId = teamId
     }
     
+    init(gameId: String, gameDTO: GameDTO) {
+        self.gameId = gameId
+        self.title = gameDTO.title
+        self.duration = gameDTO.duration // by default, 0 seconds
+        self.location = gameDTO.location
+        self.scheduledTimeReminder = gameDTO.scheduledTimeReminder // by default, 0 minutes
+        self.startTime = gameDTO.startTime
+        self.timeBeforeFeedback = gameDTO.timeBeforeFeedback // by default, 10 seconds
+        self.timeAfterFeedback = gameDTO.timeAfterFeedback // by default, 10 seconds
+        self.recordingReminder = gameDTO.recordingReminder
+        self.teamId = gameDTO.teamId
+    }
+    
     enum CodingKeys: String, CodingKey {
         case gameId = "game_id"
         case title = "title"
@@ -92,27 +105,23 @@ final class GameManager {
     static let shared = GameManager()
     
     private init() {} // TO DO - Will need to use something else than singleton
-    
-    //private let gameCollection = Firestore.firestore().collection("games") // games collection
-    //private let gameCollection = TeamManager.shared.teamCollection// games collection
-    
+        
     /** Returns a specific game document */
-    func gameDocument(teamId: String) -> DocumentReference {
-        return gameCollection(teamId: teamId).document()
+    func gameDocument(teamDocId: String, gameId: String) -> DocumentReference {
+        return gameCollection(teamDocId: teamDocId).document(gameId)
     }
-    
-    func gameCollection(teamId: String) -> CollectionReference {
-        return TeamManager.shared.teamCollection.document(teamId).collection("games")
-    }
-    
-    /** Returns the ID of the new document created for a game */
-    func gameDocumentID(teamId: String) -> String {
-        return gameDocument(teamId: teamId).documentID
+        
+    func gameCollection(teamDocId: String) -> CollectionReference {
+        return TeamManager.shared.teamCollection.document(teamDocId).collection("games")
     }
     
     /** GET - Returns the game information from the database */
-    func getGame(gameId: String) async throws -> DBGame {
-        try await gameDocument(teamId: gameId).getDocument(as: DBGame.self)
+    func getGame(gameId: String, teamId: String) async throws -> DBGame? {
+        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+            print("Could not find team id. Aborting")
+            return nil
+        }
+        return try await gameDocument(teamDocId: teamDocId, gameId: gameId).getDocument(as: DBGame.self)
     }
             
     private func getTeamID(teamName: String) async throws -> String {
@@ -121,9 +130,18 @@ final class GameManager {
     }
     
     /** Add a new game in the database */
-    func addNewGame(game: DBGame) async throws {
+    func addNewGame(gameDTO: GameDTO) async throws {
+        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: gameDTO.teamId)?.id else {
+            print("Could not find team id. Aborting")
+            return
+        }
+        let gameDocument = gameCollection(teamDocId: teamDocId).document()
+        let documentId = gameDocument.documentID // get the document id
         
+        // Create a new game object
+        let game = DBGame(gameId: documentId, gameDTO: gameDTO)
+
         // Create a new game
-        try gameDocument(teamId: game.teamId).setData(from: game, merge: false)
+        try gameDocument.setData(from: game, merge: false)
     }
 }

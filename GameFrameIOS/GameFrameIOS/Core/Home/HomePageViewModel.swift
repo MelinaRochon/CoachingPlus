@@ -13,8 +13,8 @@ final class HomePageViewModel: ObservableObject {
     
     //@Published var games: [DBGame] = []
     
-    @Published var futureGames: [GameDTO] = []
-    @Published var pastGames: [GameDTO] = []
+    @Published var futureGames: [HomeGameDTO] = []
+    @Published var pastGames: [HomeGameDTO] = []
     
     /** GET - Fetch all the games from the database */
     func loadGames() async throws {
@@ -36,10 +36,15 @@ final class HomePageViewModel: ObservableObject {
         }
         
         // Loop through each team ID
-        var gamesWithTeam: [GameDTO] = []
+        var gamesWithTeam: [HomeGameDTO] = []
         for teamId in teamsId {
+            // Get team docs for each team
+            guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+                print("Could not find team id. Aborting")
+                return
+            }
             // Get games for each team
-            let gameSnapshot = try await GameManager.shared.gameCollection(teamId: teamId).getDocuments()
+            let gameSnapshot = try await GameManager.shared.gameCollection(teamDocId: teamDocId).getDocuments()
             
             // Map the documents to Game objects and append them to the games array
             for document in gameSnapshot.documents {
@@ -48,7 +53,7 @@ final class HomePageViewModel: ObservableObject {
                     
                     // Fetch the team for each game
                     if let team = try? await TeamManager.shared.getTeam(teamId: teamId) {
-                        let gameWithTeam = GameDTO(game: game, team: team)
+                        let gameWithTeam = HomeGameDTO(game: game, team: team)
                         gamesWithTeam.append(gameWithTeam)
                         
                         
@@ -78,8 +83,8 @@ final class HomePageViewModel: ObservableObject {
 //        }
 //
         let currentDate = Date()
-        var tmpFutureGames: [GameDTO] = []
-        var tmpPastGames: [GameDTO] = []
+        var tmpFutureGames: [HomeGameDTO] = []
+        var tmpPastGames: [HomeGameDTO] = []
         // Separate games into future and past
         for game in gamesWithTeam {
             if let startTime = game.game.startTime {

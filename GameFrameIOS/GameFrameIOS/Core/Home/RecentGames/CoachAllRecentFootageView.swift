@@ -17,16 +17,18 @@ struct CoachAllRecentFootageView: View {
             List  {
                 Section {
                     ForEach(viewModel.pastGames, id: \.game.gameId) { pastGame in
-                        HStack {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 110, height: 60)
-                                .cornerRadius(10)
-                            
-                            VStack {
-                                Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Text(pastGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                        NavigationLink(destination: SelectedRecentGameView(gameId: pastGame.game.gameId, teamDocId: pastGame.team.id)) {
+                            HStack {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 110, height: 60)
+                                    .cornerRadius(10)
+                                
+                                VStack {
+                                    Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                    Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                    Text(pastGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                }
                             }
                         }
                             

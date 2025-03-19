@@ -9,7 +9,7 @@ import Foundation
 
 @MainActor
 final class ScheduledGamesViewModel: ObservableObject {
-    @Published var scheduledGames: [GameDTO] = []
+    @Published var scheduledGames: [HomeGameDTO] = []
     
     /** GET - Fetch all the scheduled games from the database */
     func loadScheduledGames() async throws {
@@ -28,10 +28,16 @@ final class ScheduledGamesViewModel: ObservableObject {
         }
         
         // Loop through each team ID
-        var gamesWithTeam: [GameDTO] = []
+        var gamesWithTeam: [HomeGameDTO] = []
         for teamId in teamsId {
+            
+            // Get team docs for each team
+            guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+                print("Could not find team id. Aborting")
+                return
+            }
             // Get games for each team
-            let gameSnapshot = try await GameManager.shared.gameCollection(teamId: teamId).getDocuments()
+            let gameSnapshot = try await GameManager.shared.gameCollection(teamDocId: teamDocId).getDocuments()
             
             // Map the documents to Game objects and append them to the games array
             for document in gameSnapshot.documents {
@@ -40,7 +46,7 @@ final class ScheduledGamesViewModel: ObservableObject {
                     
                     // Fetch the team for each game
                     if let team = try? await TeamManager.shared.getTeam(teamId: teamId) {
-                        let gameWithTeam = GameDTO(game: game, team: team)
+                        let gameWithTeam = HomeGameDTO(game: game, team: team)
                         gamesWithTeam.append(gameWithTeam)
                         
                         

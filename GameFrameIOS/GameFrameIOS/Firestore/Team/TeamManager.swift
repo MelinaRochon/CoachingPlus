@@ -137,6 +137,10 @@ final class TeamManager {
 
     }
     
+    func getTeamWithDocId(docId: String) async throws -> DBTeam {
+        try await teamDocument(id: docId).getDocument(as: DBTeam.self)
+    }
+    
     func getTeamWithAccessCode(accessCode: String) async throws -> DBTeam? {
         let snapshot = try await teamCollection.whereField("access_code", isEqualTo: accessCode).getDocuments()
         print("passe bien ici")

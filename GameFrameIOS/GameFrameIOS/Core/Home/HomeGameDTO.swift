@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct GameDTO {
+struct HomeGameDTO {
     let game: DBGame
     let team: DBTeam
 }

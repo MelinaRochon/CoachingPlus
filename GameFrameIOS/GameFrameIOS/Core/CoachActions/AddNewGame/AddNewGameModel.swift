@@ -31,29 +31,21 @@ final class AddNewGameModel: ObservableObject {
      argument when calling the addGameView page */
     func loadTeamNames() async throws {
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-        
         teamNames = try await CoachManager.shared.loadTeamsCoaching(coachId: authUser.uid)
     }
     
     /** POST - Adds a new game to the database */
     func addNewGame() async throws {
         
-        // get the generated gameId
-        let gameId = GameManager.shared.gameDocumentID(teamId: teamId)
-        
-        print("---- gameId = \(gameId)")
-        
         // finalise the location
-        let finalLocation = (location!.title + location!.subtitle)
+        let finalLocation = (location!.title + " " + location!.subtitle)
         
         print("finalLocation = \(finalLocation)")
+        // create a DTO object to be sent to the database
+        let gameDTO = GameDTO(title: title, duration: duration, location: finalLocation, scheduledTimeReminder: scheduledTimeReminder, startTime: startTime, timeBeforeFeedback: timeBeforeFeedback, timeAfterFeedback: timeAfterFeedback, recordingReminder: recordingReminder, teamId: teamId)
 
-        // create a DBGame object to be sent to the database
-        let game = DBGame(gameId: gameId, title: title, duration: duration, location: finalLocation, scheduledTimeReminder: scheduledTimeReminder, startTime: startTime, timeBeforeFeedback: timeBeforeFeedback, timeAfterFeedback: timeAfterFeedback, recordingReminder: recordingReminder, teamId: teamId)
-        
         // Add game to the database
-        try await GameManager.shared.addNewGame(game: game)
-        
+        try await GameManager.shared.addNewGame(gameDTO: gameDTO)
     }
     
     func test() {
