@@ -11,14 +11,16 @@ struct UserTypeRootView: View {
     @Binding var showSignInView: Bool
     
     // Home Screen will be based according to the user type
-    @State private var userType: String = "Coach"
+    @State private var userType: String = ""
     
     var body: some View {
         ZStack {
             if userType == "Coach" {
                 CoachMainTabView(showLandingPageView: $showSignInView)
-            } else {
+            } else if (userType == "Player") {
                 PlayerMainTabView(showLandingPageView: $showSignInView)
+            } else {
+                // When loading -> blank
             }
             HStack{
                 

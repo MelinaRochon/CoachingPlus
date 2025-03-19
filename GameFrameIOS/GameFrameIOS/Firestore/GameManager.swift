@@ -123,6 +123,19 @@ final class GameManager {
         }
         return try await gameDocument(teamDocId: teamDocId, gameId: gameId).getDocument(as: DBGame.self)
     }
+    
+    func getAllGames(teamId: String) async throws -> [DBGame]? {
+        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+            print("Could not find team id. Aborting")
+            return nil
+        }
+        
+        let snapshot = try await gameCollection(teamDocId: teamDocId).getDocuments()
+        return snapshot.documents.compactMap { document in
+            try? document.data(as: DBGame.self)
+        }
+
+    }
             
     private func getTeamID(teamName: String) async throws -> String {
         // TO DO - Fetch the team ID from the database

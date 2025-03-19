@@ -17,7 +17,7 @@ struct CoachAllTeamsView: View {
     @StateObject private var viewModel = AllTeamsViewModel()
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Divider() // This adds a divider after the title
                 
@@ -41,7 +41,7 @@ struct CoachAllTeamsView: View {
                         }) {
                             
                             ForEach(viewModel.teams, id: \.name) { team in
-                                NavigationLink(destination: CoachMyTeamView(teamName: team.name))
+                                NavigationLink(destination: CoachMyTeamView(teamName: team.name, teamId: team.teamId))
                                 {
                                     HStack {
                                         Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future

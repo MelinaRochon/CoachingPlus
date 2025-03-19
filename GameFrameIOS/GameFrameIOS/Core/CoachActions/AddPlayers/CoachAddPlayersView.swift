@@ -64,7 +64,7 @@ struct CoachAddPlayersView: View {
                         HStack {
                             Text("Email")
                             Spacer()
-                            TextField("Email address", text: $viewModel.email).foregroundStyle(.secondary).multilineTextAlignment(.trailing).textContentType(.emailAddress).keyboardType(.emailAddress)
+                            TextField("Email address", text: $viewModel.email).foregroundStyle(.secondary).multilineTextAlignment(.trailing).textContentType(.emailAddress).keyboardType(.emailAddress).autocapitalization(.none)
                         }
                     }
                     
@@ -88,34 +88,28 @@ struct CoachAddPlayersView: View {
                             TextField("XXX-XXX-XXXX", text: $viewModel.guardianPhone).foregroundStyle(.secondary).multilineTextAlignment(.trailing).keyboardType(.phonePad).textContentType(.telephoneNumber)
                         }
                     }
-                    
-                    Button(action: {
-                        dismiss() // Dismiss the full-screen cover
-                    }) {
-                        Text("Done")
-                    }
                 }
                 
-                
-            }.toolbar {
-//                ToolbarItem(placement: .topBarLeading) { // Back button on the top left
-//                                    Button(action: {
-//                                        dismiss() // Dismiss the full-screen cover
-//                                    }) {
-//                                        HStack {
-//                                            Image(systemName: "chevron.left")
-//                                            Text("Back")
-//                                        }
-//                                    }
-//                                }
+            }.navigationTitle(Text("Adding a New Player")).navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                ToolbarItem(placement: .topBarLeading) { // Back button on the top left
+                                    Button(action: {
+                                        dismiss() // Dismiss the full-screen cover
+                                    }) {
+                                        HStack {
+                                            Text("Cancel")
+                                        }
+                                    }
+                                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add") {
                         // create player!
                         Task {
                             do {
-                                try await viewModel.AddPlayerToTeam(teamId: teamId) // to add player
+                                try await viewModel.addPlayerToTeam(teamId: teamId) // to add player
                                 //showSignInView = false
                                 //return
+                                dismiss() // Dismiss the full-screen cover
                             } catch {
                                 print(error)
                             }
@@ -125,8 +119,9 @@ struct CoachAddPlayersView: View {
                         // Go back to the Creating new team page -> new player should be shown in the list
                     }
                 }
-            }.navigationTitle(Text("Adding a New Player")).navigationBarTitleDisplayMode(.inline)
+            }
         }
+//        .navigationBarBackButtonHidden(true)
         
         
     }
@@ -152,6 +147,6 @@ struct CoachAddPlayersView: View {
 }
 
 #Preview {
-    CoachAddPlayersView(teamId: "zzlZyozdFYaQeUR5gsr7")
+    CoachAddPlayersView(teamId: "")
 //    player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))
 }

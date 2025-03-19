@@ -16,7 +16,7 @@ struct CoachPlayerProfileView: View {
     let genders = ["Female", "Male", "Other"]
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             
             VStack{
                 

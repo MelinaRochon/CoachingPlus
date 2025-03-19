@@ -12,7 +12,7 @@ struct CoachHomePageView: View {
     @StateObject private var viewModel = HomePageViewModel()
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 ScrollView {
                     VStack(alignment: .leading) {

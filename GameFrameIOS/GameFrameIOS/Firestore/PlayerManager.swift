@@ -302,4 +302,15 @@ final class PlayerManager {
         return player.teamsEnrolled.contains(teamId)
 
     }
+    
+//    func getPlayerName(playerId: String) async throws -> PlayerName {
+//        UserManager.shared.getUser(userId: playerId)
+//    }
+}
+
+
+struct PlayerName {
+    let playerId: String
+    let firstName: String
+    let lastName: String
 }

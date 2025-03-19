@@ -20,7 +20,7 @@ final class AddPlayersViewModel: ObservableObject {
     @Published var guardianPhone: String = ""
     @Published var teamId = "" // get the team id
     
-    func AddPlayerToTeam(teamId: String) async throws {
+    func addPlayerToTeam(teamId: String) async throws {
         // 1. Get the team's id
         // 2. Get the team's gender -> user will have the same
         // 3. Save the player as an invites (status = pending)
