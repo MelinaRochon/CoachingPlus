@@ -170,6 +170,12 @@ final class UserManager {
 
     }
     
+    /** Gets the user information from the database */
+    func getUserWithDocId(id: String) async throws -> DBUser? {
+        return try await userDocument(id: id).getDocument(as: DBUser.self)
+    }
+
+    
     func getUserWithEmail(email: String) async throws -> DBUser? {
         let snapshot = try await userCollection.whereField("email", isEqualTo: email).getDocuments()
         

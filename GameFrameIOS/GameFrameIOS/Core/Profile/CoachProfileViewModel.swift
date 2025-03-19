@@ -11,6 +11,7 @@ import Foundation
 final class CoachProfileViewModel: ObservableObject {
     
     @Published private(set) var user: DBUser? = nil
+    @Published private(set) var player: DBPlayer? = nil
     
     /** To log out the user */
     func logOut() throws {
@@ -33,6 +34,27 @@ final class CoachProfileViewModel: ObservableObject {
         print("This is from the loadCurrentUser function: userid = \(authDataResult.uid)")
         self.user = try await UserManager.shared.getUser(userId: authDataResult.uid)
         //}
+    }
+    
+    func loadPlayer(userDocId: String, playerDocId: String) async throws {
+        
+        // Get the user information from the player's id
+//        self.user = try await UserManager.shared.getUser(userId: playerId)
+        self.user = try await UserManager.shared.findUserWithId(id: userDocId)
+        
+        // Get the player's information
+        self.player = try await PlayerManager.shared.findPlayerWithId(id: playerDocId)
+    }
+    
+    /** Updates the player's information on the database */
+    func updatePlayerInformation(jersey: Int, nickname: String) {
+        guard let player else { return }
+    
+        Task {
+            // Updating the player information on the database
+            try await PlayerManager.shared.updatePlayerJerseyAndNickname(playerDocId: player.id, jersey: jersey, nickname: nickname)
+            //self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+        }
     }
     
     /** Update the coach's information on the database */

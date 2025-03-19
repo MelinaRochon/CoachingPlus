@@ -18,7 +18,6 @@ struct CoachMyTeamView: View {
     @State private var addPlayerEnabled = false;
     @StateObject private var teamModel = TeamViewModel()
     
-    //@State private var path = NavigationPath() // Stores the navigation history
     var body: some View {
         NavigationStack {
             VStack {
@@ -53,8 +52,7 @@ struct CoachMyTeamView: View {
                     } else {
                         Section(header:
                                     HStack {
-                            //Text("Adding Players").font(.headline).bold()
-                            Spacer()                            
+                            Spacer()
                             Button{
                                 addPlayerEnabled.toggle()
                             } label: {
@@ -63,21 +61,19 @@ struct CoachMyTeamView: View {
                             }
                             //.navigationBarBackButtonHidden()
                         }){
-                            ForEach (teamModel.players, id: \.id) { player in
-                                NavigationLink(destination: CoachPlayerProfileView(player: .init(name: player.firstName, dob: Date(), jersey: 67, gender: 1, email: "johnDoe@u.com", guardianName: "Terry Doe", guardianEmail: "doe@gmail.com", guardianPhone: "545-234-9009"))) {
-                                    Text("\(player.firstName) \(player.lastName)")
+                            ForEach (teamModel.players, id: \.playerDocId) { player in
+                                //if let userId = player.userId {
+                                NavigationLink(destination: CoachPlayerProfileView(playerDocId: player.playerDocId, userDocId: player.userDocId)) {
+                                    HStack {
+                                        Text("\(player.firstName) \(player.lastName)")
+                                        Spacer()
+                                        Text(player.status).foregroundStyle(.secondary).italic(true).padding(.trailing)
+                                    }
                                 }
+
+                                //}
                             }
-//                            NavigationLink(destination: CoachPlayerProfileView(player: .init(name: "John Doe", dob: Date(), jersey: 67, gender: 1, email: "johnDoe@u.com", guardianName: "Terry Doe", guardianEmail: "doe@gmail.com", guardianPhone: "545-234-9009"))) {
-//                                Text("John Doe")
-//                            }
-                            
-//                            NavigationLink(destination: CoachPlayerProfileView(player: .init(name: "Dany Joe", dob: Date(), jersey: 1, gender: 1, email: "danyJ@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))) {
-//                                Text("Dany Joe")
-//                            }
-                            
                         }
-                        
                     }
                     
                 }.listStyle(PlainListStyle()) // Optional: Make the list style more simple

@@ -114,6 +114,10 @@ final class InviteManager {
         return try doc.data(as: DBInvite.self)
     }
     
+    func getInvite(id: String) async throws -> DBInvite? {
+        return try await inviteDocument(id: id).getDocument(as: DBInvite.self);
+    }
+    
     /** PUT - Update the invite status */
     func updateInviteStatus(id: String, newStatus: String) async throws {
         let data: [String: Any] = [

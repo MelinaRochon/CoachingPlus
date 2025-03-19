@@ -15,7 +15,7 @@ import SwiftUI
 struct CoachAllTeamsView: View {
     @State private var showCreateNewTeam = false // Switch to coach recording page
     @StateObject private var viewModel = AllTeamsViewModel()
-    
+    @State private var showCreateTeam: Bool = false
     var body: some View {
         NavigationStack {
             VStack {
@@ -30,14 +30,16 @@ struct CoachAllTeamsView: View {
 //                                // Open create new team form
 //                                Text("Add +")
 //                            }
-                            //Button(action: {
-                                NavigationLink(destination: CoachCreateTeamView()){
-                                    // Open create new team form
-                                    Text("Add +")
-                                }.navigationBarBackButtonHidden()
-                            //}) {
+                            Button{
+//                                NavigationLink(destination: CoachCreateTeamView()){
+//                                    // Open create new team form
+//                                    Text("Add +")
+//                                }.navigationBarBackButtonHidden()
                                 
-                            //}
+                                showCreateTeam.toggle()
+                            } label: {
+                                Text("Add +")
+                            }
                         }) {
                             
                             ForEach(viewModel.teams, id: \.name) { team in
@@ -64,9 +66,9 @@ struct CoachAllTeamsView: View {
                 }
             }
         }
-//        .fullScreenCover(isPresented: $showCreateNewTeam) {
-//            CoachCreateTeamView()
-//        }
+        .fullScreenCover(isPresented: $showCreateTeam) {
+            CoachCreateTeamView()
+        }
     }
     
     private func addTeam() {
