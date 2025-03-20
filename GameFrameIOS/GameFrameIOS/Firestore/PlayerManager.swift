@@ -261,6 +261,16 @@ final class PlayerManager {
         try await playerDocument(id: player.id).updateData(data as [AnyHashable: Any])
     }
     
+    func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
+        let data: [String:Any] = [
+            DBPlayer.CodingKeys.jerseyNum.rawValue: jersey,
+            DBPlayer.CodingKeys.nickName.rawValue: nickname,
+        ]
+        
+        // update data in the database
+        try await playerDocument(id: playerDocId).updateData(data as [AnyHashable: Any])
+    }
+    
     func updatePlayerId(id: String, playerId: String) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.playerId.rawValue: playerId,

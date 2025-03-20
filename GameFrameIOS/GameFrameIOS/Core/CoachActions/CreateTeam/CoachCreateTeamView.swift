@@ -16,14 +16,9 @@ import SwiftData
  Note: This form is only accessible to the coach.
  */
 struct CoachCreateTeamView: View {
-    //@State var team: Team
     @Environment(\.dismiss) var dismiss // To go back to the Teams page, if needed
-    //@State var player: Player
-    //@Query private var players: [Player]
-    //@Environment(\.modelContext) private var modelContext
     @StateObject private var viewModel = CreateTeamViewModel()
     
-    //    let auth: AuthDataResultModel  // Pass the authenticated user
     let sportOptions = ["Soccer", "Hockey", "Basketball"]
     let genderOptions = ["Female", "Male", "Mixed", "Other"]
     let ageGroupOptions = ["U3", "U4", "U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12", "U13", "U14", "U15", "U16", "U17", "U18", "18+", "Senior", "None"]
@@ -37,8 +32,6 @@ struct CoachCreateTeamView: View {
     var body: some View {
         NavigationView {
             VStack {
-//                Text("Creating a New Team").font(.title3).bold().padding(.bottom)
-                
                 Form {
                     Section {
                         HStack {
@@ -58,16 +51,6 @@ struct CoachCreateTeamView: View {
                             Text("Logo")
                             Spacer()
                             
-                            //                                                        Button(action: { logoIsPresented.toggle()}) {
-                            //                                                            Text("Choose").contentShape(Rectangle())
-                            //                                                        }.sheet(isPresented: $logoIsPresented, content: {
-                            //                                                            SymbolsPicker(selection: $viewModel.icon, title: "Choose your team's logo", autoDismiss: true) {
-                            //                                                                Image(systemName: "xmark.diamond.fill")
-                            //                                                            }
-                            //                                                        })
-                            //
-                            //                                                        Image(systemName: viewModel.logoURL)//.foregroundStyle(team.color)
-                            //                                                    }
                             HStack {
                                 ColorPicker("Team Colour", selection: Binding(
                                     get: { viewModel.colour },
@@ -80,48 +63,25 @@ struct CoachCreateTeamView: View {
                                 .labelsHidden()
                             }
                         }
+                    }
                         
-                        Section {
-                            Picker("Gender", selection: $selectedGenderLabel)
-                            {
-                                ForEach(genderOptions, id: \.self) {gender in
-                                    Text(gender).tag(gender)
-                                }
+                    Section {
+                        Picker("Gender", selection: $selectedGenderLabel)
+                        {
+                            ForEach(genderOptions, id: \.self) {gender in
+                                Text(gender).tag(gender)
                             }
-                            HStack {
-                                Picker("Age group", selection: $selectedAgeGroupLabel)
-                                {
-                                    ForEach(ageGroupOptions, id: \.self) {
-                                        Text($0)
-                                    }
+                        }
+                        HStack {
+                            Picker("Age group", selection: $selectedAgeGroupLabel)
+                            {
+                                ForEach(ageGroupOptions, id: \.self) {
+                                    Text($0)
                                 }
                             }
                         }
-                        
-//                        Section(header:
-//                                    HStack {
-//                            Text("Adding Players").font(.headline).bold()
-//                            Spacer()
-//                            NavigationLink(destination: CoachAddPlayersView(player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))) {
-//                                
-//                                // Open create new team form
-//                                Text("Add +")
-//                            }
-//                        }){
-//                            Text("John Doe")
-//                            /*List {
-//                             ForEach(players) { player in
-//                             NavigationLink {
-//                             Text("Item at")
-//                             } label: {
-//                             Text(player.name)
-//                             }
-//                             }
-//                             }*/
-//                        }
-                        /** Check if the list is scrollable!! Make sure it is. */
-                        
                     }
+                    
                 }
                 }.toolbar {
                     ToolbarItem(placement: .topBarLeading) { // Back button on the top left
@@ -129,8 +89,7 @@ struct CoachCreateTeamView: View {
                             dismiss() // Dismiss the full-screen cover
                         }) {
                             HStack {
-                                Image(systemName: "chevron.left")
-                                Text("Back")
+                                Text("Cancel")
                             }
                         }
                     }
