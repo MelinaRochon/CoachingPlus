@@ -8,7 +8,6 @@
 import Foundation
 
 struct FullGameVideoRecordingDTO {
-    let id: String
     let fullGameVideoRecordingId: String
     let gameId: String
     let uploadedBy: String

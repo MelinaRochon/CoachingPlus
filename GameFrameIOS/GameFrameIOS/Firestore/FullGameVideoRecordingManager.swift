@@ -89,8 +89,25 @@ final class FullGameVideoRecordingManager {
     }
     
     /** Add a new full game video recording in the database */
-    func addFullGameVideoRecording(fullGameVideoRecording: DBFullGameVideoRecording) async throws {
+    func addFullGameVideoRecording(coachId: String, gameId: String, fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws {
         //Create new full game video recording
-        try fullGameVideoRecordingDocument(id: fullGameVideoRecording.fullGameVideoRecordingId).setData(from: fullGameVideoRecording, merge: false)
+        do {
+            print("Sending new full game recording to Firestore: \(fullGameVideoRecordingDTO)")
+            
+            // verifie coach valide
+            let coach = try await UserManager.shared.getUser(userId: coachId)
+            
+            let fgvRecordingDocument = fullGameVideoRecordingCollection.document()
+            let documentId = fgvRecordingDocument.documentID // get the document id
+
+            // create a new full game video recording
+            let fgvRecording = DBFullGameVideoRecording(id: documentId, fullGameVideoRecordingDTO: fullGameVideoRecordingDTO)
+            try fgvRecordingDocument.setData(from: fgvRecording, merge: false)
+            
+            print("Full game video recording created!")
+        } catch let error as NSError {
+            print("Error creating full game video recording: \(error.localizedDescription)")
+            throw error
+        }
     }
 }
