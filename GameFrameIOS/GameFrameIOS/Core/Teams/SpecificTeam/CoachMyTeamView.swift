@@ -14,6 +14,7 @@ struct CoachMyTeamView: View {
     let segmentTypes = ["Footage", "Players"]
     @State var teamName: String = "";
     @State var teamId: String = "";
+    @State private var teamDocId: String = "";
     
     @State private var addPlayerEnabled = false;
     @StateObject private var teamModel = TeamViewModel()
@@ -33,7 +34,7 @@ struct CoachMyTeamView: View {
                 List {
                     if (selectedSegmentIndex == 0) {
                         ForEach(teamModel.games, id: \.gameId) { game in
-                            NavigationLink(destination: CoachSpecificFootageView()) {
+                            NavigationLink(destination: CoachSpecificFootageView(gameId: game.gameId, teamDocId: teamDocId)) {
                                 HStack (alignment: .top) {
                                     Rectangle()
                                         .fill(Color.gray.opacity(0.3))
@@ -67,7 +68,8 @@ struct CoachMyTeamView: View {
                                     HStack {
                                         Text("\(player.firstName) \(player.lastName)")
                                         Spacer()
-                                        Text(player.status).foregroundStyle(.secondary).italic(true).padding(.trailing)
+                                        Text(player.status).font(.footnote).foregroundStyle(.secondary).italic(true).padding(.trailing)
+
                                     }
                                 }
 
@@ -84,6 +86,7 @@ struct CoachMyTeamView: View {
             .task {
                 do {
                     try await teamModel.loadTeam(name: teamName, teamId: teamId)
+                    self.teamDocId = teamModel.team!.id
                 } catch {
                     print("Error occured when loading the team. Aborting")
                 }

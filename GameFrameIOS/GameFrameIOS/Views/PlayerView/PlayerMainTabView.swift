@@ -16,7 +16,7 @@ struct PlayerMainTabView: View {
                 switch selectedTab {
                 case 0: PlayerHomePageView()
                 case 1: PlayerNotificationView()
-                case 2: PlayerAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
+                case 2: PlayerAllTeamsView()
                 case 3: PlayerProfileView(showLandingPageView: $showLandingPageView)                    
                 default: PlayerHomePageView()
                 }

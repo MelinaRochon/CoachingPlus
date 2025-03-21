@@ -10,13 +10,16 @@ import SwiftUI
 struct SearchKeyMomentsView: View {
     @State private var searchText: String = ""
 
+    @State var gameId: String // scheduled game id is passed when this view is called
+    @State var teamDocId: String // scheduled game id is passed when this view is called
+
     var body: some View {
         NavigationView {
             VStack {
                 List  {
                     ForEach(0..<5, id: \.self) { _ in
                         HStack (alignment: .top) {
-                            NavigationLink(destination: CoachSpecificKeyMomentView()) {
+                            NavigationLink(destination: CoachSpecificKeyMomentView(gameId: gameId, teamDocId: teamDocId)) {
                                 Rectangle()
                                     .fill(Color.gray.opacity(0.3))
                                     .frame(width: 110, height: 60)
@@ -46,5 +49,5 @@ struct SearchKeyMomentsView: View {
 }
 
 #Preview {
-    SearchKeyMomentsView()
+    SearchKeyMomentsView(gameId: "", teamDocId: "")
 }

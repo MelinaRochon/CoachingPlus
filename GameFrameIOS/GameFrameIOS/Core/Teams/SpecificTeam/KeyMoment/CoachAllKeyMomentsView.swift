@@ -1,23 +1,29 @@
 //
-//  PlayerAllKeyMomentsView.swift
+//  CoachAllKeymomentsView.swift
 //  GameFrameIOS
 //
-//  Created by Caterina Bosi on 2025-02-18.
+//  Created by Mélina Rochon on 2025-02-11.
 //
 
 import SwiftUI
 
-struct PlayerAllKeyMomentsView: View {
-        @State private var searchText: String = ""
-        @State private var showFilterSelector = false
-        
-        var body: some View {
-            NavigationView {
+/*** Shows all recorded key moments from a specific game. */
+struct CoachAllKeyMomentsView: View {
+    @State private var searchText: String = ""
+    @State private var showFilterSelector = false
+    
+    @State var gameId: String // scheduled game id is passed when this view is called
+    @State var teamDocId: String // scheduled game id is passed when this view is called
+    @StateObject private var viewModel = KeyMomentViewModel()
+
+    var body: some View {
+        NavigationView {
+            if let game = viewModel.game {
                 
                 VStack (alignment: .leading) {
                     VStack (alignment: .leading) {
                         HStack(spacing: 0) {
-                            Text("Game X VS Y")
+                            Text(game.title)
                                 .font(.title2)
                             Spacer()
                             Button (action: {
@@ -29,8 +35,13 @@ struct PlayerAllKeyMomentsView: View {
                         
                         HStack {
                             VStack(alignment: .leading) {
-                                Text("Team 1").font(.subheadline).foregroundStyle(.black.opacity(0.9))
-                                Text("dd/mm/yyyy hh:mm:ss").font(.subheadline).foregroundStyle(.secondary)
+                                if let team = viewModel.team {
+                                    Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))
+                                }
+                                
+                                if let startTime = game.startTime {
+                                    Text(startTime.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
+                                }
                             }
                             Spacer()
                             // Edit Icon
@@ -48,18 +59,25 @@ struct PlayerAllKeyMomentsView: View {
                     
                     Divider().padding(.vertical, 2)
                     
-                    //SearchKeyMomentsView()
-                      
+                    SearchKeyMomentsView(gameId: gameId, teamDocId: teamDocId)
+                    
+                    
                 }// Show filters
                 .sheet(isPresented: $showFilterSelector, content: {
                     FilterTranscriptsListView().presentationDetents([.medium])
                 })
-                
+            }
+            
+        }.task {
+            do {
+                try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
+            } catch {
+                print("Error when loading all key moments. \(error)")
             }
         }
     }
-
+}
 
 #Preview {
-    PlayerAllKeyMomentsView()
+    CoachAllKeyMomentsView(gameId: "", teamDocId: "")
 }

@@ -10,6 +10,10 @@ import SwiftUI
 /** Shows all transcripts saved using a list */
 struct SearchTranscriptView: View {
     @State private var searchText: String = ""
+    
+    @State var gameId: String // scheduled game id is passed when this view is called
+    @State var teamDocId: String // scheduled game id is passed when this view is called
+
     var body: some View {
         NavigationView {
             
@@ -17,7 +21,7 @@ struct SearchTranscriptView: View {
                 List {
                     ForEach(0..<10, id: \.self) { _ in
                         HStack(alignment: .top) {
-                            NavigationLink(destination: CoachSpecificTranscriptView()) {
+                            NavigationLink(destination: CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId)) {
                                 VStack {
                                     HStack(alignment: .top) {
                                         Text("hh:mm:ss")
@@ -46,5 +50,5 @@ struct SearchTranscriptView: View {
 }
 
 #Preview {
-    SearchTranscriptView()
+    SearchTranscriptView(gameId: "", teamDocId: "")
 }

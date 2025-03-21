@@ -32,16 +32,19 @@ struct PlayerHomePageView: View {
                                 
                                 // Loop through games and show a preview of the next 3 games
                                 ForEach(viewModel.futureGames.prefix(3), id: \.game.gameId) { scheduledGame in
-                                    HStack {
-                                        VStack {
-                                            Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            
-                                            Text(scheduledGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            Text(scheduledGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            
-                                            Divider().background(content: { Color.gray.opacity(0.3) })
-                                        }
+                                    NavigationLink(destination: SelectedScheduledGameView(gameId: scheduledGame.game.gameId, teamDocId: scheduledGame.team.id)) {
                                         
+                                        HStack {
+                                            VStack {
+                                                Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                
+                                                Text(scheduledGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                Text(scheduledGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                
+                                                Divider().background(content: { Color.gray.opacity(0.3) })
+                                            }
+                                            
+                                        }
                                     }
                                 }
                                 
@@ -55,7 +58,7 @@ struct PlayerHomePageView: View {
                             
                             // Recent Footage Section
                             VStack(alignment: .leading, spacing: 10) {
-                                NavigationLink(destination: CoachAllRecentFootageView()) {
+                                NavigationLink(destination: PlayerAllRecentFootageView()) {
                                     Text("Recent Footage")
                                         .font(.headline)
                                         .foregroundColor(.blue)
@@ -90,7 +93,7 @@ struct PlayerHomePageView: View {
                 }
                 
                 // Show loader if the data is loading
-                if viewModel.futureGames.isEmpty || viewModel.pastGames.isEmpty {
+                if viewModel.futureGames.isEmpty && viewModel.pastGames.isEmpty {
                     VStack() {
                         ProgressView("Loading games...")
                             .progressViewStyle(CircularProgressViewStyle())

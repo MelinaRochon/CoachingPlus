@@ -1,24 +1,28 @@
 //
-//  PlayerAllKeyMomentsView.swift
+//  CoachAllTranscriptsView.swift
 //  GameFrameIOS
 //
-//  Created by Caterina Bosi on 2025-02-18.
+//  Created by Mélina Rochon on 2025-02-05.
 //
 
 import SwiftUI
 
-struct PlayerAllKeyMomentsView: View {
-        @State private var searchText: String = ""
-        @State private var showFilterSelector = false
-        
-        var body: some View {
-            NavigationView {
+struct CoachAllTranscriptsView: View {
+    @State private var searchText: String = ""
+    @State private var showFilterSelector = false
+    
+    @State var gameId: String // scheduled game id is passed when this view is called
+    @State var teamDocId: String // scheduled game id is passed when this view is called
+    @StateObject private var viewModel = TranscriptViewModel()
+
+    var body: some View {
+        NavigationView {
+            if let game = viewModel.game {
                 
                 VStack (alignment: .leading) {
                     VStack (alignment: .leading) {
                         HStack(spacing: 0) {
-                            Text("Game X VS Y")
-                                .font(.title2)
+                            Text(game.title).font(.title2)
                             Spacer()
                             Button (action: {
                                 showFilterSelector.toggle()
@@ -29,8 +33,12 @@ struct PlayerAllKeyMomentsView: View {
                         
                         HStack {
                             VStack(alignment: .leading) {
-                                Text("Team 1").font(.subheadline).foregroundStyle(.black.opacity(0.9))
-                                Text("dd/mm/yyyy hh:mm:ss").font(.subheadline).foregroundStyle(.secondary)
+                                if let team = viewModel.team {
+                                    Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))
+                                }
+                                if let startTime = game.startTime {
+                                    Text(startTime.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
+                                }
                             }
                             Spacer()
                             // Edit Icon
@@ -48,18 +56,24 @@ struct PlayerAllKeyMomentsView: View {
                     
                     Divider().padding(.vertical, 2)
                     
-                    //SearchKeyMomentsView()
-                      
+                    SearchTranscriptView(gameId: gameId, teamDocId: teamDocId)
                 }// Show filters
                 .sheet(isPresented: $showFilterSelector, content: {
                     FilterTranscriptsListView().presentationDetents([.medium])
                 })
                 
             }
+        }.task {
+            do {
+                try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
+            } catch {
+                print("Error when loading all key moments. \(error)")
+            }
         }
+        
     }
-
+}
 
 #Preview {
-    PlayerAllKeyMomentsView()
+    CoachAllTranscriptsView(gameId: "", teamDocId: "")
 }

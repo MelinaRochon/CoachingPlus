@@ -12,7 +12,10 @@ struct PlayerMyTeamView: View {
     @State private var selectedSegmentIndex = 0
     @State private var showAddPlayersSection = false
     @State var teamName: String = "";
-    //@State private var path = NavigationPath() // Stores the navigation history
+    @State var teamId: String = "";
+
+    @StateObject private var teamModel = TeamViewModel()
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -22,63 +25,39 @@ struct PlayerMyTeamView: View {
                         Section(header: HStack {
                             Text("This week") // Section header text
                         }) {
-                            NavigationLink(destination: PlayerSpecificFootageView()) {
-                                HStack (alignment: .top) {
-                                    Rectangle()
-                                        .fill(Color.gray.opacity(0.3))
-                                        .frame(width: 110, height: 60)
-                                        .cornerRadius(10)
-                                    
-                                    VStack {
-                                        Text("Game A vs C").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                            ForEach(teamModel.games, id: \.gameId) { game in
+                                NavigationLink(destination: PlayerSpecificFootageView()) {
+                                    HStack (alignment: .top) {
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.3))
+                                            .frame(width: 110, height: 60)
+                                            .cornerRadius(10)
                                         
-                                        Text("mm/dd/yyyy").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                        VStack {
+                                            Text(game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                            
+                                            Text(game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                        }
                                     }
                                 }
                             }
                             
                         }
-                        
-                        Section(header: HStack {
-                            Text("Last 30 days") // Section header text
-                        }) {
-                            HStack (alignment: .top) {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 110, height: 60)
-                                    .cornerRadius(10)
-                                
-                                VStack {
-                                    Text("Game A vs B").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    
-                                    Text("mm/dd/yyyy").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                            }
-                            
-                            HStack (alignment: .top) {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 110, height: 60)
-                                    .cornerRadius(10)
-                                
-                                VStack {
-                                    Text("Game A vs Y").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    
-                                    Text("mm/dd/yyyy").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                            }
-                        }
-                    
                 }.listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                    //.background(Color.white) // Set background color to white for the List
-                  
             }.navigationTitle(Text(teamName))
-            
+            .navigationBarTitleDisplayMode(.large)
+            .task {
+                do {
+                    try await teamModel.loadTeam(name: teamName, teamId: teamId)
+                } catch {
+                    print("Error occured when loading the team. Aborting")
+                }
+            }
             
         }
     }
 }
 
 #Preview {
-    PlayerMyTeamView(teamName: "Team 1")
+    PlayerMyTeamView(teamName: "", teamId: "")
 }

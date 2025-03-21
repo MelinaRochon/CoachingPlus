@@ -13,9 +13,8 @@ import SwiftUI
  The player also has a similar Teams page, showing all teams that they are registered in.
  */
 struct CoachAllTeamsView: View {
-    @State private var showCreateNewTeam = false // Switch to coach recording page
     @StateObject private var viewModel = AllTeamsViewModel()
-    @State private var showCreateTeam: Bool = false
+    @State private var showCreateTeam: Bool = false // Toggle to create a team
     var body: some View {
         NavigationStack {
             VStack {
@@ -26,16 +25,7 @@ struct CoachAllTeamsView: View {
                         Section(header: HStack {
                             Text("My Teams") // Section header text
                             Spacer() // Push the button to the right
-//                            Button(action: addTeam) {
-//                                // Open create new team form
-//                                Text("Add +")
-//                            }
                             Button{
-//                                NavigationLink(destination: CoachCreateTeamView()){
-//                                    // Open create new team form
-//                                    Text("Add +")
-//                                }.navigationBarBackButtonHidden()
-                                
                                 showCreateTeam.toggle()
                             } label: {
                                 Text("Add +")
@@ -68,12 +58,6 @@ struct CoachAllTeamsView: View {
         }
         .fullScreenCover(isPresented: $showCreateTeam) {
             CoachCreateTeamView()
-        }
-    }
-    
-    private func addTeam() {
-        withAnimation {
-            showCreateNewTeam.toggle()
         }
     }
 }

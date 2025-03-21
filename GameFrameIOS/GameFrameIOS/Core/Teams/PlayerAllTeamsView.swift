@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct PlayerAllTeamsView: View {
-    @State var team: Team;
     @State private var showTextField = false // Controls visibility of text field
     @State private var groupCode: String = "" // Stores entered text
     @State private var showInitialView = true // Tracks if "Have a Group Code?" and "Enter Code" should be shown
@@ -19,14 +18,14 @@ struct PlayerAllTeamsView: View {
             VStack {
                 
                 Divider() // This adds a divider after the title
-//                if !viewModel.teams.isEmpty {
+                if !viewModel.teams.isEmpty {
                     List {
                         Section(header: HStack {
                             Text("My Teams") // Section header text
                             Spacer() // Push the button to the right
                         }) {
                             ForEach(viewModel.teams, id: \.name) { team in
-                                NavigationLink(destination: PlayerMyTeamView(teamName: team.name)
+                                NavigationLink(destination: PlayerMyTeamView(teamName: team.name, teamId: team.teamId)
                                 ) {
                                     HStack {
                                         Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
@@ -37,7 +36,7 @@ struct PlayerAllTeamsView: View {
                         }
                     }
                     .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                
+                }
                 
                 
                 VStack {
@@ -111,12 +110,9 @@ struct PlayerAllTeamsView: View {
                         .transition(.opacity) // Smooth fade-in/out effect
                     }
                 }
-                .padding(.bottom, 85)
-//                }
-                
+                .padding(.bottom, 85)                
             }.transaction { $0.animation = nil }
         }
-        //.background(Color.white)
         .navigationTitle(Text("Teams"))
         .transaction { $0.animation = nil } // Prevents title animation
         .task {
@@ -131,5 +127,5 @@ struct PlayerAllTeamsView: View {
 }
 
 #Preview {
-    PlayerAllTeamsView(team: .init(name: "", sport: 0, icon: "", color: .blue, gender: 0, ageGrp: "", players: ""))
+    PlayerAllTeamsView()
 }
