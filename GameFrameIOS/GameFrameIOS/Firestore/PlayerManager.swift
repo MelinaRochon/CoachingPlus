@@ -125,7 +125,6 @@ final class PlayerManager {
     static let shared = PlayerManager()
     private init() { } // TO DO - Will need to use something else than singleton
     
-    
     private let playerCollection = Firestore.firestore().collection("players") // user collection
     
     /** Returns the player document */
@@ -141,7 +140,6 @@ final class PlayerManager {
         // create a player object
         let player = DBPlayer(id: documentId, playerDTO: playerDTO)
         try playerDocument.setData(from: player, merge: false)
-        //try playerDocument(playerId: player.playerId).setData(from: player, merge: false)
         return documentId
     }
     
@@ -150,7 +148,6 @@ final class PlayerManager {
         let query = try await playerCollection.whereField("player_id", isEqualTo: playerId).getDocuments()
         guard let doc = query.documents.first else { return nil }
         return try doc.data(as: DBPlayer.self)
-        //try await playerDocument(playerId: userId).getDocument(as: DBPlayer.self)
     }
     
     func findPlayerWithId(id: String) async throws -> DBPlayer? {
@@ -176,7 +173,6 @@ final class PlayerManager {
         ]
         
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
-        //try await playerDocument(playerId: playerId).updateData(data)
     }
     
     /** Remove all the guardian information from the player's document */
@@ -188,7 +184,6 @@ final class PlayerManager {
         ]
         
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
-        //try await playerDocument(playerId: playerId).updateData(data as [AnyHashable: Any])
     }
     
     /** PUT - Add to the 'teamsEnrolled' array the teamId */
@@ -199,8 +194,6 @@ final class PlayerManager {
         
         // Update the document asynchronously
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
-
-        //try await playerDocument(playerId: playerId).updateData(data as [AnyHashable : Any])
     }
     
     /** DELETE - Remove a team id in the  'teamsEnrolled' array */
@@ -212,8 +205,6 @@ final class PlayerManager {
         
         // Update the document asynchronously
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
-
-        //try await playerDocument(playerId: playerId).updateData(data as [AnyHashable : Any])
     }
     
     /** Remove the guardian name from the player's document */
@@ -223,8 +214,6 @@ final class PlayerManager {
         ]
         
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
-
-        //try await playerDocument(playerId: playerId).updateData(data as [AnyHashable: Any])
     }
     
     /** Remove the guardian email address from the player's document */
@@ -234,8 +223,6 @@ final class PlayerManager {
         ]
         
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
-
-        //try await playerDocument(playerId: playerId).updateData(data as [AnyHashable: Any])
     }
     
     /** Remove the guardian phone number from the player's document */
@@ -245,8 +232,6 @@ final class PlayerManager {
         ]
         
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
-
-        //try await playerDocument(playerId: playerId).updateData(data as [AnyHashable: Any])
     }
     
     /** Updates the player's information on the 'player' collection */
@@ -281,19 +266,17 @@ final class PlayerManager {
     func getTeamsEnrolled(playerId: String) async throws -> [GetTeam] {
         
         let player = try await getPlayer(playerId: playerId)!
-        print("player info: \(player)")
         
         // Fetch the team documents with the IDs from the user's itemsArray
-        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled ?? []).getDocuments()
+        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled).getDocuments()
 
         // Map the documents to Team objects and get their names
         var teams: [GetTeam] = []
         for document in snapshot.documents {
             if let team = try? document.data(as: DBTeam.self) {
                 // Add a Team object with the teamId and team name
-                let teamObject = GetTeam(teamId: team.teamId, name: team.name)
+                let teamObject = GetTeam(teamId: team.teamId, name: team.name, nickname: team.teamNickname)
                 teams.append(teamObject)
-                print("Loaded team: \(team.name) with ID: \(team.teamId)")
             }
         }
             
@@ -303,21 +286,12 @@ final class PlayerManager {
     func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
         let player = try await getPlayer(playerId: playerId)!
         print("player info: \(player)")
-        // Check if the player exists
-//            guard let player = player else {
-//                throw NSError(domain: "PlayerManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "Player not found"])
-//            }
-//
+
         // Check if the player is enrolled in the specific team by matching teamId in teamsEnrolled
         return player.teamsEnrolled.contains(teamId)
 
     }
-    
-//    func getPlayerName(playerId: String) async throws -> PlayerName {
-//        UserManager.shared.getUser(userId: playerId)
-//    }
 }
-
 
 struct PlayerName {
     let playerId: String

@@ -1,31 +1,32 @@
 //
-//  SelectedScheduledGameView.swift
+//  GameDetailsView.swift
 //  GameFrameIOS
 //
-//  Created by Mélina Rochon on 2025-03-18.
+//  Created by Mélina Rochon on 2025-03-23.
 //
 
 import SwiftUI
 
-struct SelectedScheduledGameView: View {
+struct GameDetailsView: View {
     @StateObject private var viewModel = SelectedGameModel()
     @State var gameId: String // scheduled game id is passed when this view is called
     @State var teamDocId: String // scheduled game id is passed when this view is called
+    @Environment(\.dismiss) var dismiss // To go back to the Teams page, if needed
     
     @State private var hours: Int = 0;
     @State private var minutes: Int = 0;
     @State var recordReminder: Bool = false;
     
     var body: some View {
+        
         NavigationView {
-            if let selectedGame = viewModel.selectedGame {
-                VStack {
+            VStack {
+                if let selectedGame = viewModel.selectedGame {
                     Text(selectedGame.game.title).font(.largeTitle).bold().multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 5).padding(.bottom, 5).padding(.horizontal)
-                    
                     // View the game details
                     VStack {
                         Text("Game Details").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline)
-
+                        
                         HStack {
                             Image(systemName: "person.2.fill").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
                             Text(selectedGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
@@ -74,20 +75,19 @@ struct SelectedScheduledGameView: View {
                             // TO DO - If is not a scheduled game and there was a video recording, show the actual game duration!
                         }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
                         
+                        
                     }.padding(.horizontal)
                     
                     if let userType = viewModel.userType {
-                        
                         if (userType == "Coach") {
                             Divider()
-                            
                             // View the game Settings
                             List {
                                 Text("Game Settings").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline)
                                 HStack {
                                     Text("Duration")
                                     Spacer()
-                                    Text("\(hours)h\(minutes)m").foregroundStyle(.secondary)
+                                    Text("\(hours) h \(minutes) m").foregroundStyle(.secondary)
                                 }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                 HStack {
                                     Text("Time Before Feedback")
@@ -108,10 +108,20 @@ struct SelectedScheduledGameView: View {
                                         Text("\(selectedGame.game.scheduledTimeReminder) seconds").foregroundStyle(.secondary)
                                     }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                 }
+                                
                             }.listStyle(.plain)
                         }
                     }
                     Spacer()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Done").font(.subheadline)
+                    }
                 }
             }
         }
@@ -127,28 +137,13 @@ struct SelectedScheduledGameView: View {
                     self.recordReminder = selectedGame.game.recordingReminder
                 }
                 
+                
             } catch {
                 print("ERROR. \(error)")
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                // Start the recording
-                Button
-                {
-                    // TO DO - Will need to add some action here....
-                    // MAYBE only show the start button when the game is in lets say 5 minutes or 10 minutes later??..
-                } label: {
-                    HStack {
-                        Text("Start").font(.subheadline)
-                        Image(systemName: "waveform").resizable().frame(width: 15, height: 15)
-                    }.foregroundColor(.white)
-                        .padding(.vertical, 8).padding(.horizontal, 12)
-                        .background(Color.green)
-                        .cornerRadius(25)
-                }
-            }
-        }
+        
+        
     }
     
     func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
@@ -159,5 +154,5 @@ struct SelectedScheduledGameView: View {
 }
 
 #Preview {
-    SelectedScheduledGameView(gameId: "", teamDocId: "")
+    GameDetailsView(gameId: "", teamDocId: "")
 }

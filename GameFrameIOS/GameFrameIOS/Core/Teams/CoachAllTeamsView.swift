@@ -13,6 +13,8 @@ import SwiftUI
  The player also has a similar Teams page, showing all teams that they are registered in.
  */
 struct CoachAllTeamsView: View {
+//    @State private var showAlert = false
+
     @StateObject private var viewModel = AllTeamsViewModel()
     @State private var showCreateTeam: Bool = false // Toggle to create a team
     var body: some View {
@@ -33,7 +35,7 @@ struct CoachAllTeamsView: View {
                         }) {
                             
                             ForEach(viewModel.teams, id: \.name) { team in
-                                NavigationLink(destination: CoachMyTeamView(teamName: team.name, teamId: team.teamId))
+                                NavigationLink(destination: CoachMyTeamView(teamNickname: team.nickname, teamId: team.teamId))
                                 {
                                     HStack {
                                         Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
@@ -55,9 +57,28 @@ struct CoachAllTeamsView: View {
                     print("Error. Aborting... \(error)")
                 }
             }
+            
         }
-        .fullScreenCover(isPresented: $showCreateTeam) {
+        .sheet(isPresented: $showCreateTeam, onDismiss: refreshTeams) {
             CoachCreateTeamView()
+//                .gesture(DragGesture().onChanged { _ in
+//                    showAlert = true
+//                })
+//                .alert("Drag Detected", isPresented: $showAlert) {
+//                    Button("OK", role: .cancel) { }
+//                }
+        }
+
+    }
+    
+    private func refreshTeams() {
+        Task {
+            do {
+                try await viewModel.loadAllTeams()
+                
+            } catch {
+                print("Error occured when refreshing teams. Aborting... \(error)")
+            }
         }
     }
 }

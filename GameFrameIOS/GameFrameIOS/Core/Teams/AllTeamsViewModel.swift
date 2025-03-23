@@ -53,7 +53,6 @@ final class AllTeamsViewModel: ObservableObject {
             return
         }
         
-        
         // If no problem, then add player to team
         // 1. insert player id in team players array
         try await TeamManager.shared.addPlayerToTeam(id: team.id, playerId: authUser.uid)
@@ -68,7 +67,7 @@ final class AllTeamsViewModel: ObservableObject {
         try await PlayerManager.shared.addTeamToPlayer(id: player.id, teamId: team.teamId)
         
         // show this new team by adding it to the teams array
-        let newTeam = GetTeam(teamId: team.teamId, name: team.name)
+        let newTeam = GetTeam(teamId: team.teamId, name: team.name, nickname: team.teamNickname)
         self.teams.append(newTeam) // adding new team to the page
     }
 }

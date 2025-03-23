@@ -33,12 +33,16 @@ struct CoachCreateTeamView: View {
         NavigationView {
             VStack {
                 Form {
-                    Section {
-                        HStack {
-                            Text("Name")
-                            Spacer()
-                            TextField("Team Name", text: $viewModel.name).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                    Section (footer: Text("Team nickname cannot exceed 10 characters.")) {
+                        TextField("Team Name", text: $viewModel.name).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                        TextField("Nickname", text: $viewModel.nickname).foregroundStyle(.secondary).multilineTextAlignment(.leading).onChange(of: viewModel.nickname) { nickname in
+                            if nickname.count > 10 {
+                                viewModel.nickname = String(nickname.prefix(10)) // Truncate excess characters. Don't accept more than 10
+                            }
                         }
+                    }
+                    
+                    Section (header: Text("Additional Details")) {
                         HStack {
                             Picker("Sport", selection: $selectedSportLabel)
                             {
@@ -47,6 +51,24 @@ struct CoachCreateTeamView: View {
                                 }
                             }
                         }
+                        
+                        Picker("Gender", selection: $selectedGenderLabel)
+                        {
+                            ForEach(genderOptions, id: \.self) {gender in
+                                Text(gender).tag(gender)
+                            }
+                        }
+                        HStack {
+                            Picker("Age group", selection: $selectedAgeGroupLabel)
+                            {
+                                ForEach(ageGroupOptions, id: \.self) {
+                                    Text($0)
+                                }
+                            }
+                        }
+                    }
+                    
+                    Section(header: Text("Optional Details")) {
                         HStack {
                             Text("Logo")
                             Spacer()
@@ -64,63 +86,45 @@ struct CoachCreateTeamView: View {
                             }
                         }
                     }
-                        
-                    Section {
-                        Picker("Gender", selection: $selectedGenderLabel)
-                        {
-                            ForEach(genderOptions, id: \.self) {gender in
-                                Text(gender).tag(gender)
-                            }
-                        }
-                        HStack {
-                            Picker("Age group", selection: $selectedAgeGroupLabel)
-                            {
-                                ForEach(ageGroupOptions, id: \.self) {
-                                    Text($0)
-                                }
-                            }
-                        }
-                    }
-                    
                 }
-                }.toolbar {
-                    ToolbarItem(placement: .topBarLeading) { // Back button on the top left
-                        Button(action: {
-                            dismiss() // Dismiss the full-screen cover
-                        }) {
-                            HStack {
-                                Text("Cancel")
-                            }
+            }.toolbar {
+                ToolbarItem(placement: .topBarLeading) { // Back button on the top left
+                    Button(action: {
+                        dismiss() // Dismiss the full-screen cover
+                    }) {
+                        HStack {
+                            Text("Cancel")
                         }
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: { /* Action will need to be added -> complete team form */
-                            
-                            viewModel.sport = selectedSportLabel
-                            viewModel.gender = selectedGenderLabel
-                            viewModel.ageGrp = selectedAgeGroupLabel
-
-                            Task{
-                                do {
-                                    let canWeDismiss = try await viewModel.createTeam()
-                                    if (canWeDismiss) {
-                                        dismiss() // Dismiss the full-screen cover
-                                    }
-                                } catch {
-                                    viewModel.alertMessage = "Error: \(error.localizedDescription)"
-                                    viewModel.showAlert = true
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: { /* Action will need to be added -> complete team form */
+                        
+                        viewModel.sport = selectedSportLabel
+                        viewModel.gender = selectedGenderLabel
+                        viewModel.ageGrp = selectedAgeGroupLabel
+                        
+                        Task{
+                            do {
+                                let canWeDismiss = try await viewModel.createTeam()
+                                if (canWeDismiss) {
+                                    dismiss() // Dismiss the full-screen cover
                                 }
+                            } catch {
+                                viewModel.alertMessage = "Error: \(error.localizedDescription)"
+                                viewModel.showAlert = true
                             }
-                            viewModel.test()
-                        }) {
-                            Text("Create")
                         }
+                        viewModel.test()
+                    }) {
+                        Text("Create")
                     }
-                }.alert(isPresented: $viewModel.showAlert) {
-                    Alert(title: Text("Message"), message: Text(viewModel.alertMessage), dismissButton: .default(Text("OK")))
-                }.navigationTitle(Text("Creating a New Team")).navigationBarTitleDisplayMode(.inline)
-                
-        }.navigationBarBackButtonHidden(true)
+                }
+            }
+            .alert(isPresented: $viewModel.showAlert) {
+                Alert(title: Text("Message"), message: Text(viewModel.alertMessage), dismissButton: .default(Text("OK")))
+            }.navigationTitle(Text("Creating a New Team")).navigationBarTitleDisplayMode(.inline)
+        }.navigationBarBackButtonHidden(true) // disabled the back button as we have a sheet
     }
 }
 

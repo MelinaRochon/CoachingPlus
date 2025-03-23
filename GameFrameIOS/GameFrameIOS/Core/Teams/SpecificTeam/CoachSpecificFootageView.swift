@@ -13,6 +13,7 @@ struct CoachSpecificFootageView: View {
     @State var teamDocId: String // team document id
     
     @StateObject private var viewModel = SelectedGameModel()
+    @State private var isGameDetailsEnabled: Bool = false
     
     var body: some View {
         NavigationView {
@@ -22,16 +23,18 @@ struct CoachSpecificFootageView: View {
                         HStack(alignment: .top) {
                             VStack {
                                 Text(selectedGame.game.title).font(.title2).multilineTextAlignment(.center)
-                                Text(selectedGame.team.name).font(.headline).foregroundStyle(.black.opacity(0.9))
+                                Text(selectedGame.team.teamNickname).font(.headline) //.foregroundStyle(.black.opacity(0.9))
                                 if let startTime = selectedGame.game.startTime {
                                     Text(startTime, style: .date).font(.subheadline).foregroundStyle(.secondary)
                                 }
-                                if let location = selectedGame.game.location {
-                                    Text(location).font(.subheadline).foregroundStyle(.secondary).italic(true).multilineTextAlignment(.center).padding(.bottom, 2).padding(.horizontal)
+                                
+                                Button {
+                                    isGameDetailsEnabled.toggle()
+                                } label: {
+                                    Text("View Game Details").foregroundColor(Color.red).underline()
                                 }
                                 Divider()
                             }
-                            
                         }
                         
                         // Watch Full Game
@@ -127,7 +130,6 @@ struct CoachSpecificFootageView: View {
                         }.padding()
                             .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
                             .padding(.horizontal).padding(.top)
-                        
                     }
                 }
             }
@@ -139,10 +141,11 @@ struct CoachSpecificFootageView: View {
                     print("Error when fetching specific footage info: \(error)")
                 }
             }
+            .sheet(isPresented: $isGameDetailsEnabled) {
+                GameDetailsView(gameId: gameId, teamDocId: teamDocId)
+            }
         }
     }
-    
-    
 }
 
 #Preview {

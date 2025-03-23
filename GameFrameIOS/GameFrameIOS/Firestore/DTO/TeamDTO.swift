@@ -10,6 +10,7 @@ import Foundation
 struct TeamDTO {
     let teamId: String
     let name: String
+    let teamNickname: String
     let sport: String
     let logoUrl: String?
     let colour: String?

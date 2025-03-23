@@ -12,6 +12,7 @@ struct DBTeam: Codable {
     let id: String
     let teamId: String
     let name: String
+    let teamNickname: String
     let sport: String
     let logoUrl: String?
     let colour: String?
@@ -26,6 +27,7 @@ struct DBTeam: Codable {
         id: String,
         teamId: String,
         name: String,
+        teamNickname: String,
         sport: String,
         logoUrl: String? = nil,
         colour: String? = nil,
@@ -39,6 +41,7 @@ struct DBTeam: Codable {
         self.id = id
         self.teamId = teamId
         self.name = name
+        self.teamNickname = teamNickname
         self.sport = sport
         self.logoUrl = logoUrl
         self.colour = colour
@@ -54,6 +57,7 @@ struct DBTeam: Codable {
         self.id = id
         self.teamId = teamDTO.teamId
         self.name = teamDTO.name
+        self.teamNickname = teamDTO.teamNickname
         self.sport = teamDTO.sport
         self.logoUrl = teamDTO.logoUrl
         self.colour = teamDTO.colour
@@ -69,6 +73,7 @@ struct DBTeam: Codable {
         case id = "id"
         case teamId = "team_id"
         case name = "name"
+        case teamNickname = "team_nickname"
         case sport = "sport"
         case logoUrl = "logo_url"
         case colour = "colour"
@@ -85,6 +90,7 @@ struct DBTeam: Codable {
         self.id = try container.decode(String.self, forKey: .id)
         self.teamId = try container.decode(String.self, forKey: .teamId)
         self.name = try container.decode(String.self, forKey: .name)
+        self.teamNickname = try container.decode(String.self, forKey: .teamNickname)
         self.sport = try container.decode(String.self, forKey: .sport)
         self.logoUrl = try container.decode(String.self, forKey: .logoUrl)
         self.colour = try container.decode(String.self, forKey: .colour)
@@ -102,6 +108,7 @@ struct DBTeam: Codable {
         try container.encode(self.id, forKey: .id)
         try container.encode(self.teamId, forKey: .teamId)
         try container.encode(self.name, forKey: .name)
+        try container.encode(self.teamNickname, forKey: .teamNickname)
         try container.encode(self.sport, forKey: .sport)
         try container.encodeIfPresent(self.logoUrl, forKey: .logoUrl)
         try container.encodeIfPresent(self.colour, forKey: .colour)

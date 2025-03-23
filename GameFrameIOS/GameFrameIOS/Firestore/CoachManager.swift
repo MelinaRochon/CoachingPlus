@@ -131,7 +131,6 @@ final class CoachManager {
     func loadTeamsCoaching(coachId: String) async throws -> [GetTeam] {
         
         let coach = try await getCoach(coachId: coachId)!
-        print("coach: \(coach)")
         
         // Fetch the team documents with the IDs from the user's itemsArray
         let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: coach.teamsCoaching ?? []).getDocuments()
@@ -140,9 +139,8 @@ final class CoachManager {
         for document in snapshot.documents {
             if let team = try? document.data(as: DBTeam.self) {
                 // Add a Team object with the teamId and team name
-                let teamObject = GetTeam(teamId: team.teamId, name: team.name)
+                let teamObject = GetTeam(teamId: team.teamId, name: team.name, nickname: team.teamNickname)
                 teams.append(teamObject)
-                print("Loaded team: \(team.name) with ID: \(team.teamId)")
             }
         }
             

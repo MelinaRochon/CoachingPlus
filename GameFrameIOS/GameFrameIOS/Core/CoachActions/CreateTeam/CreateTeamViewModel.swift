@@ -13,6 +13,7 @@ final class CreateTeamViewModel: ObservableObject {
     @Published var team: DBTeam? = nil
     
     @Published var name = ""
+    @Published var nickname = "" // 10 characters
     @Published var sport = ""
     @Published var logoURL = ""
     @Published var colourHex: String = "#0000FF" // Default to blue
@@ -20,12 +21,11 @@ final class CreateTeamViewModel: ObservableObject {
     @Published var ageGrp = ""
     @Published var alertMessage = ""
     @Published var showAlert = false
-    //@Published var isLoading = false
     
     // Convert HEX to SwiftUI Color
-        var colour: Color {
-            return Color(hex: colourHex) ?? .blue
-        }
+    var colour: Color {
+        return Color(hex: colourHex) ?? .blue
+    }
     
     func createTeam() async throws -> Bool{
         do {
@@ -41,6 +41,7 @@ final class CreateTeamViewModel: ObservableObject {
             let newTeam = TeamDTO(
                 teamId: UUID().uuidString,
                 name: name,
+                teamNickname: nickname,
                 sport: sport,
                 logoUrl: logoURL.isEmpty ? "" : logoURL,
                 colour: colourHex,
@@ -53,8 +54,6 @@ final class CreateTeamViewModel: ObservableObject {
             )
 
             try await TeamManager.shared.createNewTeam(coachId: coachId, teamDTO: newTeam)
-            //try await TeamManager.shared.createNewTeam(coachId: coachId, team: newTeam)
-            
             return true
             
         } catch {

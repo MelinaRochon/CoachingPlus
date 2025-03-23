@@ -48,7 +48,8 @@ struct PlayerMyTeamView: View {
             .navigationBarTitleDisplayMode(.large)
             .task {
                 do {
-                    try await teamModel.loadTeam(name: teamName, teamId: teamId)
+                    try await teamModel.loadTeam(teamId: teamId)
+                    try await teamModel.loadGames(teamId: teamId)
                 } catch {
                     print("Error occured when loading the team. Aborting")
                 }

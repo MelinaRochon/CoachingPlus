@@ -9,121 +9,71 @@ import SwiftUI
 
 struct CoachAddPlayersView: View {
     
-    @StateObject private var viewModel = AddPlayersViewModel()
+    @StateObject private var viewModel = AddPlayersViewModel() // view Model to load the data 
     @State var teamId: String
     @Environment(\.dismiss) var dismiss // Go back to the create Team view
-//    @State var player: Player
+
     let genders = ["Female", "Male", "Other"]
-    //@Binding var path = NavigationPath // Stores the navigation history
-    //@Environment(\.modelContext) private var modelContext
-    
-//    var dateRange: ClosedRange<Date> {
-//        let min = Calendar.current.date(byAdding: .year, value: -1, to: player.dob)!
-//        let max = Calendar.current.date(byAdding: .year, value: 1, to: player.dob)!
-//            return min...max
-//        }
     
     var body: some View {
         
         NavigationView {
             VStack {
-                //Text("Adding a Player").font(.title3).bold().padding(.bottom)
                 Form {
                     Section {
-                        HStack {
-                            Text("First name")
-                            Spacer()
-                            TextField("First name", text: $viewModel.firstName).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
-                        }
-                        
-                        HStack {
-                            Text("Last name")
-                            Spacer()
-                            TextField("Last name", text: $viewModel.lastName).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
-                        }
+                        TextField("First name", text: $viewModel.firstName).foregroundStyle(.secondary) //.multilineTextAlignment(.trailing)
+                        TextField("Last name", text: $viewModel.lastName).foregroundStyle(.secondary) //.multilineTextAlignment(.trailing)
                     }
-                    Section {
-//                        DatePicker(selection: $player.dob, in: dateRange, displayedComponents: .date) {
-//                            Text("Date of birth")
-//                        }
-                        
+                    
+                    Section(footer: Text("The invite will be sent to this email address.")) {
+                        TextField("Email address", text: $viewModel.email).foregroundStyle(.secondary).multilineTextAlignment(.leading).textContentType(.emailAddress).keyboardType(.emailAddress).autocapitalization(.none)
+                    }
+                    
+                    Section (header: Text("Optional Player Information")) {
+                        TextField("Player Nickname", text: $viewModel.nickname).foregroundStyle(.secondary) //.multilineTextAlignment(.trailing)
                         HStack {
                             Text("Jersey #")
                             Spacer()
                             // Will need to make this only for int -> make sure it doesn't allow + or -
-                            TextField("Jersey", value: $viewModel.jersey, format: .number).foregroundStyle(.secondary).multilineTextAlignment(.trailing).keyboardType(.numberPad)
-                        }
-                        HStack {
-                            Text("Nickname")
-                            Spacer()
-                            TextField("Nickname", text: $viewModel.nickname).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
-                        }
-                    }
-                    
-                    Section(footer: Text("The invite will be sent to this email address.")) {
-                        HStack {
-                            Text("Email")
-                            Spacer()
-                            TextField("Email address", text: $viewModel.email).foregroundStyle(.secondary).multilineTextAlignment(.trailing).textContentType(.emailAddress).keyboardType(.emailAddress).autocapitalization(.none)
+                            TextField("Jersey", value: $viewModel.jersey, format: .number).foregroundStyle(.primary).multilineTextAlignment(.trailing).keyboardType(.numberPad)
                         }
                     }
                     
                     Section (header: Text("Guardian Information")) {
-                        HStack {
-                            Text("Name")
-                            Spacer()
-                            TextField("Guardian Name", text: $viewModel.guardianName).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
-                        }
-                        
-                        HStack {
-                            Text("Email")
-                            Spacer()
-                            TextField("Guardian Email", text: $viewModel.guardianEmail).foregroundStyle(.secondary).multilineTextAlignment(.trailing).keyboardType(.emailAddress).textContentType(.emailAddress)
-                        }
-                        
-                        HStack {
-                            Text("Phone")
-                            Spacer()
-//                            TextField("XXX-XXX-XXXX", text: Binding (get: {$viewModel.guardianPhone}, set: { val in $viewModel.guardianPhone = formatPhoneNumber(val)})).foregroundStyle(.secondary).multilineTextAlignment(.trailing).keyboardType(.phonePad)
-                            TextField("XXX-XXX-XXXX", text: $viewModel.guardianPhone).foregroundStyle(.secondary).multilineTextAlignment(.trailing).keyboardType(.phonePad).textContentType(.telephoneNumber)
-                        }
+                        TextField("Guardian Name", text: $viewModel.guardianName).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                        TextField("Guardian Email", text: $viewModel.guardianEmail).foregroundStyle(.secondary).multilineTextAlignment(.leading).keyboardType(.emailAddress).textContentType(.emailAddress)
+                        TextField("Guardian Phone", text: $viewModel.guardianPhone).foregroundStyle(.secondary).multilineTextAlignment(.leading).keyboardType(.phonePad).textContentType(.telephoneNumber)
                     }
                 }
                 
-            }.navigationTitle(Text("Adding a New Player")).navigationBarTitleDisplayMode(.inline)
-                .toolbar {
+            }
+            .navigationTitle(Text("Adding a New Player")).navigationBarTitleDisplayMode(.inline)
+            .toolbar {
                 ToolbarItem(placement: .topBarLeading) { // Back button on the top left
-                                    Button(action: {
-                                        dismiss() // Dismiss the full-screen cover
-                                    }) {
-                                        HStack {
-                                            Text("Cancel")
-                                        }
-                                    }
-                                }
+                    Button(action: {
+                        dismiss() // Dismiss the full-screen cover
+                    }) {
+                        HStack {
+                            Text("Cancel")
+                        }
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add") {
-                        // create player!
                         Task {
                             do {
-                                try await viewModel.addPlayerToTeam(teamId: teamId) // to add player
-                                //showSignInView = false
-                                //return
-                                dismiss() // Dismiss the full-screen cover
+                                let canDismiss = try await viewModel.addPlayerToTeam(teamId: teamId) // to add player
+                                if canDismiss {
+                                    dismiss() // Dismiss the full-screen cover
+                                }
                             } catch {
                                 print(error)
                             }
                         }
-                        //modelContext.insert(player)
-                        // Player's state is added to database
-                        // Go back to the Creating new team page -> new player should be shown in the list
                     }
                 }
             }
         }
-//        .navigationBarBackButtonHidden(true)
-        
-        
     }
     
     func formatPhoneNumber(_ number: String) -> String {
@@ -148,5 +98,4 @@ struct CoachAddPlayersView: View {
 
 #Preview {
     CoachAddPlayersView(teamId: "")
-//    player: .init(name: "Melina Rochon", dob: Date(), jersey: 34, gender: 1, email: "moch072@u.com", guardianName: "", guardianEmail: "", guardianPhone: ""))
 }

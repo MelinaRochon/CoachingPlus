@@ -35,11 +35,11 @@ struct DBGame: Codable {
     
     init(gameId: String, teamId: String) {
         self.gameId = gameId
-        self.title = ""
+        self.title = "Unknown Game"
         self.duration = 0 // by default, 0 seconds
         self.location = nil
         self.scheduledTimeReminder = 0 // by default, 0 minutes
-        self.startTime = nil
+        self.startTime = Date()
         self.timeBeforeFeedback = 10 // by default, 10 seconds
         self.timeAfterFeedback = 10 // by default, 10 seconds
         self.recordingReminder = false
@@ -156,5 +156,24 @@ final class GameManager {
 
         // Create a new game
         try gameDocument.setData(from: game, merge: false)
+    }
+    
+    /** Adds a new 'Unkown Game' to the database in the game collection */
+    func addNewUnkownGame(teamId: String) async throws -> String? {
+        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+            print("Could not find team doc id. Aborting")
+            return nil
+        }
+        
+        let gameDocument = gameCollection(teamDocId: teamDocId).document()
+        let documentId = gameDocument.documentID // get the document id
+        
+        // Create a new default game object
+        let game = DBGame(gameId: documentId, teamId: teamId)
+        
+        // Create a new game
+        try gameDocument.setData(from: game, merge: false)
+        
+        return documentId // return the game_id
     }
 }

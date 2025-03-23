@@ -22,9 +22,7 @@ final class TeamViewModel: ObservableObject {
     @Published var players: [User_Status] = []
     @Published var games: [DBGame] = []
     
-    func loadTeam(name: String, teamId: String) async throws {
-        
-        print("name: \(name) - teamID: \(teamId)")
+    func loadTeam(teamId: String) async throws {
         // Find the team from the teamId
         guard let tmpTeam = try await TeamManager.shared.getTeam(teamId: teamId) else {
             print("Error when loading the team. Aborting")
@@ -32,17 +30,19 @@ final class TeamViewModel: ObservableObject {
         }
         
         self.team = tmpTeam
-        
+    }
+    
+    func loadGames(teamId: String) async throws {
         // Get the list of games, if they exists.
         guard let tmpGames: [DBGame] = try await GameManager.shared.getAllGames(teamId: teamId) else {
             print("Could not get games. Abort,,,")
             return
         }
-        print("------------")
-        print(tmpGames)
-        print("------------")
         
         self.games = tmpGames
+    }
+    
+    func loadPlayers(teamId: String) async throws {
 
         // Get the list of players, if they exist. Otherwise, let the user know that there's none
         guard let tmpPlayers = team?.players else {
@@ -56,7 +56,6 @@ final class TeamViewModel: ObservableObject {
             // TO DO - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
             return
         }
-        
         
         // For each player in the list, get their names
         var tmpArrayPlayer: [User_Status] = []

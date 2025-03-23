@@ -12,12 +12,11 @@ struct CoachAddingGameView: View {
     
     @StateObject private var viewModel = AddNewGameModel()
     @Environment(\.dismiss) var dismiss // To go back to the Teams page, if needed
-    @State var timeString = ""
-    @State var hours: Int = 0
-    @State var minutes: Int = 0
-    @State var timeBeforeFeedbackSec: Int = 0
-    @State var timeAfterFeedbackSec: Int = 0
-
+    
+    // Variables for the timestamp
+    @State private var hours: Int = 0
+    @State private var minutes: Int = 0
+    
     // Define the list of options and corresponding values
     let timeOptions = [
         ("At time of event", 0),
@@ -46,40 +45,33 @@ struct CoachAddingGameView: View {
         ("30 seconds", 30)
     ]
     
-    @State var selectedTeamName: String? = nil
-    @State private var selectedTeamId: String? = nil
-
-
+    // Team variables -> new game will be added to this team
+    @State var selectedTeamName: String?
+    @State var selectedTeamId: String?
+    
     @State private var selectedTimeLabel = "5 minutes before"  // User-friendly label
     @State private var selectedTimeValue = 5  // Database-friendly time string
     @State private var feedbackBeforeTimeLabel = "10 seconds"
     @State private var feedbackAfterTimeLabel = "10 seconds"
-    
-//    private func formatTime() {
-//        var timeFormatter : DateFormatter {
-//            let formatter = DateFormatter()
-//            formatter.timeStyle = .short
-//            formatter.locale = Locale(identifier: "tr_TR") // your locale here
-//            return formatter
-//        }
-//        
-//        timeString = timeFormatter.string(from: newGame.duration)
-//    }
-    
+        
     var body: some View {
         NavigationView {
             VStack(alignment: .leading) {
                 Form {
                     Section {
-                        HStack {
-                            TextField("Title", text: $viewModel.title).multilineTextAlignment(.leading)
-                        }
+                        TextField("Title", text: $viewModel.title).multilineTextAlignment(.leading)
                         
                         HStack {
-                            Picker("Replace team name", selection: $selectedTeamId) {
-                                ForEach(viewModel.teamNames, id: \.teamId) { i in
-                                    Text(i.name).tag(i.teamId as String?)
+                            if viewModel.teamNames != [] {
+                                Picker("Selected Team", selection: $selectedTeamId) {
+                                    ForEach(viewModel.teamNames, id: \.teamId) { i in
+                                        Text(i.name).tag(i.teamId as String?)
+                                    }
                                 }
+                            } else {
+                                Text("Team")
+                                Spacer()
+                                Text(selectedTeamName ?? "").foregroundStyle(.secondary).multilineTextAlignment(.leading)
                             }
                         }
                         
@@ -100,8 +92,6 @@ struct CoachAddingGameView: View {
                     }
                     
                     Section (header: Text("Scheduled Time")) {
-                        
-                        
                         HStack {
                             HStack {
                                 DatePicker("Start", selection: $viewModel.startTime, displayedComponents: [.date, .hourAndMinute])
@@ -129,10 +119,8 @@ struct CoachAddingGameView: View {
                                         Text("min").bold()
                                     }
                                 }.frame(maxWidth: .infinity, alignment: .center)
-                                
                             }
                         }
-                        
                     }
                     
                     Section(header: Text("Feedback Settings")) {
@@ -169,25 +157,19 @@ struct CoachAddingGameView: View {
                 .task{
                     print("Loading current user...")
                     // Load the teams names if it is not passed as an argument when calling this view
-                    try? await viewModel.loadTeamNames()
-                    
-                    if selectedTeamName == nil {
+                    if (selectedTeamName == nil || selectedTeamId == nil) {
+                        try? await viewModel.loadTeamNames() // only load the team names if they are set to null
                         if let firstTeam = viewModel.teamNames.first {
                             selectedTeamId = firstTeam.teamId
                         }
                     }
                 }
-                
-                
             }.toolbar {
                 ToolbarItem(placement: .topBarLeading) { // Back button on the top left
                     Button(action: {
                         dismiss() // Dismiss the full-screen cover
                     }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
-                        }
+                        Text("Cancel")
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -215,13 +197,19 @@ struct CoachAddingGameView: View {
                         viewModel.duration = ((3600 * hours) + (60 * minutes))
                         
                         viewModel.teamId = selectedTeamId! // set the selected team id
-                        print(selectedTeamId!)
                         
                         Task {
-                            try await viewModel.addNewGame() // add new game to the database
+                            do {
+                                let canDismiss = try await viewModel.addNewGame() // add new game to the database
+                                if canDismiss {
+                                    dismiss()  // Dismiss the full-screen cover
+                                }
+
+                            } catch {
+                                print("Error when adding a new game... \(error)")
+                            }
                         }
                         
-                        viewModel.test()
                     }) {
                         Text("Done")
                     }
@@ -244,5 +232,5 @@ struct CoachAddingGameView: View {
 }
 
 #Preview {
-    CoachAddingGameView()
+    CoachAddingGameView(selectedTeamName: nil, selectedTeamId: nil)
 }
