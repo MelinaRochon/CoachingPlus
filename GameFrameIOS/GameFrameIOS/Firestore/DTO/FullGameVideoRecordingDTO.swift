@@ -8,10 +8,10 @@
 import Foundation
 
 struct FullGameVideoRecordingDTO {
-    let fullGameVideoRecordingId: String
     let gameId: String
     let uploadedBy: String
     let fileURL: String?
     let startTime: Date
     let endTime: Date?
+    let teamId: String
 }

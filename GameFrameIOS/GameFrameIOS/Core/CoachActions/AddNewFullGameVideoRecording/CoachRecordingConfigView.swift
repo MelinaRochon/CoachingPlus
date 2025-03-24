@@ -17,18 +17,17 @@ import SwiftUI
  */
 struct CoachRecordingConfigView: View {
     @Environment(\.dismiss) var dismiss // To go back to the main tab view
-
+    
     @StateObject private var recordingViewModel = AddNewFGVideoRecordingModel()
     @StateObject private var gameViewModel = AddNewGameModel()
     @StateObject private var teamsViewModel = AllTeamsViewModel()
-
+    
     @State private var currentTimestamp: Date = Date() // Stores the current time
     @State private var showCreateNewTeam = false
-    @State private var selectedTeam: String? = nil
+    @State private var selectedTeamId: String? = nil
     @State private var selectedRecordingTypeLabel: String = "Video"
     @State private var selectedAppleWatchUseLabel: Bool = false
     
-    let teamOptions = ["Team 1", "Team 2", "Team 3"]
     let recordingOptions = ["Video", "Audio Only"]
     
     var body: some View {
@@ -36,16 +35,16 @@ struct CoachRecordingConfigView: View {
             VStack {
                 Form {
                     Section(header: Text("Recording Settings")) {
-//                        Picker("Select Team", selection: $selectedTeam) {
-//                            ForEach(teamsViewModel.teams, id: \.teamId) { team in
-//                                HStack {
-//                                    Image(systemName: selectedTeam == team ? "checkmark.circle.fill" : "tshirt")
-//                                        .foregroundColor(selectedTeam == team ? .blue : .gray)
-//                                    Text(team)
-//                                }
-//                                .tag(team as String?)
-//                            }
-//                        }
+                        Picker("Select Team", selection: $selectedTeamId) {
+                            ForEach(teamsViewModel.teams, id: \.teamId) { team in
+                                HStack {
+                                    Image(systemName: selectedTeamId == team.teamId ? "checkmark.circle.fill" : "tshirt")
+                                        .foregroundColor(selectedTeamId == team.teamId ? .blue : .gray)
+                                    Text(team.name)
+                                }
+                                .tag(team.teamId as String?)
+                            }
+                        }
                         
                         Picker("Recording Type", selection: $selectedRecordingTypeLabel) {
                             ForEach(recordingOptions, id: \ .self) { option in
@@ -58,46 +57,26 @@ struct CoachRecordingConfigView: View {
                     }
                 }
                 .navigationTitle("Start a Recording")
-                //.navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(.inline)
                 
                 Spacer()
                 
                 Button(action: {
-                    currentTimestamp = Date()
-                    
-                    gameViewModel.title = "Unknown Game"
-                    gameViewModel.duration = 0
-                    gameViewModel.scheduledTimeReminder = 0
-                    gameViewModel.startTime = currentTimestamp
-                    gameViewModel.timeBeforeFeedback = 0
-                    gameViewModel.timeAfterFeedback = 0
-                    gameViewModel.recordingReminder = false
-                    gameViewModel.teamId = "A4013599-0BAE-495A-9FB2-342B67C071F6"
-                    
+                    gameViewModel.teamId = selectedTeamId!
                     Task{
                         do {
-                            let canWeDismiss: () = try await gameViewModel.addNewGame()
+                            if selectedTeamId != nil {
+                                let gameId = try await gameViewModel.addUnknownGame()
+                                if (selectedRecordingTypeLabel == "Video"){
+                                    recordingViewModel.gameId = gameId!
+                                    let canWeDismiss = try await recordingViewModel.createFGRecording(teamId: selectedTeamId)
+                                }
+                            }
                         } catch {
                             print("Error Creating Game")
                             print("Error: \(error.localizedDescription)")
                         }
                     }
-                    gameViewModel.test()
-                    
-                    if (selectedRecordingTypeLabel == "Video"){
-                        recordingViewModel.startTime = currentTimestamp
-                        
-                        Task{
-                            do {
-                                let canWeDismiss = try await recordingViewModel.createFGRecording(gameId: "FXy9YF11Gt1HgQLbbDiZ")
-                            } catch {
-                                print("Error Creating Recording")
-                                print("Error: \(error.localizedDescription)")
-                            }
-                        }
-                        recordingViewModel.test()
-                    }
-                    
                 }) {
                     Text("Start Recording")
                         .font(.title2)
@@ -105,11 +84,11 @@ struct CoachRecordingConfigView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(selectedTeam != nil ? Color.blue : Color.gray)
+                        .background(selectedTeamId != nil ? Color.blue : Color.gray)
                         .cornerRadius(12)
                         .padding(.horizontal)
                 }
-                .disabled(selectedTeam == nil)
+                .disabled(selectedTeamId == nil)
                 
             }.toolbar {
                 ToolbarItem(placement: .topBarLeading) { // Back button on the top left
@@ -119,6 +98,19 @@ struct CoachRecordingConfigView: View {
                         HStack {
                             Text("Cancel")
                         }
+                    }
+                }
+            }
+            .task {
+                if selectedTeamId == nil {
+                    do {
+                        
+                        try await teamsViewModel.loadAllTeams()
+                        if let firstTeam = teamsViewModel.teams.first {
+                            selectedTeamId = firstTeam.teamId
+                        }
+                    } catch {
+                        print("Error when loading the team information for the coachRecordingconfigView \(error)")
                     }
                 }
             }

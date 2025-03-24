@@ -110,7 +110,8 @@ final class GameManager {
     func gameDocument(teamDocId: String, gameId: String) -> DocumentReference {
         return gameCollection(teamDocId: teamDocId).document(gameId)
     }
-        
+      
+    /** Returns the game collection */
     func gameCollection(teamDocId: String) -> CollectionReference {
         return TeamManager.shared.teamCollection.document(teamDocId).collection("games")
     }

@@ -16,6 +16,7 @@ struct DBFullGameVideoRecording: Codable {
     let fileURL: String?
     let startTime: Date
     let endTime: Date?
+    let teamId: String
     
     init(id: String,
          fullGameVideoRecordingId: String,
@@ -23,7 +24,8 @@ struct DBFullGameVideoRecording: Codable {
          uploadedBy: String,
          fileURL: String?,
          startTime: Date,
-         endTime: Date?
+         endTime: Date?,
+         teamId: String
     ) {
         self.id = id
         self.fullGameVideoRecordingId = fullGameVideoRecordingId
@@ -32,16 +34,18 @@ struct DBFullGameVideoRecording: Codable {
         self.fileURL = fileURL
         self.startTime = startTime
         self.endTime = endTime
+        self.teamId = teamId
     }
     
     init(id: String, fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) {
         self.id = id
-        self.fullGameVideoRecordingId = fullGameVideoRecordingDTO.fullGameVideoRecordingId
+        self.fullGameVideoRecordingId = id // fullGameVideoRecordingDTO.fullGameVideoRecordingId
         self.gameId = fullGameVideoRecordingDTO.gameId
         self.uploadedBy = fullGameVideoRecordingDTO.uploadedBy
         self.fileURL = fullGameVideoRecordingDTO.fileURL
         self.startTime = fullGameVideoRecordingDTO.startTime
         self.endTime = fullGameVideoRecordingDTO.endTime
+        self.teamId = fullGameVideoRecordingDTO.teamId
     }
     
     enum CodingKeys: String, CodingKey {
@@ -52,6 +56,7 @@ struct DBFullGameVideoRecording: Codable {
         case fileURL = "file_URL"
         case startTime = "start_time"
         case endTime = "end_time"
+        case teamId = "team_id"
     }
     
     init(from decoder: any Decoder) throws {
@@ -63,6 +68,7 @@ struct DBFullGameVideoRecording: Codable {
         self.fileURL = try container.decodeIfPresent(String.self, forKey: .fileURL)
         self.startTime = try container.decode(Date.self, forKey: .startTime)
         self.endTime = try container.decodeIfPresent(Date.self, forKey: .endTime)
+        self.teamId = try container.decode(String.self, forKey: .teamId)
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -74,6 +80,7 @@ struct DBFullGameVideoRecording: Codable {
         try container.encode(self.fileURL, forKey: .fileURL)
         try container.encode(self.startTime, forKey: .startTime)
         try container.encode(self.endTime, forKey: .endTime)
+        try container.encode(self.teamId, forKey: .teamId)
     }
 }
 
@@ -81,27 +88,34 @@ final class FullGameVideoRecordingManager {
     static let shared = FullGameVideoRecordingManager()
     private init() {}
     
-    let fullGameVideoRecordingCollection = Firestore.firestore().collection("fg_video_recording")
-    
     /** Returns a specific full game video recording document */
-    private func fullGameVideoRecordingDocument(id: String) -> DocumentReference {
-        fullGameVideoRecordingCollection.document(id)
+    func fullGameVideoRecordingDocument(teamDocId: String, fgDocId: String) -> DocumentReference {
+        return fullGameVideoRecordingCollection(teamDocId: teamDocId).document(fgDocId)
     }
     
-    /** Add a new full game video recording in the database */
-    func addFullGameVideoRecording(coachId: String, gameId: String, fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws {
+    /** Returns the full game video recording collection */
+    func fullGameVideoRecordingCollection(teamDocId: String) -> CollectionReference {
+        return TeamManager.shared.teamCollection.document(teamDocId).collection("fg_video_recording")
+    }
+    
+    /** Add a full game video recording to the database */
+    func addFullGameVideoRecording(fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws {
         //Create new full game video recording
         do {
             print("Sending new full game recording to Firestore: \(fullGameVideoRecordingDTO)")
             
-            // verifie coach valide
-            let coach = try await UserManager.shared.getUser(userId: coachId)
-            
-            let fgvRecordingDocument = fullGameVideoRecordingCollection.document()
+            guard let teamDocId = try await TeamManager.shared.getTeam(teamId: fullGameVideoRecordingDTO.teamId)?.id else {
+                print("Could not find team id. Aborting")
+                return
+            }
+
+            let fgvRecordingDocument = fullGameVideoRecordingCollection(teamDocId: teamDocId).document()
             let documentId = fgvRecordingDocument.documentID // get the document id
 
-            // create a new full game video recording
+            // create a new full game video recording object
             let fgvRecording = DBFullGameVideoRecording(id: documentId, fullGameVideoRecordingDTO: fullGameVideoRecordingDTO)
+            
+            // create a new full game video recording
             try fgvRecordingDocument.setData(from: fgvRecording, merge: false)
             
             print("Full game video recording created!")
