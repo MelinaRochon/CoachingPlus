@@ -6,3 +6,8 @@
 //
 
 import Foundation
+@MainActor
+final class AudioRecordingViewModel: ObservableObject {
+    @Published var transcripts: String = "";
+    
+}

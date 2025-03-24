@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct AudioRecordingView: View {
+struct RecordingButtonView: View {
     @State private var isRecording = false
     @Namespace private var animation
 
@@ -49,5 +49,5 @@ struct AudioRecordingView: View {
 }
 
 #Preview {
-    AudioRecordingView()
+    RecordingButtonView()
 }
