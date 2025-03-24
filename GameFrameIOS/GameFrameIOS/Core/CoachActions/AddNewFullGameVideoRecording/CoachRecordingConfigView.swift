@@ -27,6 +27,7 @@ struct CoachRecordingConfigView: View {
     @State private var selectedTeamId: String? = nil
     @State private var selectedRecordingTypeLabel: String = "Video"
     @State private var selectedAppleWatchUseLabel: Bool = false
+    @State private var navigateToRecordingView = false // Navigation control
     
     let recordingOptions = ["Video", "Audio Only"]
     
@@ -71,6 +72,7 @@ struct CoachRecordingConfigView: View {
                                     recordingViewModel.gameId = gameId!
                                     let canWeDismiss = try await recordingViewModel.createFGRecording(teamId: selectedTeamId)
                                 }
+                                navigateToRecordingView = true // Navigate after game creation
                             }
                         } catch {
                             print("Error Creating Game")
@@ -90,6 +92,8 @@ struct CoachRecordingConfigView: View {
                 }
                 .disabled(selectedTeamId == nil)
                 
+                NavigationLink(destination: CoachRecordingView().navigationBarBackButtonHidden(true), isActive: $navigateToRecordingView) { EmptyView() }
+
             }.toolbar {
                 ToolbarItem(placement: .topBarLeading) { // Back button on the top left
                     Button(action: {
