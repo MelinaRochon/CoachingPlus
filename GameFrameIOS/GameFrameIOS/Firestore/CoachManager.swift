@@ -58,6 +58,7 @@ final class CoachManager {
     
     private init() {} // TO DO - Will need to use something else than singleton
     
+    /** Returns the coach collection */
     private let coachCollection = Firestore.firestore().collection("coaches")
     
     /** Returns a specific coach document */
@@ -71,21 +72,18 @@ final class CoachManager {
         let documentId = coachDoc.documentID
         
         let coach = DBCoach(id: documentId, coachId: coachId)
-        
         try coachDoc.setData(from: coach, merge: false)
     }
     
+    /** GET - Returns the coach document from the database using the coach id */
     func getCoachDocumentWithCoachId(coachId: String) async throws -> QuerySnapshot {
         return try await coachCollection.whereField("coach_id", isEqualTo: coachId).getDocuments()
     }
     
     /** GET - Returns the coach's information from the database */
     func getCoach(coachId: String) async throws -> DBCoach? {
-        //let snapshot = try await getCoachDocumentWithCoachId(coachId: coachId)
-        
         guard let doc = try await getCoachDocumentWithCoachId(coachId: coachId).documents.first else { return nil }
         return try doc.data(as: DBCoach.self)
-        //try await coachDocument(coachId: coachId).getDocument(as: DBCoach.self)
     }
     
     /** PUT - Add a new team id in the teamsCoaching array */
@@ -96,17 +94,11 @@ final class CoachManager {
         // TO DO - Make sure the teamId that we are adding isn't already in the database
         
         // Update the document asynchronously
-        //let snapshot = try await coachCollection.whereField("coach_id", isEqualTo: coachId).getDocuments()
-        
         if let doc = try await getCoachDocumentWithCoachId(coachId: coachId).documents.first {
             try await doc.reference.updateData(data as [AnyHashable : Any])// Assuming you have a `Coach` model
-            //print("Coach: \(coach)")
         } else {
             print("No coach found with that ID.")
         }
-        //guard let doc = snapshot.documents.first else { return }
-
-        //try await coachDocument(coachId: coachId).updateData(data as [AnyHashable : Any])
     }
     
     /** DELETE - Remove a team id in the teamsCoaching array */
@@ -117,17 +109,14 @@ final class CoachManager {
         ]
         
         // Update the document asynchronously
-        
         if let doc = try await getCoachDocumentWithCoachId(coachId: coachId).documents.first {
             try await doc.reference.updateData(data as [AnyHashable : Any])// Assuming you have a `Coach` model
-            //print("Coach: \(coach)")
         } else {
             print("No coach found with that ID.")
         }
-        
-        //try await coachDocument(coachId: coachId).updateData(data as [AnyHashable : Any])
     }
     
+    /** GET - Returns all the teams that the coach is coaching from the database */
     func loadTeamsCoaching(coachId: String) async throws -> [GetTeam] {
         
         let coach = try await getCoach(coachId: coachId)!

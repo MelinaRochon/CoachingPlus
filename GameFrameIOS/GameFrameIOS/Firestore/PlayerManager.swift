@@ -8,7 +8,7 @@
 import Foundation
 import FirebaseFirestore
 
-struct DBPlayer: Codable {
+struct DBPlayer: Codable { 
     let id: String
     let playerId: String?
     var jerseyNum: Int
@@ -114,10 +114,6 @@ struct DBPlayer: Codable {
         try container.encodeIfPresent(self.profilePicture, forKey: .profilePicture)
         try container.encodeIfPresent(self.teamsEnrolled, forKey: .teamsEnrolled)
     }
-    
-//    mutating func updateGuardianName(name: String) {
-//        guardianName = name
-//    }
 }
 
 final class PlayerManager {
@@ -132,7 +128,7 @@ final class PlayerManager {
         playerCollection.document(id)
     }
     
-    /** Creates a new player in the database */
+    /** POST - Creates a new player in the database */
     func createNewPlayer(playerDTO: PlayerDTO) async throws -> String {
         let playerDocument = playerCollection.document()
         let documentId = playerDocument.documentID // get the document id
@@ -143,13 +139,14 @@ final class PlayerManager {
         return documentId
     }
     
-    /** Returns the player's information from the database by finding the user's document, with the userId */
+    /** GET - Returns the player's information from the database by finding the user's document, with the userId */
     func getPlayer(playerId: String) async throws -> DBPlayer? {
         let query = try await playerCollection.whereField("player_id", isEqualTo: playerId).getDocuments()
         guard let doc = query.documents.first else { return nil }
         return try doc.data(as: DBPlayer.self)
     }
     
+    /** GET - Returns the player using the player's document id */
     func findPlayerWithId(id: String) async throws -> DBPlayer? {
         return try await playerDocument(id: id).getDocument(as: DBPlayer.self)
     }
@@ -166,7 +163,7 @@ final class PlayerManager {
         return decoder
     }()
     
-    /** Updates the guardian name in the player's profile - NOT used? */
+    /** PUT - Updates the guardian name in the player's profile - NOT used? */
     func updateGuardianName(id: String, name: String) async throws {
         let data: [String: Any] = [
             DBPlayer.CodingKeys.guardianName.rawValue: name
@@ -175,7 +172,7 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** Remove all the guardian information from the player's document */
+    /** DELETE - Remove all the guardian information from the player's document */
     func removeGuardianInfo(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianName.rawValue: nil,
@@ -207,7 +204,7 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** Remove the guardian name from the player's document */
+    /** DELETE - Remove the guardian name from the player's document */
     func removeGuardianInfoName(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianName.rawValue: nil
@@ -216,7 +213,7 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** Remove the guardian email address from the player's document */
+    /** DELETE - Remove the guardian email address from the player's document */
     func removeGuardianInfoEmail(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianEmail.rawValue: nil
@@ -225,7 +222,7 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** Remove the guardian phone number from the player's document */
+    /** DELETE - Remove the guardian phone number from the player's document */
     func removeGuardianInfoPhone(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianPhone.rawValue: nil
@@ -234,7 +231,7 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** Updates the player's information on the 'player' collection */
+    /** PUT - Updates the player's information on the 'player' collection */
     func updatePlayerInfo(player: DBPlayer) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.jerseyNum.rawValue: player.jerseyNum,
@@ -246,6 +243,7 @@ final class PlayerManager {
         try await playerDocument(id: player.id).updateData(data as [AnyHashable: Any])
     }
     
+    /** PUT - Update the player's jersey and nickname information in the database */
     func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.jerseyNum.rawValue: jersey,
@@ -256,6 +254,7 @@ final class PlayerManager {
         try await playerDocument(id: playerDocId).updateData(data as [AnyHashable: Any])
     }
     
+    /** PUT - Updatethe player's id in the database */
     func updatePlayerId(id: String, playerId: String) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.playerId.rawValue: playerId,
@@ -263,6 +262,7 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable: Any])
     }
     
+    /** GET - Returns all teams that the player is enrolled */
     func getTeamsEnrolled(playerId: String) async throws -> [GetTeam] {
         
         let player = try await getPlayer(playerId: playerId)!
@@ -283,6 +283,7 @@ final class PlayerManager {
         return teams
     }
     
+    /** GET - Returns if the player is enrolled to the specified team or not */
     func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
         let player = try await getPlayer(playerId: playerId)!
         print("player info: \(player)")

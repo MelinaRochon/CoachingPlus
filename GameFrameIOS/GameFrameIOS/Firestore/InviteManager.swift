@@ -89,11 +89,14 @@ final class InviteManager {
     static let shared = InviteManager()
     private init() {} // TO DO - Will need to use something else than singleton
     
+    /** Returns the invite collection */
     private let inviteCollection = Firestore.firestore().collection("invites") // invites collection
     
+    /** Returns a specific invite document */
     private func inviteDocument(id: String) -> DocumentReference {
         inviteCollection.document(id)
     }
+    
     /** Create a new invite in the database */
     func createNewInvite(inviteDTO: InviteDTO) async throws -> String {
         let inviteDocument = inviteCollection.document()
@@ -114,6 +117,7 @@ final class InviteManager {
         return try doc.data(as: DBInvite.self)
     }
     
+    /** GET - Returns the invite document from the database */
     func getInvite(id: String) async throws -> DBInvite? {
         return try await inviteDocument(id: id).getDocument(as: DBInvite.self);
     }

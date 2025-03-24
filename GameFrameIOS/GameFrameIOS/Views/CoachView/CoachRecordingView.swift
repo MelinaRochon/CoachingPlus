@@ -9,7 +9,12 @@ import SwiftUI
 
 struct CoachRecordingView: View {
     var body: some View {
-        Text("CoachRecordingView")
+        NavigationView {
+            VStack(alignment: .center) {
+                
+                // button to record
+            }
+        }
     }
 }
 

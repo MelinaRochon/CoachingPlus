@@ -133,7 +133,7 @@ final class UserManager {
     static let shared = UserManager()
     private init() { } // TO DO - Will need to use something else than singleton
     
-    
+    /** Returns the user collection */
     private let userCollection = Firestore.firestore().collection("users") // user collection
     
     /** Returns the user document */
@@ -141,14 +141,14 @@ final class UserManager {
         userCollection.document(id)
     }
             
-    /** Get user type */
+    /** GET - Get user type */
     func getUserType() async throws -> String {
         // returns the user type!
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         return try await getUser(userId: authUser.uid)!.userType
     }
     
-    /** Creates a new user in the database */
+    /** POST - Creates a new user in the database */
     func createNewUser(userDTO: UserDTO) async throws -> String {
         let userDocument = userCollection.document()
         let documentId = userDocument.documentID // get the document id
@@ -160,9 +160,8 @@ final class UserManager {
         return documentId
     }
         
-    /** Gets the user information from the database */
+    /** GET - Gets the user information from the database */
     func getUser(userId: String) async throws -> DBUser? {
-        //try await userDocument().getDocument(as: DBUser.self)
         let snapshot = try await userCollection.whereField("user_id", isEqualTo: userId).getDocuments()
         
         guard let doc = snapshot.documents.first else { return nil }
@@ -170,12 +169,12 @@ final class UserManager {
 
     }
     
-    /** Gets the user information from the database */
+    /** GET - Gets the user information from the database */
     func getUserWithDocId(id: String) async throws -> DBUser? {
         return try await userDocument(id: id).getDocument(as: DBUser.self)
     }
 
-    
+    /** GET - Returns the user information from the user's email address */
     func getUserWithEmail(email: String) async throws -> DBUser? {
         let snapshot = try await userCollection.whereField("email", isEqualTo: email).getDocuments()
         
@@ -183,26 +182,27 @@ final class UserManager {
         return try doc.data(as: DBUser.self)
     }
     
-    /** Update the coach profile on the user collection from the database */
+    /** PUT - Update the coach profile on the user collection from the database */
     func updateCoachProfile(user: DBUser) async throws {
-//        let userDocument = Firestore.firestore().collection("users").document()
-
         let data: [String: Any] = [
             DBUser.CodingKeys.phone.rawValue: user.phone
         ]
+        
+        // TO DO - Update this function!!!! Currently not working....
         
 //        try await userDocument().updateData(data as [AnyHashable : Any])
 
 //        try await userDocument(userId: user.userId).updateData(data as [AnyHashable : Any])
     }
     
+    /** GET - Get the user information from its user doc id */
     func findUserWithId(id: String) async throws -> DBUser? {
         return try await userDocument(id: id).getDocument(as: DBUser.self)
     }
     
+    /** PUT - Update the user DTO in the database */
     func updateUserDTO(id: String, email: String, userTpe: String, firstName: String, lastName: String, dob: Date, phone: String?, country: String?, userId: String) async throws {
-        //let user = DBUser(id: id, userDTO: userDTO)
-
+        
         let data: [String: Any] = [
             DBUser.CodingKeys.userId.rawValue: userId,
             DBUser.CodingKeys.email.rawValue: email,
@@ -215,5 +215,4 @@ final class UserManager {
         ]
         try await userDocument(id: id).updateData(data as [AnyHashable : Any])
     }
-
 }

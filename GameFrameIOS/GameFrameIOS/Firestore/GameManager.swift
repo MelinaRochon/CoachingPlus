@@ -125,6 +125,7 @@ final class GameManager {
         return try await gameDocument(teamDocId: teamDocId, gameId: gameId).getDocument(as: DBGame.self)
     }
     
+    /** GET - Returns all games from the database */
     func getAllGames(teamId: String) async throws -> [DBGame]? {
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
             print("Could not find team id. Aborting")
@@ -137,13 +138,8 @@ final class GameManager {
         }
 
     }
-            
-    private func getTeamID(teamName: String) async throws -> String {
-        // TO DO - Fetch the team ID from the database
-        return "zzlZyozdFYaQeUR5gsr7"
-    }
-    
-    /** Add a new game in the database */
+                
+    /** POST - Add a new game in the database */
     func addNewGame(gameDTO: GameDTO) async throws {
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: gameDTO.teamId)?.id else {
             print("Could not find team id. Aborting")
@@ -159,7 +155,7 @@ final class GameManager {
         try gameDocument.setData(from: game, merge: false)
     }
     
-    /** Adds a new 'Unkown Game' to the database in the game collection */
+    /** POST - Adds a new 'Unkown Game' to the database in the game collection */
     func addNewUnkownGame(teamId: String) async throws -> String? {
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
             print("Could not find team doc id. Aborting")
