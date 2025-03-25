@@ -68,7 +68,8 @@ struct CoachMyTeamView: View {
                                             Text(game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                             
                                             if let startTime = game.startTime {
-                                                if startTime > Date() {
+                                                let gameEndTime = startTime.addingTimeInterval(TimeInterval(game.duration))
+                                                if gameEndTime > Date() {
                                                     // scheduled Game
 //                                                    Button("Scheduled Game")
                                                     Text("Scheduled Game").font(.caption).bold().foregroundColor(Color.green).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
