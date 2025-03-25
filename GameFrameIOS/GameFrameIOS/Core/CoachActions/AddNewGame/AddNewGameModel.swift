@@ -32,7 +32,10 @@ final class AddNewGameModel: ObservableObject {
      argument when calling the addGameView page */
     func loadTeamNames() async throws {
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-        teamNames = try await CoachManager.shared.loadTeamsCoaching(coachId: authUser.uid)
+        let tmpTeams = try await CoachManager.shared.loadTeamsCoaching(coachId: authUser.uid)
+        if tmpTeams != nil {
+            self.teamNames = tmpTeams!
+        }
     }
     
     /** POST - Adds a new game to the database */
@@ -75,11 +78,6 @@ final class AddNewGameModel: ObservableObject {
         // Add game to the database
         print("Adding unknown game, teamId: \(teamId)")
         return try await GameManager.shared.addNewUnkownGame(teamId: teamId)
-//        if gameId == nil {
-//            print("Error when adding a new game. Could not get the gameId. Aborting")
-//            return nil
-//        }
-//        return gameId
     }
     
     func test() {

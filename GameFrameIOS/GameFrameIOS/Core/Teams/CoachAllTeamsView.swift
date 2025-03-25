@@ -22,7 +22,6 @@ struct CoachAllTeamsView: View {
             VStack {
                 Divider() // This adds a divider after the title
                 
-                if !viewModel.teams.isEmpty {
                     List {
                         Section(header: HStack {
                             Text("My Teams") // Section header text
@@ -33,20 +32,20 @@ struct CoachAllTeamsView: View {
                                 Text("Add +")
                             }
                         }) {
-                            
-                            ForEach(viewModel.teams, id: \.name) { team in
-                                NavigationLink(destination: CoachMyTeamView(teamNickname: team.nickname, teamId: team.teamId))
-                                {
-                                    HStack {
-                                        Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
-                                        Text(team.name)
+                            if !viewModel.teams.isEmpty {
+                                ForEach(viewModel.teams, id: \.name) { team in
+                                    NavigationLink(destination: CoachMyTeamView(teamNickname: team.nickname, teamId: team.teamId))
+                                    {
+                                        HStack {
+                                            Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
+                                            Text(team.name)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                     .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                }
             }
             .navigationTitle(Text("Teams"))
             .task {

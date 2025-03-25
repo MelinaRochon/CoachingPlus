@@ -66,23 +66,18 @@ final class authenticationViewModel: ObservableObject {
             return
         }
         
-//        let authDataResult = try await AuthenticationManager.shared.createUser(email: email, password: password)
-        //let docId = UserManager.shared.getUserDocumentID() // returns the UUID generated for the document
-        let authDataResult = try await AuthenticationManager.shared.signInUser(email: email, password: password)
-
-        let user = UserDTO(userId: "lS1ZWVKbPAcqkn5kPWjoDqSPMMe2", email: "player3@player.com", userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
+        let authDataResult = try await AuthenticationManager.shared.createUser(email: email, password: password)
+        let user = UserDTO(userId: authDataResult.uid, email: authDataResult.email, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
         try await UserManager.shared.createNewUser(userDTO: user)
         
         // create a new user, according to type
         if (userType == "Player") {
-            //let player = DBPlayer(playerId: authDataResult.uid)
             // TO DO - Get the gender from the team and the teamId
             let player = PlayerDTO(playerId: authDataResult.uid, jerseyNum: 0, gender: "", profilePicture: nil, teamsEnrolled: ["zzlZyozdFYaQeUR5gsr7"])
             try await PlayerManager.shared.createNewPlayer(playerDTO: player)
         } else {
             // Create a new coach
-            //let coach = DBCoach(coachId: authDataResult.uid)
-            try await CoachManager.shared.addCoach(coachId: "3ouZjxPzM7akcE4u6Fi7TxpY3v43")
+            try await CoachManager.shared.addCoach(coachId: authDataResult.uid)
         }
     }
     

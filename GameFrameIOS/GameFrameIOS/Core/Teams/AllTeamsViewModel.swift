@@ -27,7 +27,10 @@ final class AllTeamsViewModel: ObservableObject {
         let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
                 
         if (userType == "Coach") {
-            teams = try await CoachManager.shared.loadTeamsCoaching(coachId: authUser.uid)
+            let tmpTeams = try await CoachManager.shared.loadTeamsCoaching(coachId: authUser.uid)
+            if tmpTeams != nil {
+                self.teams = tmpTeams!
+            }
         } else {
             // player
             teams = try await PlayerManager.shared.getTeamsEnrolled(playerId: authUser.uid)

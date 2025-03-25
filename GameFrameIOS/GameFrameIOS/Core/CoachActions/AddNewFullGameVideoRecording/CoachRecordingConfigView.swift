@@ -17,83 +17,72 @@ import SwiftUI
  */
 struct CoachRecordingConfigView: View {
     @Environment(\.dismiss) var dismiss // To go back to the main tab view
-    
-    @StateObject private var recordingViewModel = AddNewFGVideoRecordingModel()
-    @StateObject private var gameViewModel = AddNewGameModel()
     @StateObject private var teamsViewModel = AllTeamsViewModel()
     
-    @State private var currentTimestamp: Date = Date() // Stores the current time
-    @State private var showCreateNewTeam = false
     @State private var selectedTeamId: String? = nil
     @State private var selectedRecordingTypeLabel: String = "Video"
     @State private var selectedAppleWatchUseLabel: Bool = false
-    @State private var navigateToRecordingView = false // Navigation control
-    
+    @State private var gameId: String? = nil
     let recordingOptions = ["Video", "Audio Only"]
     
     var body: some View {
         NavigationView {
             VStack {
-                Form {
-                    Section(header: Text("Recording Settings")) {
-                        Picker("Select Team", selection: $selectedTeamId) {
-                            ForEach(teamsViewModel.teams, id: \.teamId) { team in
-                                HStack {
-                                    Image(systemName: selectedTeamId == team.teamId ? "checkmark.circle.fill" : "tshirt")
-                                        .foregroundColor(selectedTeamId == team.teamId ? .blue : .gray)
-                                    Text(team.name)
+                VStack {
+                    Form {
+                        Section(header: Text("Recording Settings")) {
+                            Picker("Select Team", selection: $selectedTeamId) {
+                                ForEach(teamsViewModel.teams, id: \.teamId) { team in
+                                    HStack {
+                                        Image(systemName: selectedTeamId == team.teamId ? "checkmark.circle.fill" : "tshirt")
+                                            .foregroundColor(selectedTeamId == team.teamId ? .blue : .gray)
+                                        Text(team.name).padding(.leading, 5)
+                                    }
+                                    .tag(team.teamId as String?)
                                 }
-                                .tag(team.teamId as String?)
                             }
-                        }
-                        
-                        Picker("Recording Type", selection: $selectedRecordingTypeLabel) {
-                            ForEach(recordingOptions, id: \ .self) { option in
-                                Text(option)
-                            }
-                        }
-                        .pickerStyle(SegmentedPickerStyle())
-                        
-                        Toggle("Use Apple Watch for Recording", isOn: $selectedAppleWatchUseLabel)
-                    }
-                }
-                .navigationTitle("Start a Recording")
-                .navigationBarTitleDisplayMode(.inline)
-                
-                Spacer()
-                
-                Button(action: {
-                    gameViewModel.teamId = selectedTeamId!
-                    Task{
-                        do {
-                            if selectedTeamId != nil {
-                                let gameId = try await gameViewModel.addUnknownGame()
-                                if (selectedRecordingTypeLabel == "Video"){
-                                    recordingViewModel.gameId = gameId!
-                                    let canWeDismiss = try await recordingViewModel.createFGRecording(teamId: selectedTeamId)
+                            
+                            Picker("Recording Type", selection: $selectedRecordingTypeLabel) {
+                                ForEach(recordingOptions, id: \ .self) { option in
+                                    Text(option)
                                 }
-                                navigateToRecordingView = true // Navigate after game creation
                             }
-                        } catch {
-                            print("Error Creating Game")
-                            print("Error: \(error.localizedDescription)")
+                            .pickerStyle(SegmentedPickerStyle())
+                            
+                            Toggle("Use Apple Watch for Recording", isOn: $selectedAppleWatchUseLabel)
                         }
                     }
-                }) {
-                    Text("Start Recording")
-                        .font(.title2)
-                        .bold()
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(selectedTeamId != nil ? Color.blue : Color.gray)
-                        .cornerRadius(12)
-                        .padding(.horizontal)
+                    .navigationTitle("Start a Recording")
+                    .navigationBarTitleDisplayMode(.inline)
+                    if selectedRecordingTypeLabel == "Video" {
+                        Text("Video")
+                        NavigationLink(destination: CoachRecordingView()) {
+                            Text("Start Video Recording")
+                                .font(.title2)
+                                .bold()
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(selectedTeamId != nil ? Color.red : Color.gray)
+                                .cornerRadius(12)
+                                .padding(.horizontal)
+                        }.disabled(selectedTeamId == nil)
+                    } else {
+                        Text("Audio")
+                        NavigationLink(destination: AudioRecordingView(teamId: selectedTeamId!)) {
+                            Text("Start Audio Recording")
+                                .font(.title2)
+                                .bold()
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(selectedTeamId != nil ? Color.red : Color.gray)
+                                .cornerRadius(12)
+                                .padding(.horizontal)
+                        }.disabled(selectedTeamId == nil)
+                    }
+                    Spacer()
                 }
-                .disabled(selectedTeamId == nil)
-                
-                NavigationLink(destination: CoachRecordingView().navigationBarBackButtonHidden(true), isActive: $navigateToRecordingView) { EmptyView() }
-
             }.toolbar {
                 ToolbarItem(placement: .topBarLeading) { // Back button on the top left
                     Button(action: {
@@ -108,7 +97,6 @@ struct CoachRecordingConfigView: View {
             .task {
                 if selectedTeamId == nil {
                     do {
-                        
                         try await teamsViewModel.loadAllTeams()
                         if let firstTeam = teamsViewModel.teams.first {
                             selectedTeamId = firstTeam.teamId
@@ -118,9 +106,6 @@ struct CoachRecordingConfigView: View {
                     }
                 }
             }
-        }
-        .fullScreenCover(isPresented: $showCreateNewTeam) {
-            CoachCreateTeamView()
         }
     }
 }

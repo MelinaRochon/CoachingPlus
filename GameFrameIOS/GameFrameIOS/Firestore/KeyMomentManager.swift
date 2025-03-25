@@ -16,9 +16,9 @@ struct DBKeyMoment: Codable {
     let audioUrl: String?
     let frameStart: Date // transcription start
     let frameEnd: Date // transcription end
-    let feedbackFor: [DBPlayer]?
+    let feedbackFor: [String]?
     
-    init(keyMomentId: String, fullGameId: String, gameId: String, uploadedBy: String, audioUrl: String? = nil, frameStart: Date, frameEnd: Date, feedbackFor: [DBPlayer]? = nil) {
+    init(keyMomentId: String, fullGameId: String? = nil, gameId: String, uploadedBy: String, audioUrl: String? = nil, frameStart: Date, frameEnd: Date, feedbackFor: [String]? = nil) {
         self.keyMomentId = keyMomentId
         self.fullGameId = fullGameId
         self.gameId = gameId
@@ -54,19 +54,19 @@ struct DBKeyMoment: Codable {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.keyMomentId = try container.decode(String.self, forKey: .keyMomentId)
-        self.fullGameId = try container.decode(String.self, forKey: .fullGameId)
+        self.fullGameId = try container.decodeIfPresent(String.self, forKey: .fullGameId)
         self.gameId = try container.decode(String.self, forKey: .gameId)
         self.uploadedBy = try container.decode(String.self, forKey: .uploadedBy)
         self.audioUrl = try container.decodeIfPresent(String.self, forKey: .audioUrl)
         self.frameStart = try container.decode(Date.self, forKey: .frameStart)
         self.frameEnd = try container.decode(Date.self, forKey: .frameEnd)
-        self.feedbackFor = try container.decodeIfPresent([DBPlayer].self, forKey: .feedbackFor)
+        self.feedbackFor = try container.decodeIfPresent([String].self, forKey: .feedbackFor)
     }
     
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.keyMomentId, forKey: .keyMomentId)
-        try container.encode(self.fullGameId, forKey: .fullGameId)
+        try container.encodeIfPresent(self.fullGameId, forKey: .fullGameId)
         try container.encode(self.gameId, forKey: .gameId)
         try container.encode(self.uploadedBy, forKey: .uploadedBy)
         try container.encodeIfPresent(self.audioUrl, forKey: .audioUrl)
@@ -117,11 +117,11 @@ final class KeyMomentManager {
     }
     
     /** POST - Add a new key moment to the database */
-    func addNewKeyMoment(teamId: String, keyMomentDTO: KeyMomentDTO) async throws {
+    func addNewKeyMoment(teamId: String, keyMomentDTO: KeyMomentDTO) async throws -> String? {
         // Make sure the collection path can be found
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
             print("Could not find team id. Aborting")
-            return
+            return nil
         }
         
         let keyMomentDocument = keyMomentCollection(teamDocId: teamDocId, gameDocId: keyMomentDTO.gameId).document()
@@ -132,6 +132,8 @@ final class KeyMomentManager {
         
         // Add the key moment to the database
         try keyMomentDocument.setData(from: keyMoment, merge: false)
+        
+        return documentId // return the key moment document id
     }
     
     /** DELETE - Remove a key moment from the database */

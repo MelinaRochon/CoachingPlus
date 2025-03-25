@@ -10,9 +10,7 @@ import Foundation
 
 @MainActor
 final class HomePageViewModel: ObservableObject {
-    
-    //@Published var games: [DBGame] = []
-    
+        
     @Published var futureGames: [HomeGameDTO] = []
     @Published var pastGames: [HomeGameDTO] = []
     
@@ -55,33 +53,11 @@ final class HomePageViewModel: ObservableObject {
                     if let team = try? await TeamManager.shared.getTeam(teamId: teamId) {
                         let gameWithTeam = HomeGameDTO(game: game, team: team)
                         gamesWithTeam.append(gameWithTeam)
-                        
-                        
-                        //self.games.append()
-                        print("games values: \(gameWithTeam)")
                     }
                 }
             }
         }
         
-//        // Now filter games based on their startTime
-//        let currentDate = Date()
-//        let filteredGames = gamesWithTeam.filter { game in
-//            guard let startTime = game.game.startTime else { return false }
-//            
-//            // Make sure the game is in the future
-//            return startTime > currentDate
-//        }
-//        
-//        // Sort the filtered games by their startTime (earliest to latest)
-//        let sortedGames = filteredGames.sorted { game1, game2 in
-//            guard let startTime1 = game1.game.startTime, let startTime2 = game2.game.startTime else {
-//                return false
-//            }
-//            // Compare startTimes in ascending order (earliest first)
-//            return startTime1 < startTime2
-//        }
-//
         let currentDate = Date()
         var tmpFutureGames: [HomeGameDTO] = []
         var tmpPastGames: [HomeGameDTO] = []
@@ -89,25 +65,25 @@ final class HomePageViewModel: ObservableObject {
         for game in gamesWithTeam {
             if let startTime = game.game.startTime {
                 let gameEndTime = startTime.addingTimeInterval(TimeInterval(game.game.duration))
-                    if gameEndTime > currentDate {
-                        tmpFutureGames.append(game)
-                    } else {
-                        tmpPastGames.append(game)
-                    }
+                if gameEndTime > currentDate {
+                    tmpFutureGames.append(game)
+                } else {
+                    tmpPastGames.append(game)
                 }
             }
+        }
+        
         // Sort the future games by startTime (earliest to latest)
-           let sortedFutureGames = tmpFutureGames.sorted { game1, game2 in
-               guard let startTime1 = game1.game.startTime, let startTime2 = game2.game.startTime else {
-                   return false
-               }
-               return startTime1 < startTime2
-           }
+        let sortedFutureGames = tmpFutureGames.sorted { game1, game2 in
+            guard let startTime1 = game1.game.startTime, let startTime2 = game2.game.startTime else {
+                return false
+            }
+            return startTime1 < startTime2
+        }
         
         
         // Assign the combined data to the published array
         self.futureGames = sortedFutureGames
         self.pastGames = tmpPastGames
-        //self.games = gamesWithTeam
     }
 }
