@@ -38,6 +38,9 @@ final class CreateTeamViewModel: ObservableObject {
                 return false
             }
             
+            let uniqueAccessCode = try await TeamManager.shared.generateUniqueTeamAccessCode()
+            print("unique access code: \(uniqueAccessCode)")
+            
             let newTeam = TeamDTO(
                 teamId: UUID().uuidString,
                 name: name,
@@ -47,7 +50,7 @@ final class CreateTeamViewModel: ObservableObject {
                 colour: colourHex,
                 gender: gender,
                 ageGrp: ageGrp,
-                accessCode: nil,  // Optional access code for joining the team
+                accessCode: uniqueAccessCode,  // Optional access code for joining the team
                 coaches: [coachId],  // The coach creating the team
                 players: [],
                 invites: []

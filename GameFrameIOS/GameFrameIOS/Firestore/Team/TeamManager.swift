@@ -63,7 +63,7 @@ struct DBTeam: Codable {
         self.colour = teamDTO.colour
         self.gender = teamDTO.gender
         self.ageGrp = teamDTO.ageGrp
-        self.accessCode = "abcd123" // a changer
+        self.accessCode = teamDTO.accessCode //
         self.coaches = teamDTO.coaches
         self.players = teamDTO.players
         self.invites = teamDTO.invites
@@ -281,5 +281,28 @@ final class TeamManager {
             .getDocuments()
         
         return !snapshot.documents.isEmpty
+    }
+    
+    // Generates an 8-character unique team access code
+    func generateUniqueTeamAccessCode() async throws -> String {
+        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+        func generateCode() -> String {
+            return String((0..<8).map { _ in characters.randomElement()! })
+        }
+
+        while true {
+            let newCode = generateCode()
+
+            let snapshot = try await teamCollection
+                .whereField("access_code", isEqualTo: newCode)
+                .getDocuments()
+
+            if snapshot.documents.isEmpty {
+                return newCode // return when unique code found
+            }
+
+            // If code exists, loop to generate another
+        }
     }
 }
