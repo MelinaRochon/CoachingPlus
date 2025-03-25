@@ -170,6 +170,7 @@ final class GameManager {
         
         // Create a new game
         try gameDocument.setData(from: game, merge: false)
+        print("Successfully created new game, gameId: \(documentId)")
         
         return documentId // return the game_id
     }

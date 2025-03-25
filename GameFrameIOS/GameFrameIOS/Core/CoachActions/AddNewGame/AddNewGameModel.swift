@@ -73,6 +73,7 @@ final class AddNewGameModel: ObservableObject {
     
     func addUnknownGame() async throws -> String? {
         // Add game to the database
+        print("Adding unknown game, teamId: \(teamId)")
         return try await GameManager.shared.addNewUnkownGame(teamId: teamId)
 //        if gameId == nil {
 //            print("Error when adding a new game. Could not get the gameId. Aborting")
