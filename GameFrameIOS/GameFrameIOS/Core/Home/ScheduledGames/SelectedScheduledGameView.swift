@@ -8,24 +8,30 @@
 import SwiftUI
 
 struct SelectedScheduledGameView: View {
-    @StateObject private var viewModel = SelectedGameModel()
+    @StateObject private var selecGameViewModel = SelectedGameModel()
+    @StateObject private var recordingViewModel = AddNewFGVideoRecordingModel()
+    
     @State var gameId: String // scheduled game id is passed when this view is called
     @State var teamDocId: String // scheduled game id is passed when this view is called
     
     @State private var hours: Int = 0;
     @State private var minutes: Int = 0;
     @State var recordReminder: Bool = false;
+    @State private var canStartRecording: Bool = false // Controls start button visibility
+    @State private var navigateToRecordingView = false // Track navigation state
+    @State private var minsToStartGame: Int = 10; // How many minutes before a scheduled game can a coach start a recording
+    
     
     var body: some View {
         NavigationView {
-            if let selectedGame = viewModel.selectedGame {
+            if let selectedGame = selecGameViewModel.selectedGame {
                 VStack {
                     Text(selectedGame.game.title).font(.largeTitle).bold().multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 5).padding(.bottom, 5).padding(.horizontal)
                     
                     // View the game details
                     VStack {
                         Text("Game Details").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline)
-
+                        
                         HStack {
                             Image(systemName: "person.2.fill").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
                             Text(selectedGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
@@ -76,7 +82,7 @@ struct SelectedScheduledGameView: View {
                         
                     }.padding(.horizontal)
                     
-                    if let userType = viewModel.userType {
+                    if let userType = selecGameViewModel.userType {
                         
                         if (userType == "Coach") {
                             Divider()
@@ -117,14 +123,23 @@ struct SelectedScheduledGameView: View {
         }
         .task {
             do {
-                try await viewModel.getSelectedGameInfo(gameId: gameId, teamDocId: teamDocId)
-                try await viewModel.getUserType()
-                if let selectedGame = viewModel.selectedGame {
+                try await selecGameViewModel.getSelectedGameInfo(gameId: gameId, teamDocId: teamDocId)
+                try await selecGameViewModel.getUserType()
+                if let selectedGame = selecGameViewModel.selectedGame {
                     // Get the duration to be shown
                     let (dhours, dminutes) = convertSecondsToHoursMinutes(seconds: selectedGame.game.duration)
                     self.hours = dhours
                     self.minutes = dminutes
                     self.recordReminder = selectedGame.game.recordingReminder
+                    
+                    // Check if game starts within the next 10 minutes or is ongoing
+                    if let startTime = selectedGame.game.startTime {
+                        let currentTime = Date()
+                        let timeDifference = startTime.timeIntervalSince(currentTime)
+                        let gameEndTime = startTime.addingTimeInterval(TimeInterval(selectedGame.game.duration))
+                        self.canStartRecording = (Int(timeDifference) <= minsToStartGame*60 && timeDifference >= 0) || (currentTime <= gameEndTime && currentTime >= startTime)
+                        print(canStartRecording)
+                    }
                 }
                 
             } catch {
@@ -133,23 +148,51 @@ struct SelectedScheduledGameView: View {
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                // Start the recording
-                Button
-                {
-                    // TO DO - Will need to add some action here....
-                    // MAYBE only show the start button when the game is in lets say 5 minutes or 10 minutes later??..
-                } label: {
-                    HStack {
-                        Text("Start").font(.subheadline)
-                        Image(systemName: "waveform").resizable().frame(width: 15, height: 15)
-                    }.foregroundColor(.white)
+                if canStartRecording {
+                    Button(action: {
+                        guard let selectedGame = selecGameViewModel.selectedGame else {
+                            print("ERROR: No selected game available")
+                            return
+                        }
+                        
+                        let gameId = selectedGame.game.gameId
+                        let teamId = selectedGame.team.teamId
+
+                        Task {
+                            do {
+                                print("Starting recording for Game ID: \(gameId), Team ID: \(teamId)")
+
+                                recordingViewModel.gameId = gameId
+                                try await recordingViewModel.createFGRecording(teamId: teamId)
+
+                                print("Recording successfully created in the database.")
+
+                                navigateToRecordingView = true
+                            } catch {
+                                print("Error Creating Recording: \(error.localizedDescription)")
+                            }
+                        }
+                    }) {
+                        HStack {
+                            Text("Start").font(.subheadline)
+                            Image(systemName: "waveform").resizable().frame(width: 15, height: 15)
+                        }
+                        .foregroundColor(.white)
                         .padding(.vertical, 8).padding(.horizontal, 12)
                         .background(Color.green)
                         .cornerRadius(25)
+                    }
                 }
             }
         }
+        .background(
+            NavigationLink(
+                destination: CoachRecordingView().navigationBarBackButtonHidden(true),
+                isActive: $navigateToRecordingView
+            ) { EmptyView() }
+        )
     }
+
     
     func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
         let hours = seconds / 3600

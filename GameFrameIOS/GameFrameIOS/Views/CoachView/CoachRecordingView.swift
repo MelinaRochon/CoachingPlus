@@ -11,7 +11,7 @@ struct CoachRecordingView: View {
     var body: some View {
         NavigationView {
             VStack(alignment: .center) {
-                
+                Text("Coach Recording View")
                 // button to record
             }
         }
