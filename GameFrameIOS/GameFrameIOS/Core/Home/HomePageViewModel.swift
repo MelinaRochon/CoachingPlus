@@ -88,7 +88,9 @@ final class HomePageViewModel: ObservableObject {
         // Separate games into future and past
         for game in gamesWithTeam {
             if let startTime = game.game.startTime {
-                    if startTime > currentDate {
+                let gameEndTime = startTime.addingTimeInterval(TimeInterval(game.game.duration))
+                print(gameEndTime)
+                    if gameEndTime > currentDate {
                         tmpFutureGames.append(game)
                     } else {
                         tmpPastGames.append(game)
