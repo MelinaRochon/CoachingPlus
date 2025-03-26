@@ -101,6 +101,11 @@ final class KeyMomentManager {
         return try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentDocId).getDocument(as: DBKeyMoment.self)
     }
     
+    /** GET - Returns a specific key moment document from the database using doc ids */
+    func getKeyMomentWithDocId(teamDocId: String, gameDocId: String, keyMomentDocId: String) async throws -> DBKeyMoment? {
+        return try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameDocId, keyMomentDocId: keyMomentDocId).getDocument(as: DBKeyMoment.self)
+    }
+    
     /** GET - Returns all the key moments in the collection */
     func getAllKeyMoments(teamId: String, gameId: String) async throws -> [DBKeyMoment]? {
         // Make sure the game document can be found under the team id given

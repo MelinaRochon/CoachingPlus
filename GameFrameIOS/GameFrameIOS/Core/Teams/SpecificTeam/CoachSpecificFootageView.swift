@@ -13,6 +13,8 @@ struct CoachSpecificFootageView: View {
     @State var teamDocId: String // team document id
     
     @StateObject private var viewModel = SelectedGameModel()
+    @StateObject private var transcriptModel = TranscriptViewModel()
+
     @State private var isGameDetailsEnabled: Bool = false
     
     var body: some View {
@@ -99,34 +101,23 @@ struct CoachSpecificFootageView: View {
                                 Spacer()
                                 
                             }.padding(.bottom, 4)
-                            
-                            HStack (alignment: .top) {
-                                NavigationLink(destination: CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId)) {
-                                    VStack {
-                                        HStack (alignment: .top) {
-                                            Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
-                                            Spacer()
-                                            Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
-                                            Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                            if !transcriptModel.recordings.isEmpty {
+                                ForEach(transcriptModel.recordings, id: \.id) { recording in
+                                    HStack(alignment: .top) {
+                                        NavigationLink(destination: CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId, recording: recording)) {
+                                            HStack(alignment: .top) {
+                                                let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
+                                                Text(formatDuration(durationInSeconds)).bold().font(.headline).foregroundColor(Color.black)
+                                                Spacer()
+                                                Text("Transcript: \(recording.transcript)")
+                                                    .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3).padding(.top, 4).foregroundColor(Color.black)
+                                                
+                                                Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                            }.tag(recording.id as Int)
                                         }
-                                        Divider().padding(.vertical, 2)
                                     }
-                                }.foregroundStyle(.black)
-                            }
-                            HStack (alignment: .top) {
-                                NavigationLink(destination: CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId)) {
-                                    VStack {
-                                        
-                                        HStack (alignment: .top) {
-                                            Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).padding(.bottom, 2)
-                                            Spacer()
-                                            Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).padding(.top, 4)
-                                            Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                        }
-                                    }.foregroundStyle(.black)
                                 }
                             }
-                            
                         }.padding()
                             .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
                             .padding(.horizontal).padding(.top)
@@ -137,6 +128,8 @@ struct CoachSpecificFootageView: View {
             .task {
                 do {
                     try await viewModel.getSelectedGameInfo(gameId: gameId, teamDocId: teamDocId)
+                    try await transcriptModel.loadFirstThreeTranscripts(gameId: gameId, teamDocId: teamDocId)
+
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
                 }
@@ -146,6 +139,14 @@ struct CoachSpecificFootageView: View {
             }
         }
     }
+    
+    func formatDuration(_ duration: TimeInterval) -> String {
+        let hours = Int(duration) / 3600
+        let minutes = (Int(duration) % 3600) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
 }
 
 #Preview {

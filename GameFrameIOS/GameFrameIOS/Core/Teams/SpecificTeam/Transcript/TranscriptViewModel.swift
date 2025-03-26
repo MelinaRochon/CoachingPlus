@@ -6,6 +6,13 @@
 //
 
 import Foundation
+
+struct PlayerNameAndPhoto {
+    let playerId: String
+    let name: String
+    let photoURL: URL?
+}
+
 @MainActor
 final class TranscriptViewModel: ObservableObject {
     
@@ -13,10 +20,97 @@ final class TranscriptViewModel: ObservableObject {
     @Published var game: DBGame?
     // TO DO - Will need to add the key moments db
     
-    func loadAllTranscripts() {
+    @Published var recordings: [keyMomentTranscript] = [];
+    @Published var feedbackFor: [PlayerNameAndPhoto]? = nil
+    
+    func loadAllTranscripts(gameId: String, teamDocId: String) async throws {
         // For now, take a games array
-        
+        do {
+                        
+            // Get all the transcripts from the database
+            guard let transcripts = try await TranscriptManager.shared.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
+                print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
+                return
+            }
+            
+            // transcripts were fround in the database. Get the key moments associated to each
+            var allRecordings: [keyMomentTranscript] = []
+            for transcript in transcripts {
+                let keyMomentDocId = transcript.keyMomentId // get the key moment document id to be fetched
+                
+                // Get all the key moments from the database
+                guard let keyMoment = try await KeyMomentManager.shared.getKeyMomentWithDocId(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentDocId) else {
+                    print("No key moment found. Aborting..")
+                    return
+                }
+                // get the length of the array to set the id of the element of the list
+                let recordingsLength = allRecordings.count
+                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: keyMoment.feedbackFor)
+                
+                // Adding new element to the array
+                allRecordings.append(keyMomentTranscript)
+            }
+            
+            // filter the games
+            let tmpAllRecordings: [keyMomentTranscript] = []
+            
+            let sortedRecordings = allRecordings.sorted { recording1, recording2 in
+                let frameStart1 = recording1.frameStart
+                let frameStart2 = recording2.frameStart
+                return frameStart1 < frameStart2
+            }
+            
+            self.recordings = sortedRecordings
+            
+        } catch {
+            print("Error when loading the recordings from the database. Error: \(error)")
+            return
+        }
     }
+    
+    func loadFirstThreeTranscripts(gameId: String, teamDocId: String) async throws {
+        // For now, take a games array
+        do {
+                        
+            // Get all the transcripts from the database
+            guard let transcripts = try await TranscriptManager.shared.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
+                print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
+                return
+            }
+            
+            // transcripts were fround in the database. Get the key moments associated to each
+            var allRecordings: [keyMomentTranscript] = []
+            for transcript in transcripts {
+                let keyMomentDocId = transcript.keyMomentId // get the key moment document id to be fetched
+                
+                // Get all the key moments from the database
+                guard let keyMoment = try await KeyMomentManager.shared.getKeyMomentWithDocId(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentDocId) else {
+                    print("No key moment found. Aborting..")
+                    return
+                }
+                // get the length of the array to set the id of the element of the list
+                let recordingsLength = allRecordings.count
+                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: keyMoment.feedbackFor)
+                
+                // Adding new element to the array
+                allRecordings.append(keyMomentTranscript)
+            }
+            
+            // filter the games            
+//            let sortedRecordings = allRecordings.sorted { recording1, recording2 in
+//                let frameStart1 = recording1.frameStart
+//                let frameStart2 = recording2.frameStart
+//                return frameStart1 < frameStart2
+//            }
+            
+            self.recordings = Array(allRecordings.sorted(by: { $0.frameStart < $1.frameStart }).prefix(3))
+
+        } catch {
+            print("Error when loading the recordings from the database. Error: \(error)")
+            return
+        }
+    }
+
     
     func loadGameDetails(gameId: String, teamDocId: String) async throws {
         // Get the team data
@@ -34,4 +128,33 @@ final class TranscriptViewModel: ObservableObject {
 
     }
     
+    func getFeebackFor(feedbackFor: [String]) async throws {
+        // Find the players in the feedbackFor array (player_id) and return their names
+        if !feedbackFor.isEmpty {
+            
+            var tmpPlayers: [PlayerNameAndPhoto] = []
+            // There are players associated to the feedback
+            for feedbackId in feedbackFor {
+                
+                // get the player
+                guard let player = try await PlayerManager.shared.getPlayer(playerId: feedbackId) else {
+                    print("No player found with this player id. Aborting..")
+                    return
+                }
+                
+                guard let user = try await UserManager.shared.getUser(userId: player.playerId!) else {
+                    print("No user found with this player id. Aborting..")
+                    return
+                }
+                
+                let playerName = (user.firstName + " " + user.lastName)
+                
+                // create a new array to store the players
+                let newPlayer = PlayerNameAndPhoto(playerId: player.playerId!, name: playerName, photoURL: nil)
+                tmpPlayers.append(newPlayer)
+            }
+            
+            self.feedbackFor = tmpPlayers
+        }
+    }
 }

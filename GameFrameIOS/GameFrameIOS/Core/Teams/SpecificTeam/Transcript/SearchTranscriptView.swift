@@ -13,28 +13,28 @@ struct SearchTranscriptView: View {
     
     @State var gameId: String // scheduled game id is passed when this view is called
     @State var teamDocId: String // scheduled game id is passed when this view is called
-
+    
+    @StateObject private var transcriptModel = TranscriptViewModel()
+    
     var body: some View {
         NavigationView {
             
             VStack {
                 List {
-                    ForEach(0..<10, id: \.self) { _ in
-                        HStack(alignment: .top) {
-                            NavigationLink(destination: CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId)) {
-                                VStack {
+                    if !transcriptModel.recordings.isEmpty {
+                        ForEach(transcriptModel.recordings, id: \.id) { recording in
+                            HStack(alignment: .top) {
+                                NavigationLink(destination: CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId, recording: recording)) {
                                     HStack(alignment: .top) {
-                                        Text("hh:mm:ss")
-                                            .font(.headline)
+                                        let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
+                                        Text(formatDuration(durationInSeconds)).bold().font(.headline)
                                         Spacer()
-                                        Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\"")
-                                            .font(.caption)
+                                        Text("Transcript: \(recording.transcript)")
+                                            .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
                                             .padding(.top, 4)
-                                        Image(systemName: "person.circle")
-                                            .resizable()
-                                            .frame(width: 22, height: 22)
-                                            .foregroundStyle(.gray)
-                                    }
+                                        
+                                        Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                    }.tag(recording.id as Int)
                                 }
                             }
                         }
@@ -45,8 +45,22 @@ struct SearchTranscriptView: View {
                 .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search transcripts" )
                 .scrollContentBackground(.hidden)
             }
+        }.task {
+            do {
+                try await transcriptModel.loadAllTranscripts(gameId: gameId, teamDocId: teamDocId)
+            } catch {
+                print("Could not load transcripts. error: \(error)")
+            }
         }
     }
+    
+    func formatDuration(_ duration: TimeInterval) -> String {
+        let hours = Int(duration) / 3600
+        let minutes = (Int(duration) % 3600) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
 }
 
 #Preview {

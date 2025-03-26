@@ -111,6 +111,16 @@ final class TranscriptManager {
         }
     }
     
+    /** GET - Returns all transcripts in the collection */
+    func getAllTranscriptsWithDocId(teamDocId: String, gameDocId: String) async throws -> [DBTranscript]? {
+        
+        // Get all documents in the transcript collection
+        let snapshot = try await transcriptCollection(teamDocId: teamDocId, gameDocId: gameDocId).getDocuments()
+        return snapshot.documents.compactMap { document in
+            try? document.data(as: DBTranscript.self)
+        }
+    }
+        
     /** POST - Add a new transcript to the database */
     func addNewTranscript(teamId: String, transcriptDTO: TranscriptDTO) async throws {
         // Make sure the collection path can be found
