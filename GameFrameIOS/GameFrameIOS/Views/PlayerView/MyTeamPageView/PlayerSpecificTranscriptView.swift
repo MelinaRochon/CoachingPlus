@@ -63,8 +63,8 @@ struct PlayerSpecificTranscriptView: View {
                     VStack {
                         Divider()
                             
-                        // Comment section
-                        CommentSectionView()
+                        // TODO: Comment section
+                        //CommentSectionView(viewModel: <#T##KeyMomentViewModel#>, teamId: <#T##String#>, keyMomentId: <#T##String#>)
                         
                     }.frame(maxHeight: .infinity, alignment: .bottom)
                 }

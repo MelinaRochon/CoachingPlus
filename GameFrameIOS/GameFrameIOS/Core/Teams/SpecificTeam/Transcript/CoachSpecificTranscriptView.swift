@@ -73,9 +73,18 @@ struct CoachSpecificTranscriptView: View {
                             }
                             VStack {
                                 Divider()
-                                
-                                // Comment section
-                                CommentSectionView()
+
+                                // TODO: Comment section
+//                                if let recording = recording {
+//                                    CommentSectionView(
+//                                        viewModel: CommentSectionViewModel(),
+//                                        teamId: teamDocId,
+//                                        keyMomentId: String(recording.id),
+//                                        gameId: gameId,
+//                                        transcriptId: String(recording.transcript)
+//                                    )
+//                                }
+
                                 
                             }
                             .frame(maxHeight: .infinity, alignment: .bottom)

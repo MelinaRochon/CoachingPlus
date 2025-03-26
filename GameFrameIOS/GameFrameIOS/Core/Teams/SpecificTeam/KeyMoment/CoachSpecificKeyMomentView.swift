@@ -19,6 +19,7 @@ struct CoachSpecificKeyMomentView: View {
     @State var recording: keyMomentTranscript?
 
     @StateObject private var viewModel = TranscriptViewModel()
+    @StateObject private var commentViewModel = CommentSectionViewModel()
 
     var body: some View {
         ScrollView {
@@ -97,9 +98,17 @@ struct CoachSpecificKeyMomentView: View {
                     }
                     Divider()
                     
-                    CommentSectionView()
+                    // Integrated CommentSectionView
+                    if let recording = recording {
+                        CommentSectionView(
+                            viewModel: commentViewModel,
+                            teamId: teamDocId,
+                            keyMomentId: String(recording.id),
+                            gameId: gameId,
+                            transcriptId: String(recording.transcript)
+                        )
+                    }
                 }
-                
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
