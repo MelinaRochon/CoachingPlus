@@ -38,7 +38,7 @@ struct PlayerAllTeamsView: View {
                     .listStyle(PlainListStyle()) // Optional: Make the list style more simple
                 }
                 
-                
+                Spacer()
                 VStack {
                     // Show initial text & button if `showInitialView` is true
                     if showInitialView {

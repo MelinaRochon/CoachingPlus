@@ -1,40 +1,42 @@
 //
-//  CoachSpecificFootageView.swift
+//  PlayerSpecificFootageView.swift
 //  GameFrameIOS
 //
-//  Created by Mélina Rochon on 2025-02-05.
+//  Created by Caterina Bosi on 2025-02-05.
 //
 
 import SwiftUI
 
-struct CoachSpecificFootageView: View {
+struct PlayerSpecificFootageView: View {
     
     @State var gameId: String // game Id
     @State var teamDocId: String // team document id
-    
+
     @StateObject private var viewModel = SelectedGameModel()
     @StateObject private var transcriptModel = TranscriptViewModel()
     @State private var gameStartTime: Date?
 
     @State private var isGameDetailsEnabled: Bool = false
-    
+
     // See if transcripts and key moments were found
+    // TO DO - Make sure they are associated to the player!
     @State private var keyMomentsFound: Bool = false
     @State private var transcriptsFound: Bool = false
-    
+
     var body: some View {
         NavigationView {
             ScrollView {
                 if let selectedGame = viewModel.selectedGame {
+                    
                     VStack {
                         HStack(alignment: .top) {
                             VStack {
-                                Text(selectedGame.game.title).font(.title2).multilineTextAlignment(.center)
-                                Text(selectedGame.team.teamNickname).font(.headline) //.foregroundStyle(.black.opacity(0.9))
+                                Text(selectedGame.game.title).font(.title2)
+                                Text(selectedGame.team.teamNickname).font(.headline)
+
                                 if let gameStartTime = gameStartTime {
                                     Text(gameStartTime, style: .date).font(.subheadline).foregroundStyle(.secondary)
                                 }
-                                
                                 Button {
                                     isGameDetailsEnabled.toggle()
                                 } label: {
@@ -42,11 +44,12 @@ struct CoachSpecificFootageView: View {
                                 }
                                 Divider()
                             }
+                            
                         }
                         
                         // Watch Full Game
                         VStack(alignment: .leading, spacing: 0) {
-                            NavigationLink(destination: CoachFullGameTranscriptView()) {
+                            NavigationLink(destination: PlayerFullGameTranscriptView()) {
                                 Text("Full Game Transcript")
                                     .font(.headline)
                                     .foregroundColor(.black)
@@ -60,13 +63,13 @@ struct CoachSpecificFootageView: View {
                         
                         // Key moments
                         VStack(alignment: .leading, spacing: 10) {
-                            NavigationLink(destination: CoachAllKeyMomentsView(gameId: gameId, teamDocId: teamDocId)) {
+                            NavigationLink(destination: PlayerAllKeyMomentsView(gameId: gameId, teamDocId: teamDocId)) {
                                 Text("Key moments")
                                     .font(.headline)
                                     .foregroundStyle(keyMomentsFound ? .black : .secondary)
                                 
                                 Image(systemName: "chevron.right")
-                                    .foregroundColor(keyMomentsFound ? .black : .secondary)
+                                    .foregroundStyle(keyMomentsFound ? .black : .secondary)
                                 Spacer()
                                 
                             }.padding(.bottom, 4).disabled(keyMomentsFound == false)
@@ -75,7 +78,7 @@ struct CoachSpecificFootageView: View {
                                 if !transcriptModel.keyMoments.isEmpty {
                                     ForEach(transcriptModel.keyMoments, id: \.id) { keyMoment in
                                         HStack(alignment: .top) {
-                                            NavigationLink(destination: CoachSpecificKeyMomentView(gameId: gameId, teamDocId: teamDocId, recording: keyMoment)) {
+                                            NavigationLink(destination: PlayerSpecificKeyMomentView()) {
                                                 Rectangle()
                                                     .fill(Color.gray.opacity(0.3))
                                                     .frame(width: 110, height: 60)
@@ -90,6 +93,7 @@ struct CoachSpecificFootageView: View {
                                                             Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
                                                         }
                                                     }
+                                                    
                                                     Text(keyMoment.transcript).font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black).lineLimit(3)
                                                 }
                                             }
@@ -107,13 +111,13 @@ struct CoachSpecificFootageView: View {
                         // Transcript
                         VStack(alignment: .leading, spacing: 10) {
                             
-                            NavigationLink(destination: CoachAllTranscriptsView(gameId: gameId, teamDocId: teamDocId)) {
+                            NavigationLink(destination: PlayerAllTranscriptsView(gameId: gameId, teamDocId: teamDocId)) {
                                 Text("Transcript")
                                     .font(.headline)
                                     .foregroundStyle(transcriptsFound ? .black : .secondary)
                                 
                                 Image(systemName: "chevron.right")
-                                    .foregroundColor(transcriptsFound ? .black : .secondary)
+                                    .foregroundStyle(transcriptsFound ? .black : .secondary)
                                 Spacer()
                                 
                             }.padding(.bottom, 4).disabled(transcriptsFound == false)
@@ -121,7 +125,7 @@ struct CoachSpecificFootageView: View {
                             if !transcriptModel.recordings.isEmpty {
                                 ForEach(transcriptModel.recordings, id: \.id) { recording in
                                     HStack(alignment: .center) {
-                                        NavigationLink(destination: CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId, recording: recording)) {
+                                        NavigationLink(destination: PlayerSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId, recording: recording)) {
                                             HStack(alignment: .center) {
                                                 if let gameStartTime = gameStartTime {
                                                     let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
@@ -133,16 +137,17 @@ struct CoachSpecificFootageView: View {
                                                     Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
                                                 }
                                             }.tag(recording.id as Int)
-                                        }
+                                        }.foregroundStyle(.black)
                                     }
                                 }
                             } else {
                                 // Transcripts empty
                                 Text("No transcripts.").font(.caption).foregroundColor(.secondary)
                             }
-                        }.padding()
-                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
-                            .padding(.horizontal).padding(.top)
+                        }
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
+                        .padding(.horizontal).padding(.top)
                     }
                 }
             }
@@ -183,5 +188,5 @@ struct CoachSpecificFootageView: View {
 }
 
 #Preview {
-    CoachSpecificFootageView(gameId: "", teamDocId: "")
+    PlayerSpecificFootageView(gameId: "", teamDocId: "")
 }

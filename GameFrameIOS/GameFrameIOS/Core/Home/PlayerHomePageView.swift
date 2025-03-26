@@ -36,12 +36,12 @@ struct PlayerHomePageView: View {
                                         
                                         HStack {
                                             VStack {
-                                                Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.black)
                                                 
-                                                Text(scheduledGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                                Text(scheduledGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                Text(scheduledGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.secondary)
+                                                Text(scheduledGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.black)
                                                 
-                                                Divider().background(content: { Color.gray.opacity(0.3) })
+//                                                Divider().background(content: { Color.gray.opacity(0.3) })
                                             }
                                             
                                         }
@@ -54,17 +54,19 @@ struct PlayerHomePageView: View {
                             .padding(.horizontal).padding(.top)
                             
                         }
-                        if !viewModel.pastGames.isEmpty {
+                        
                             
                             // Recent Footage Section
-                            VStack(alignment: .leading, spacing: 10) {
-                                NavigationLink(destination: PlayerAllRecentFootageView()) {
-                                    Text("Recent Footage")
-                                        .font(.headline)
-                                        .foregroundColor(.blue)
-                                    
-                                    Image(systemName: "chevron.right")
-                                }
+                        VStack(alignment: .leading, spacing: 10) {
+                            NavigationLink(destination: PlayerAllRecentFootageView()) {
+                                Text("Recent Footage")
+                                    .font(.headline)
+                                    .foregroundColor(.blue)
+                                
+                                Image(systemName: "chevron.right")
+                            }
+                            
+                            if !viewModel.pastGames.isEmpty {
                                 // Loop through games and show a preview of the past 3 games
                                 ForEach(viewModel.pastGames.prefix(3), id: \.game.gameId) { pastGame in
                                     
@@ -84,11 +86,14 @@ struct PlayerHomePageView: View {
                                     }
                                 }
                                 
+                            } else {
+                                
                             }
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 2))
-                            .padding(.horizontal).padding(.top)
                         }
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 2))
+                        .padding(.horizontal).padding(.top)
+                        
                     }
                 }
                 
