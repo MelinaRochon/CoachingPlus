@@ -126,6 +126,11 @@ struct PlayerCreateAccountView: View {
                             // create account is called!
                             Task {
                                 do {
+                                    await viewModel.validateTeamAccessCode()
+                                    if viewModel.showInvalidCodeAlert {
+                                        return
+                                    }
+                                    
                                     let accountExists = try await viewModel.checkIfPlayerAccountExists()
                                     if (accountExists == nil) {
                                         // There's a problem with the user's input.
@@ -172,6 +177,8 @@ struct PlayerCreateAccountView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .padding(.horizontal)
                             
+                        }.alert("Invalid Access Code", isPresented: $viewModel.showInvalidCodeAlert) {
+                            Button("OK", role: .cancel) { }
                         }
                         
                     }

@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import FirebaseFirestore
+
 @MainActor
 /** Observable object to be called when the coach wants to authenticate by performing one of the
  following action: signIn, signUp. */
@@ -21,8 +23,11 @@ final class authenticationViewModel: ObservableObject {
     @Published var teamAccessCode: String = ""
     @Published var teamId: String = "" // team id
     @Published var teamName: String = ""
-
     
+    @Published var showInvalidCodeAlert: Bool = false // Controls alert visibility
+    @Published var showSignUpScreen: Bool = false // Controls navigation if valid
+    let db = Firestore.firestore()
+
     func signIn(userType: String) async throws {
         print("SignIn Test!")
         // validate email and password
@@ -251,4 +256,24 @@ final class authenticationViewModel: ObservableObject {
         try await InviteManager.shared.updateInviteStatus(id: invite.id, newStatus: "Accepted")
         print("it worked!")
     }
+    
+    // validating if team access code is valid
+        func validateTeamAccessCode() async {
+            do {
+                let snapshot = try await db.collection("teams")
+                    .whereField("accessCode", isEqualTo: teamAccessCode)
+                    .getDocuments()
+
+                if let document = snapshot.documents.first {
+                    self.teamId = document.documentID // Store the valid team ID
+                    self.teamName = document["name"] as? String ?? "Unknown Team"
+                    self.showSignUpScreen = true // Allow navigation to sign-up
+                } else {
+                    self.showInvalidCodeAlert = true // Show alert in UI
+                }
+            } catch {
+                print("Error checking team access code: \(error.localizedDescription)")
+                self.showInvalidCodeAlert = true // Show error alert
+            }
+        }
 }
