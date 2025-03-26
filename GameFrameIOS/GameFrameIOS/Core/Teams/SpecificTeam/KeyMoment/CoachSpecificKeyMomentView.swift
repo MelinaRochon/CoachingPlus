@@ -12,14 +12,14 @@ import SwiftUI
 struct CoachSpecificKeyMomentView: View {
     @State private var progress: Double = 0.0
     @State private var comment: String = ""
-        let totalDuration: Double = 180 // Example: 3 minutes (180 seconds)
+    @State private var totalDuration: Double = 180 // Example: 3 minutes (180 seconds)
     
     @State var gameId: String // game Id
     @State var teamDocId: String // team document id
-    
-    @StateObject private var viewModel = KeyMomentViewModel()
+    @State var recording: keyMomentTranscript?
 
-    
+    @StateObject private var viewModel = TranscriptViewModel()
+
     var body: some View {
         ScrollView {
             if let game = viewModel.game {
@@ -30,21 +30,19 @@ struct CoachSpecificKeyMomentView: View {
                             Text(game.title).font(.title2)
                             Spacer()
                         }
-                        HStack {
-                            Text("Key moment #1").font(.headline)
-                            Spacer()
+                        
+                        if let recording = recording {
                             
-                            // Edit Icon
-                            Button(action: {}) {
-                                Image(systemName: "pencil.and.outline")
-                                    .foregroundColor(.blue) // Adjust color
-                            }
-                            // Share Icon
-                            Button(action: {}) {
-                                Image(systemName: "square.and.arrow.up")
-                                    .foregroundColor(.blue) // Adjust color
-                            }
-                        }.padding(.bottom, -2)
+                            HStack {
+                                Text("Key moment #\(recording.id+1)").font(.headline)
+                                Spacer()                                
+                                //                            // Share Icon
+                                //                            Button(action: {}) {
+                                //                                Image(systemName: "square.and.arrow.up")
+                                //                                    .foregroundColor(.blue) // Adjust color
+                                //                            }
+                            }.padding(.bottom, -2)
+                        }
                         HStack (spacing: 0){
                             VStack(alignment: .leading) {
                                 if let team = viewModel.team {
@@ -91,11 +89,12 @@ struct CoachSpecificKeyMomentView: View {
                     }.padding()
                     
                     // Transcription section
-                    VStack(alignment: .leading) {
-                        Text("Transcription").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal).padding(.bottom, 2)
-                        Text("\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
-                    }.padding(.bottom, 5)
-                    
+                    if let recording = recording {
+                        VStack(alignment: .leading) {
+                            Text("Transcription").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal).padding(.bottom, 2)
+                            Text(recording.transcript).font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
+                        }.padding(.bottom, 5)
+                    }
                     Divider()
                     
                     CommentSectionView()
@@ -107,6 +106,12 @@ struct CoachSpecificKeyMomentView: View {
         .task {
             do {
                 try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
+                let feedbackFor = recording!.feedbackFor ?? []
+                try await viewModel.getFeebackFor(feedbackFor: feedbackFor)
+                
+                if let gameStartTime = viewModel.gameStartTime {
+                    totalDuration = recording!.frameStart.timeIntervalSince(gameStartTime)
+                }
             } catch {
                 print("Error when fetching specific footage info: \(error)")
             }
@@ -132,5 +137,5 @@ struct CoachSpecificKeyMomentView: View {
 }
 
 #Preview {
-    CoachSpecificKeyMomentView(gameId: "", teamDocId: "")
+    CoachSpecificKeyMomentView(gameId: "", teamDocId: "", recording: nil)
 }

@@ -125,6 +125,10 @@ final class GameManager {
         return try await gameDocument(teamDocId: teamDocId, gameId: gameId).getDocument(as: DBGame.self)
     }
     
+    func getGameWithDocId(gameDocId: String, teamDocId: String) async throws -> DBGame? {
+        return try await gameDocument(teamDocId: teamDocId, gameId: gameDocId).getDocument(as: DBGame.self)
+    }
+    
     /** GET - Returns all games from the database */
     func getAllGames(teamId: String) async throws -> [DBGame]? {
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {

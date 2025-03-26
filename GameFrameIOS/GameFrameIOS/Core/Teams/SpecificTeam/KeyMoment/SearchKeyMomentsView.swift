@@ -13,27 +13,33 @@ struct SearchKeyMomentsView: View {
     @State var gameId: String // scheduled game id is passed when this view is called
     @State var teamDocId: String // scheduled game id is passed when this view is called
 
+    @StateObject private var transcriptModel = TranscriptViewModel()
+
+    
     var body: some View {
         NavigationView {
             VStack {
                 List  {
-                    ForEach(0..<5, id: \.self) { _ in
-                        HStack (alignment: .top) {
-                            NavigationLink(destination: CoachSpecificKeyMomentView(gameId: gameId, teamDocId: teamDocId)) {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 110, height: 60)
-                                    .cornerRadius(10)
-                                
-                                VStack {
-                                    HStack {
-                                        Text("hh:mm:ss").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2)
-                                        Spacer()
-                                        Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                    if !transcriptModel.keyMoments.isEmpty{
+                        ForEach(transcriptModel.keyMoments, id: \.id) { keyMoment in
+                            HStack(alignment: .top) {
+                                NavigationLink(destination: CoachSpecificKeyMomentView(gameId: gameId, teamDocId: teamDocId, recording: keyMoment)) {
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.3))
+                                        .frame(width: 110, height: 60)
+                                        .cornerRadius(10)
+                                    
+                                    VStack {
+                                        if let startTime = transcriptModel.gameStartTime {
+                                            HStack {
+                                                let durationInSeconds = keyMoment.frameStart.timeIntervalSince(startTime)
+                                                Text(formatDuration(durationInSeconds)).bold().font(.headline)
+                                                Spacer()
+                                                Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
+                                            }
+                                        }
+                                        Text("Transcript: \(keyMoment.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).lineLimit(3)
                                     }
-                                    
-                                    Text("Transcript: \"Lorem ipsum dolor sit amet, consectetur adipiscing...\"").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    
                                 }
                             }
                         }
@@ -42,10 +48,24 @@ struct SearchKeyMomentsView: View {
                 .listStyle(PlainListStyle()) // Optional: Make the list style more simple
                 .navigationTitle("All Key Moments").navigationBarTitleDisplayMode(.inline)
                 .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search key moments" )
-                //.scrollContentBackground(.hidden)
+            }
+        }.task {
+            do {
+                try await transcriptModel.getGameStartTime(gameId: gameId, teamDocId: teamDocId)
+                try await transcriptModel.loadFirstThreeTranscripts(gameId: gameId, teamDocId: teamDocId)
+            } catch {
+                print("Problem when loading the key moments: \(error)")
             }
         }
     }
+    
+    func formatDuration(_ duration: TimeInterval) -> String {
+        let hours = Int(duration) / 3600
+        let minutes = (Int(duration) % 3600) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
 }
 
 #Preview {

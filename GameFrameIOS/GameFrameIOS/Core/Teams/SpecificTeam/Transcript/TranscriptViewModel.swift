@@ -21,10 +21,12 @@ final class TranscriptViewModel: ObservableObject {
     // TO DO - Will need to add the key moments db
     
     @Published var recordings: [keyMomentTranscript] = [];
+    @Published var keyMoments: [keyMomentTranscript] = [];
+
     @Published var feedbackFor: [PlayerNameAndPhoto]? = nil
+    @Published var gameStartTime: Date? = nil
     
     func loadAllTranscripts(gameId: String, teamDocId: String) async throws {
-        // For now, take a games array
         do {
                         
             // Get all the transcripts from the database
@@ -64,6 +66,21 @@ final class TranscriptViewModel: ObservableObject {
             
         } catch {
             print("Error when loading the recordings from the database. Error: \(error)")
+            return
+        }
+    }
+    
+    func getGameStartTime(gameId: String, teamDocId: String) async throws {
+        do {
+            guard let game = try await GameManager.shared.getGameWithDocId(gameDocId: gameId, teamDocId: teamDocId) else {
+                print("Could not get the game information.")
+                return
+            }
+            
+            self.gameStartTime = game.startTime
+            
+        } catch {
+            print("Could not get the game start time. Aborting.")
             return
         }
     }
@@ -111,7 +128,49 @@ final class TranscriptViewModel: ObservableObject {
         }
     }
 
-    
+    func loadFirstThreeKeyMoments(gameId: String, teamDocId: String) async throws {
+        // For now, take a games array
+        do {
+                        
+            // Get all the transcripts from the database
+            guard let transcripts = try await TranscriptManager.shared.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
+                print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
+                return
+            }
+            
+            // transcripts were fround in the database. Get the key moments associated to each
+            var allRecordings: [keyMomentTranscript] = []
+            for transcript in transcripts {
+                let keyMomentDocId = transcript.keyMomentId // get the key moment document id to be fetched
+                
+                // Get all the key moments from the database
+                guard let keyMoment = try await KeyMomentManager.shared.getKeyMomentWithDocId(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentDocId) else {
+                    print("No key moment found. Aborting..")
+                    return
+                }
+                
+                if keyMoment.fullGameId != nil {
+                    
+                    
+                    // get the length of the array to set the id of the element of the list
+                    let recordingsLength = allRecordings.count
+                    let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: keyMoment.feedbackFor)
+                    
+                    // Adding new element to the array
+                    allRecordings.append(keyMomentTranscript)
+                } else {
+                    print("")
+                }
+            }
+            
+            self.keyMoments = Array(allRecordings.sorted(by: { $0.frameStart < $1.frameStart }).prefix(3))
+
+        } catch {
+            print("Error when loading the recordings from the database. Error: \(error)")
+            return
+        }
+    }
+
     func loadGameDetails(gameId: String, teamDocId: String) async throws {
         // Get the team data
         let team = try await TeamManager.shared.getTeamWithDocId(docId: teamDocId);
@@ -120,11 +179,12 @@ final class TranscriptViewModel: ObservableObject {
         
         // Get the game's data
         guard let tmpGame = try await GameManager.shared.getGame(gameId: gameId, teamId: team.teamId) else {
-                print("Game not found or nil")
-                return
-            }
+            print("Game not found or nil")
+            return
+        }
         
         self.game = tmpGame
+        self.gameStartTime = tmpGame.startTime
 
     }
     

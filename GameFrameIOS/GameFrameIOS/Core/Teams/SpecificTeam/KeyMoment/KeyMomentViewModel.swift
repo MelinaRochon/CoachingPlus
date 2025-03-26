@@ -12,11 +12,7 @@ final class KeyMomentViewModel: ObservableObject {
     @Published var team: DBTeam?
     @Published var game: DBGame?
     // TO DO - Will need to add the key moments db
-    
-    func loadAllKeyMoments() {
-        // For now, take a games array
-        
-    }
+    @Published var recordings: [keyMomentTranscript] = [];
     
     func loadGameDetails(gameId: String, teamDocId: String) async throws {
         // Get the team data

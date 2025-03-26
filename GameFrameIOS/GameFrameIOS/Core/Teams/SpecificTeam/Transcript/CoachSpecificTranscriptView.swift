@@ -18,8 +18,6 @@ struct CoachSpecificTranscriptView: View {
 
     var body: some View {
         NavigationView {
-            
-            
             ScrollView {
                 if let game = viewModel.game {
                     VStack {
@@ -46,16 +44,6 @@ struct CoachSpecificTranscriptView: View {
                                     }
                                 }
                                 Spacer()
-//                                // Edit Icon
-//                                Button(action: {}) {
-//                                    Image(systemName: "pencil.and.outline")
-//                                        .foregroundColor(.blue) // Adjust color
-//                                }
-//                                // Share Icon
-//                                Button(action: {}) {
-//                                    Image(systemName: "square.and.arrow.up")
-//                                        .foregroundColor(.blue) // Adjust color
-//                                }
                             }
                         }.padding(.leading).padding(.trailing).padding(.top, 3)
                         
@@ -63,10 +51,12 @@ struct CoachSpecificTranscriptView: View {
                         if let recording = recording {
                             // Transcription section
                             VStack(alignment: .leading) {
-                                let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
-                                Text(formatDuration(durationInSeconds)).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal).padding(.bottom, 2)
-                                
-                                Text("\(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
+                                if let gameStartTime = viewModel.gameStartTime {
+                                    let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
+                                    Text(formatDuration(durationInSeconds)).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal).padding(.bottom, 2)
+                                    
+                                    Text("\(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
+                                }
                             }.padding(.bottom, 10).padding(.top)
                             
                             if let feedbackFor = viewModel.feedbackFor {
@@ -97,6 +87,7 @@ struct CoachSpecificTranscriptView: View {
                 do {
                     try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
                     let feedbackFor = recording!.feedbackFor ?? []
+                    
                     try await viewModel.getFeebackFor(feedbackFor: feedbackFor)
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
@@ -104,20 +95,12 @@ struct CoachSpecificTranscriptView: View {
             }
         }
         .toolbar {
-            //            ToolbarItem(placement: .topBarTrailing) {
-            //                // Share Icon
-            //                Button(action: {}) {
-            //                    Image(systemName: "square.and.arrow.up")
-            //                        .foregroundColor(.blue) // Adjust color
-            //                }
-            //
-            //            }
-            
             ToolbarItem(placement:.navigationBarTrailing) {
                 Button(action: {}) {
                     Image(systemName: "square.and.arrow.up")
                 }.foregroundColor(.red)
             }
+            
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !isEditing {
                     Button {
