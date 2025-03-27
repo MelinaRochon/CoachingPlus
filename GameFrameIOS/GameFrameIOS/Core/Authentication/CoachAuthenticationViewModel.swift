@@ -261,9 +261,9 @@ final class authenticationViewModel: ObservableObject {
         func validateTeamAccessCode() async {
             do {
                 let snapshot = try await db.collection("teams")
-                    .whereField("accessCode", isEqualTo: teamAccessCode)
+                    .whereField("access_code", isEqualTo: teamAccessCode)
                     .getDocuments()
-
+                print("Query for access codes executed, found \(snapshot.documents.count) results")
                 if let document = snapshot.documents.first {
                     self.teamId = document.documentID // Store the valid team ID
                     self.teamName = document["name"] as? String ?? "Unknown Team"

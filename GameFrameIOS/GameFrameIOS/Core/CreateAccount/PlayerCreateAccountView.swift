@@ -126,6 +126,7 @@ struct PlayerCreateAccountView: View {
                             // create account is called!
                             Task {
                                 do {
+                                    print("Verifying access code")
                                     await viewModel.validateTeamAccessCode()
                                     if viewModel.showInvalidCodeAlert {
                                         return
