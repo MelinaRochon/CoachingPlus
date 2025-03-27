@@ -88,4 +88,26 @@ final class AudioRecordingViewModel: ObservableObject {
             return
         }
     }
+    
+    func endAudioRecordingGame(teamId: String, gameId: String) async throws {
+        // Update the game's duration, and add the end time
+        guard let team = try await TeamManager.shared.getTeam(teamId: teamId) else {
+            print("Team could not be found. Aborting.")
+            return
+        }
+        
+        guard let game = try await GameManager.shared.getGame(gameId: gameId, teamId: teamId) else {
+            print("Could not get the game. Aborting.")
+            return
+        }
+        let endTime = Date() // get the end time of the game
+            
+        if let startTime = game.startTime {
+            // Get the duration of the game in seconds
+            let duration = endTime.timeIntervalSince(startTime)
+            let durationInSeconds = Int(duration)
+            print("duration \(duration) and in seconds: \(durationInSeconds)")
+            try await GameManager.shared.updateGameDurationUsingTeamDocId(gameId: gameId, teamDocId: team.id, duration: durationInSeconds)
+        }
+    }
 }

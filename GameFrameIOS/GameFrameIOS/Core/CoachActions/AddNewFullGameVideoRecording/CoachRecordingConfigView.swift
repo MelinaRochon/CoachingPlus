@@ -55,7 +55,6 @@ struct CoachRecordingConfigView: View {
                     .navigationTitle("Start a Recording")
                     .navigationBarTitleDisplayMode(.inline)
                     if selectedRecordingTypeLabel == "Video" {
-                        Text("Video")
                         NavigationLink(destination: CoachRecordingView()) {
                             Text("Start Video Recording")
                                 .font(.title2)
@@ -68,7 +67,6 @@ struct CoachRecordingConfigView: View {
                                 .padding(.horizontal)
                         }.disabled(selectedTeamId == nil)
                     } else {
-                        Text("Audio")
                         NavigationLink(destination: AudioRecordingView(teamId: selectedTeamId!)) {
                             Text("Start Audio Recording")
                                 .font(.title2)

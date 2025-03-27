@@ -178,4 +178,12 @@ final class GameManager {
         
         return documentId // return the game_id
     }
+    
+    func updateGameDurationUsingTeamDocId(gameId: String, teamDocId: String, duration: Int) async throws {
+        let data: [String:Any] = [
+            DBGame.CodingKeys.duration.rawValue: duration
+        ]
+        
+        try await gameDocument(teamDocId: teamDocId, gameId: gameId).updateData(data as [AnyHashable: Any])
+    }
 }

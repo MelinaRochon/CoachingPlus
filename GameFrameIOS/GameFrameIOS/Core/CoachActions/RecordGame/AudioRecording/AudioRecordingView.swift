@@ -13,7 +13,9 @@ struct AudioRecordingView: View {
     @State private var recordingStartTime: Date?
     @State private var gameId: String = ""
     @State var teamId: String = ""
-    
+    @State private var showStopRecordingAlert: Bool = false
+    @State private var navigateToHome = false
+
     var body: some View {
         NavigationView {
             VStack {
@@ -52,13 +54,37 @@ struct AudioRecordingView: View {
                     Spacer().frame(height: 5)
 
                 }
+                NavigationLink(destination: CoachMainTabView(showLandingPageView: .constant(false)), isActive: $navigateToHome) { EmptyView()
+                }
+
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        
+                        showStopRecordingAlert.toggle()
                     } label: {
                         Text("End Recording")
+                    }.alert("Are you sure you want to stop recording?", isPresented: $showStopRecordingAlert) {
+                        Button(role: .cancel) {
+                            // Handle the cancelation
+                        } label: {
+                            Text("Cancel")
+                        }
+                        Button("End Recording") {
+                            // Handle the end recording
+                            // Update the game's duration, add the end time
+                            // Let the user see a page after with the game's detail that he can edit?
+                            Task {
+                                do {
+                                    try await audioRecordingModel.endAudioRecordingGame(teamId: teamId, gameId: gameId)
+                                    // Go back to the main page
+                                    navigateToHome = true
+
+                                } catch {
+                                    print("Error when ending recording. ")
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -66,7 +92,7 @@ struct AudioRecordingView: View {
                 do {
                     // Load all recordings that are already there, if there are some
                     // Start by creating a new game
-                    let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) // gameDocId
+                    let gameDocId = "4WnWLr9f1xJNz58hcxcX" // try await audioRecordingModel.addUnknownGame(teamId: teamId) // gameDocId
                     self.gameId = gameDocId ?? ""
                     print("ib aydui recording... gameId: \(gameId), teamId: \(teamId)")
                 } catch {
