@@ -92,7 +92,7 @@ struct AudioRecordingView: View {
                 do {
                     // Load all recordings that are already there, if there are some
                     // Start by creating a new game
-                    let gameDocId = "4WnWLr9f1xJNz58hcxcX" // try await audioRecordingModel.addUnknownGame(teamId: teamId) // gameDocId
+                    let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) // gameDocId
                     self.gameId = gameDocId ?? ""
                     print("ib aydui recording... gameId: \(gameId), teamId: \(teamId)")
                 } catch {
