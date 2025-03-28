@@ -18,6 +18,8 @@ struct CoachMyTeamView: View {
     
     @State private var addPlayerEnabled = false;
     @State private var addGameEnabled = false;
+    
+    @State private var isTeamSettingsEnabled: Bool = false;
 
     @StateObject private var teamModel = TeamViewModel()
     
@@ -116,8 +118,9 @@ struct CoachMyTeamView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     // Settings button - Coach can modify the settings of the team
+                    
                     Button(action: {
-                        // TO DO - Add team settings here
+                        isTeamSettingsEnabled.toggle()
                     }) {
                         Label("Settings", systemImage: "gear").foregroundStyle(.red)
                     }
@@ -128,6 +131,9 @@ struct CoachMyTeamView: View {
             }
             .sheet(isPresented: $addGameEnabled, onDismiss: refreshData) {
                 CoachAddingGameView(selectedTeamName: teamNickname, selectedTeamId: teamId) // Adding a new game
+            }
+            .sheet(isPresented: $isTeamSettingsEnabled) {
+                CoachTeamSettingsView(teamId: teamId) //
             }
         }
     }
