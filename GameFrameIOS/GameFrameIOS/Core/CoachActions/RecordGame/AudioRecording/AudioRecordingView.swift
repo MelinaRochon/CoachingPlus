@@ -21,7 +21,6 @@ struct AudioRecordingView: View {
             VStack {
                 if !audioRecordingModel.recordings.isEmpty {
                     ScrollViewReader { proxy in
-                        
                         List {
                             Section(header: Text("Transcripts added")) {
                                 ForEach(audioRecordingModel.recordings, id: \.id) { recording in
@@ -129,14 +128,14 @@ struct AudioRecordingView: View {
     }
     
     // Scroll to bottom helper function
-        private func scrollToBottom(proxy: ScrollViewProxy, newCount: Int) {
-            guard let lastItem = audioRecordingModel.recordings.last else { return }
-            DispatchQueue.main.async {
-                withAnimation(.easeInOut(duration: 0.8)) { // Smooth scrolling
-                    proxy.scrollTo(lastItem.id, anchor: .bottom)
-                }
+    private func scrollToBottom(proxy: ScrollViewProxy, newCount: Int) {
+        guard let lastItem = audioRecordingModel.recordings.last else { return }
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.8)) { // Smooth scrolling
+                proxy.scrollTo(lastItem.id, anchor: .bottom)
             }
         }
+    }
     
     func stopRecordingManually() {
         handleRecordingStateChange(false)
