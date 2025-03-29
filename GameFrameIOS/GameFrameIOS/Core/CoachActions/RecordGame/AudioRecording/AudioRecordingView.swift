@@ -45,30 +45,34 @@ struct AudioRecordingView: View {
                         List {
                             Section(header: Text("Transcripts added")) {
                                 ForEach(audioRecordingModel.recordings, id: \.id) { recording in
-                                    VStack {
-                                        HStack (alignment: .center) {
-                                            let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
-                                            
-                                            Text(formatDuration(durationInSeconds)).bold().font(.headline)
-                                            VStack {
-                                                Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
-                                                if let feedbackFor = recording.feedbackFor {
-                                                    ForEach(feedbackFor, id: \.playerId) { player in
-                                                        
-                                                        HStack {
-                                                            //                                            Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
-                                                            //
-                                                            
-                                                            //                                                    if let nickname = player.nickname {
-                                                            //                                                        Text("\(nickname), ")
-                                                            //                                                    } else {
-                                                            Text("\(player.firstName) \(player.lastName)").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
-                                                        }.tag(player.playerId as String)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }.tag(recording.id as Int)
+                                    RecordingRowView(recording: recording)
+
+//                                    VStack {
+//                                        HStack (alignment: .center) {
+//                                            let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
+//                                            let formatDurationInSec = formatDuration(durationInSeconds)
+//                                            Text(formatDurationInSec).bold().font(.headline)
+////                                            VStack {
+//                                                Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+//                                                if let feedbackFor = recording.feedbackFor {
+//                                                    Text("\(feedbackFor.first.firstName) \(feedbackFor.first.lastName)").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+//
+//                                                    ForEach(feedbackFor, id: \.playerId) { player in
+//                                                        
+//                                                        HStack {
+//                                                            //                                            Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+//                                                            //
+//                                                            
+//                                                            //                                                    if let nickname = player.nickname {
+//                                                            //                                                        Text("\(nickname), ")
+//                                                            //                                                    } else {
+//                                                            Text("\(player.firstName) \(player.lastName)").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+//                                                        }.tag(player.playerId as String)
+//                                                    //}
+//                                                }
+//                                            }
+//                                        }
+//                                    }.tag(recording.id as Int)
                                 }
                             }
                         }
@@ -135,7 +139,7 @@ struct AudioRecordingView: View {
                     // Load all recordings that are already there, if there are some
                     // Start by creating a new game
                     let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) // gameDocId
-                    self.gameId = gameDocId
+                    self.gameId = gameDocId ?? ""
                     
                     // Load the players of the team for the transcription
                     try await audioRecordingModel.loadPlayersForTranscription(teamId: teamId)
@@ -317,4 +321,44 @@ struct AudioRecordingView: View {
 
 #Preview {
     AudioRecordingView(teamId: "", errorWrapper: .constant(nil))
+}
+
+
+struct RecordingRowView: View {
+    let recording: keyMomentTranscript  // Replace with your actual model type
+
+    var body: some View {
+        VStack {
+            HStack (alignment: .center) {
+                let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
+                let formatDurationInSec = formatDuration(durationInSeconds)
+                Text(formatDurationInSec).bold().font(.headline)
+                VStack {
+                    Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                    if let feedbackFor = recording.feedbackFor {
+                        ForEach(feedbackFor, id: \.playerId) { player in
+                            
+                            HStack {
+                                //                                            Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                //
+                                
+                                //                                                    if let nickname = player.nickname {
+                                //                                                        Text("\(nickname), ")
+                                //                                                    } else {
+                                Text("\(player.firstName) \(player.lastName)").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                            }.tag(player.playerId as String)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /** Format the duration into hh:mm:ss */
+    func formatDuration(_ duration: TimeInterval) -> String {
+        let hours = Int(duration) / 3600
+        let minutes = (Int(duration) % 3600) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
 }

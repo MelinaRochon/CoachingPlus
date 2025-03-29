@@ -54,7 +54,7 @@ final class AudioRecordingViewModel: ObservableObject {
             let confidence: Int = 5 // Should be from 1 to 5 where 1 is the lowest and 5 is most confident
             
             // Add a new tranacript object
-            let transcriptDTO = TranscriptDTO(keyMomentId: keyMomentDocId!, transcript: transcription, language: "English", generatedBy: "Auto", confidence: confidence, gameId: gameId)
+            let transcriptDTO = TranscriptDTO(keyMomentId: keyMomentDocId!, transcript: transcription, language: "English", generatedBy: authUser.uid, confidence: confidence, gameId: gameId)
             
             // Add a new transcript to the database
             try await TranscriptManager.shared.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO)
@@ -153,7 +153,8 @@ final class AudioRecordingViewModel: ObservableObject {
         if let startTime = game.startTime {
             // Get the duration of the game in seconds
             let duration = endTime.timeIntervalSince(startTime)
-            try await GameManager.shared.updateGameDurationUsingTeamDocId(gameId: gameId, teamDocId: team.id, duration: Int(duration))
+            let durationInSeconds = Int(duration)
+            try await GameManager.shared.updateGameDurationUsingTeamDocId(gameId: gameId, teamDocId: team.id, duration: durationInSeconds)
         }
     }
     
