@@ -12,8 +12,8 @@ import TranscriptionKit
 import AVKit
 
 /***
- This structure is called when starting an audio recording. When an audio recording starts, it transcribes
- speech to text.
+ This structure is called to start an audio recording. When an audio recording starts, it transcribes the
+ speech to text, and adds it as a new keyMoment and a new transcript object to the database.
  */
 struct AudioRecordingView: View {
     @StateObject private var audioRecordingModel = AudioRecordingViewModel()
@@ -45,34 +45,7 @@ struct AudioRecordingView: View {
                         List {
                             Section(header: Text("Transcripts added")) {
                                 ForEach(audioRecordingModel.recordings, id: \.id) { recording in
-                                    RecordingRowView(recording: recording)
-
-//                                    VStack {
-//                                        HStack (alignment: .center) {
-//                                            let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
-//                                            let formatDurationInSec = formatDuration(durationInSeconds)
-//                                            Text(formatDurationInSec).bold().font(.headline)
-////                                            VStack {
-//                                                Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
-//                                                if let feedbackFor = recording.feedbackFor {
-//                                                    Text("\(feedbackFor.first.firstName) \(feedbackFor.first.lastName)").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
-//
-//                                                    ForEach(feedbackFor, id: \.playerId) { player in
-//                                                        
-//                                                        HStack {
-//                                                            //                                            Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
-//                                                            //
-//                                                            
-//                                                            //                                                    if let nickname = player.nickname {
-//                                                            //                                                        Text("\(nickname), ")
-//                                                            //                                                    } else {
-//                                                            Text("\(player.firstName) \(player.lastName)").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
-//                                                        }.tag(player.playerId as String)
-//                                                    //}
-//                                                }
-//                                            }
-//                                        }
-//                                    }.tag(recording.id as Int)
+                                    RecordingRowView(recording: recording, players: audioRecordingModel.players)
                                 }
                             }
                         }
@@ -172,26 +145,7 @@ struct AudioRecordingView: View {
             
             // Initialize
             // Going to store audio in document directory...
-            do {
-                
-                let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                
-                let fileName = url.appendingPathComponent("test\(self.audios.count + 1).m4a")
-                let settings = [
-                    AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                    AVSampleRateKey: 12000,
-                    AVNumberOfChannelsKey: 1,
-                    AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-                ]
-                
-                self.recorder = try AVAudioRecorder(url: fileName, settings: settings)
-                print("Saving audio file at: \(fileName.path)")
-                
-                self.recorder.record()
-                
-            } catch {
-                print(error.localizedDescription)
-            }
+            initializeAudioRecording()
             startRecording()
             
         } else {
@@ -225,6 +179,28 @@ struct AudioRecordingView: View {
             
             // Reset the recording start and end times
             recordingStartTime = nil
+        }
+    }
+    
+    /** Initialize the audio recording */
+    private func initializeAudioRecording() {
+        do {
+            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            
+            let fileName = url.appendingPathComponent("test\(self.audios.count + 1).m4a")
+            let settings = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVSampleRateKey: 12000,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            ]
+            
+            self.recorder = try AVAudioRecorder(url: fileName, settings: settings)
+            print("Saving audio file at: \(fileName.path)")
+            
+            self.recorder.record()
+        } catch {
+            print(error.localizedDescription)
         }
     }
     
@@ -267,15 +243,9 @@ struct AudioRecordingView: View {
                     return playerAssociated
                 }
             }
-            
-            // no player found
-            playerAssociated = nil
-        } else {
-            // associate feedback to no one as there are no players
-            playerAssociated = nil
         }
         
-        return playerAssociated
+        return nil
     }
     
     /** Scroll to bottom of the list - helper function */
@@ -292,15 +262,7 @@ struct AudioRecordingView: View {
     func stopRecordingManually() {
         handleRecordingStateChange(false)
     }
-    
-    /** Format the duration into hh:mm:ss */
-    func formatDuration(_ duration: TimeInterval) -> String {
-        let hours = Int(duration) / 3600
-        let minutes = (Int(duration) % 3600) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
-    }
-    
+        
     /** Get all the saved audio files in the directory */
     func getAudios() {
         do {
@@ -324,41 +286,51 @@ struct AudioRecordingView: View {
 }
 
 
+/** This structure is called to show the player's names associated with the saved feedback (transcript) */
 struct RecordingRowView: View {
-    let recording: keyMomentTranscript  // Replace with your actual model type
+    var recording: keyMomentTranscript
+    var players: [PlayerTranscriptInfo]? = []
 
     var body: some View {
         VStack {
             HStack (alignment: .center) {
                 let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
-                let formatDurationInSec = formatDuration(durationInSeconds)
-                Text(formatDurationInSec).bold().font(.headline)
+                Text(formatDuration(durationInSeconds)).bold().font(.headline)
                 VStack {
                     Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
                     if let feedbackFor = recording.feedbackFor {
-                        ForEach(feedbackFor, id: \.playerId) { player in
-                            
-                            HStack {
-                                //                                            Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
-                                //
-                                
-                                //                                                    if let nickname = player.nickname {
-                                //                                                        Text("\(nickname), ")
-                                //                                                    } else {
-                                Text("\(player.firstName) \(player.lastName)").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
-                            }.tag(player.playerId as String)
+                        // check if the feedback for array is the same length as the number of players on the team
+                        if let playersOnTeam = players {
+                            if feedbackFor.count == playersOnTeam.count {
+                                HStack {
+                                    Text("All").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                                }
+                            } else {
+                                PlayersNameView(feedbackFor: feedbackFor)
+                            }
+                        } else {
+                            PlayersNameView(feedbackFor: feedbackFor)
                         }
                     }
                 }
             }
         }
-    }
-    
-    /** Format the duration into hh:mm:ss */
-    func formatDuration(_ duration: TimeInterval) -> String {
-        let hours = Int(duration) / 3600
-        let minutes = (Int(duration) % 3600) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }    
+}
+
+/** This structure is called when the player's name needs to be showed once the audio recording has been saved */
+private struct PlayersNameView: View {
+    var feedbackFor: [PlayerTranscriptInfo]? = []
+
+    var body: some View {
+        HStack {
+            if let players = feedbackFor {
+                ForEach(players, id: \.playerId) { player in
+                    HStack {
+                        Text("\(player.firstName) \(player.lastName) ").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                    }.tag(player.playerId as String)
+                }
+            }
+        }
     }
 }

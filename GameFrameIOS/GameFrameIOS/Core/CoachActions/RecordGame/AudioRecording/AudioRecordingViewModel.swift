@@ -23,7 +23,9 @@ struct PlayerTranscriptInfo {
     let jersey: Int
 }
 
-/** The audio recording view model links the AudioRecordingView to the KeyMomentManager and the TranscriptManager. */
+/***
+ The audio recording view model links the AudioRecordingView to the KeyMomentManager and the TranscriptManager.
+ */
 @MainActor
 final class AudioRecordingViewModel: ObservableObject {
     @Published var recordings: [keyMomentTranscript] = [];
@@ -60,18 +62,22 @@ final class AudioRecordingViewModel: ObservableObject {
             try await TranscriptManager.shared.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO)
             
             var feedbackForArray: [PlayerTranscriptInfo] = []
-//        if feedbackFor == "none" {
-//            feedbackForArray = []
-//        } else if feedbackFor == "all" {
-//            if let playersInTeam = players {
-//                feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
-//            }
-//        } else {
-//            if let playersInTeam = players {
-//                let p = playersInTeam.first(where: { $0.playerId == feedbackFor })
-//                feedbackForArray.append(p!)
-//            }
-//        }
+            
+            /** Following code will be used in a future feature - adapting the feedback to multiple people */
+            /********
+             if feedbackFor == "none" {
+             feedbackForArray = []
+             } else if feedbackFor == "all" {
+             if let playersInTeam = players {
+             feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
+             }
+             } else {
+             if let playersInTeam = players {
+             let p = playersInTeam.first(where: { $0.playerId == feedbackFor })
+             feedbackForArray.append(p!)
+             }
+             }
+             **/
             
             if let feedback = feedbackFor {
                 print("append feedback")
@@ -80,10 +86,26 @@ final class AudioRecordingViewModel: ObservableObject {
                 // Add a new recording to the array
                 let recordingsLength = self.recordings.count
                 let newRecording = keyMomentTranscript(id: recordingsLength, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
-
+                
                 self.recordings.append(newRecording)
             } else {
-                print("no feedback")
+                
+                // if there are players on the team, then associate to each one of them
+                if let playersInTeam = players {
+                    print("append all players")
+                    feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
+                    
+                    let recordingsLength = self.recordings.count
+                    
+                    // Add a new recording to the array
+                    let newRecording = keyMomentTranscript(id: recordingsLength, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
+                    
+                    self.recordings.append(newRecording)
+                    
+                } else {
+                    print("no feedback")
+                }
+                
             }
         } catch {
             print("Error when adding a new recording to the database. ")
@@ -96,11 +118,11 @@ final class AudioRecordingViewModel: ObservableObject {
         // Add game to the database
         return try await GameManager.shared.addNewUnkownGame(teamId: teamId)
     }
-
+    
     /** Load all recordings to the AudioRecordingView */
     func loadAllRecordings() async throws {
         do {
-                        
+            
             // Get all the transcripts from the database
             guard let transcripts = try await TranscriptManager.shared.getAllTranscripts(teamId: teamId, gameId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
@@ -149,7 +171,7 @@ final class AudioRecordingViewModel: ObservableObject {
         }
         
         let endTime = Date() // get the end time of the game
-            
+        
         if let startTime = game.startTime {
             // Get the duration of the game in seconds
             let duration = endTime.timeIntervalSince(startTime)

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/** This is the audio recording button view */
+/***This is the audio recording button view */
 struct RecordingButtonView: View {
     @State private var isRecording = false
     @Namespace private var animation
@@ -36,9 +36,9 @@ struct RecordingButtonView: View {
                 }
             }
             .scaleEffect(isRecording ? 1.1 : 1.0) // Pulsing effect
-            .animation(isRecording ? .easeInOut(duration: 0.6).repeatForever(autoreverses: true) : .default, value: isRecording)
+            .animation(isRecording ? .easeInOut(duration: 0.6).repeatForever(autoreverses: true) : .default, value: isRecording) // animation effect when the button changes to make it seem more user friendly
             .onTapGesture {
-                isRecording.toggle()
+                isRecording.toggle() // recording is on/off
                 onRecordingStateChange(isRecording) // Notify parent view
             }
         }
