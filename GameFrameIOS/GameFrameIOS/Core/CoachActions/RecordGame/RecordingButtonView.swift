@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/** This is the audio recording button view */
 struct RecordingButtonView: View {
     @State private var isRecording = false
     @Namespace private var animation

@@ -47,7 +47,9 @@ final class TranscriptViewModel: ObservableObject {
                 }
                 // get the length of the array to set the id of the element of the list
                 let recordingsLength = allRecordings.count
-                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: keyMoment.feedbackFor)
+                let tmpPlayer = try await getAllPlayersInfo(feedbackFor: keyMoment.feedbackFor)
+
+                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
                 
                 // Adding new element to the array
                 allRecordings.append(keyMomentTranscript)
@@ -107,19 +109,14 @@ final class TranscriptViewModel: ObservableObject {
                 }
                 // get the length of the array to set the id of the element of the list
                 let recordingsLength = allRecordings.count
-                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: keyMoment.feedbackFor)
+                let tmpPlayer = try await getAllPlayersInfo(feedbackFor: keyMoment.feedbackFor)
+
+                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
                 
                 // Adding new element to the array
                 allRecordings.append(keyMomentTranscript)
             }
-            
-            // filter the games            
-//            let sortedRecordings = allRecordings.sorted { recording1, recording2 in
-//                let frameStart1 = recording1.frameStart
-//                let frameStart2 = recording2.frameStart
-//                return frameStart1 < frameStart2
-//            }
-            
+                        
             self.recordings = Array(allRecordings.sorted(by: { $0.frameStart < $1.frameStart }).prefix(3))
 
         } catch {
@@ -151,10 +148,11 @@ final class TranscriptViewModel: ObservableObject {
                 
                 if keyMoment.fullGameId != nil {
                     
-                    
+                    let tmpPlayer = try await getAllPlayersInfo(feedbackFor: keyMoment.feedbackFor)
+
                     // get the length of the array to set the id of the element of the list
                     let recordingsLength = allRecordings.count
-                    let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: keyMoment.feedbackFor)
+                    let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
                     
                     // Adding new element to the array
                     allRecordings.append(keyMomentTranscript)
@@ -216,5 +214,34 @@ final class TranscriptViewModel: ObservableObject {
             
             self.feedbackFor = tmpPlayers
         }
+    }
+    
+    func getAllPlayersInfo (feedbackFor: [String]?) async throws -> [PlayerTranscriptInfo] {
+        var tmpPlayer: [PlayerTranscriptInfo] = []
+        if let feedbackFor = feedbackFor {
+            for playerId in feedbackFor {
+                let player = try await loadPlayerInfo(playerId: playerId)!;
+                
+                tmpPlayer.append(player)
+            }
+        }
+        return tmpPlayer
+    }
+    func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
+        // get the user info
+        guard let user = try await UserManager.shared.getUser(userId: playerId) else {
+            print("no user found. abort")
+            return nil
+        }
+        
+        guard let player = try await PlayerManager.shared.getPlayer(playerId: playerId) else {
+            print("no player found. abprt")
+            return nil
+        }
+        
+        // create an object to store the player's info
+        let playerObject = PlayerTranscriptInfo(playerId: playerId, firstName: user.firstName, lastName: user.lastName, nickname: player.nickName, jersey: player.jerseyNum)
+        
+        return playerObject
     }
 }

@@ -115,15 +115,11 @@ struct CoachSpecificTranscriptView: View {
             .task {
                 do {
                     try await transcriptViewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
-                    if let feedbackFor = recording?.feedbackFor {
-                        try await transcriptViewModel.getFeebackFor(feedbackFor: feedbackFor)
-                    }
-                    if let recording = recording {
-                        await commentViewModel.loadComments(
-                            teamId: teamDocId,
-                            keyMomentId: "\(recording.id)"
-                        )
-                    }
+                    let feedbackFor = recording!.feedbackFor ?? []
+                    
+                    // Add a new key moment to the database
+                    let fbFor: [String] = feedbackFor.map { $0.playerId }
+                    try await transcriptViewModel.getFeebackFor(feedbackFor: fbFor)
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
                 }
