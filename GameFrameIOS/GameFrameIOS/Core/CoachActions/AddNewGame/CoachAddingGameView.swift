@@ -220,7 +220,7 @@ struct CoachAddingGameView: View {
         }
     }
     
-    /// Convert user input (hours & minutes) into a Firestore Timestamp
+    /** Convert user input (hours & minutes) into a Firestore Timestamp*/
     func convertToTimestamp(hours: Int, minutes: Int) -> Timestamp {
         let calendar = Calendar.current
         let now = Date()

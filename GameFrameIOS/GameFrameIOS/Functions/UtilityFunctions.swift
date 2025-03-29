@@ -20,3 +20,13 @@ func formatDuration(_ duration: TimeInterval) -> String {
     let seconds = Int(duration) % 60
     return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
 }
+
+/** Converts a time duration from seconds into hours and minutes.
+ - Parameter seconds: The total time in seconds.
+ - Returns: A tuple containing the equivalent hours (int) and minutes
+ */
+func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
+    let hours = seconds / 3600
+    let minutes = (seconds % 3600) / 60
+    return (hours, minutes)
+}

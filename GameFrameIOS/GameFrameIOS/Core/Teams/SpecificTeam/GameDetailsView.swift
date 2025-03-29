@@ -142,14 +142,6 @@ struct GameDetailsView: View {
                 print("ERROR. \(error)")
             }
         }
-        
-        
-    }
-    
-    func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        return (hours, minutes)
     }
 }
 

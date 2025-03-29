@@ -35,9 +35,12 @@ struct CoachCreateAccountView: View {
                     
                     // Form Fields with Uniform Style
                     VStack (spacing: 10) {
-                        customTextField("First Name", text: $viewModel.firstName)
-                        customTextField("Last Name", text: $viewModel.lastName)
-                        
+                        CustomUIFields.customTextField("First Name", text: $viewModel.firstName)
+                            .autocorrectionDisabled(true)
+
+                        CustomUIFields.customTextField("Last Name", text: $viewModel.lastName)
+                            .autocorrectionDisabled(true)
+
                         // Date Picker Styled Like Other Fields
                         HStack {
                             Text("Date of Birth")
@@ -57,8 +60,11 @@ struct CoachCreateAccountView: View {
                                 .stroke(Color.gray, lineWidth: 1)
                         )
                         
-                        customTextField("Phone", text: $viewModel.phone)
-                        
+                        CustomUIFields.customTextField("Phone", text: $viewModel.phone)
+                            .autocapitalization(.none)
+                            .autocorrectionDisabled(true)
+                            .keyboardType(.phonePad) // Shows phone-specific keyboard
+
                         // Country Picker Styled Like Other Fields
                         HStack {
                             Picker(selection: $viewModel.country) {
@@ -78,33 +84,13 @@ struct CoachCreateAccountView: View {
                             )
                         //.pickerStyle(.navigationLink)
                         
-                        //customTextField("Email", text: $viewModel.email)
-                        TextField("Email", text: $viewModel.email)
-                            .frame(height: 45)
-                            .padding(.horizontal)
-                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-                            .foregroundColor(.black).autocapitalization(.none)
-                        
-                        // Password Field Styled Like Other Fields
-                        HStack {
-                            if showPassword {
-                                TextField("Password", text: $viewModel.password).autocapitalization(.none)
-                            } else {
-                                SecureField("Password", text: $viewModel.password).autocapitalization(.none)
-                            }
-                            Button(action: { showPassword.toggle() }) {
-                                Image(
-                                    systemName: showPassword ? "eye.slash" : "eye"
-                                )
-                                .foregroundColor(.gray)
-                            }
-                        }
-                        .frame(height: 45)
-                        .padding(.horizontal)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray, lineWidth: 1)
-                        )
+                        CustomUIFields.customTextField("Email", text: $viewModel.email)
+                            .autocapitalization(.none)
+                            .autocorrectionDisabled(true)
+                            .keyboardType(.emailAddress) // Shows email-specific keyboard
+
+                        // Password Field with Eye Toggle
+                        CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
                     }
                     .padding(.horizontal)
                     
@@ -125,33 +111,14 @@ struct CoachCreateAccountView: View {
                         
                         
                     } label: {
-                        //NavigationLink(destination: CoachMainTabView(showLandingPageView: $showSignInView)){
-                        HStack {
-                            Text("Create Account")
-                                .font(.body).bold()
-                        }
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        //}
-                        .padding(.horizontal)
+                        // Use the custom styled "Create Account" button
+                        CustomUIFields.createAccountButton("Create Account")
                     }
                     Spacer()
                 }
             }
         }
-    }
-    
-    // Custom TextField for Uniform Style
-    private func customTextField(_ placeholder: String, text: Binding<String>) -> some View {
-        TextField(placeholder, text: text)
-            .frame(height: 45)
-            .padding(.horizontal)
-            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-            .foregroundColor(.black)
-    }
+    }    
 }
 
 #Preview {

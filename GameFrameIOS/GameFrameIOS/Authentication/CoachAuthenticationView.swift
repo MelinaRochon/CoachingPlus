@@ -33,7 +33,7 @@ struct CoachAuthenticationView: View {
                             
                             NavigationLink(destination: CoachCreateAccountView(showSignInView: $showSignInView)) {
                                 
-                                Text("Create one.")
+                                Text("Create one")
                                     .foregroundColor(.blue)
                                     .font(.footnote)
                                     .underline()
@@ -43,24 +43,13 @@ struct CoachAuthenticationView: View {
                     
                     // Form Fields
                     VStack {
-                        TextField("Email", text: $viewModel.email).frame(height: 40).padding(.horizontal)
-                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1)).autocapitalization(.none)
-                        
+                        CustomUIFields.customTextField("Email", text: $viewModel.email)
+                            .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                            .autocorrectionDisabled(true)
+
                         // Password Field with Eye Toggle
-                        HStack {
-                            //TextField("Password", text: $viewModel.password)
-                            if (showPassword == true) {
-                                TextField("Password", text: $viewModel.password).autocapitalization(.none)
-                            } else {
-                                SecureField("Password", text: $viewModel.password).autocapitalization(.none)
-                            }
-                            Button(action: { showPassword.toggle() }) {
-                                Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .foregroundColor(.gray)
-                            }
-                        }
-                        .frame(height: 45).padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
                     }
                     .padding(.horizontal)
                     
@@ -85,17 +74,10 @@ struct CoachAuthenticationView: View {
                             }
                         }
                     } label: {
-                        HStack {
-                            Text("Let's go!")
-                                .font(.body).bold()
-                            Image(systemName: "arrow.right")
-                        }
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }.padding(.horizontal)
+
+                        // Use the custom styled "Create Account" button
+                        CustomUIFields.signInAccountButton("Let's go! bb")
+                    }
                     Spacer()
                     
                 }

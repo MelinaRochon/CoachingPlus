@@ -10,9 +10,7 @@ struct PlayerSignUpView: View {
     @State private var teamAccessCode: String = ""
     var email: String // retreive the email address entered by the user in the previous view
     var teamId: String // retreive the team id from the team access code entered by the user in the previous view
-    
-    //    @State private var password: String = ""
-    
+        
     @State private var showPassword: Bool = false
     
     @Binding var showSignInView: Bool
@@ -25,13 +23,16 @@ struct PlayerSignUpView: View {
             
             ScrollView {
                 Spacer().frame(height: 20)
-                
-                
+
                 // Form Fields with Uniform Style
                 VStack(spacing: 10) {
-                    customTextField("First Name", text: $viewModel.firstName)
-                    customTextField("Last Name", text: $viewModel.lastName)
                     
+                    CustomUIFields.customTextField("First Name", text: $viewModel.firstName)
+                        .autocorrectionDisabled(true)
+
+                    CustomUIFields.customTextField("Last Name", text: $viewModel.lastName)
+                        .autocorrectionDisabled(true)
+
                     // Date Picker Styled Like Other Fields
                     HStack {
                         Text("Date of Birth")
@@ -43,8 +44,12 @@ struct PlayerSignUpView: View {
                     .frame(height: 45)
                     .padding(.horizontal)
                     .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-                    
-                    customTextField("Phone", text: $viewModel.phone) // TO DO - Make the phone number for the player optional?? Demands on his age
+                                        
+                    // TODO: Make the phone number for the player optional?? Demands on his age
+                    CustomUIFields.customTextField("Phone", text: $viewModel.phone)
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled(true)
+                        .keyboardType(.phonePad) // Shows phone-specific keyboard
                     
                     // Country Picker Styled Like Other Fields
                     HStack {
@@ -64,28 +69,11 @@ struct PlayerSignUpView: View {
                             .stroke(Color.gray, lineWidth: 1)
                     )
         
-                    
-                    TextField("Email", text: $viewModel.email)
-                        .frame(height: 45)
-                        .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-                        .autocapitalization(.none).foregroundStyle(.secondary)
-                        .autocapitalization(.none).disabled(true)
+                    CustomUIFields.disabledCustomTextField("Email", text: $viewModel.email)
+
                     // Password Field Styled Like Other Fields
-                    HStack {
-                        if showPassword {
-                            TextField("Password", text: $viewModel.password).autocapitalization(.none)
-                        } else {
-                            SecureField("Password", text: $viewModel.password).autocapitalization(.none)
-                        }
-                        Button(action: { showPassword.toggle() }) {
-                            Image(systemName: showPassword ? "eye.slash" : "eye")
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    .frame(height: 45)
-                    .padding(.horizontal)
-                    .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                    CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
+                    
                 }
                 .padding(.horizontal)
                 
@@ -106,17 +94,8 @@ struct PlayerSignUpView: View {
                     }
                     
                 } label: {
-                    HStack {
-                        Text("Create Account")
-                            .font(.body).bold()
-                    }
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.black)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .padding(.horizontal)
-                    
+                    // Use the custom styled "Create Account" button
+                    CustomUIFields.createAccountButton("Create Account")
                 }
             }
         }.task {
@@ -131,15 +110,6 @@ struct PlayerSignUpView: View {
                 print("error.. Abort.. \(error)")
             }
         }
-    }
-    
-    // Custom TextField for Uniform Style
-    private func customTextField(_ placeholder: String, text: Binding<String>) -> some View {
-        TextField(placeholder, text: text)
-            .frame(height: 45)
-            .padding(.horizontal)
-            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-            .foregroundColor(.black)
     }
 }
 

@@ -46,28 +46,13 @@ struct PlayerLoginView: View {
                     
                     // Form Fields
                     VStack(spacing: 10) {
-                        TextField("Email", text: $viewModel.email)
-                            .frame(height: 45)
-                            .padding(.horizontal)
-                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-                            .foregroundColor(.black).autocapitalization(.none)
+                        CustomUIFields.customTextField("Email", text: $viewModel.email)
                             .autocapitalization(.none)
-                        
+                            .autocorrectionDisabled(true)
+                            .keyboardType(.emailAddress) // Shows email-specific keyboard
+
                         // Password Field with Eye Toggle
-                        HStack {
-                            if showPassword {
-                                TextField("Password", text: $viewModel.password).autocapitalization(.none)
-                            } else {
-                                SecureField("Password", text: $viewModel.password).autocapitalization(.none)
-                            }
-                            Button(action: { showPassword.toggle() }) {
-                                Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .foregroundColor(.gray)
-                            }
-                        }
-                        .frame(height: 45)
-                        .padding(.horizontal)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
                     }
                     .padding(.horizontal)
                     
@@ -88,31 +73,14 @@ struct PlayerLoginView: View {
                         }
                         
                     } label: {
-                        HStack {
-                            Text("Get coached!")
-                                .font(.body).bold()
-                            Image(systemName: "arrow.right")
-                        }
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .padding(.horizontal)
+                        // Use the custom styled "Create Account" button
+                        CustomUIFields.signInAccountButton("Get coached!")
+
                     }
                 }
             }
         }
-    }
-    
-    // Custom TextField for Uniform Style
-    private func customTextField(_ placeholder: String, text: Binding<String>) -> some View {
-        TextField(placeholder, text: text)
-            .frame(height: 45)
-            .padding(.horizontal)
-            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-            .foregroundColor(.black)
-    }
+    }    
 }
 
 #Preview {
