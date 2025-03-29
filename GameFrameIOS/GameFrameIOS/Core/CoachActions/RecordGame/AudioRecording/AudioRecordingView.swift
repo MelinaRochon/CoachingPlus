@@ -6,16 +6,37 @@
 //
 
 import SwiftUI
+import TimerKit
+import AVFoundation
+import TranscriptionKit
+import AVKit
 
+/***
+ This structure is called when starting an audio recording. When an audio recording starts, it transcribes
+ speech to text.
+ */
 struct AudioRecordingView: View {
     @StateObject private var audioRecordingModel = AudioRecordingViewModel()
-
+    
     @State private var recordingStartTime: Date?
     @State private var gameId: String = ""
     @State var teamId: String = ""
     @State private var showStopRecordingAlert: Bool = false
     @State private var navigateToHome = false
-
+    
+    @State var timer = ScrumTimer()
+    @Binding var errorWrapper: ErrorWrapper?
+    @State var speechRecognizer = SpeechRecognizer()
+    @State private var isRecording = false
+    
+    // creating instance for recording
+    @State var session : AVAudioSession!
+    @State var recorder: AVAudioRecorder!
+    @State var alert: Bool = false
+    
+    // Fetch Audios
+    @State var audios: [URL] = []
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -24,12 +45,29 @@ struct AudioRecordingView: View {
                         List {
                             Section(header: Text("Transcripts added")) {
                                 ForEach(audioRecordingModel.recordings, id: \.id) { recording in
-                                    HStack (alignment: .center) {
-                                        let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
-                                        
-                                        Text(formatDuration(durationInSeconds)).bold().font(.headline)
-                                        Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
-                                        Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                    VStack {
+                                        HStack (alignment: .center) {
+                                            let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
+                                            
+                                            Text(formatDuration(durationInSeconds)).bold().font(.headline)
+                                            VStack {
+                                                Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                                                if let feedbackFor = recording.feedbackFor {
+                                                    ForEach(feedbackFor, id: \.playerId) { player in
+                                                        
+                                                        HStack {
+                                                            //                                            Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                                            //
+                                                            
+                                                            //                                                    if let nickname = player.nickname {
+                                                            //                                                        Text("\(nickname), ")
+                                                            //                                                    } else {
+                                                            Text("\(player.firstName) \(player.lastName)").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                                                        }.tag(player.playerId as String)
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }.tag(recording.id as Int)
                                 }
                             }
@@ -51,11 +89,13 @@ struct AudioRecordingView: View {
                         handleRecordingStateChange(isRecording)
                     }
                     Spacer().frame(height: 5)
-
+                    
                 }
+                
+                /** Link to go back to the main tab */
                 NavigationLink(destination: CoachMainTabView(showLandingPageView: .constant(false)), isActive: $navigateToHome) { EmptyView()
                 }
-
+                
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -78,7 +118,7 @@ struct AudioRecordingView: View {
                                     try await audioRecordingModel.endAudioRecordingGame(teamId: teamId, gameId: gameId)
                                     // Go back to the main page
                                     navigateToHome = true
-
+                                    
                                 } catch {
                                     print("Error when ending recording. ")
                                 }
@@ -87,13 +127,34 @@ struct AudioRecordingView: View {
                     }
                 }
             }
+            .alert(isPresented: self.$alert, content: {
+                Alert(title: Text("Error"), message: Text("Enable Access"))
+            })
             .task {
                 do {
                     // Load all recordings that are already there, if there are some
                     // Start by creating a new game
                     let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) // gameDocId
-                    self.gameId = gameDocId ?? ""
-                    print("ib aydui recording... gameId: \(gameId), teamId: \(teamId)")
+                    self.gameId = gameDocId
+                    
+                    // Load the players of the team for the transcription
+                    try await audioRecordingModel.loadPlayersForTranscription(teamId: teamId)
+                    
+                    // Initialising the audio recorder
+                    self.session = AVAudioSession.sharedInstance()
+                    try self.session.setCategory(.playAndRecord)
+                    
+                    // requesting permission
+                    // require microphone usage description
+                    self.session.requestRecordPermission{ (status) in
+                        if !status {
+                            // error msg
+                            self.alert.toggle()
+                        } else {
+                            // if permission is granted, fetching data
+                            self.getAudios()
+                        }
+                    }
                 } catch {
                     print("Error when loading the audio recording transcripts. Error: \(error)")
                 }
@@ -104,20 +165,56 @@ struct AudioRecordingView: View {
     func handleRecordingStateChange(_ isRecording: Bool) {
         if isRecording {
             // Start Recording: Capture start time
-            recordingStartTime = Date()
+            
+            // Initialize
+            // Going to store audio in document directory...
+            do {
+                
+                let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                
+                let fileName = url.appendingPathComponent("test\(self.audios.count + 1).m4a")
+                let settings = [
+                    AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                    AVSampleRateKey: 12000,
+                    AVNumberOfChannelsKey: 1,
+                    AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+                ]
+                
+                self.recorder = try AVAudioRecorder(url: fileName, settings: settings)
+                print("Saving audio file at: \(fileName.path)")
+                
+                self.recorder.record()
+                
+            } catch {
+                print(error.localizedDescription)
+            }
+            startRecording()
+            
         } else {
             // Stop Recording: Save to recordings
+            self.recorder.stop()
+            self.getAudios() // updating data
+            
             if let startTime = recordingStartTime {
                 let endTime = Date()
                 audioRecordingModel.gameId = gameId
                 audioRecordingModel.teamId = teamId
-
+                
                 Task {
                     do {
+                        try await endRecording()  // Wait for the transcription to finish
                         
-                        try await audioRecordingModel.addRecording(recordingStart: startTime, recordingEnd: endTime)
+                        // Get the generated transcript
+                        let transcript = speechRecognizer.transcript
+                        
+                        // Get the player that is associated to the transcript
+                        let feedbackFor = try await getPlayerAssociatedToTranscript(transcript: transcript)
+                        
+                        // Cut the transcript to see if the name of the player is in the transcript
+                        // See which player the transcript is associated to
+                        try await audioRecordingModel.addRecording(recordingStart: startTime, recordingEnd: endTime, transcription: transcript, feedbackFor: feedbackFor)
                     } catch {
-                        print("Error...")
+                        errorWrapper = ErrorWrapper(error: error, guidance: "Error when saving the audio recording. Please try again later.")
                     }
                 }
             }
@@ -127,7 +224,57 @@ struct AudioRecordingView: View {
         }
     }
     
-    // Scroll to bottom helper function
+    /** Start the transcript and save the start time when recording. */
+    private func startRecording() {
+        speechRecognizer.resetTranscript() // reset the transcription
+        speechRecognizer.startTranscribing() // start the speech to text transcript
+        
+        // set the start time
+        recordingStartTime = Date()
+    }
+    
+    /** End the transcript after a delay of half a second to make sure all the speech to text was transcribed successfully and stop the transcript */
+    private func endRecording() async throws {
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5-second delay
+        speechRecognizer.stopTranscribing()
+    }
+    
+    /** Find the player that is associated to the transcription */
+    private func getPlayerAssociatedToTranscript(transcript: String) async throws -> PlayerTranscriptInfo? {
+        var playerAssociated: PlayerTranscriptInfo? = nil
+        if let players = audioRecordingModel.players {
+            print("we have some oplayers")
+            for player in players {
+                // check if the transcript is associated to a player
+                print("current player : \(player.firstName) \(player.lastName), nickname : \(player.nickname ?? "none")")
+                
+                if let nickname = player.nickname {
+                    // check if the player's nickname is mentionned in the transcript
+                    if transcript.contains(nickname) {
+                        playerAssociated = player
+                        print("found player wth nickname")
+                        return playerAssociated
+                    }
+                }
+                if transcript.contains(player.firstName) {
+                    playerAssociated = player
+                    print("found player wth name")
+                    
+                    return playerAssociated
+                }
+            }
+            
+            // no player found
+            playerAssociated = nil
+        } else {
+            // associate feedback to no one as there are no players
+            playerAssociated = nil
+        }
+        
+        return playerAssociated
+    }
+    
+    /** Scroll to bottom of the list - helper function */
     private func scrollToBottom(proxy: ScrollViewProxy, newCount: Int) {
         guard let lastItem = audioRecordingModel.recordings.last else { return }
         DispatchQueue.main.async {
@@ -137,18 +284,37 @@ struct AudioRecordingView: View {
         }
     }
     
+    /** This function stops the recording manually */
     func stopRecordingManually() {
         handleRecordingStateChange(false)
     }
     
+    /** Format the duration into hh:mm:ss */
     func formatDuration(_ duration: TimeInterval) -> String {
         let hours = Int(duration) / 3600
         let minutes = (Int(duration) % 3600) / 60
         let seconds = Int(duration) % 60
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
+    
+    /** Get all the saved audio files in the directory */
+    func getAudios() {
+        do {
+            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            
+            // fetch all data from document directory...
+            let results = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .producesRelativePathURLs)
+            
+            // Add all the files in the audio array
+            for i in results {
+                self.audios.append(i)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
 }
 
 #Preview {
-    AudioRecordingView(teamId: "")
+    AudioRecordingView(teamId: "", errorWrapper: .constant(nil))
 }

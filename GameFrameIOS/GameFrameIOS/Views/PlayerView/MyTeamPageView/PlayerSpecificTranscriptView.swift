@@ -90,7 +90,9 @@ struct PlayerSpecificTranscriptView: View {
                     try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
                     let feedbackFor = recording!.feedbackFor ?? []
                     
-                    try await viewModel.getFeebackFor(feedbackFor: feedbackFor)
+                    // Add a new key moment to the database
+                    let fbFor: [String] = feedbackFor.map { $0.playerId }
+                    try await viewModel.getFeebackFor(feedbackFor: fbFor)
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
                 }

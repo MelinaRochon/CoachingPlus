@@ -116,7 +116,10 @@ struct CoachSpecificKeyMomentView: View {
             do {
                 try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
                 let feedbackFor = recording!.feedbackFor ?? []
-                try await viewModel.getFeebackFor(feedbackFor: feedbackFor)
+                
+                // Add a new key moment to the database
+                let fbFor: [String] = feedbackFor.map { $0.playerId }
+                try await viewModel.getFeebackFor(feedbackFor: fbFor)
                 
                 if let gameStartTime = viewModel.gameStartTime {
                     totalDuration = recording!.frameStart.timeIntervalSince(gameStartTime)

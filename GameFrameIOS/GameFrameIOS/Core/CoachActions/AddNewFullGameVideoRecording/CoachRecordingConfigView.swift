@@ -67,7 +67,7 @@ struct CoachRecordingConfigView: View {
                                 .padding(.horizontal)
                         }.disabled(selectedTeamId == nil)
                     } else {
-                        NavigationLink(destination: AudioRecordingView(teamId: selectedTeamId!)) {
+                        NavigationLink(destination: AudioRecordingView(teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
                             Text("Start Audio Recording")
                                 .font(.title2)
                                 .bold()
