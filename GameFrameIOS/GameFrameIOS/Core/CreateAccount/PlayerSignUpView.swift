@@ -7,7 +7,6 @@
 import SwiftUI
 
 struct PlayerSignUpView: View {
-    @State private var teamAccessCode: String = ""
     var email: String // retreive the email address entered by the user in the previous view
     var teamId: String // retreive the team id from the team access code entered by the user in the previous view
         
@@ -15,8 +14,7 @@ struct PlayerSignUpView: View {
     
     @Binding var showSignInView: Bool
     @StateObject private var viewModel = authenticationViewModel()
-    @State private var country = "Canada"
-    let countries = ["United States", "Canada", "United Kingdom", "Australia"]
+//    @State private var country = "Canada"
     
     var body: some View {
         VStack(spacing: 20) {
@@ -56,7 +54,7 @@ struct PlayerSignUpView: View {
                         Text("Country or region")
                         Spacer()
                         Picker("Country", selection: $viewModel.country) {
-                            ForEach(countries, id: \.self) { c in
+                            ForEach(AppData.countries, id: \.self) { c in
                                 Text(c).tag(c)
                             }
                         }

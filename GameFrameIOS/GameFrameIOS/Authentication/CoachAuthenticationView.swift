@@ -7,42 +7,43 @@
 
 import SwiftUI
 
-
-
+/** This view handles the authentication process for coaches.
+ It allows users to enter their email and password, toggle password visibility,  and navigate to the account creation screen.
+ Uses `CustomUIFields` for UI components and `authenticationViewModel` for authentication logic.
+*/
 struct CoachAuthenticationView: View {
+    @StateObject private var viewModel = authenticationViewModel() // ViewModel for handling authentication logic
+    @State private var showPassword: Bool = false // Controls password visibility
     
-    @StateObject private var viewModel = authenticationViewModel()
-    @State private var showPassword: Bool = false
-    //@Binding var userType: String
+    // Binding to determine if sign-in view should be shown
     @Binding var showSignInView: Bool
     
     var body: some View {
         NavigationView{
             VStack {
                 ScrollView{
+                    
                     // Welcome Message
                     Spacer().frame(height: 20)
                     VStack(spacing: 5) {
                         Text("Glad to have you back Coach!")
                             .font(.title3).bold()
                         
+                        // Navigation link to the account creation view
                         HStack {
                             Text("I don't have an account!")
                                 .foregroundColor(.gray)
                                 .font(.footnote)
                             
                             NavigationLink(destination: CoachCreateAccountView(showSignInView: $showSignInView)) {
-                                
-                                Text("Create one")
-                                    .foregroundColor(.blue)
-                                    .font(.footnote)
-                                    .underline()
+                                CustomUIFields.linkButton("Create one")
                             }
                         }
                     }
                     
                     // Form Fields
                     VStack {
+                        // Email Input Field
                         CustomUIFields.customTextField("Email", text: $viewModel.email)
                             .autocapitalization(.none)
                             .keyboardType(.emailAddress)
@@ -55,31 +56,20 @@ struct CoachAuthenticationView: View {
                     
                     // "Let's go!" Button
                     Button {
-                        print("Sign In account tapped")
                         Task {
-                            /*do {
-                                try await viewModel.signUpCoach() // to sign up
-                                showSignInView = false
-                                return
-                            } catch {
-                                print(error)
-                            }*/
-                            
                             do {
                                 try await viewModel.signIn(userType: "Coach") // to sign in
                                 showSignInView = false
                                 return
                             } catch {
-                                print(error)
+                                print(error) //TODO: Handle error (consider adding user feedback)
                             }
                         }
                     } label: {
-
-                        // Use the custom styled "Create Account" button
-                        CustomUIFields.signInAccountButton("Let's go! bb")
+                        // Custom Sign-In Button
+                        CustomUIFields.signInAccountButton("Let's go!")
                     }
                     Spacer()
-                    
                 }
             }
         }

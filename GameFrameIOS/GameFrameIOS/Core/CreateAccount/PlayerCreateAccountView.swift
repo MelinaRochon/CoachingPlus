@@ -1,30 +1,29 @@
 import SwiftUI
 
+/** View for creating a player account, guiding the user through the sign-up process. */
 struct PlayerCreateAccountView: View {
-    //@State private var teamAccessCode: String = ""
-    //    @State private var firstName: String = ""
-    //    @State private var lastName: String = ""
-    //    @State private var dateOfBirth: Date = Date()
-    //    @State private var phone: String = ""
-    //    @State private var country: String = ""
-    //    @State private var email: String = ""
-    //    @State private var password: String = ""
-    @State private var showPassword: Bool = false
     
+    // Controls whether the sign-in view should be shown.
     @Binding var showSignInView: Bool
+    
+    // ViewModel handling authentication logic.
     @StateObject private var viewModel = authenticationViewModel()
+    
+    // State to track whether the user should navigate to the sign-up page.
     @State private var navigateToSignUp = false
+    
+    // State to track whether the user should navigate to account creation.
     @State private var navigateToCreateAccount = false
-    let countries = ["United States", "Canada", "United Kingdom", "Australia"]
+    
+    // State to open an alert if the user account already exists.
+    @State private var errorUserExists: Bool = false
     
     var body: some View {
-        //NavigationView{
         VStack(spacing: 20) {
-            
             ScrollView {
                 Spacer().frame(height: 20)
                 
-                // Title
+                // Title & Navigation to Login
                 VStack(spacing: 5) {
                     Text("Hey Champ!")
                         .font(.title3).bold()
@@ -33,16 +32,12 @@ struct PlayerCreateAccountView: View {
                             .foregroundColor(.gray)
                             .font(.footnote)
                         NavigationLink(destination: PlayerLoginView(showSignInView: $showSignInView)) {
-                            Text("Log in")
-                                .foregroundColor(.blue)
-                                .font(.footnote)
-                                .underline()
+                            CustomUIFields.linkButton("Log in")
                         }
                     }
                 }
                 
-                // Form Fields with Uniform Style
-                
+                // Form Fields Section
                 if (!navigateToSignUp && !navigateToCreateAccount) {
                     VStack(spacing: 10) {
                         // Team Access Code with Help Button
@@ -61,18 +56,16 @@ struct PlayerCreateAccountView: View {
                         .padding(.horizontal)
                         .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                         
+                        // Email Input Field
                         CustomUIFields.customTextField("Email", text: $viewModel.email)
                             .autocapitalization(.none)
                             .autocorrectionDisabled(true)
                             .keyboardType(.emailAddress) // Shows email-specific keyboard
-                        
                     }
                     .padding(.horizontal)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
                     Button {
-                        print("Create player account tapped")
-                        
                         // create account is called!
                         Task {
                             do {
@@ -82,55 +75,43 @@ struct PlayerCreateAccountView: View {
                                     return
                                 }
                                 
-                                let accountExists = try await viewModel.checkIfPlayerAccountExists()
-                                if (accountExists == nil) {
-                                    // There's a problem with the user's input.
-                                    // Show alert to let them know
-                                } else {
-                                    //if (accountExists == true) {
-                                    // Account exists inside the invite collection.
-                                    // Load the next page to complete registration.
-                                    // Make sure the user id is not set yet, otherwise can't sign up with this email
-                                    let userIdExists = try await viewModel.checkIfUserIdExists()
-                                    if (userIdExists == true) {
-                                        // user id exists. Can't sign up with this email
+                                // Check if account exists
+                                let doesUserIdExits = try await viewModel.checkIfUserIdAlreadyExists()
+                                if let userIdExists = doesUserIdExits {
+                                    if userIdExists {
+                                        // TODO: Show error as user id exists. Can't sign up with this email
+                                        errorUserExists.toggle() // true
                                     } else {
-                                        // user id was not found.
-                                        navigateToSignUp = true;
+                                        print("Account does not exist")
+                                        // Proceed with the sign up
+                                        navigateToSignUp.toggle()
                                     }
                                 }
-                                
-                                //                                    } else if (accountExists == false) {
-                                //                                        // Account doesn't exist. Proceed as normal.
-                                //
-                                //                                        //NavigationLink(destination: PlayerSignUpView(email: viewModel.email, teamId: viewModel.teamId, showSignInView: $showSignInView))
-                                //                                        //                                    try await viewModel.signUp(userType: "Player") // to sign up
-                                //                                        //                                    showSignInView = false
-                                //
-                                //                                    }
                                 
                                 return
                             } catch {
                                 print(error)
                             }
                         }
-                        
                     } label: {
-                        // Use the custom styled "Create Account" button
+                        // Uses the custom-styled "Continue" button
                         CustomUIFields.createAccountButton("Continue")
-                        
-                    }.alert("Invalid Access Code", isPresented: $viewModel.showInvalidCodeAlert) {
+                    }
+                    .alert("Invalid Access Code", isPresented: $viewModel.showInvalidCodeAlert) {
                         Button("OK", role: .cancel) { }
                     }
-                    
+                    .alert("That account already exists. Please sign in.", isPresented: $errorUserExists){
+                        Button("OK", role: .cancel) {}
+                    }
                 }
                 
+                // Navigation to Sign-Up Page
                 if (navigateToSignUp) {
                     PlayerSignUpView(email: viewModel.email, teamId: viewModel.teamId, showSignInView: $showSignInView)
                 }
             }
-            
-        }.frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

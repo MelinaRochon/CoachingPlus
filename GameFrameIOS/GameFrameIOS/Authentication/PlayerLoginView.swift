@@ -7,45 +7,44 @@
 
 import SwiftUI
 
+/** This view handles the login process for players.
+ It allows players to enter their credentials, toggle password visibility, and navigate to the account creation screen.
+ Uses `CustomUIFields` for UI components and `authenticationViewModel` for authentication logic.
+*/
 struct PlayerLoginView: View {
-    
+    // ViewModel for handling authentication logic
     @StateObject private var viewModel = authenticationViewModel()
     
+    // Binding to determine if sign-in view should be shown
     @Binding var showSignInView: Bool
     
-    @State private var email: String = ""
-    @State private var password: String = ""
+    // Local state for visibility toggle
     @State private var showPassword: Bool = false
     
     var body: some View {
         NavigationView{
             VStack(spacing: 20) {
-                
                 ScrollView{
-                    
                     // Welcome Message
                     Spacer().frame(height: 20)
                     VStack(spacing: 5) {
                         Text("Welcome back Champ!")
                             .font(.title3).bold()
                         
+                        // Navigation link to account creation
                         HStack {
-                            
                             Text("I don't have an account!")
                                 .foregroundColor(.gray)
                                 .font(.footnote)
                             NavigationLink(destination: PlayerCreateAccountView(showSignInView: $showSignInView)) {
-                                Text("Create one.")
-                                    .foregroundColor(.blue)
-                                    .font(.footnote)
-                                    .underline()
+                                CustomUIFields.linkButton("Create one")
                             }
                         }
                     }
                     
-                    
                     // Form Fields
                     VStack(spacing: 10) {
+                        // Email Input Field
                         CustomUIFields.customTextField("Email", text: $viewModel.email)
                             .autocapitalization(.none)
                             .autocorrectionDisabled(true)
@@ -56,8 +55,6 @@ struct PlayerLoginView: View {
                     }
                     .padding(.horizontal)
                     
-                    
-                    // "Get coached!" Button
                     Button {
                         print("Create account tapped")
                         
@@ -67,15 +64,12 @@ struct PlayerLoginView: View {
                                 showSignInView = false
                                 return
                             } catch {
-                                print(error)
+                                print(error) // TODO: Handle error (consider showing an alert)
                             }
-                            
                         }
-                        
                     } label: {
-                        // Use the custom styled "Create Account" button
+                        // Custom Styled Login Button
                         CustomUIFields.signInAccountButton("Get coached!")
-
                     }
                 }
             }

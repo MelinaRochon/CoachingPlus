@@ -66,6 +66,8 @@ struct CustomUIFields {
     
     /// Creates a styled "Create Account" button.
     ///
+    /// - Parameters:
+    ///   - placeholder: The placeholder text.
     /// - Returns: A customized `HStack` representing a "Create Account" button.
     static func createAccountButton(_ placeholder: String) -> some View {
         styledHStack {
@@ -100,6 +102,19 @@ struct CustomUIFields {
         .background(Color.black)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal)
+    }
+    
+    /// A reusable style for a `text link` with specific styling, acting just as a normal link.
+    ///
+    /// - Parameters:
+    ///   - placeholder: The placeholder text.
+    /// - Returns: A styled `Link` view.
+
+    static func linkButton(_ placeholder: String) -> some View {
+        Text(placeholder)
+            .foregroundColor(.blue)
+            .font(.footnote)
+            .underline()
     }
 }
 
