@@ -71,6 +71,11 @@ final class authenticationViewModel: ObservableObject {
             return
         }
         
+        guard try await verifyEmailAddress(email: email) == nil else {
+            print("User already exists with this email. Abort")
+            return
+        }
+        
         let authDataResult = try await AuthenticationManager.shared.createUser(email: email, password: password)
         let user = UserDTO(userId: authDataResult.uid, email: authDataResult.email, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
         try await UserManager.shared.createNewUser(userDTO: user)
@@ -98,6 +103,45 @@ final class authenticationViewModel: ObservableObject {
         }
     }
     
+    func verifyEmailAddress(email: String) async throws -> DBUser? {
+        // verify the email address.
+        guard let user = try await UserManager.shared.getUserWithEmail(email: email) else {
+            print("User does not exist")
+            return nil
+        }
+        
+        return user
+    }
+    
+    func checkIfUserIdAlreadyExists() async throws -> Bool? {
+        // check using the email address and the team access code
+        guard !teamAccessCode.isEmpty, !email.isEmpty else {
+            print("Need to enter a valid email address and team access code")
+            return nil
+        }
+        
+        // verify the access code
+        guard let team = try await TeamManager.shared.getTeamWithAccessCode(accessCode: teamAccessCode) else {
+            print("Access code invalid")
+            return nil
+        }
+        
+        self.teamId = team.teamId
+
+        // verify the email address.
+        guard let user = try await verifyEmailAddress(email: email) else {
+            print("User does not exist")
+            return false
+        }
+        print("user info: \(user)")
+        // if user id -> return, otherwise continue
+        guard user.userId == nil else {
+            print("A user and player exists with this userId.")
+            return true
+        }
+        
+        return false // there is no 'real player' with the userId
+    }
     func checkIfPlayerAccountExists() async throws -> Bool? {
         // check using the email address and the team access code
         guard !teamAccessCode.isEmpty, !email.isEmpty else {
@@ -119,6 +163,10 @@ final class authenticationViewModel: ObservableObject {
             return false
         }
         // if user id -> return, otherwise continue
+        guard user.userId == nil else {
+            print("A user and player exists with this userId.")
+            return true
+        }
         
         // verify the email address exists inside an invite
         guard let invite = try await InviteManager.shared.getInviteByEmailAndTeamId(email: email, teamId: team.teamId) else {

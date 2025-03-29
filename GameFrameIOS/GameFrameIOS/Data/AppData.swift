@@ -9,5 +9,7 @@ import Foundation
 
 /** A structure containing reusable data that can be accessed and used accross the app. */
 struct AppData {
+    
+    /// A list of supported countries used in forms and selection fields.
     static let countries = ["United States", "Canada", "United Kingdom", "Australia"]
 }

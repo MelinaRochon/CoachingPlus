@@ -4,9 +4,8 @@ struct CoachCreateAccountView: View {
     @State private var showPassword: Bool = false
     @StateObject private var viewModel = authenticationViewModel()
     @Binding var showSignInView: Bool
-    
-    let countries = ["United States", "Canada", "United Kingdom", "Australia"]
-    
+        
+    @State private var showErrorAlert: Bool = false
     var body: some View {
         NavigationView{
             VStack(spacing: 20) {
@@ -24,11 +23,7 @@ struct CoachCreateAccountView: View {
                                 .font(.footnote)
                             
                             NavigationLink(destination: CoachAuthenticationView(showSignInView: $showSignInView)) {
-                                
-                                Text("Log in.")
-                                    .foregroundColor(.blue)
-                                    .font(.footnote)
-                                    .underline()
+                                CustomUIFields.linkButton("Log in")
                             }
                         }
                     }
@@ -68,7 +63,7 @@ struct CoachCreateAccountView: View {
                         // Country Picker Styled Like Other Fields
                         HStack {
                             Picker(selection: $viewModel.country) {
-                                ForEach(countries, id: \.self) { country in
+                                ForEach(AppData.countries, id: \.self) { country in
                                     Text(country).tag(country)
                                 }
                             } label: {
@@ -96,11 +91,13 @@ struct CoachCreateAccountView: View {
                     
                     // "Let's go!" Button
                     Button{
-                        print("Create account tapped")
-                        
                         // create account is called!
                         Task {
                             do {
+                                guard try await viewModel.verifyEmailAddress(email: viewModel.email) == nil else {
+                                    showErrorAlert.toggle()
+                                    return
+                                }
                                 try await viewModel.signUp(userType: "Coach") // to sign up
                                 showSignInView = false
                                 return
@@ -108,13 +105,13 @@ struct CoachCreateAccountView: View {
                                 print(error)
                             }
                         }
-                        
-                        
                     } label: {
                         // Use the custom styled "Create Account" button
                         CustomUIFields.createAccountButton("Create Account")
                     }
                     Spacer()
+                }.alert("That account already exists. Please sign in.", isPresented: $showErrorAlert){
+                    Button("OK", role: .cancel) {}
                 }
             }
         }
