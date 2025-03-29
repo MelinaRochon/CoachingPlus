@@ -130,7 +130,7 @@ final class CommentManager {
     func getAllCommentsForSpecificTranscriptId(teamId: String, transcriptId: String) async throws -> [DBComment]? {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("Could not find team id. Abortingg")
             return nil
         }
         
@@ -143,11 +143,12 @@ final class CommentManager {
     
     /** POST - Add a new comment to the database */
     func addNewComment(teamId: String, commentDTO: CommentDTO) async throws {
+        print("in manager!")
+        print("teamId: \(teamId)")
+        print("trying to add comment: \(commentDTO)")
+
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
-            return
-        }
+        let teamDocId = try await TeamManager.shared.getTeamWithDocId(docId: teamId).id
 
         let commentDocument = commentCollection(teamDocId: teamDocId).document()
         let documentId = commentDocument.documentID // get the document ID
@@ -157,6 +158,7 @@ final class CommentManager {
         
         // Add the comment to the database
         try commentDocument.setData(from: comment, merge: false)
+        print("done!")
     }
     
     /** DELETE - Remove a comment from the database */

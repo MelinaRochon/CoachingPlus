@@ -136,6 +136,7 @@ final class TeamManager {
     
     /** Returns the team's information from the database */
     func getTeam(teamId: String) async throws -> DBTeam? {
+        print("in TeamManager, teamId: \(teamId)")
         let snapshot = try await teamCollection.whereField("team_id", isEqualTo: teamId).getDocuments()
 
         //try await teamDocument(teamId: teamId).getDocument(as: DBTeam.self)

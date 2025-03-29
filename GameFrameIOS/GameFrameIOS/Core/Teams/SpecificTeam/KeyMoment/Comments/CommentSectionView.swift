@@ -10,7 +10,7 @@ import SwiftUI
 struct CommentSectionView: View {
     @ObservedObject var viewModel: CommentSectionViewModel
     @State private var newComment: String = ""
-    
+
     var teamId: String
     var keyMomentId: String
     var gameId: String
@@ -23,19 +23,38 @@ struct CommentSectionView: View {
                 .padding(.horizontal)
 
             ScrollView {
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 10) {
+                    if viewModel.comments.isEmpty {
+                                            Text("No comments yet. Be the first to comment!")
+                                                .foregroundColor(.gray)
+                                                .padding()
+                                        }
                     ForEach(viewModel.comments, id: \.commentId) { comment in
-                        VStack(alignment: .leading) {
-                            Text(comment.uploadedBy)
-                                .font(.caption)
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "person.circle.fill")
+                                .resizable()
+                                .frame(width: 36, height: 36)
                                 .foregroundColor(.gray)
-                            Text(comment.comment)
-                                .font(.body)
-                                .padding(.vertical, 4)
-                            Text(comment.createdAt.formatted(.dateTime.year().month().day().hour().minute()))
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Divider()
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(comment.uploadedBy)
+                                        .font(.subheadline)
+                                        .bold()
+                                    
+                                    Spacer()
+                                    
+                                    Text(comment.createdAt.formatted(.dateTime.hour().minute()))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Text(comment.comment)
+                                    .font(.body)
+                                    .padding(10)
+                                    .background(Color(UIColor.systemGray6))
+                                    .cornerRadius(10)
+                            }
                         }
                         .padding(.horizontal)
                     }
@@ -43,14 +62,16 @@ struct CommentSectionView: View {
             }
             .frame(height: 200)
 
+            // Comment Input Section
             HStack {
                 TextField("Write a comment...", text: $newComment)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .frame(height: 40)
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.gray, lineWidth: 1))
 
                 Button(action: {
                     Task {
                         if !newComment.trimmingCharacters(in: .whitespaces).isEmpty {
+                            print("in CommentSectionView, teamId: \(teamId)")
                             await viewModel.addComment(teamId: teamId, keyMomentId: keyMomentId, gameId: gameId, transcriptId: transcriptId, text: newComment)
                             DispatchQueue.main.async {
                                 newComment = "" // Clear input field safely
