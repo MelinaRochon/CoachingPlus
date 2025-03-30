@@ -77,6 +77,7 @@ struct PlayerAllTeamsView: View {
                                 .foregroundColor(.black).autocapitalization(.none)
 
                             
+                            
                             Button(action: {
                                 withAnimation {
                                     showTextField = false  // Hide input field

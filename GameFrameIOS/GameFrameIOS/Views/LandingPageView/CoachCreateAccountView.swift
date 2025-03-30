@@ -62,22 +62,21 @@ struct CoachCreateAccountView: View {
 
                         // Country Picker Styled Like Other Fields
                         HStack {
-                            Picker(selection: $viewModel.country) {
-                                ForEach(AppData.countries, id: \.self) { country in
-                                    Text(country).tag(country)
+                            Text("Country or region")
+                            Spacer()
+                            Picker("Country", selection: $viewModel.country) {
+                                ForEach(AppData.countries, id: \.self) { c in
+                                    Text(c).tag(c)
                                 }
-                            } label: {
-                                Text("Country or region")
-                                    .foregroundColor(.primary) // Ensures black text
                             }
-                        }.pickerStyle(.navigationLink)
-                            .frame(height: 45)
-                            .padding(.horizontal)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray, lineWidth: 1)
-                            )
-                        //.pickerStyle(.navigationLink)
+                        }
+                        .frame(height: 45)
+                        .pickerStyle(.automatic)
+                        .padding(.horizontal)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
                         
                         CustomUIFields.customTextField("Email", text: $viewModel.email)
                             .autocapitalization(.none)

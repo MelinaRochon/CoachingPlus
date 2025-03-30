@@ -70,10 +70,10 @@ struct CustomUIFields {
     ///   - placeholder: The placeholder text.
     /// - Returns: A customized `HStack` representing a "Create Account" button.
     static func createAccountButton(_ placeholder: String) -> some View {
-        styledHStack {
+        styledHStack(content: {
             Text(placeholder)
                 .font(.body).bold()
-        }
+        }, background: .black)
     }
     
     /// Creates a styled "Sign in Account" button.
@@ -92,14 +92,14 @@ struct CustomUIFields {
     /// - Parameters:
     ///   - content: A closure that returns the content inside the `HStack`.
     /// - Returns: A styled `HStack` view.
-    static func styledHStack<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    static func styledHStack<Content: View>(@ViewBuilder content: () -> Content, background: Color? = .black) -> some View {
         HStack {
             content()
         }
         .foregroundColor(.white)
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color.black)
+        .background(background)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal)
     }
