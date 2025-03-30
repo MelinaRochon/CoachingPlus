@@ -30,3 +30,46 @@ func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
     let minutes = (seconds % 3600) / 60
     return (hours, minutes)
 }
+
+
+/***Format the entered phone number to (XXX)-XXX-XXXX
+ Formats the given phone number string into a standard phone number format: (XXX)-XXX-XXXX.
+
+ This function takes an unformatted string containing digits and formats it into a phone number format
+ that matches the pattern (XXX)-XXX-XXXX, where 'X' represents a digit. Any non-numeric characters
+ in the input string will be ignored, and only numeric digits will be used.
+
+ If there are more than 10 digits in the input string, only the first 10 digits are used for formatting.
+ If there are fewer than 10 digits, the function will format whatever digits are available and leave
+ the remaining positions empty in the result.
+ 
+ - Parameter number: A string representing the phone number, which may contain non-numeric characters.
+
+ - Returns: A string formatted as a phone number in the form of (XXX)-XXX-XXXX.
+ 
+ Examples:
+ 
+    Input: "1234567890"
+    Output: "(123)-456-7890"
+
+    Input: "1-234-567-890"
+    Output: "(123)-456-7890"
+**/
+func formatPhoneNumber(_ number: String) -> String {
+    // Keep only digits
+    let digits = number.filter { $0.isNumber }
+    
+    var result = ""
+    let mask = "(XXX)-XXX-XXXX"
+    var index = digits.startIndex
+
+    for ch in mask where index < digits.endIndex {
+        if ch == "X" {
+            result.append(digits[index])
+            index = digits.index(after: index)
+        } else {
+            result.append(ch)
+        }
+    }
+    return result
+}
