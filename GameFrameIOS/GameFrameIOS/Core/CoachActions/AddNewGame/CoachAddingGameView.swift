@@ -18,7 +18,7 @@ import Firebase
  - **Recording Reminder:** Enable or disable recording notifications before the game.
  - **Firestore Integration:** Saves the created game event to the Firebase Firestore database.
  
- This view interacts with `AddNewGameModel`, which handles data storage, team retrieval, and database operations.
+ This view interacts with `TeamModel` and `GameModel`, which handles data storage, team retrieval, and database operations.
  It includes form-based inputs and custom pickers for a streamlined user experience.
  
  ## Navigation:

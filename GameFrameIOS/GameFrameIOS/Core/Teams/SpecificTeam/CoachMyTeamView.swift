@@ -150,7 +150,7 @@ struct CoachMyTeamView: View {
             }
             .sheet(isPresented: $addPlayerEnabled, onDismiss: refreshData) {
                 // Sheet to add a new player
-                CoachAddPlayersView(teamId: teamId) // passing the teamId as an argument
+                CoachAddPlayersView(teamModel: teamModel) // passing the teamId as an argument
             }
             .sheet(isPresented: $addGameEnabled, onDismiss: refreshData) {
                 // Sheet to add a new game

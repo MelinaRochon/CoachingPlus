@@ -61,5 +61,19 @@ final class PlayerModel: ObservableObject {
         
         self.players = tmpArrayPlayer
     }
-
+    
+    func addPlayer(playerDTO: PlayerDTO) async throws -> String {
+        return try await PlayerManager.shared.createNewPlayer(playerDTO: playerDTO)
+    }
+    
+    func addPlayerToTeam(teamId: String, inviteDocId: String) async throws -> Bool {
+        do {
+            // Add the new invite to the team
+            try await TeamManager.shared.addInviteToTeam(id: teamId, inviteDocId: inviteDocId)
+            return true
+        } catch {
+            print("Failed to add player to the team.. \(error.localizedDescription)")
+            return false
+        }
+    }
 }
