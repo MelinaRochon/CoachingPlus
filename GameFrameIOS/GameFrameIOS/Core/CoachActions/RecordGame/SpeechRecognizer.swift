@@ -10,6 +10,17 @@ import AVFoundation
 import Speech
 import Observation
 
+/** This file defines a helper class `SpeechRecognizer` for transcribing speech to text using
+  Apple's `SFSpeechRecognizer` and `AVAudioEngine`. The class provides methods to start and
+  stop transcriptions, manage audio session permissions, and handle errors during speech recognition.
+
+  ## Key Features:
+  - Initializes speech recognition and microphone access.
+  - Provides real-time transcription of speech into text.
+  - Handles errors related to recognition and permissions.
+  - Allows the speech recognizer to be reset or stopped as needed.
+  - Supports asynchronous methods and error handling.
+*/
 
 /// This is a helper for transcribing speech to text using SFSpeechRecognizer and AVAudioEngine.
 /// From App Dev Tutorials: https://developer.apple.com/tutorials/app-dev-training/transcribing-speech-to-text

@@ -27,7 +27,7 @@ struct PlayerTranscriptInfo {
  The audio recording view model links the AudioRecordingView to the KeyMomentManager and the TranscriptManager.
  */
 @MainActor
-final class AudioRecordingViewModel: ObservableObject {
+final class AudioRecordingModel: ObservableObject {
     @Published var recordings: [keyMomentTranscript] = [];
     @Published var teamId: String = ""
     @Published var gameId: String = ""

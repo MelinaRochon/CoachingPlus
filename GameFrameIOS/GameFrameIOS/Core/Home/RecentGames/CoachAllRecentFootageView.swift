@@ -10,7 +10,7 @@ import SwiftUI
 /** Shows all the recent footage saved. User can search for specific footages using the search bar */
 struct CoachAllRecentFootageView: View {
     @State private var searchText: String = ""
-    @StateObject private var viewModel = RecentFootageViewModel()
+    @StateObject private var viewModel = RecentFootageModel()
     
     var body: some View {
         NavigationView {

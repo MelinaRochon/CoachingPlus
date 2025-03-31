@@ -16,7 +16,7 @@ import AVKit
  speech to text, and adds it as a new keyMoment and a new transcript object to the database.
  */
 struct AudioRecordingView: View {
-    @StateObject private var audioRecordingModel = AudioRecordingViewModel()
+    @StateObject private var audioRecordingModel = AudioRecordingModel()
     
     @State private var recordingStartTime: Date?
     @State private var gameId: String = ""

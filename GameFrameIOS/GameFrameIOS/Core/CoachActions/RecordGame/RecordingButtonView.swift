@@ -7,10 +7,29 @@
 
 import SwiftUI
 
-/***This is the audio recording button view */
+/** This file defines a custom SwiftUI view called `RecordingButtonView` that represents a button
+  used for starting and stopping audio recordings. The button has a dynamic appearance, changing
+  shape and size based on the recording state (i.e., recording or not recording).
+
+  ## Purpose:
+  The `RecordingButtonView` is used in the UI to provide an interactive button that allows
+  users to toggle audio recording. The button provides visual feedback when recording starts
+  and stops, using animations to make the user experience more intuitive and engaging.
+
+  ## Key Features:
+  - The button's appearance changes when recording starts or stops (size, shape, color).
+  - Pulsing animation effect to visually indicate the recording state.
+  - Callback function (`onRecordingStateChange`) to notify the parent view of the recording state.
+**Note**: This is the audio recording button view
+ */
 struct RecordingButtonView: View {
+    /// State variable to track whether recording is in progress.
     @State private var isRecording = false
+    
+    /// Namespace used for matched geometry effect during animation.
     @Namespace private var animation
+    
+    /// Callback to notify parent view of the current recording state.
     var onRecordingStateChange: (Bool) -> Void  // Callback to notify parent
 
     var body: some View {
