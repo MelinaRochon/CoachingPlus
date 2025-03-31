@@ -47,4 +47,5 @@ enum StatusEnum {
 /// - It conforms to the `Error` protocol, meaning it can be used as a type of error in Swift's error handling system. This error type helps in managing team-related validation failures gracefully.
 enum TeamValidationError: Error {
     case invalidAccessCode
+    case userExists
 }
