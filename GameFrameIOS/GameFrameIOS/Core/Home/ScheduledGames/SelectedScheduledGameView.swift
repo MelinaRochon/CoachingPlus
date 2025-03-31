@@ -7,29 +7,74 @@
 
 import SwiftUI
 
+/**
+ `SelectedScheduledGameView` is a SwiftUI view that displays detailed information about a scheduled game.
+
+ ## Features:
+ - Displays the game title, team name, scheduled time, and location.
+ - Allows navigation to Apple Maps to view the game location.
+ - Shows game duration and feedback timing settings.
+ - Coaches can view additional game settings such as feedback delays and recording reminders.
+ - If the user is a coach and the game is about to start (within a predefined time) or is ongoing,
+   a "Start Recording" button becomes available.
+ - Supports both video and audio-only recording options.
+ - Automatically determines if recording can begin based on the game’s start time.
+
+ ## User Interactions:
+ - **Coaches**: Can view game settings and start a recording.
+ - **Players & Others**: Can only view game details.
+ - Clicking on the game location will open Apple Maps with the given address.
+ - Selecting a recording type (video/audio) initiates the recording process.
+
+ ## Lifecycle:
+ - Fetches user type on view load.
+ - Determines whether the "Start Recording" button should be enabled.
+ - Formats game duration into hours and minutes.
+ - Displays an alert if an error occurs while fetching data.
+
+ */
 struct SelectedScheduledGameView: View {
-    @StateObject private var selecGameViewModel = SelectedGameModel()
+    
+    // MARK: - State Properties
+
+    /// View model responsible for handling video/audio recording operations.
     @StateObject private var recordingViewModel = FGVideoRecordingModel()
     
-    @State var gameId: String // scheduled game id is passed when this view is called
-    @State var teamDocId: String // scheduled game id is passed when this view is called
+    /// View model for fetching user details.
+    @StateObject private var userModel = UserModel()
+
+    /// Stores the game duration in hours.
+    @State private var hours: Int = 0
+
+    /// Stores the game duration in minutes.
+    @State private var minutes: Int = 0
     
-    @State private var hours: Int = 0;
-    @State private var minutes: Int = 0;
-    @State var recordReminder: Bool = false;
-    @State private var canStartRecording: Bool = false // Controls start button visibility
-    @State private var navigateToRecordingView = false // Track navigation state
-    @State private var minsToStartGame: Int = 10; // How many minutes before a scheduled game can a coach start a recording
-    @State private var selectedRecordingType: String = "Video" // Default selection
+    /// Indicates whether the user has set a reminder for recording.
+    @State private var recordReminder: Bool = false
+
+    /// Determines whether the "Start Recording" button should be enabled.
+    @State private var canStartRecording: Bool = false
+
+    /// Controls navigation to the recording view.
+    @State private var navigateToRecordingView = false
+
+    /// Defines how many minutes before a scheduled game a coach can start recording.
+    @State private var minsToStartGame: Int = 10
+
+    /// Stores the selected recording type (e.g., "Video" or "Audio Only").
+    @State private var selectedRecordingType: String = "Video"
+
+    /// Stores the game information passed to this view.
+    @State var selectedGame: HomeGameDTO?
     
-    var recordingOptions = [
-        ("Video", "video.fill"),
-        ("Audio Only", "waveform")
-    ] // Dropdown choices with icons
+    /// Stores the type of user (e.g., "Coach", "Player"), fetched dynamically.
+    @State private var userType: String? = nil
     
+    // MARK: - View
+
     var body: some View {
         NavigationView {
-            if let selectedGame = selecGameViewModel.selectedGame {
+            if let selectedGame = selectedGame {
                 VStack {
                     Text(selectedGame.game.title).font(.largeTitle).bold().multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 5).padding(.bottom, 5).padding(.horizontal)
                     
@@ -82,12 +127,12 @@ struct SelectedScheduledGameView: View {
                             Image(systemName: "clock").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
                             Text("\(hours) h \(minutes) m").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                             
-                            // TO DO - If is not a scheduled game and there was a video recording, show the actual game duration!
+                            // TODO: If is not a scheduled game and there was a video recording, show the actual game duration!
                         }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
                         
                     }.padding(.horizontal)
                     
-                    if let userType = selecGameViewModel.userType {
+                    if let userType = userType {
                         
                         if (userType == "Coach") {
                             Divider()
@@ -128,9 +173,10 @@ struct SelectedScheduledGameView: View {
         }
         .task {
             do {
-                try await selecGameViewModel.getSelectedGameInfo(gameId: gameId, teamDocId: teamDocId)
-                try await selecGameViewModel.getUserType()
-                if let selectedGame = selecGameViewModel.selectedGame {
+                self.userType = try await userModel.getUserType()
+//                try await selecGameViewModel.getSelectedGameInfo(gameId: gameId, teamDocId: teamDocId)
+//                try await selecGameViewModel.getUserType()
+                if let selectedGame = selectedGame {
                     // Get the duration to be shown
                     let (dhours, dminutes) = convertSecondsToHoursMinutes(seconds: selectedGame.game.duration)
                     self.hours = dhours
@@ -155,7 +201,7 @@ struct SelectedScheduledGameView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 if canStartRecording {
                     Menu {
-                        ForEach(recordingOptions, id: \ .0) { option, icon in
+                        ForEach(AppData.recordingHomePageOptions, id: \ .0) { option, icon in
                             Button(action: {
                                 selectedRecordingType = option
                                 if selectedRecordingType == "Video" {
@@ -187,26 +233,36 @@ struct SelectedScheduledGameView: View {
         }
     }
     
-    /** Function to start recording based on selection */
+    
+    // MARK: - Functions
+    
+    /**
+     Function to start recording based on the selected game and recording type.
+     Ensures that a game is selected before proceeding and then creates a recording entry in the database.
+     */
     private func startRecording() {
-        guard let selectedGame = selecGameViewModel.selectedGame else {
+        // Ensure there is a selected game before starting the recording
+        guard let selectedGame = selectedGame else {
             print("ERROR: No selected game available")
             return
         }
         
+        // Extract game and team IDs from the selected game
         let gameId = selectedGame.game.gameId
         let teamId = selectedGame.team.teamId
         
+        // Perform the recording operation asynchronously
         Task {
             do {
                 print("Starting \(selectedRecordingType) recording for Game ID: \(gameId), Team ID: \(teamId)")
-                
+                // Assign the game ID to the recording view model
                 recordingViewModel.gameId = gameId
+                
+                // Attempt to create a recording entry in the database for the specified team
                 try await recordingViewModel.createFGRecording(teamId: teamId)
-                
                 print("Recording successfully created in the database.")
-                
             } catch {
+                // Handle and log any errors that occur during recording creation
                 print("Error Creating Recording: \(error.localizedDescription)")
             }
         }
@@ -214,5 +270,7 @@ struct SelectedScheduledGameView: View {
 }
 
 #Preview {
-    SelectedScheduledGameView(gameId: "", teamDocId: "")
+    let game = HomeGameDTO(game: DBGame(gameId: "2oKD1iyUYXTFeWjelDz8", teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7"),
+                           team: DBTeam(id: "6mpZlv7mGho5XaBN8Xcs", teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7", name: "Hornets", teamNickname: "HORNET", sport: "Soccer", gender: "Female", ageGrp: "U15", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"]))
+    SelectedScheduledGameView(selectedGame: game)
 }

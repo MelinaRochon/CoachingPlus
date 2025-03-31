@@ -39,7 +39,7 @@ struct CoachMainTabView: View {
                     tabBarItem(image: "person", filledImage: "person.fill", label: "Profile", tabIndex: 3)
                     Spacer()
                 }
-                .frame(height: 80)
+                .frame(height: 75)
                 .background(Color.white) // Tab bar background
                 .overlay(
                     Rectangle()

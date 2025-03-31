@@ -15,4 +15,14 @@ final class UserModel: ObservableObject {
         return try await UserManager.shared.createNewUser(userDTO: userDTO)
     }
     
+    func getUser() async throws -> DBUser? {
+        let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+        
+        return try await UserManager.shared.getUser(userId: authUser.uid)
+    }
+    
+    func getUserType() async throws -> String {
+        return try await getUser()!.userType
+    }
+    
 }

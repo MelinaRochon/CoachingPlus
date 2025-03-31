@@ -22,7 +22,7 @@ struct PlayerHomePageView: View {
                         if !viewModel.futureGames.isEmpty {
                             
                             VStack(alignment: .leading, spacing: 10) {
-                                NavigationLink(destination: CoachAllScheduledGamesView()) {
+                                NavigationLink(destination: CoachAllScheduledGamesView(futureGames: viewModel.futureGames)) {
                                     Text("Scheduled Games")
                                         .font(.headline)
                                         .foregroundColor(.blue)
@@ -32,18 +32,14 @@ struct PlayerHomePageView: View {
                                 
                                 // Loop through games and show a preview of the next 3 games
                                 ForEach(viewModel.futureGames.prefix(3), id: \.game.gameId) { scheduledGame in
-                                    NavigationLink(destination: SelectedScheduledGameView(gameId: scheduledGame.game.gameId, teamDocId: scheduledGame.team.id)) {
-                                        
+                                    NavigationLink(destination: SelectedScheduledGameView(selectedGame: scheduledGame)) {
                                         HStack {
                                             VStack {
                                                 Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.black)
                                                 
                                                 Text(scheduledGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.secondary)
                                                 Text(formatStartTime(scheduledGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.black)
-                                                
-//                                                Divider().background(content: { Color.gray.opacity(0.3) })
                                             }
-                                            
                                         }
                                     }
                                 }

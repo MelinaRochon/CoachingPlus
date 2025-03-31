@@ -154,7 +154,7 @@ struct CoachSpecificFootageView: View {
                         if let startTime = selectedGame.game.startTime {
                             gameStartTime = startTime
                         }
-                    }
+                    } 
                     try await transcriptModel.loadFirstThreeTranscripts(gameId: gameId, teamDocId: teamDocId)
                     
                     if !transcriptModel.recordings.isEmpty {

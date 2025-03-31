@@ -17,23 +17,44 @@ import SwiftUI
  - The coach can add new games and players to the team and also modify team settings.
  */
 struct CoachMyTeamView: View {
-    @State private var selectedSegmentIndex = 0 // Tracks the selected segment between Footage and Players
     
-    @State var teamNickname: String = "" // Holds the team nickname to be displayed in the title
-    @State var teamId: String = "" // Holds the unique ID for the team
-    @State private var teamDocId: String = "" // Holds the document ID for the team
+    // MARK: - State Properties
 
-    @State private var addPlayerEnabled = false // Toggles visibility for adding a player
-    @State private var addGameEnabled = false // Toggles visibility for adding a game
-    @State private var isTeamSettingsEnabled: Bool = false // Toggles visibility for team settings view
-    
-    let segmentTypes = ["Footage", "Players"] // The segments that allow switching between footage and players
-    
-    // View models to manage team, game and player-related data
+    /// Tracks the selected segment (Footage or Players).
+    @State private var selectedSegmentIndex = 0
+
+    /// Holds the team nickname for display.
+    @State var teamNickname: String = ""
+
+    /// Holds the unique ID for the team.
+    @State var teamId: String = ""
+
+    /// Holds the document ID for the team in the database.
+    @State private var teamDocId: String = ""
+
+    /// Toggles visibility for adding a player.
+    @State private var addPlayerEnabled = false
+
+    /// Toggles visibility for adding a game.
+    @State private var addGameEnabled = false
+
+    /// Toggles visibility for the team settings view.
+    @State private var isTeamSettingsEnabled: Bool = false
+
+    /// The available segment options (Footage and Players).
+    let segmentTypes = ["Footage", "Players"]
+
+    /// View model for managing team data.
     @StateObject var teamModel: TeamModel
+    
+    /// View model for managing game data.
     @StateObject private var gameModel = GameModel()
+
+    /// View model for managing player data.
     @StateObject private var playerModel = PlayerModel()
     
+    // MARK: - View
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -162,6 +183,9 @@ struct CoachMyTeamView: View {
             }
         }
     }
+    
+    
+    // MARK: - Function
     
     /// Function to refresh team data and load games and players
     private func refreshData() {

@@ -117,11 +117,24 @@ struct CustomUIFields {
             .underline()
     }
     
+    /// A styled rectangle to be used as a preview for game videos.
+    /// - Returns: A `Rectangle` view with a gray background, rounded corners, and a specific size.
     static func gameVideoPreviewStyle() -> some View {
         Rectangle()
             .fill(Color.gray.opacity(0.3))
             .frame(width: 110, height: 60)
             .cornerRadius(10)
+    }
+    
+    /// A loading spinner with a given placeholder text, used to indicate loading status.
+    /// - Parameter placeholder: A `String` that will be displayed as the text for the loading spinner.
+    /// - Returns: A `VStack` containing a `ProgressView` styled as a circular spinner.
+    static func loadingSpinner(_ placeholder: String) -> some View {
+        VStack() {
+            ProgressView(placeholder)
+                .progressViewStyle(CircularProgressViewStyle())
+                .padding()
+        }
     }
 }
 
