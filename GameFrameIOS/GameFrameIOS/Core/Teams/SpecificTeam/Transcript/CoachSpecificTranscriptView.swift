@@ -103,9 +103,9 @@ struct CoachSpecificTranscriptView: View {
                                 CommentSectionView(
                                     viewModel: commentViewModel,
                                     teamId: teamDocId,
-                                    keyMomentId: "keyMomentId",
+                                    keyMomentId: "\(recording.keyMomentId)",
                                     gameId: gameId,
-                                    transcriptId: "\(recording.id)"
+                                    transcriptId: "\(recording.transcriptId)"
                                 )
                             }.frame(maxHeight: .infinity, alignment: .bottom)
                         }
