@@ -7,20 +7,39 @@
 
 import SwiftUI
 
-/** This view handles the login process for players.
- It allows players to enter their credentials, toggle password visibility, and navigate to the account creation screen.
- Uses `CustomUIFields` for UI components and `AuthenticationModel` for authentication logic.
-*/
+/**
+ This view manages the login process for players.
+ It allows users to enter their credentials, toggle password visibility, and navigate to the account creation screen if needed.
+
+ The view utilizes:
+ - `CustomUIFields` for UI components.
+ - `AuthenticationModel` for handling authentication logic.
+
+ Additionally, it provides error handling and conditional navigation based on authentication results.
+ */
 struct PlayerLoginView: View {
-    // ViewModel for handling authentication logic
-    @StateObject private var viewModel = AuthenticationModel()
     
-    // Binding to determine if sign-in view should be shown
+    // MARK: - State Properties
+
+    /// ViewModel responsible for handling authentication logic.
+    @StateObject private var authModel = AuthenticationModel()
+
+    /// Binding to track whether the sign-in view should be displayed.
     @Binding var showSignInView: Bool
-    
-    // Local state for visibility toggle & alerts
+
+    /// Controls the visibility of the entered password.
     @State private var showPassword: Bool = false
+
+    /// Indicates whether an error message should be displayed to the user.
     @State private var showErrorMessage: Bool = false
+
+    /// Determines if the error alert should be shown.
+    @State private var showErrorAlert: Bool = false
+
+    /// Controls whether the user should be redirected to the sign-up screen due to login failure.
+    @State private var errorGoToSignUp: Bool = false
+
+    // MARK: - View
 
     var body: some View {
         NavigationView{
@@ -46,13 +65,13 @@ struct PlayerLoginView: View {
                     // Form Fields
                     VStack(spacing: 10) {
                         // Email Input Field
-                        CustomUIFields.customTextField("Email", text: $viewModel.email)
+                        CustomUIFields.customTextField("Email", text: $authModel.email)
                             .autocapitalization(.none)
                             .autocorrectionDisabled(true)
                             .keyboardType(.emailAddress) // Shows email-specific keyboard
 
                         // Password Field with Eye Toggle
-                        CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
+                        CustomUIFields.customPasswordField("Password", text: $authModel.password, showPassword: $showPassword)
                     }
                     .padding(.horizontal)
                     
@@ -61,7 +80,12 @@ struct PlayerLoginView: View {
                         
                         Task {
                             do {
-                                try await viewModel.signIn() // to sign up
+                                guard try await authModel.verifyEmailAddress() != nil else {
+                                    showErrorAlert.toggle()
+                                    return
+                                }
+
+                                try await authModel.signIn() // to sign up
                                 showSignInView = false
                                 return
                             } catch {
@@ -79,23 +103,44 @@ struct PlayerLoginView: View {
             .alert("Invalid credentials. Please try again.", isPresented: $showErrorMessage) {
                 Button(role: .cancel) {
                     // reset email and password
-                    viewModel.email = ""
-                    viewModel.password = ""
+                    authModel.email = ""
+                    authModel.password = ""
                 } label: {
                     Text("OK")
                 }
+            }
+            .alert("Account Not Found", isPresented: $showErrorAlert) {
+                Button(role: .cancel) {
+                    authModel.email = ""
+                    authModel.password = ""
+                    errorGoToSignUp = true
+                } label: {
+                    Text("Sign Up")
+                }
+                Button("OK") {
+                    authModel.email = ""
+                    authModel.password = ""
+                }
+            } message: {
+                Text("No account was found with this email. Please consider creating a new account.")
+            }
+            .navigationDestination(isPresented: $errorGoToSignUp) {
+                PlayerCreateAccountView(showSignInView: $showSignInView, viewModel: AuthenticationModel())
             }
         }
     }    
 }
 
+
+// MARK: - File extension
+
 extension PlayerLoginView: AuthenticationLoginProtocol {
     // Computed property to validate login credentials
     var loginIsValid: Bool {
-        return !viewModel.email.isEmpty // Ensure email is not empty
-        && viewModel.email.contains("@") // Check for a basic email format
-        && !viewModel.password.isEmpty // Ensure password is not empty
-        && viewModel.password.count > 5 // Enforce a minimum password length
+        return !authModel.email.isEmpty // Ensure email is not empty
+        && authModel.email.contains("@") // Check for a basic email format
+        && !authModel.password.isEmpty // Ensure password is not empty
+        && authModel.password.count > 5 // Enforce a minimum password length
     }
 }
 

@@ -32,23 +32,30 @@ import SwiftUI
 */
 struct PlayerCreateAccountView: View {
     
-    // Controls whether the sign-in view should be shown.
+    // MARK: - State Properties
+
+    /// Controls whether the sign-in view should be shown.
     @Binding var showSignInView: Bool
     
-    // ViewModel handling authentication logic.
+    /// ViewModel handling authentication logic.
     @StateObject var viewModel: AuthenticationModel
     
-    // State to track whether the user should navigate to the sign-up page.
+    /// State to track whether the user should navigate to the sign-up page.
     @State private var navigateToSignUp = false
     
-    // State to track whether the user should navigate to account creation.
+    /// State to track whether the user should navigate to account creation.
     @State private var navigateToCreateAccount = false
     
-    // State to open an alert if the user account already exists.
+    /// State to open an alert if the user account already exists.
     @State private var errorUserExists: Bool = false
     
-    // State to open an alert if the team access code is invalid.
+    /// State to open an alert if the team access code is invalid.
     @State private var errorAccessCodeInvalid: Bool = false
+
+    /// A boolean to control whether the user is redirected to login.
+    @State private var errorGoToLogin: Bool = false
+
+    // MARK: - View
 
     var body: some View {
         VStack(spacing: 20) {
@@ -108,7 +115,7 @@ struct PlayerCreateAccountView: View {
                                     navigateToSignUp.toggle()
                                     return
                                 } catch {
-                                    errorUserExists.toggle() // true
+                                    errorUserExists = true
                                     print("Error when verifying if the user id exists. \(error)")
                                 }
                             } catch {
@@ -131,12 +138,21 @@ struct PlayerCreateAccountView: View {
                             Text("OK")
                         }
                     }
-                    .alert("An account with that email address already exists. Please sign in.", isPresented: $errorUserExists){
+                    .alert("Account exists", isPresented: $errorUserExists){
                         Button(role: .cancel) {
                             viewModel.resetAccountFields()
+                            errorGoToLogin = true
                         } label: {
-                            Text("OK")
+                            Text("Login")
                         }
+                        Button("OK") {
+                            viewModel.resetAccountFields()
+                        }
+                    } message: {
+                        Text("An account with that email address already exists. Please sign in.")
+                    }
+                    .navigationDestination(isPresented: $errorGoToLogin) {
+                        PlayerLoginView(showSignInView: $showSignInView)
                     }
                 }
                 
@@ -151,6 +167,8 @@ struct PlayerCreateAccountView: View {
     }
 }
 
+
+// MARK: - Create Account validation
 
 /// Extension that conforms the PlayerCreateAccountView to the AuthenticationSignUpProtocol, which defines validation logic.
 extension PlayerCreateAccountView: AuthenticationSignUpProtocol {
@@ -172,6 +190,7 @@ extension PlayerCreateAccountView: AuthenticationSignUpProtocol {
         && !viewModel.lastName.isEmpty
     }
 }
+
 
 #Preview {
     PlayerCreateAccountView(showSignInView: .constant(false), viewModel: AuthenticationModel())

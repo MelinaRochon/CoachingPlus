@@ -155,7 +155,7 @@ final class AuthenticationModel: ObservableObject {
             throw TeamValidationError.invalidAccessCode
         }
         
-        self.teamId = team.teamId ?? ""
+        self.teamId = team.teamId
         return team
     }
     
@@ -183,7 +183,7 @@ final class AuthenticationModel: ObservableObject {
         // If the user ID exists, the process is aborted.
         guard user?.userId == nil else {
             print("A user and player exists with this userId.")
-            return
+            throw TeamValidationError.userExists
         }
     }
     

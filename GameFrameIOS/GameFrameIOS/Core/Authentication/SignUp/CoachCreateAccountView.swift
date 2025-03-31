@@ -23,6 +23,9 @@ struct CoachCreateAccountView: View {
     /// A boolean to control whether the error alert is shown.
     @State private var showErrorAlert: Bool = false
     
+    /// A boolean to control whether the user is redirected to Login.
+    @State private var errorGoToLogin: Bool = false
+    
     // MARK: - View
 
     var body: some View {
@@ -140,12 +143,21 @@ struct CoachCreateAccountView: View {
                     .opacity(signUpIsValid ? 1.0 : 0.5)
                     
                     Spacer()
-                }.alert("An account with that email address already exists. Please sign in.", isPresented: $showErrorAlert){
+                }.alert("Account exists", isPresented: $showErrorAlert){
                     Button(role: .cancel) {
                         viewModel.resetAccountFields()
+                        errorGoToLogin = true
                     } label: {
-                        Text("OK")
+                        Text("Login")
                     }
+                    Button("OK") {
+                        viewModel.resetAccountFields()
+                    }
+                } message: {
+                    Text("An account with that email address already exists. Please sign in.")
+                }
+                .navigationDestination(isPresented: $errorGoToLogin) {
+                    CoachLoginView(showSignInView: $showSignInView)
                 }
             }
         }
