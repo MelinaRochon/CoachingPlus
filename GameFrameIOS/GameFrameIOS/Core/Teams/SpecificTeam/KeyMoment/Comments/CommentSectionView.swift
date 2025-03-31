@@ -87,7 +87,7 @@ struct CommentSectionView: View {
             .padding(.horizontal)
         }
         .task {
-            await viewModel.loadComments(teamId: teamId, keyMomentId: keyMomentId)
+            await viewModel.loadCommentsForTranscript(teamId: teamId, transcriptId: transcriptId)
         }
     }
 }

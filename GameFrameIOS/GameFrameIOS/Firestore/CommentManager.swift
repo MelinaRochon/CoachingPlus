@@ -89,7 +89,7 @@ final class CommentManager {
     func getComment(teamId: String, commentDocId: String) async throws -> DBComment? {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("getComment: Could not find team id. Aborting")
             return nil
         }
         
@@ -100,7 +100,7 @@ final class CommentManager {
     func getAllComments(teamId: String) async throws -> [DBComment]? {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("getAllComments: Could not find team id. Aborting")
             return nil
         }
         
@@ -115,7 +115,7 @@ final class CommentManager {
     func getAllCommentsForSpecificKeyMomentId(teamId: String, keyMomentId: String) async throws -> [DBComment]? {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("getAllCommentsForSpecificKeyMomentId: Could not find team id. Aborting")
             return nil
         }
         
@@ -128,13 +128,8 @@ final class CommentManager {
     
     /** GET - Returns all comments that are associated to a specific transcript from the database */
     func getAllCommentsForSpecificTranscriptId(teamId: String, transcriptId: String) async throws -> [DBComment]? {
-        // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Abortingg")
-            return nil
-        }
         
-        let query = try await commentCollection(teamDocId: teamDocId).whereField("transcript_id", isEqualTo: transcriptId).getDocuments()
+        let query = try await commentCollection(teamDocId: teamId).whereField("transcript_id", isEqualTo: transcriptId).getDocuments()
         
         return query.documents.compactMap { document in
             try? document.data(as: DBComment.self)
@@ -165,7 +160,7 @@ final class CommentManager {
     func removeComment(teamId: String, commentId: String) async throws {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("removeComment: Could not find team id. Aborting")
             return
         }
         

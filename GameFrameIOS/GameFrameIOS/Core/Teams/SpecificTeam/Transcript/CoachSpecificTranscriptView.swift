@@ -114,6 +114,7 @@ struct CoachSpecificTranscriptView: View {
             }
             .task {
                 do {
+                    print("CoachSpecificTranscript, teamDocId: \(teamDocId)")
                     try await transcriptViewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
                     let feedbackFor = recording!.feedbackFor ?? []
                     
