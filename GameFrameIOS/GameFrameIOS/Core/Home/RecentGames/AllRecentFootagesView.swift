@@ -1,5 +1,5 @@
 //
-//  CoachAllRecentFootageView.swift
+//  AllRecentFootageView.swift
 //  GameFrameIOS
 //
 //  Created by Mélina Rochon on 2025-02-11.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /**
- `CoachAllRecentFootageView` displays all previously recorded game footage.
+ `AllRecentFootageView` displays all previously recorded game footage for coaches.
 
  ## Features:
  - Lists past games that have recorded footage.
@@ -21,7 +21,7 @@ import SwiftUI
  - Typing in the search bar filters the list of past games.
  - Selecting a game opens its details, including recorded video previews.
  */
-struct CoachAllRecentFootageView: View {
+struct AllRecentFootageView: View {
     
     // MARK: - State Properties
 
@@ -34,6 +34,9 @@ struct CoachAllRecentFootageView: View {
     /// Determines whether to show an error message when no recorded games are available.
     @State private var showNoGamesError: Bool = false
 
+    /// Stores the type of user (e.g., "Coach", "Player"), fetched dynamically.
+    @State var userType: String
+
     // MARK: - View
 
     var body: some View {
@@ -42,7 +45,7 @@ struct CoachAllRecentFootageView: View {
                 Section {
                     if !pastGames.isEmpty {
                         ForEach(pastGames, id: \.game.gameId) { pastGame in
-                            NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame)) {
+                            NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame, userType: userType)) {
                                 HStack {
                                     CustomUIFields.gameVideoPreviewStyle()
                                     
@@ -67,5 +70,5 @@ struct CoachAllRecentFootageView: View {
 }
 
 #Preview {
-    CoachAllRecentFootageView(pastGames: [])
+    AllRecentFootageView(pastGames: [], userType: "Player")
 }

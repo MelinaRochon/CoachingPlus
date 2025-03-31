@@ -68,7 +68,7 @@ struct SelectedScheduledGameView: View {
     @State var selectedGame: HomeGameDTO?
     
     /// Stores the type of user (e.g., "Coach", "Player"), fetched dynamically.
-    @State private var userType: String? = nil
+    @State var userType: String? = nil
     
     // MARK: - View
 
@@ -173,26 +173,24 @@ struct SelectedScheduledGameView: View {
         }
         .task {
             do {
-                self.userType = try await userModel.getUserType()
-//                try await selecGameViewModel.getSelectedGameInfo(gameId: gameId, teamDocId: teamDocId)
-//                try await selecGameViewModel.getUserType()
-                if let selectedGame = selectedGame {
-                    // Get the duration to be shown
-                    let (dhours, dminutes) = convertSecondsToHoursMinutes(seconds: selectedGame.game.duration)
-                    self.hours = dhours
-                    self.minutes = dminutes
-                    self.recordReminder = selectedGame.game.recordingReminder
-                    
-                    // Check if game starts within the next 10 minutes or is ongoing
-                    if let startTime = selectedGame.game.startTime {
-                        let currentTime = Date()
-                        let timeDifference = startTime.timeIntervalSince(currentTime)
-                        let gameEndTime = startTime.addingTimeInterval(TimeInterval(selectedGame.game.duration))
-                        self.canStartRecording = (Int(timeDifference) <= minsToStartGame*60 && timeDifference >= 0) || (currentTime <= gameEndTime && currentTime >= startTime)
-                        print(canStartRecording)
+                if userType == "Coach" {
+                    if let selectedGame = selectedGame {
+                        // Get the duration to be shown
+                        let (dhours, dminutes) = convertSecondsToHoursMinutes(seconds: selectedGame.game.duration)
+                        self.hours = dhours
+                        self.minutes = dminutes
+                        self.recordReminder = selectedGame.game.recordingReminder
+                        
+                        // Check if game starts within the next 10 minutes or is ongoing
+                        if let startTime = selectedGame.game.startTime {
+                            let currentTime = Date()
+                            let timeDifference = startTime.timeIntervalSince(currentTime)
+                            let gameEndTime = startTime.addingTimeInterval(TimeInterval(selectedGame.game.duration))
+                            self.canStartRecording = (Int(timeDifference) <= minsToStartGame*60 && timeDifference >= 0) || (currentTime <= gameEndTime && currentTime >= startTime)
+                            print(canStartRecording)
+                        }
                     }
                 }
-                
             } catch {
                 print("ERROR. \(error)")
             }

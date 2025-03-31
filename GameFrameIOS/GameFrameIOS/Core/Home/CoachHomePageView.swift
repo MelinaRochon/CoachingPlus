@@ -45,7 +45,7 @@ struct CoachHomePageView: View {
                         // Scheduled Games Sectio
                         VStack(alignment: .leading, spacing: 10) {
                             // Navigation link to view all scheduled games
-                            NavigationLink(destination: CoachAllScheduledGamesView(futureGames: futureGames)) {
+                            NavigationLink(destination: AllScheduledGamesView(futureGames: futureGames, userType: "Coach")) {
                                 Text("Scheduled Games")
                                     .font(.headline)
                                     .foregroundColor(futureGamesFound ? .blue : .secondary)
@@ -61,7 +61,7 @@ struct CoachHomePageView: View {
                                 // Loop through games and show a preview of the next 3 games only
                                 ForEach(futureGames.prefix(3), id: \.game.gameId) { scheduledGame in
                                     HStack(alignment: .top) {
-                                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: scheduledGame)
+                                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: scheduledGame, userType: "Coach")
                                         ) {
                                             VStack {
                                                 Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
@@ -83,7 +83,7 @@ struct CoachHomePageView: View {
                         // Recent Footage Section
                         VStack(alignment: .leading, spacing: 10) {
                             // Navigation link to view all recent games
-                            NavigationLink(destination: CoachAllRecentFootageView(pastGames: pastGames)) {
+                            NavigationLink(destination: AllRecentFootageView(pastGames: pastGames, userType: "Coach")) {
                                 HStack {
                                     Text("Recent Games")
                                         .font(.headline)
@@ -99,7 +99,7 @@ struct CoachHomePageView: View {
                             // Display preview of recent games
                             if !pastGames.isEmpty {
                                 ForEach(pastGames.prefix(3), id: \.game.gameId) { pastGame in
-                                    NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame)) {
+                                    NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame, userType: "Coach")) {
                                         HStack {
                                             CustomUIFields.gameVideoPreviewStyle()
                                             

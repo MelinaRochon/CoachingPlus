@@ -1,5 +1,5 @@
 //
-//  CoachAllScheduledGamesView.swift
+//  AllScheduledGamesView.swift
 //  GameFrameIOS
 //
 //  Created by Mélina Rochon on 2025-02-11.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /**
- `CoachAllScheduledGamesView` displays all scheduled games added by the coach.
+ `AllScheduledGamesView` displays all scheduled games added by the coach.
 
  ## Features:
  - Lists all upcoming scheduled games.
@@ -22,7 +22,7 @@ import SwiftUI
  - Typing in the search bar filters the list of games.
  - Clicking on a game navigates to a detailed game view.
  */
-struct CoachAllScheduledGamesView: View {
+struct AllScheduledGamesView: View {
     
     // MARK: - State Properties
 
@@ -32,6 +32,9 @@ struct CoachAllScheduledGamesView: View {
     /// Holds the list of future scheduled games retrieved from the database.
     @State var futureGames: [HomeGameDTO] = []
     
+    /// Stores the type of user (e.g., "Coach", "Player"), fetched dynamically.
+    @State var userType: String
+
     // MARK: - View
 
     var body: some View {
@@ -39,11 +42,10 @@ struct CoachAllScheduledGamesView: View {
             List  {
                 Section {
                     // Scheduled Games Section
-                    
                     if !futureGames.isEmpty {
                         // Show all the scheduled Games
                         ForEach(futureGames, id: \.game.gameId) { futureGame in
-                            NavigationLink(destination: SelectedScheduledGameView(selectedGame: futureGame)) {
+                            NavigationLink(destination: SelectedScheduledGameView(selectedGame: futureGame, userType: userType)) {
                                 HStack {
                                     VStack {
                                         Text(futureGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
@@ -66,5 +68,5 @@ struct CoachAllScheduledGamesView: View {
 }
 
 #Preview {
-    CoachAllScheduledGamesView(futureGames: [])
+    AllScheduledGamesView(futureGames: [], userType: "Coach")
 }

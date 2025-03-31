@@ -39,6 +39,8 @@ struct SelectedRecentGameView: View {
     /// Stores the selected minutes for a time-related input (e.g., recording duration)
     @State private var minutes: Int = 0
     
+    @State var userType: String
+    
     // MARK: - View
 
     var body: some View {
@@ -103,14 +105,15 @@ struct SelectedRecentGameView: View {
                         
                         if !canStartRecording {
                             VStack {
-                                NavigationLink(destination: CoachSpecificFootageView(gameId: selectedGame.game.gameId, teamDocId: selectedGame.team.id)) {
-                                    HStack {
-                                        Text("View Game Footage").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline).foregroundColor(.red)
-                                        Spacer()
-                                        Image(systemName: "chevron.right").foregroundColor(.red)
+                                if userType == "Coach" {
+                                    NavigationLink(destination: CoachSpecificFootageView(gameId: selectedGame.game.gameId, teamDocId: selectedGame.team.id)) {
+                                        navigationLabel()
                                     }
-                                    .padding()
-                                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
+
+                                } else {
+                                    NavigationLink(destination: PlayerSpecificFootageView(gameId: selectedGame.game.gameId, teamDocId: selectedGame.team.id)) {
+                                        navigationLabel()
+                                    }
                                 }
                             }.padding(.horizontal).padding(.top)
                         }
@@ -207,12 +210,26 @@ struct SelectedRecentGameView: View {
             }
         }
     }
+    
+    
+    /// Creates a custom navigation label with text and an arrow icon for navigation.
+    /// - Returns: A `HStack` containing a text label and a right arrow icon, styled with padding, background, and shadow.
+    private func navigationLabel() -> some View {
+        HStack {
+            Text("View Game Footage").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline).foregroundColor(.red)
+            Spacer()
+            Image(systemName: "chevron.right").foregroundColor(.red)
+        }
+        .padding()
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
+    }
 }
+
 
 #Preview {
     // For testing purpose
     let date: Date = Date(timeIntervalSince1970: 150000)
     let game = HomeGameDTO(game: DBGame(gameId: "2oKD1iyUYXTFeWjelDz8", title: "Test vs Done", duration: 1400, scheduledTimeReminder: 10, startTime: date, timeBeforeFeedback: 10, timeAfterFeedback: 10, recordingReminder: true, teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7"),
                            team: DBTeam(id: "6mpZlv7mGho5XaBN8Xcs", teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7", name: "Hornets", teamNickname: "HORNET", sport: "Soccer", gender: "Female", ageGrp: "U15", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"]))
-    SelectedRecentGameView(selectedGame: game)
+    SelectedRecentGameView(selectedGame: game, userType: "Player")
 }
