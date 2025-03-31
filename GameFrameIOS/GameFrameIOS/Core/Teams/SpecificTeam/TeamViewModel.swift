@@ -5,16 +5,9 @@
 //  Created by Mélina Rochon on 2025-03-19.
 //
 
-struct User_Status {
-//    let userId: String
-    let firstName: String
-    let lastName: String
-    let status: String
-    let playerDocId: String
-    let userDocId: String
-}
 
 import Foundation
+
 @MainActor
 final class TeamViewModel: ObservableObject {
     

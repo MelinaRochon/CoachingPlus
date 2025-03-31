@@ -64,7 +64,22 @@ struct CoachAllKeyMomentsView: View {
                     
                 }// Show filters
                 .sheet(isPresented: $showFilterSelector, content: {
-                    FilterTranscriptsListView().presentationDetents([.medium])
+                    NavigationStack {
+                        FilterTranscriptsListView()
+                            .presentationDetents([.medium])
+                            .toolbar {
+                                ToolbarItem {
+                                    Button (action: {
+                                        showFilterSelector = false // Close the filter options
+                                    }) {
+                                        Text("Done")
+                                    }
+                                }
+                            }
+                            .navigationTitle("Filter Options")
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                        
                 })
             }
             

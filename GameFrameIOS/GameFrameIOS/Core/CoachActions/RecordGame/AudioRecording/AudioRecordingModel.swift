@@ -4,9 +4,9 @@
 //
 //  Created by Mélina Rochon on 2025-03-23.
 //
-
+ 
 import Foundation
-
+ 
 struct keyMomentTranscript {
     let id: Int
     let keyMomentId: String // referenced key moment
@@ -16,7 +16,7 @@ struct keyMomentTranscript {
     let frameEnd: Date // transcription end
     let feedbackFor: [PlayerTranscriptInfo]?
 }
-
+ 
 struct PlayerTranscriptInfo {
     let playerId: String
     let firstName: String
@@ -24,10 +24,12 @@ struct PlayerTranscriptInfo {
     let nickname: String?
     let jersey: Int
 }
-
-/** The audio recording view model links the AudioRecordingView to the KeyMomentManager and the TranscriptManager. */
+ 
+/***
+The audio recording view model links the AudioRecordingView to the KeyMomentManager and the TranscriptManager.
+*/
 @MainActor
-final class AudioRecordingViewModel: ObservableObject {
+final class AudioRecordingModel: ObservableObject {
     @Published var recordings: [keyMomentTranscript] = [];
     @Published var teamId: String = ""
     @Published var gameId: String = ""
@@ -35,77 +37,81 @@ final class AudioRecordingViewModel: ObservableObject {
     
     /** Adds a new recording - adds a new keyMoment and transcript in the database. Update the recordings array */
     func addRecording(recordingStart: Date, recordingEnd: Date, transcription: String, feedbackFor: PlayerTranscriptInfo?) async throws {
-        do {
-            // Get the id of the authenticated user (coach)
-            let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-            
-            // Add a new key moment to the database
-            let fbFor: [String] = feedbackFor.map { [$0.playerId] } ?? []
-            
-            // Add a new key moment object
-            let keyMomentDTO = KeyMomentDTO(fullGameId: nil, gameId: gameId, uploadedBy: authUser.uid, audioUrl: nil, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: fbFor)
-            
-            // Add a new key moment to the database
-            let keyMomentDocId = try await KeyMomentManager.shared.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)
-            if keyMomentDocId == nil {
-                print("Error. The key moment doc id is nil.")
-                return
-            }
-            
-            // Add a new transcript to the database
-            let confidence: Int = 5 // Should be from 1 to 5 where 1 is the lowest and 5 is most confident
-            
-            // Add a new tranacript object
-            let transcriptDTO = TranscriptDTO(keyMomentId: keyMomentDocId!, transcript: transcription, language: "English", generatedBy: authUser.uid, confidence: confidence, gameId: gameId)
-            
-            // Add a new transcript to the database
-            guard let transcriptDocId = try await TranscriptManager.shared.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
-                print("Error: the transcript doc ID is nil.")
-                return
-            }
-            
-            var feedbackForArray: [PlayerTranscriptInfo] = []
-//        if feedbackFor == "none" {
-//            feedbackForArray = []
-//        } else if feedbackFor == "all" {
-//            if let playersInTeam = players {
-//                feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
-//            }
-//        } else {
-//            if let playersInTeam = players {
-//                let p = playersInTeam.first(where: { $0.playerId == feedbackFor })
-//                feedbackForArray.append(p!)
-//            }
-//        }
-            
-            if let feedback = feedbackFor {
-                print("append feedback")
-                feedbackForArray.append(feedback)
+            do {
+                // Get the id of the authenticated user (coach)
+                let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+                // Add a new key moment to the database
+                let fbFor: [String] = feedbackFor.map { [$0.playerId] } ?? []
+                // Add a new key moment object
+                let keyMomentDTO = KeyMomentDTO(fullGameId: nil, gameId: gameId, uploadedBy: authUser.uid, audioUrl: nil, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: fbFor)
+                // Add a new key moment to the database
+                let keyMomentDocId = try await KeyMomentManager.shared.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)
+                guard let safeKeyMomentId = keyMomentDocId else {
+                    print("Error: The key moment doc ID is nil. Aborting.")
+                    return
+                }
                 
-                // Add a new recording to the array
-                let recordingsLength = self.recordings.count
-                let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: keyMomentDocId!, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
-
-                self.recordings.append(newRecording)
-            } else {
-                print("no feedback")
+                // Add a new transcript to the database
+                let confidence: Int = 5 // Should be from 1 to 5 where 1 is the lowest and 5 is most confident
+                // Add a new tranacript object
+                let transcriptDTO = TranscriptDTO(keyMomentId: keyMomentDocId!, transcript: transcription, language: "English", generatedBy: authUser.uid, confidence: confidence, gameId: gameId)
+                // Add a new transcript to the database
+                guard let transcriptDocId = try await TranscriptManager.shared.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
+                    print("Error: the transcript doc ID is nil.")
+                    return
+                }
+                var feedbackForArray: [PlayerTranscriptInfo] = []
+                /** Following code will be used in a future feature - adapting the feedback to multiple people */
+                /********
+                 if feedbackFor == "none" {
+                 feedbackForArray = []
+                 } else if feedbackFor == "all" {
+                 if let playersInTeam = players {
+                 feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
+                 }
+                 } else {
+                 if let playersInTeam = players {
+                 let p = playersInTeam.first(where: { $0.playerId == feedbackFor })
+                 feedbackForArray.append(p!)
+                 }
+                 }
+                 **/
+                if let feedback = feedbackFor {
+                    print("append feedback")
+                    feedbackForArray.append(feedback)
+                    // Add a new recording to the array
+                    let recordingsLength = self.recordings.count
+                    let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: safeKeyMomentId, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
+                    self.recordings.append(newRecording)
+                } else {
+                    // if there are players on the team, then associate to each one of them
+                    if let playersInTeam = players {
+                        print("append all players")
+                        feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
+                        let recordingsLength = self.recordings.count
+                        // Add a new recording to the array
+                        let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: safeKeyMomentId, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
+                        self.recordings.append(newRecording)
+                    } else {
+                        print("no feedback")
+                    }
+                }
+            } catch {
+                print("Error when adding a new recording to the database. ")
+                return
             }
-        } catch {
-            print("Error when adding a new recording to the database. ")
-            return
         }
-    }
     
     /** Add a unkown game to the database */
     func addUnknownGame(teamId: String) async throws -> String? {
         // Add game to the database
         return try await GameManager.shared.addNewUnkownGame(teamId: teamId)
     }
-
+    
     /** Load all recordings to the AudioRecordingView */
     func loadAllRecordings() async throws {
         do {
-                        
+            
             // Get all the transcripts from the database
             guard let transcripts = try await TranscriptManager.shared.getAllTranscripts(teamId: teamId, gameId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
@@ -154,7 +160,7 @@ final class AudioRecordingViewModel: ObservableObject {
         }
         
         let endTime = Date() // get the end time of the game
-            
+        
         if let startTime = game.startTime {
             // Get the duration of the game in seconds
             let duration = endTime.timeIntervalSince(startTime)

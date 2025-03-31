@@ -10,81 +10,95 @@ import Foundation
 import SwiftUI
 
 /***
- This structure is the 'Coach Recording Configuration' form. It allows the coach to configure recording settings before starting a session.
- The coach can select a team, choose the recording type, and enable Apple Watch recording.
+ A view that allows a coach to configure recording settings before starting a session.
  
- Note: The form is designed to ensure a team is selected before proceeding.
+ ### Features:
+ - Select a team from a list.
+ - Choose between video or audio recording.
+ - Optionally enable Apple Watch for recording.
+ - Ensures that a team is selected before proceeding.
+ 
+ This form ensures that the necessary configurations are made before launching the recording process.
  */
 struct CoachRecordingConfigView: View {
-    @Environment(\.dismiss) var dismiss // To go back to the main tab view
-    @StateObject private var teamsViewModel = AllTeamsViewModel()
+    // Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
     
-    @State private var selectedTeamId: String? = nil
-    @State private var selectedRecordingTypeLabel: String = "Video"
-    @State private var selectedAppleWatchUseLabel: Bool = false
-    @State private var gameId: String? = nil
-    let recordingOptions = ["Video", "Audio Only"]
+    // ViewModel to manage the list of teams
+    @StateObject private var teamsViewModel = AllTeamsViewModel() // Fetches the list of teams
+    
+    // State variables for managing user selections and app state
+    @State private var selectedTeamId: String? = nil // Holds the selected team ID
+    @State private var selectedRecordingTypeLabel: String = "Video" // Default recording type is Video
+    @State private var selectedAppleWatchUseLabel: Bool = false // Indicates if Apple Watch recording is enabled
+    @State private var showNoTeamsAlert = false  // State to manage alert visibility
+    @State private var navigateToCreateTeam = false // State variable for navigation
     
     var body: some View {
         NavigationView {
             VStack {
-                VStack {
-                    Form {
-                        Section(header: Text("Recording Settings")) {
-                            Picker("Select Team", selection: $selectedTeamId) {
-                                ForEach(teamsViewModel.teams, id: \.teamId) { team in
-                                    HStack {
-                                        Image(systemName: selectedTeamId == team.teamId ? "checkmark.circle.fill" : "tshirt")
-                                            .foregroundColor(selectedTeamId == team.teamId ? .blue : .gray)
-                                        Text(team.name).padding(.leading, 5)
-                                    }
-                                    .tag(team.teamId as String?)
-                                }
-                            }
-                            
-                            Picker("Recording Type", selection: $selectedRecordingTypeLabel) {
-                                ForEach(recordingOptions, id: \ .self) { option in
-                                    Text(option)
-                                }
-                            }
-                            .pickerStyle(SegmentedPickerStyle())
-                            
-                            Toggle("Use Apple Watch for Recording", isOn: $selectedAppleWatchUseLabel)
-                        }
+                Form {
+                    // Recording Settings Section
+                    Section(header: Text("Recording Settings")) {
+                        // Team Selection Picker
+                        CustomPicker(
+                            title: "Select Team",
+                            options: teamsViewModel.teams.compactMap { $0.teamId },
+                            displayText: { teamId in
+                                // Display the team name corresponding to the selected team ID
+                                teamsViewModel.teams.first(where: { $0.teamId == teamId })?.name ?? "Unknown Team"
+                            },
+                            selectedOption: Binding(
+                                get: { selectedTeamId ?? (teamsViewModel.teams.first?.teamId ?? "") }, // Default to the first team
+                                set: { selectedTeamId = $0 } // Update the selected team ID
+                            )
+                        )
+                        
+                        // Recording Type Picker (Video or Audio)
+                        CustomPicker(
+                            title: "Recording Typess",
+                            options: AppData.recordingOptions, // List of recording options (e.g., "Video", "Audio Only")
+                            displayText: { $0 }, // Display text for each option (directly using the string)
+                            selectedOption: $selectedRecordingTypeLabel
+                        ).pickerStyle(SegmentedPickerStyle())
+                        
+                        // Apple Watch Recording Toggle
+                        Toggle("Use Apple Watch for Recording", isOn: $selectedAppleWatchUseLabel)
                     }
-                    .navigationTitle("Start a Recording")
-                    .navigationBarTitleDisplayMode(.inline)
-                    if selectedRecordingTypeLabel == "Video" {
-                        NavigationLink(destination: CoachRecordingView()) {
-                            Text("Start Video Recording")
-                                .font(.title2)
-                                .bold()
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(selectedTeamId != nil ? Color.red : Color.gray)
-                                .cornerRadius(12)
-                                .padding(.horizontal)
-                        }.disabled(selectedTeamId == nil)
-                    } else {
-                        NavigationLink(destination: AudioRecordingView(teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
-                            Text("Start Audio Recording")
-                                .font(.title2)
-                                .bold()
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(selectedTeamId != nil ? Color.red : Color.gray)
-                                .cornerRadius(12)
-                                .padding(.horizontal)
-                        }.disabled(selectedTeamId == nil)
-                    }
-                    Spacer()
+                }
+                .navigationTitle("Start a Recording")
+                .navigationBarTitleDisplayMode(.inline)
+                
+                // Button to start the recording (Video or Audio)
+                if selectedRecordingTypeLabel == "Video" {
+                    NavigationLink(destination: CoachRecordingView()) {
+                        
+                        // Custom Styled 'Start Video Recording' button
+                        CustomUIFields.styledHStack(content: {
+                            Text("Start Video Recording").font(.title2).bold()
+                        }, background: selectedTeamId != nil ? .red : .gray)
+                        
+                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
+                } else {
+                    NavigationLink(destination: AudioRecordingView(teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
+                        
+                        // Custom Styled 'Start Audio Recording' button
+                        CustomUIFields.styledHStack(content: {
+                            Text("Start Audio Recording").font(.title2).bold()
+                        }, background: selectedTeamId != nil ? .red : .gray)
+                        
+                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
+                }
+                Spacer()
+                
+                NavigationLink(destination: CoachMainTabView(showLandingPageView: .constant(false)), isActive: $navigateToCreateTeam) {
+                    EmptyView()
                 }
             }.toolbar {
+                // Cancel Button (Top Left)
                 ToolbarItem(placement: .topBarLeading) { // Back button on the top left
                     Button(action: {
-                        dismiss() // Dismiss the full-screen cover
+                        dismiss() // Dismiss the view
                     }) {
                         HStack {
                             Text("Cancel")
@@ -92,12 +106,23 @@ struct CoachRecordingConfigView: View {
                     }
                 }
             }
+            .alert("A team must be added first to add a new game.", isPresented: $showNoTeamsAlert) {
+                Button(role: .cancel) {
+                    navigateToCreateTeam = true // Trigger navigation after alert
+                } label: {
+                    Text("OK")
+                }
+            }
             .task {
+                // Load Teams on View Appear
                 if selectedTeamId == nil {
                     do {
                         try await teamsViewModel.loadAllTeams()
                         if let firstTeam = teamsViewModel.teams.first {
                             selectedTeamId = firstTeam.teamId
+                        } else {
+                            // No teams
+                            showNoTeamsAlert = true
                         }
                     } catch {
                         print("Error when loading the team information for the coachRecordingconfigView \(error)")

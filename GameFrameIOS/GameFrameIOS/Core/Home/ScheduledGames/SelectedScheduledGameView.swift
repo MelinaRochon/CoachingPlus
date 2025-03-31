@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SelectedScheduledGameView: View {
     @StateObject private var selecGameViewModel = SelectedGameModel()
-    @StateObject private var recordingViewModel = AddNewFGVideoRecordingModel()
+    @StateObject private var recordingViewModel = FGVideoRecordingModel()
     
     @State var gameId: String // scheduled game id is passed when this view is called
     @State var teamDocId: String // scheduled game id is passed when this view is called
@@ -21,11 +21,11 @@ struct SelectedScheduledGameView: View {
     @State private var navigateToRecordingView = false // Track navigation state
     @State private var minsToStartGame: Int = 10; // How many minutes before a scheduled game can a coach start a recording
     @State private var selectedRecordingType: String = "Video" // Default selection
-        
+    
     var recordingOptions = [
-            ("Video", "video.fill"),
-            ("Audio Only", "waveform")
-        ] // Dropdown choices with icons
+        ("Video", "video.fill"),
+        ("Audio Only", "waveform")
+    ] // Dropdown choices with icons
     
     var body: some View {
         NavigationView {
@@ -45,7 +45,7 @@ struct SelectedScheduledGameView: View {
                         
                         HStack {
                             Image(systemName: "calendar.badge.clock").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
-                            Text(selectedGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(formatStartTime(selectedGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                         }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
                         
                         HStack (alignment: .center) {
@@ -152,71 +152,64 @@ struct SelectedScheduledGameView: View {
             }
         }
         .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        if canStartRecording {
-                            Menu {
-                                ForEach(recordingOptions, id: \ .0) { option, icon in
-                                    Button(action: {
-                                        selectedRecordingType = option
-                                        if selectedRecordingType == "Video" {
-                                            startRecording()
-                                        }
-                                        navigateToRecordingView = true
-                                    }) {
-                                        Label(option, systemImage: icon)
-                                    }
+            ToolbarItem(placement: .topBarTrailing) {
+                if canStartRecording {
+                    Menu {
+                        ForEach(recordingOptions, id: \ .0) { option, icon in
+                            Button(action: {
+                                selectedRecordingType = option
+                                if selectedRecordingType == "Video" {
+                                    startRecording()
                                 }
-                            } label: {
-                                HStack {
-                                    Text("Start").font(.subheadline)
-                                    Image(systemName: "waveform")
-                                        .resizable()
-                                        .frame(width: 15, height: 15)
-                                }
-                                .foregroundColor(.white)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background(Color.green)
-                                .cornerRadius(25)
+                                navigateToRecordingView = true
+                            }) {
+                                Label(option, systemImage: icon)
                             }
                         }
-                    }
-                }
-                .navigationDestination(isPresented: $navigateToRecordingView) {
-                    CoachRecordingView().navigationBarBackButtonHidden(true)
-                }
-            }
-            
-            /// Function to start recording based on selection
-            private func startRecording() {
-                guard let selectedGame = selecGameViewModel.selectedGame else {
-                    print("ERROR: No selected game available")
-                    return
-                }
-                
-                let gameId = selectedGame.game.gameId
-                let teamId = selectedGame.team.teamId
-
-                Task {
-                    do {
-                        print("Starting \(selectedRecordingType) recording for Game ID: \(gameId), Team ID: \(teamId)")
-
-                        recordingViewModel.gameId = gameId
-                        try await recordingViewModel.createFGRecording(teamId: teamId)
-
-                        print("Recording successfully created in the database.")
-
-                    } catch {
-                        print("Error Creating Recording: \(error.localizedDescription)")
+                    } label: {
+                        HStack {
+                            Text("Start").font(.subheadline)
+                            Image(systemName: "waveform")
+                                .resizable()
+                                .frame(width: 15, height: 15)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(Color.green)
+                        .cornerRadius(25)
                     }
                 }
             }
-
+        }
+        .navigationDestination(isPresented: $navigateToRecordingView) {
+            CoachRecordingView().navigationBarBackButtonHidden(true)
+        }
+    }
     
-    func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        return (hours, minutes)
+    /** Function to start recording based on selection */
+    private func startRecording() {
+        guard let selectedGame = selecGameViewModel.selectedGame else {
+            print("ERROR: No selected game available")
+            return
+        }
+        
+        let gameId = selectedGame.game.gameId
+        let teamId = selectedGame.team.teamId
+        
+        Task {
+            do {
+                print("Starting \(selectedRecordingType) recording for Game ID: \(gameId), Team ID: \(teamId)")
+                
+                recordingViewModel.gameId = gameId
+                try await recordingViewModel.createFGRecording(teamId: teamId)
+                
+                print("Recording successfully created in the database.")
+                
+            } catch {
+                print("Error Creating Recording: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

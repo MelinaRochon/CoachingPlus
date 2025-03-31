@@ -127,7 +127,6 @@ struct CoachPlayerProfileView: View {
                                         Spacer()
                                         Text(guardianName).foregroundStyle(.secondary)
                                     }
-                                    //                                    .disabled(true)
                                 }
                                 
                                 if guardianEmail != "" {
@@ -136,7 +135,6 @@ struct CoachPlayerProfileView: View {
                                         Spacer()
                                         Text(guardianEmail).foregroundStyle(.secondary)
                                     }
-                                    //                                    .disabled(true)
                                 }
                                 
                                 if guardianPhone != "" {
@@ -145,10 +143,7 @@ struct CoachPlayerProfileView: View {
                                         Spacer()
                                         Text(guardianPhone).foregroundStyle(.secondary)
                                     }
-                                    //.disabled(true)
                                 }
-                                
-                                
                             }
                         }
                         

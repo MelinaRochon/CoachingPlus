@@ -1,5 +1,5 @@
 //
-//  RecentFootageViewModel.swift
+//  RecentFootageModel.swift
 //  GameFrameIOS
 //
 //  Created by Mélina Rochon on 2025-03-11.
@@ -8,7 +8,7 @@
 import Foundation
 
 @MainActor
-final class RecentFootageViewModel: ObservableObject {
+final class RecentFootageModel: ObservableObject {
     @Published var pastGames: [HomeGameDTO] = []
     
     /** GET - Fetch all the recent games from the database in the last 30 days */

@@ -36,7 +36,7 @@ final class AllTeamsViewModel: ObservableObject {
             teams = try await PlayerManager.shared.getTeamsEnrolled(playerId: authUser.uid)
         }
     }
-    
+     
     func validateAccessCode(accessCode: String) async throws {
         // Get the user id
         let authUser = try await AuthenticationManager.shared.getAuthenticatedUser()

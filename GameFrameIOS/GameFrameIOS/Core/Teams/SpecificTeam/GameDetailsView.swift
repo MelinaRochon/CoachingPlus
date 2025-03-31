@@ -35,7 +35,7 @@ struct GameDetailsView: View {
                         
                         HStack {
                             Image(systemName: "calendar.badge.clock").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
-                            Text(selectedGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(formatStartTime(selectedGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                         }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
                         
                         HStack (alignment: .center) {
@@ -142,14 +142,6 @@ struct GameDetailsView: View {
                 print("ERROR. \(error)")
             }
         }
-        
-        
-    }
-    
-    func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        return (hours, minutes)
     }
 }
 

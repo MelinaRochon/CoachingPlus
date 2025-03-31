@@ -41,7 +41,7 @@ struct CoachHomePageView: View {
                                                     Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                                     
                                                     Text(scheduledGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                                    Text(scheduledGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                    Text(formatStartTime(scheduledGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                                     
                                                     Divider().background(content: { Color.gray.opacity(0.3) })
                                                 }
@@ -88,8 +88,7 @@ struct CoachHomePageView: View {
                                             VStack {
                                                 Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black)
                                                 Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black)
-                                                Text(pastGame.game.startTime?.formatted(.dateTime.year().month().day()) ?? Date().formatted(.dateTime.year().month().day())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black)
-                                                //Divider().background(content: { Color.gray.opacity(0.3) })
+                                                Text(formatStartTime(pastGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black)
                                             }
                                         }
                                     }

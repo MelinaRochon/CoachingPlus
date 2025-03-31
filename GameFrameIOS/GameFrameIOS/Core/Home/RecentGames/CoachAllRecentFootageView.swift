@@ -10,7 +10,7 @@ import SwiftUI
 /** Shows all the recent footage saved. User can search for specific footages using the search bar */
 struct CoachAllRecentFootageView: View {
     @State private var searchText: String = ""
-    @StateObject private var viewModel = RecentFootageViewModel()
+    @StateObject private var viewModel = RecentFootageModel()
     
     var body: some View {
         NavigationView {
@@ -27,7 +27,7 @@ struct CoachAllRecentFootageView: View {
                                 VStack {
                                     Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                     Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    Text(pastGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                    Text( formatStartTime(pastGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                 }
                             }
                         }

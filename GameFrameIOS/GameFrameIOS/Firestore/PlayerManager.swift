@@ -15,7 +15,7 @@ struct DBPlayer: Codable {
     var nickName: String?
     let gender: String?
     let profilePicture: String?
-    let teamsEnrolled: [String] // TO DO - Think about leaving it as it is or putting it as optional
+    let teamsEnrolled: [String] // TODO: Think about leaving it as it is or putting it as optional
     
     
     // Guardian information - optional

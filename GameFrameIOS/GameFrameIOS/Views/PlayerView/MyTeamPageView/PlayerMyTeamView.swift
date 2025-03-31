@@ -60,7 +60,7 @@ struct PlayerMyTeamView: View {
                                     VStack {
                                         Text(game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                         
-                                        Text(game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                        Text(formatStartTime(game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                         if let startTime = game.startTime {
                                             let gameEndTime = startTime.addingTimeInterval(TimeInterval(game.duration))
                                             if gameEndTime > Date() {

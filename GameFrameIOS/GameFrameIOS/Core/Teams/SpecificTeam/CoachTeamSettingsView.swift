@@ -7,18 +7,26 @@
 
 import SwiftUI
 
+/// A view that allows the coach to view and manage the settings of a specific team.
 struct CoachTeamSettingsView: View {
-    @StateObject private var viewModel = TeamViewModel()
-    @State var teamId: String // The ID of the team being viewed
+    /// The model for managing team data, passed as an observed object to track changes.
+    @ObservedObject var teamModel: TeamModel
+    
+    /// Temporary storage for the list of players associated with the team.
+    @State var players: [User_Status] = []
+    
+    /// Environment value to dismiss the current view and return to the previous one.
     @Environment(\.dismiss) var dismiss // Allows the user to go back
 
+    /// State to track whether the "Copied!" message should be shown when the access code is copied.
     @State private var showCopiedMessage = false // To show "Copied!" message
 
     var body: some View {
+        // Navigation view that allows for navigation between views and displaying a toolbar.
         NavigationView {
             VStack {
-                if let team = viewModel.team {
-                    
+                // Check if the team data is available and unwrap it.
+                if let team = teamModel.team {
                     // Team Name Title
                     Text(team.name)
                         .font(.largeTitle)
@@ -31,7 +39,7 @@ struct CoachTeamSettingsView: View {
                     
                     Divider()
                     
-                    // Team Details List
+                    // List displaying the various team settings (nickname, age group, sport, gender, access code).
                     List {
                         // Section Title
                         Text("Team Settings")
@@ -42,7 +50,7 @@ struct CoachTeamSettingsView: View {
                         HStack {
                             Text("Nickname")
                             Spacer()
-                            Text(team.teamNickname ?? "N/A")
+                            Text(team.teamNickname)
                                 .foregroundColor(.secondary)
                         }
 
@@ -50,7 +58,7 @@ struct CoachTeamSettingsView: View {
                         HStack {
                             Text("Age Group")
                             Spacer()
-                            Text(team.ageGrp ?? "N/A")
+                            Text(team.ageGrp)
                                 .foregroundColor(.secondary)
                         }
 
@@ -75,7 +83,7 @@ struct CoachTeamSettingsView: View {
                             Text("Access Code")
                             Spacer()
                             Text(team.accessCode ?? "N/A")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.secondary).padding(.trailing, 5)
                             
                             // Copy Button
                             Button(action: {
@@ -87,6 +95,21 @@ struct CoachTeamSettingsView: View {
                             }) {
                                 Image(systemName: "doc.on.doc.fill")
                                     .foregroundColor(.gray)
+                            }
+                        }
+                        
+                        Section(header: Text("Players")) {
+                            if !players.isEmpty {
+                                ForEach(players, id: \.playerDocId) { player in
+                                    HStack {
+                                        Image(systemName: "person")
+                                            .foregroundColor(.blue)
+                                        
+                                        Text("\(player.firstName) \(player.lastName)")
+                                    }
+                                }
+                            } else {
+                                Text("No players found.").font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -114,16 +137,9 @@ struct CoachTeamSettingsView: View {
                 }
             }
         }
-        .task {
-            do {
-                try await viewModel.loadTeam(teamId: teamId)
-            } catch {
-                print("Error loading team settings: \(error)")
-            }
-        }
     }
 }
 
 #Preview {
-    CoachTeamSettingsView(teamId: "mockTeamId")
+    CoachTeamSettingsView(teamModel: TeamModel(), players: [])
 }

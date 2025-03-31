@@ -7,6 +7,13 @@
 
 import SwiftUI
 
+/** This file defines the `SelectedRecentGameView` view, which displays detailed information
+  about a selected recent game, such as the game title, team name, and start time.
+  It uses the `SelectedGameModel` to fetch the game data and displays it within a navigation view.
+  The user can also start a recording via the toolbar button.
+ */
+
+/// This view displays details about a selected recent game including the game title, team name, and start time.
 struct SelectedRecentGameView: View {
     @StateObject private var viewModel = SelectedGameModel()
     @State var gameId: String // scheduled game id is passed when this view is called
@@ -27,7 +34,7 @@ struct SelectedRecentGameView: View {
                         
                         HStack {
                             Image(systemName: "calendar.badge.clock")
-                            Text(selectedGame.game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(formatStartTime(selectedGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
 
                         }
                     }
