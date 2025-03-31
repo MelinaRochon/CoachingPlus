@@ -33,6 +33,14 @@ final class TeamModel: ObservableObject {
         return try await TeamManager.shared.generateUniqueTeamAccessCode()
     }
     
-    
+    func getTeam(teamId: String) async throws {
+        // Find the team from the teamId
+        guard let tmpTeam = try await TeamManager.shared.getTeam(teamId: teamId) else {
+            print("Error when loading the team. Aborting")
+            return
+        }
+        
+        self.team = tmpTeam
+    }
     
 }

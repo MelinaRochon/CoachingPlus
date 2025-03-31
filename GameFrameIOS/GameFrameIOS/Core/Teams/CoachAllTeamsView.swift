@@ -34,7 +34,7 @@ struct CoachAllTeamsView: View {
                         }) {
                             if !viewModel.teams.isEmpty {
                                 ForEach(viewModel.teams, id: \.name) { team in
-                                    NavigationLink(destination: CoachMyTeamView(teamNickname: team.nickname, teamId: team.teamId))
+                                    NavigationLink(destination: CoachMyTeamView(teamNickname: team.nickname, teamId: team.teamId, teamModel: TeamModel()))
                                     {
                                         HStack {
                                             Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future

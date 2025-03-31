@@ -73,3 +73,15 @@ func formatPhoneNumber(_ number: String) -> String {
     }
     return result
 }
+
+
+/// A helper function to format the provided start time into a readable string.
+/// If the `startTime` is nil, it uses the current date and time as the default value.
+///
+/// - Parameter startTime: The optional `Date` to be formatted. If nil, the current date and time are used.
+/// - Returns: A string representing the formatted date and time, in the format "YYYY-MM-DD HH:mm".
+func formatStartTime(_ startTime: Date?) -> String {
+    let format = startTime?.formatted(.dateTime.year().month().day().hour().minute()) ??
+                Date().formatted(.dateTime.year().month().day().hour().minute())
+    return format
+}

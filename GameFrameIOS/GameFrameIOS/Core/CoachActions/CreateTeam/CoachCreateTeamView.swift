@@ -206,14 +206,6 @@ struct CoachCreateTeamView: View {
 /// adding validation logic for team creation.
 extension CoachCreateTeamView: TeamProtocol {
     /// Checks whether the form inputs are valid for creating a team.
-    ///
-    /// A team is considered valid if:
-    /// - The team name is not empty.
-    /// - The nickname is not empty and does not exceed 10 characters.
-    /// - A sport is selected.
-    /// - A gender option is selected.
-    /// - An age group is selected.
-    /// - A color is specified.
     var addTeamIsValid: Bool {
         return !name.isEmpty
         && !nickname.isEmpty && nickname.count < 11 // cannot exceed 10 characters

@@ -1,59 +1,31 @@
 //
-//  TeamViewModel.swift
+//  PlayerModel.swift
 //  GameFrameIOS
 //
-//  Created by Mélina Rochon on 2025-03-19.
+//  Created by Mélina Rochon on 2025-03-30.
 //
-
 
 import Foundation
 
-@MainActor
-final class TeamViewModel: ObservableObject {
-    
-    @Published var team: DBTeam?
-    @Published var players: [User_Status] = []
-    @Published var games: [DBGame] = []
-    
-    func loadTeam(teamId: String) async throws {
-        // Find the team from the teamId
-        guard let tmpTeam = try await TeamManager.shared.getTeam(teamId: teamId) else {
-            print("Error when loading the team. Aborting")
-            return
-        }
-        
-        self.team = tmpTeam
-    }
-    
-    func loadGames(teamId: String) async throws {
-        // Get the list of games, if they exists.
-        guard let tmpGames: [DBGame] = try await GameManager.shared.getAllGames(teamId: teamId) else {
-            print("Could not get games. Abort,,,")
-            return
-        }
-        
-        self.games = tmpGames
-    }
-    
-    func loadPlayers(teamId: String) async throws {
+struct User_Status {
+    let firstName: String
+    let lastName: String
+    let status: String
+    let playerDocId: String
+    let userDocId: String
+}
 
+
+@MainActor
+final class PlayerModel: ObservableObject {
+    @Published var players: [User_Status] = []
+    
+    func getAllPlayers(invites: [String], players: [String]) async throws {
         // Get the list of players, if they exist. Otherwise, let the user know that there's none
-        guard let tmpPlayers = team?.players else {
-            print("There are no players in the team at the moment. Please add one.")
-            // TO DO - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
-            return
-        }
-        
-        guard let tmpInvites = team?.invites else {
-            print("There are no players in the team at the moment. Please add one.")
-            // TO DO - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
-            return
-        }
-        
         // For each player in the list, get their names
         var tmpArrayPlayer: [User_Status] = []
         
-        for inviteDocId in tmpInvites {
+        for inviteDocId in invites {
             guard let invite = try await InviteManager.shared.getInvite(id: inviteDocId) else {
                 print("Could not find the invite's info.. Aborting")
                 return
@@ -73,11 +45,7 @@ final class TeamViewModel: ObservableObject {
             }
         }
         
-        for playerId in tmpPlayers {
-            // Check invites array
-            // if user status is set to "Pending", then get the user doc using userDocId!
-            // else if user is not pending, don't do anything
-            
+        for playerId in players {
             guard let user = try await UserManager.shared.getUser(userId: playerId) else {
                 print("Could not find the user's info.. Aborting")
                 return

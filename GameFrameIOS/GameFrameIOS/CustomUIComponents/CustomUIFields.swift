@@ -116,6 +116,13 @@ struct CustomUIFields {
             .font(.footnote)
             .underline()
     }
+    
+    static func gameVideoPreviewStyle() -> some View {
+        Rectangle()
+            .fill(Color.gray.opacity(0.3))
+            .frame(width: 110, height: 60)
+            .cornerRadius(10)
+    }
 }
 
 

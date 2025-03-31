@@ -28,8 +28,12 @@ struct CoachMyTeamView: View {
     @State private var isTeamSettingsEnabled: Bool = false // Toggles visibility for team settings view
     
     let segmentTypes = ["Footage", "Players"] // The segments that allow switching between footage and players
-    @StateObject private var teamModel = TeamViewModel() // View model to manage team-related data
-
+    
+    // View models to manage team, game and player-related data
+    @StateObject var teamModel: TeamModel
+    @StateObject private var gameModel = GameModel()
+    @StateObject private var playerModel = PlayerModel()
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -58,41 +62,40 @@ struct CoachMyTeamView: View {
                             } label: {
                                 // Button to add a new game
                                 HStack {
-                                    Text("Add")
-                                    Image(systemName: "calendar.badge.plus")
-                                }.foregroundColor(Color.red)
+                                    Text("Add Game")
+                                }
+                                .foregroundColor(Color.blue)
                             }
                         }) {
                             // Looping through games related to the team
-                            ForEach(teamModel.games, id: \.gameId) { game in
-                                
-                                // Navigation to specific game footage view
-                                NavigationLink(destination: CoachSpecificFootageView(gameId: game.gameId, teamDocId: teamDocId)) {
-                                    HStack (alignment: .top) {
-                                        // Displaying the game preview image and information
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.3))
-                                            .frame(width: 110, height: 60)
-                                            .cornerRadius(10)
-                                        
-                                        VStack {
-                                            // Game title and formatted start time
-                                            Text(game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                            if !gameModel.games.isEmpty {
+                                ForEach(gameModel.games, id: \.gameId) { game in
+                                    
+                                    // Navigation to specific game footage view
+                                    NavigationLink(destination: CoachSpecificFootageView(gameId: game.gameId, teamDocId: teamDocId)) {
+                                        HStack (alignment: .top) {
+                                            // Displaying the game preview image and information
+                                            CustomUIFields.gameVideoPreviewStyle()
                                             
-                                            Text(game.startTime?.formatted(.dateTime.year().month().day().hour().minute()) ?? Date().formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            
-                                            // Indicating if the game is scheduled
-                                            if let startTime = game.startTime {
-                                                let gameEndTime = startTime.addingTimeInterval(TimeInterval(game.duration))
-                                                if gameEndTime > Date() {
-                                                    // scheduled Game
-//                                                    Button("Scheduled Game")
-                                                    Text("Scheduled Game").font(.caption).bold().foregroundColor(Color.green).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                            VStack {
+                                                // Game title and formatted start time
+                                                Text(game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                
+                                                Text(formatStartTime(game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                
+                                                // Indicating if the game is scheduled
+                                                if let startTime = game.startTime {
+                                                    let gameEndTime = startTime.addingTimeInterval(TimeInterval(game.duration))
+                                                    if gameEndTime > Date() {
+                                                        Text("Scheduled Game").font(.caption).bold().foregroundColor(Color.green).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
+                            } else {
+                                Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     } else {
@@ -105,22 +108,25 @@ struct CoachMyTeamView: View {
                             } label: {
                                 // Open create new team form
                                 HStack {
-                                    Text("Add")
-                                    Image(systemName: "person.crop.circle.badge.plus")
-                                }.foregroundColor(Color.red)
+                                    Text("Add Player")
+                                }.foregroundColor(Color.blue)
                             }
                         }){
                             // Looping through players related to the team
-                            ForEach (teamModel.players, id: \.playerDocId) { player in
-                                // Navigation to specific player profile view
-                                NavigationLink(destination: CoachPlayerProfileView(playerDocId: player.playerDocId, userDocId: player.userDocId)) {
-                                    HStack {
-                                        // Displaying player name and status
-                                        Text("\(player.firstName) \(player.lastName)")
-                                        Spacer()
-                                        Text(player.status).font(.footnote).foregroundStyle(.secondary).italic(true).padding(.trailing)
+                            if !playerModel.players.isEmpty {
+                                ForEach (playerModel.players, id: \.playerDocId) { player in
+                                    // Navigation to specific player profile view
+                                    NavigationLink(destination: CoachPlayerProfileView(playerDocId: player.playerDocId, userDocId: player.userDocId)) {
+                                        HStack {
+                                            // Displaying player name and status
+                                            Text("\(player.firstName) \(player.lastName)")
+                                            Spacer()
+                                            Text(player.status).font(.footnote).foregroundStyle(.secondary).italic(true).padding(.trailing)
+                                        }
                                     }
                                 }
+                            } else {
+                                Text("No players found.").font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -148,11 +154,11 @@ struct CoachMyTeamView: View {
             }
             .sheet(isPresented: $addGameEnabled, onDismiss: refreshData) {
                 // Sheet to add a new game
-                CoachAddingGameView(selectedTeamName: teamNickname, selectedTeamId: teamId) // Adding a new game
+                CoachAddingGameView(teamModel: teamModel) // Adding a new game
             }
             .sheet(isPresented: $isTeamSettingsEnabled) {
                 // Sheet to modify team settings
-                CoachTeamSettingsView(teamId: teamId)
+                CoachTeamSettingsView(teamModel: teamModel, players: playerModel.players)
             }
         }
     }
@@ -162,12 +168,24 @@ struct CoachMyTeamView: View {
         Task {
             do {
                 // Load team data from the view model
-                try await teamModel.loadTeam(teamId: teamId)
+                try await teamModel.getTeam(teamId: teamId)
                 self.teamDocId = teamModel.team?.id ?? "" // Set the team document ID
                 
                 // Load games and players associated with the team
-                try await teamModel.loadGames(teamId: teamId)
-                try await teamModel.loadPlayers(teamId: teamId)
+                try await gameModel.getAllGames(teamId: teamId)
+                
+                guard let tmpPlayers = teamModel.team?.players else {
+                    print("There are no players in the team at the moment. Please add one.")
+                    // TO DO - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
+                    return
+                }
+                guard let tmpInvites = teamModel.team?.invites else {
+                    print("There are no players in the team at the moment. Please add one.")
+                    // TO DO - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
+                    return
+                }
+
+                try await playerModel.getAllPlayers(invites: tmpInvites, players: tmpPlayers)
 
             } catch {
                 // Print error message if data fetching fails
@@ -178,5 +196,5 @@ struct CoachMyTeamView: View {
 }
 
 #Preview {
-    CoachMyTeamView(teamNickname: "", teamId: "")
+    CoachMyTeamView(teamNickname: "", teamId: "", teamModel: TeamModel())
 }

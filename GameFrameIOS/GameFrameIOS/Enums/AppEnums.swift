@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - File description
+
 /**
  This file contains the definitions of various enums used throughout the GameFrame iOS application. These enums help standardize different user types, status types, and error states used in the system.
 
@@ -17,6 +19,7 @@ import Foundation
  3. **TeamValidationError**:
 */
 
+// MARK: - Enums
 
 /// **UserType**: Enum representing different user types in the system.
 /// - This enum represents the different types of users in the system. The two possible values are:
