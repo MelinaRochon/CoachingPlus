@@ -16,6 +16,8 @@ struct CoachSpecificTranscriptView: View {
     
     @StateObject private var transcriptViewModel = TranscriptViewModel()
     @StateObject private var commentViewModel = CommentSectionViewModel()
+    
+//    @State var game: DBGame
 
     var body: some View {
         NavigationView {
