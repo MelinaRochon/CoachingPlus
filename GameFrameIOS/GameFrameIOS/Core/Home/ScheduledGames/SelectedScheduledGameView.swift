@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SelectedScheduledGameView: View {
     @StateObject private var selecGameViewModel = SelectedGameModel()
-    @StateObject private var recordingViewModel = AddNewFGVideoRecordingModel()
+    @StateObject private var recordingViewModel = FGVideoRecordingModel()
     
     @State var gameId: String // scheduled game id is passed when this view is called
     @State var teamDocId: String // scheduled game id is passed when this view is called

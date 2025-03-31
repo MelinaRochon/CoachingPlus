@@ -7,21 +7,6 @@
 
 import Foundation
 
-/// Protocol defining authentication requirements for login.
-protocol AuthenticationLoginProtocol {
-    /// A computed property that checks whether the login credentials are valid.
-    var loginIsValid: Bool { get }
-}
-
-
-/// Protocol defining authentication requirements for sign up.
-protocol AuthenticationSignUpProtocol {
-    /// A computed property that checks whether the login credentials are valid.
-    var signUpIsValid: Bool { get }
-    
-    var signUpWithAccessCodeValid: Bool { get }
-}
-
 
 /**
  ViewModel responsible for managing authentication-related data and operations.

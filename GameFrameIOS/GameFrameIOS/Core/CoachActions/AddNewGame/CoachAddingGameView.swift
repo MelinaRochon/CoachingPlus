@@ -8,7 +8,26 @@
 import SwiftUI
 import Firebase
 
-/** This view allows the coach to add a new game by selecting teams, location, and feedback settings. */
+/**
+ `CoachAddingGameView` is a SwiftUI view that allows soccer coaches to create a new game event.
+ 
+ ## Features:
+ - **Game Details:** Input a title, select a team, and specify the location.
+ - **Scheduled Time:** Choose a start time and set a game duration.
+ - **Feedback Settings:** Configure automatic feedback reminders before and after key events.
+ - **Recording Reminder:** Enable or disable recording notifications before the game.
+ - **Firestore Integration:** Saves the created game event to the Firebase Firestore database.
+ 
+ This view interacts with `AddNewGameModel`, which handles data storage, team retrieval, and database operations.
+ It includes form-based inputs and custom pickers for a streamlined user experience.
+ 
+ ## Navigation:
+ - **Back to Teams Page:** Users can dismiss the view with a cancel button.
+ - **Save and Proceed:** Users can finalize game details and save them to the database.
+ 
+ This view is designed with state management using `@StateObject` for handling game data and `@Environment(\.dismiss)`
+ for navigation control.
+ */
 struct CoachAddingGameView: View {
     // ViewModel for managing the data related to adding a new game
     @StateObject private var viewModel = AddNewGameModel()
@@ -21,34 +40,13 @@ struct CoachAddingGameView: View {
     @State private var minutes: Int = 0
     
     // Options for reminder time before the event
-    let timeOptions = [
-        ("At time of event", 0),
-        ("5 minutes before", 5),
-        ("10 minutes before", 10),
-        ("15 minutes before", 15),
-        ("30 minutes before", 30),
-        ("1 hour before", 60)
-    ]
+    let timeOptions = [("At time of event", 0), ("5 minutes before", 5), ("10 minutes before", 10), ("15 minutes before", 15), ("30 minutes before", 30), ("1 hour before", 60)]
     
     // Options for feedback time before the event
-    let feedbackBeforeTimeOptions = [
-        ("None", 0),
-        ("5 seconds", 5),
-        ("10 seconds", 10),
-        ("15 seconds", 15),
-        ("20 seconds", 20),
-        ("30 seconds", 30)
-    ]
+    let feedbackBeforeTimeOptions = [("None", 0), ("5 seconds", 5), ("10 seconds", 10), ("15 seconds", 15), ("20 seconds", 20), ("30 seconds", 30)]
     
     // Options for feedback time after the event
-    let feedbackAfterTimeOptions = [
-        ("None", 0),
-        ("5 seconds", 5),
-        ("10 seconds", 10),
-        ("15 seconds", 15),
-        ("20 seconds", 20),
-        ("30 seconds", 30)
-    ]
+    let feedbackAfterTimeOptions = [("None", 0), ("5 seconds", 5), ("10 seconds", 10), ("15 seconds", 15), ("20 seconds", 20), ("30 seconds", 30)]
     
     // Variables for storing the selected team information
     @State var selectedTeamName: String?
@@ -142,7 +140,7 @@ struct CoachAddingGameView: View {
                             displayText: { $0 },
                             selectedOption: $feedbackBeforeTimeLabel
                         )
-                                            
+                        
                         // CustomPicker for selecting feedback after the event
                         CustomPicker(
                             title: "After Feedback",
@@ -257,7 +255,7 @@ struct CoachAddingGameView: View {
         
         // Add the specified number of hours to the current date
         let newDate = calendar.date(byAdding: .hour, value: hours, to: now)!
-            // Add the specified number of minutes to the new date
+        // Add the specified number of minutes to the new date
             .addingTimeInterval(TimeInterval(minutes * 60))
         
         // Return the calculated date as a Firestore Timestamp

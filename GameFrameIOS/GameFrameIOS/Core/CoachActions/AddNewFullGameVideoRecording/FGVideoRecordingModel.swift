@@ -1,5 +1,5 @@
 //
-//  AddNewFGVideoRecordingModel.swift
+//  FGVideoRecordingModel.swift
 //  GameFrameIOS
 //
 //  Created by Caterina Bosi on 2025-03-13.
@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-final class AddNewFGVideoRecordingModel: ObservableObject {    
+final class FGVideoRecordingModel: ObservableObject {
     @Published var fileURL = ""
     @Published var startTime: Date = Date()
     @Published var endTime: Date = Date()

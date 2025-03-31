@@ -15,7 +15,7 @@ struct User_Status {
 }
 
 import Foundation
-@MainActor
+@MainActor 
 final class TeamViewModel: ObservableObject {
     
     @Published var team: DBTeam?
