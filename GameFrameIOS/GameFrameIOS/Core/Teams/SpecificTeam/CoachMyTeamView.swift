@@ -23,15 +23,6 @@ struct CoachMyTeamView: View {
     /// Tracks the selected segment (Footage or Players).
     @State private var selectedSegmentIndex = 0
 
-    /// Holds the team nickname for display.
-    @State var teamNickname: String = ""
-
-    /// Holds the unique ID for the team.
-    @State var teamId: String = ""
-
-    /// Holds the document ID for the team in the database.
-    @State private var teamDocId: String = ""
-
     /// Toggles visibility for adding a player.
     @State private var addPlayerEnabled = false
 
@@ -44,14 +35,14 @@ struct CoachMyTeamView: View {
     /// The available segment options (Footage and Players).
     let segmentTypes = ["Footage", "Players"]
 
-    /// View model for managing team data.
-    @StateObject var teamModel: TeamModel
-    
     /// View model for managing game data.
     @StateObject private var gameModel = GameModel()
 
     /// View model for managing player data.
     @StateObject private var playerModel = PlayerModel()
+    
+    /// The team whose settings are being viewed and modified.
+    @State var selectedTeam: DBTeam
     
     // MARK: - View
 
@@ -93,7 +84,7 @@ struct CoachMyTeamView: View {
                                 ForEach(gameModel.games, id: \.gameId) { game in
                                     
                                     // Navigation to specific game footage view
-                                    NavigationLink(destination: CoachSpecificFootageView(gameId: game.gameId, teamDocId: teamDocId)) {
+                                    NavigationLink(destination: CoachSpecificFootageView(game: game, team: selectedTeam)) {
                                         HStack (alignment: .top) {
                                             // Displaying the game preview image and information
                                             CustomUIFields.gameVideoPreviewStyle()
@@ -154,7 +145,7 @@ struct CoachMyTeamView: View {
                     
                 }.listStyle(PlainListStyle()) // Optional: Make the list style more simple
             }
-            .navigationTitle(Text(teamNickname))
+            .navigationTitle(Text(selectedTeam.teamNickname))
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 refreshData() // Refresh data when the view appears
@@ -171,15 +162,15 @@ struct CoachMyTeamView: View {
             }
             .sheet(isPresented: $addPlayerEnabled, onDismiss: refreshData) {
                 // Sheet to add a new player
-                CoachAddPlayersView(teamModel: teamModel) // passing the teamId as an argument
+                CoachAddPlayersView(team: selectedTeam) // passing the teamId as an argument
             }
             .sheet(isPresented: $addGameEnabled, onDismiss: refreshData) {
                 // Sheet to add a new game
-                CoachAddingGameView(teamModel: teamModel) // Adding a new game
+                CoachAddingGameView(team: selectedTeam) // Adding a new game
             }
             .sheet(isPresented: $isTeamSettingsEnabled) {
                 // Sheet to modify team settings
-                CoachTeamSettingsView(teamModel: teamModel, players: playerModel.players)
+                CoachTeamSettingsView(team: selectedTeam, players: playerModel.players)
             }
         }
     }
@@ -191,21 +182,17 @@ struct CoachMyTeamView: View {
     private func refreshData() {
         Task {
             do {
-                // Load team data from the view model
-                try await teamModel.getTeam(teamId: teamId)
-                self.teamDocId = teamModel.team?.id ?? "" // Set the team document ID
-                
                 // Load games and players associated with the team
-                try await gameModel.getAllGames(teamId: teamId)
+                try await gameModel.getAllGames(teamId: selectedTeam.teamId)
                 
-                guard let tmpPlayers = teamModel.team?.players else {
+                guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TO DO - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
                     return
                 }
-                guard let tmpInvites = teamModel.team?.invites else {
+                guard let tmpInvites = selectedTeam.invites else {
                     print("There are no players in the team at the moment. Please add one.")
-                    // TO DO - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
+                    // TODO: Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
                     return
                 }
 
@@ -220,5 +207,6 @@ struct CoachMyTeamView: View {
 }
 
 #Preview {
-    CoachMyTeamView(teamNickname: "", teamId: "", teamModel: TeamModel())
+    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
+    CoachMyTeamView(selectedTeam: team)
 }
