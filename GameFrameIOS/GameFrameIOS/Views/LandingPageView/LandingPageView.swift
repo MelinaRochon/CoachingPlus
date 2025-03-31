@@ -84,7 +84,7 @@ struct LandingPageView: View {
                                     .clipShape(Capsule())
                             }
                             
-                            NavigationLink(destination: PlayerCreateAccountView(showSignInView: $showSignInView)) {
+                            NavigationLink(destination: PlayerCreateAccountView(showSignInView: $showSignInView, viewModel: AuthenticationModel())) {
                                 Text("Player")
                                     .font(.headline)
                                     .padding()

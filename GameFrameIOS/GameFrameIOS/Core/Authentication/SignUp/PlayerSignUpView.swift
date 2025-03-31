@@ -6,15 +6,18 @@
 //
 import SwiftUI
 
+/// This struct defines the view for player sign-up, where the user provides their information to create an account.
+/// The `PlayerSignUpView` struct is a SwiftUI view responsible for displaying the player's sign-up form.
 struct PlayerSignUpView: View {
-    var email: String // retreive the email address entered by the user in the previous view
-    var teamId: String // retreive the team id from the team access code entered by the user in the previous view
-        
+    
+    /// The view model (AuthenticationModel) is observed and passed from the parent view to manage the player's authentication data.
+    @ObservedObject var viewModel: AuthenticationModel
+
+    /// Local state to toggle password visibility in the password field.
     @State private var showPassword: Bool = false
     
+    /// Binding to control the visibility of the sign-in view in the parent view.
     @Binding var showSignInView: Bool
-    @StateObject private var viewModel = authenticationViewModel()
-//    @State private var country = "Canada"
     
     var body: some View {
         VStack(spacing: 20) {
@@ -24,14 +27,15 @@ struct PlayerSignUpView: View {
 
                 // Form Fields with Uniform Style
                 VStack(spacing: 10) {
-                    
+                    // Custom text field for the player's first name
                     CustomUIFields.customTextField("First Name", text: $viewModel.firstName)
                         .autocorrectionDisabled(true)
-
+                    
+                    // Custom text field for the player's last name
                     CustomUIFields.customTextField("Last Name", text: $viewModel.lastName)
                         .autocorrectionDisabled(true)
 
-                    // Date Picker Styled Like Other Fields
+                    // Custom date picker for selecting the player's date of birth
                     HStack {
                         Text("Date of Birth")
                             .foregroundColor(.gray)
@@ -44,12 +48,17 @@ struct PlayerSignUpView: View {
                     .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                                         
                     // TODO: Make the phone number for the player optional?? Demands on his age
+                    // Custom text field for the player's phone number with phone-specific keyboard
                     CustomUIFields.customTextField("Phone", text: $viewModel.phone)
                         .autocapitalization(.none)
                         .autocorrectionDisabled(true)
                         .keyboardType(.phonePad) // Shows phone-specific keyboard
+                        .onChange(of: viewModel.phone) { newVal in
+                            // Formats the phone number when it changes
+                            viewModel.phone = formatPhoneNumber(newVal)
+                        }
                     
-                    // Country Picker Styled Like Other Fields
+                    // Country picker with a list of countries
                     HStack {
                         Text("Country or region")
                         Spacer()
@@ -67,50 +76,61 @@ struct PlayerSignUpView: View {
                             .stroke(Color.gray, lineWidth: 1)
                     )
         
+                    // Disabled text field for displaying the email (cannot be edited)
                     CustomUIFields.disabledCustomTextField("Email", text: $viewModel.email)
 
-                    // Password Field Styled Like Other Fields
+                    // Custom password field for the user to set their password
                     CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
-                    
                 }
                 .padding(.horizontal)
                 
-                
-                // "Get coached!" Button
+                // Submit button for creating the player account
                 Button {
-                    print("Create player account tapped")
-                    
-                    //create account is called!
+                    // Task to handle the sign-up process asynchronously
                     Task {
                         do {
-                            try await viewModel.playerSignUp() // to sign up
+                            // Attempt to create the account with the provided data
+                            try await viewModel.signUp(userType: .player)
+                            // If successful, hide the sign-in view
                             showSignInView = false
                             return
                         } catch {
+                            // Print error if the sign-up fails
                             print(error)
                         }
                     }
                     
                 } label: {
-                    // Use the custom styled "Create Account" button
+                    // Custom button styled for creating the account
                     CustomUIFields.createAccountButton("Create Account")
                 }
-            }
-        }.task {
-            do {
-                // load the player's information
-                // If there there's more than one player with the same teamId and email --> Actually that can't happen because in the Authentication, we will have an issue. Can't have more than one email address that is the same for more than one account!!!
-                try await viewModel.loadPlayerInfo(email: email, teamId: teamId)
-                viewModel.email = email
-                viewModel.teamId = teamId
-                //country = viewModel.country
-            } catch {
-                print("error.. Abort.. \(error)")
+                .disabled(!signUpIsValid)
+                .opacity(signUpIsValid ? 1.0 : 0.5)
             }
         }
     }
 }
 
+
+/// Extension that conforms the PlayerSignUpView to the AuthenticationSignUpProtocol, which defines validation logic.
+extension PlayerSignUpView: AuthenticationSignUpProtocol {
+    /// Computed property that checks if the sign-up form is valid (all fields must be filled correctly)
+    var signUpIsValid: Bool {
+        return !viewModel.email.isEmpty
+        && viewModel.email.contains("@") // Email should be non-empty and contain "@"
+        && !viewModel.password.isEmpty
+        && viewModel.password.count > 5 // Password should be at least 6 characters long
+        && !viewModel.firstName.isEmpty
+        && !viewModel.lastName.isEmpty // First and Last names should be non-empty
+    }
+    
+    /// Placeholder computed property for validating access code (not implemented in this case)
+    var signUpWithAccessCodeValid: Bool {
+        return true
+    }
+}
+
+
 #Preview {
-    PlayerSignUpView(email: "", teamId: "", showSignInView: .constant(false))
+    PlayerCreateAccountView(showSignInView: .constant(false), viewModel: AuthenticationModel())
 }

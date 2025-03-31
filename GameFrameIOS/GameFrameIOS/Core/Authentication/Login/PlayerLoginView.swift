@@ -9,18 +9,19 @@ import SwiftUI
 
 /** This view handles the login process for players.
  It allows players to enter their credentials, toggle password visibility, and navigate to the account creation screen.
- Uses `CustomUIFields` for UI components and `authenticationViewModel` for authentication logic.
+ Uses `CustomUIFields` for UI components and `AuthenticationModel` for authentication logic.
 */
 struct PlayerLoginView: View {
     // ViewModel for handling authentication logic
-    @StateObject private var viewModel = authenticationViewModel()
+    @StateObject private var viewModel = AuthenticationModel()
     
     // Binding to determine if sign-in view should be shown
     @Binding var showSignInView: Bool
     
-    // Local state for visibility toggle
+    // Local state for visibility toggle & alerts
     @State private var showPassword: Bool = false
-    
+    @State private var showErrorMessage: Bool = false
+
     var body: some View {
         NavigationView{
             VStack(spacing: 20) {
@@ -36,7 +37,7 @@ struct PlayerLoginView: View {
                             Text("I don't have an account!")
                                 .foregroundColor(.gray)
                                 .font(.footnote)
-                            NavigationLink(destination: PlayerCreateAccountView(showSignInView: $showSignInView)) {
+                            NavigationLink(destination: PlayerCreateAccountView(showSignInView: $showSignInView, viewModel: AuthenticationModel())) {
                                 CustomUIFields.linkButton("Create one")
                             }
                         }
@@ -60,22 +61,44 @@ struct PlayerLoginView: View {
                         
                         Task {
                             do {
-                                try await viewModel.signIn(userType: "Player") // to sign up
+                                try await viewModel.signIn() // to sign up
                                 showSignInView = false
                                 return
                             } catch {
-                                print(error) // TODO: Handle error (consider showing an alert)
+                                showErrorMessage = true
                             }
                         }
                     } label: {
                         // Custom Styled Login Button
                         CustomUIFields.signInAccountButton("Get coached!")
                     }
+                    .disabled(!loginIsValid)
+                    .opacity(loginIsValid ? 1.0 : 0.5)
+                }
+            }
+            .alert("Invalid credentials. Please try again.", isPresented: $showErrorMessage) {
+                Button(role: .cancel) {
+                    // reset email and password
+                    viewModel.email = ""
+                    viewModel.password = ""
+                } label: {
+                    Text("OK")
                 }
             }
         }
     }    
 }
+
+extension PlayerLoginView: AuthenticationLoginProtocol {
+    // Computed property to validate login credentials
+    var loginIsValid: Bool {
+        return !viewModel.email.isEmpty // Ensure email is not empty
+        && viewModel.email.contains("@") // Check for a basic email format
+        && !viewModel.password.isEmpty // Ensure password is not empty
+        && viewModel.password.count > 5 // Enforce a minimum password length
+    }
+}
+
 
 #Preview {
     PlayerLoginView(showSignInView: .constant(false))

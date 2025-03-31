@@ -9,20 +9,21 @@ import SwiftUI
 
 /** This view handles the authentication process for coaches.
  It allows users to enter their email and password, toggle password visibility,  and navigate to the account creation screen.
- Uses `CustomUIFields` for UI components and `authenticationViewModel` for authentication logic.
+ Uses `CustomUIFields` for UI components and `AuthenticationModel` for authentication logic.
 */
-struct CoachAuthenticationView: View {
-    @StateObject private var viewModel = authenticationViewModel() // ViewModel for handling authentication logic
+struct CoachLoginView: View {
+    @StateObject private var viewModel = AuthenticationModel() // ViewModel for handling authentication logic
     @State private var showPassword: Bool = false // Controls password visibility
     
     // Binding to determine if sign-in view should be shown
     @Binding var showSignInView: Bool
+    // Local state for alert visibility
+    @State private var showErrorMessage: Bool = false
     
     var body: some View {
         NavigationView{
             VStack {
                 ScrollView{
-                    
                     // Welcome Message
                     Spacer().frame(height: 20)
                     VStack(spacing: 5) {
@@ -58,24 +59,47 @@ struct CoachAuthenticationView: View {
                     Button {
                         Task {
                             do {
-                                try await viewModel.signIn(userType: "Coach") // to sign in
+                                try await viewModel.signIn() // to sign in
                                 showSignInView = false
                                 return
                             } catch {
-                                print(error) //TODO: Handle error (consider adding user feedback)
+                                showErrorMessage = true
                             }
                         }
                     } label: {
                         // Custom Sign-In Button
                         CustomUIFields.signInAccountButton("Let's go!")
                     }
+                    .disabled(!loginIsValid)
+                    .opacity(loginIsValid ? 1.0 : 0.5)
+                    
                     Spacer()
+                }
+            }
+            .alert("Invalid credentials. Please try again.", isPresented: $showErrorMessage) {
+                Button(role: .cancel) {
+                    // reset email and password
+                    viewModel.email = ""
+                    viewModel.password = ""
+                } label: {
+                    Text("OK")
                 }
             }
         }
     }
 }
 
+extension CoachLoginView: AuthenticationLoginProtocol {
+    // Computed property to validate login credentials
+    var loginIsValid: Bool {
+        return !viewModel.email.isEmpty // Ensure email is not empty
+        && viewModel.email.contains("@") // Check for a basic email format
+        && !viewModel.password.isEmpty // Ensure password is not empty
+        && viewModel.password.count > 5 // Enforce a minimum password length
+    }
+}
+
+
 #Preview {
-    CoachAuthenticationView(showSignInView: .constant(false))
+    CoachLoginView(showSignInView: .constant(false))
 }

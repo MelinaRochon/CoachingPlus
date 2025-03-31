@@ -27,11 +27,25 @@ struct AuthDataResultModel {
 }
 
 /**
- A manager responsible for handling authentication-related tasks, including:
- - Signing in and signing out users
- - Creating accounts
- - Resetting and updating passwords
- - Updating email addresses
+ A singleton manager responsible for handling Firebase Authentication-related tasks.
+ The `AuthenticationManager` class provides the following functionality for managing user authentication:
+ - Signing in users with email and password.
+ - Creating new user accounts.
+ - Signing out the currently authenticated user.
+ - Resetting user passwords and updating account details such as email and password.
+ 
+ This class is implemented as a singleton to ensure a single, global instance for authentication tasks throughout the app.
+
+ Key methods in this class:
+ - `getAuthenticatedUser`: Retrieves the currently authenticated user.
+ - `createUser`: Creates a new user account using email and password.
+ - `signOut`: Signs out the current authenticated user.
+ - `signInUser`: Signs in an existing user using email and password.
+ - `resetPassword`: Sends a password reset email to the user.
+ - `updatePassword`: Updates the authenticated user's password.
+ - `updateEmail`: Updates the authenticated user's email address.
+
+ Singleton usage is enforced by the private initializer, ensuring that only one instance of the manager is used across the app. This approach follows the Singleton design pattern, but dependency injection may offer a more flexible and testable approach (recommended for larger projects).
  */
 final class AuthenticationManager {
     
