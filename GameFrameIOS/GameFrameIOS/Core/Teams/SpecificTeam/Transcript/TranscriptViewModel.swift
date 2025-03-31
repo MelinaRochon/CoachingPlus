@@ -49,7 +49,7 @@ final class TranscriptViewModel: ObservableObject {
                 let recordingsLength = allRecordings.count
                 let tmpPlayer = try await getAllPlayersInfo(feedbackFor: keyMoment.feedbackFor)
 
-                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
+                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
                 
                 // Adding new element to the array
                 allRecordings.append(keyMomentTranscript)
@@ -111,7 +111,7 @@ final class TranscriptViewModel: ObservableObject {
                 let recordingsLength = allRecordings.count
                 let tmpPlayer = try await getAllPlayersInfo(feedbackFor: keyMoment.feedbackFor)
 
-                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
+                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
                 
                 // Adding new element to the array
                 allRecordings.append(keyMomentTranscript)
@@ -152,7 +152,7 @@ final class TranscriptViewModel: ObservableObject {
 
                     // get the length of the array to set the id of the element of the list
                     let recordingsLength = allRecordings.count
-                    let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
+                    let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
                     
                     // Adding new element to the array
                     allRecordings.append(keyMomentTranscript)
