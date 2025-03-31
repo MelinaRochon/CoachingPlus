@@ -94,7 +94,7 @@ final class KeyMomentManager {
     func getKeyMoment(teamId: String, gameId: String, keyMomentDocId: String) async throws -> DBKeyMoment? {
         // Make sure the game document can be found under the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("getKeyMoment: Could not find team id. Aborting")
             return nil
         }
         
@@ -110,7 +110,7 @@ final class KeyMomentManager {
     func getAllKeyMoments(teamId: String, gameId: String) async throws -> [DBKeyMoment]? {
         // Make sure the game document can be found under the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("getAllKeyMoments: Could not find team id. Aborting")
             return nil
         }
         
@@ -125,7 +125,7 @@ final class KeyMomentManager {
     func addNewKeyMoment(teamId: String, keyMomentDTO: KeyMomentDTO) async throws -> String? {
         // Make sure the collection path can be found
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("addNewKeyMoment: Could not find team id. Aborting")
             return nil
         }
         
@@ -145,7 +145,7 @@ final class KeyMomentManager {
     func removeKeyMoment(teamId: String, gameId: String, keyMomentId: String) async throws {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("removeKeyMoment: Could not find team id. Aborting")
             return
         }
 

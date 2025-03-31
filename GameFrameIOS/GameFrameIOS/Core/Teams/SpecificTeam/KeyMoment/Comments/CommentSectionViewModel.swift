@@ -11,23 +11,58 @@ import Foundation
 final class CommentSectionViewModel: ObservableObject {
         @Published var comments: [DBComment] = []
     
-        /** Fetch all comments for the given key moment */
-        func loadComments(teamId: String, keyMomentId: String) async {
-            guard !teamId.isEmpty, !keyMomentId.isEmpty else {
-                        print("Invalid teamId or keyMomentId")
-                        return
+//        func loadComments(teamId: String, keyMomentId: String) async {
+//            guard !teamId.isEmpty, !keyMomentId.isEmpty else {
+//                        print("Invalid teamId or keyMomentId")
+//                        return
+//                    }
+//            do {
+//                if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificKeyMomentId(teamId: teamId, keyMomentId: keyMomentId) {
+//                    self.comments = fetchedComments.sorted { $0.createdAt > $1.createdAt } // Order by newest first
+//                    print("Loaded \(self.comments.count) comments")
+//                } else {
+//                    self.comments = [] // Ensures empty list instead of nil
+//                }
+//            } catch {
+//                print("Error fetching comments: \(error)")
+//            }
+//        }
+    
+    /** Fetch all comments for the given key moment */
+    func loadCommentsForKeyMoment(teamId: String, keyMomentId: String) async {
+                guard !teamId.isEmpty, !keyMomentId.isEmpty else {
+                            print("Invalid teamId or keyMomentId")
+                            return
+                        }
+                do {
+                    if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificKeyMomentId(teamId: teamId, keyMomentId: keyMomentId) {
+                        self.comments = fetchedComments.sorted { $0.createdAt > $1.createdAt } // Order by newest first
+                        print("Loaded \(self.comments.count) comments")
+                    } else {
+                        self.comments = [] // Ensures empty list instead of nil
                     }
-            do {
-                if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificKeyMomentId(teamId: teamId, keyMomentId: keyMomentId) {
-                    self.comments = fetchedComments.sorted { $0.createdAt > $1.createdAt } // Order by newest first
-                    print("Loaded \(self.comments.count) comments")
-                } else {
-                    self.comments = [] // Ensures empty list instead of nil
+                } catch {
+                    print("Error fetching comments: \(error)")
                 }
-            } catch {
-                print("Error fetching comments: \(error)")
             }
-        }
+    
+    /** Fetch all comments for the given transcript */
+    func loadCommentsForTranscript(teamId: String, transcriptId: String) async {
+        guard !teamId.isEmpty, !transcriptId.isEmpty else {
+                            print("Invalid teamId or transcriptId")
+                            return
+                        }
+                do {
+                    if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificTranscriptId(teamId: teamId, transcriptId: transcriptId) {
+                        self.comments = fetchedComments.sorted { $0.createdAt > $1.createdAt } // Order by newest first
+                        print("Loaded \(self.comments.count) comments")
+                    } else {
+                        self.comments = [] // Ensures empty list instead of nil
+                    }
+                } catch {
+                    print("Error fetching comments: \(error)")
+                }
+            }
 
         /** Add a new comment to the Firestore database */
         func addComment(teamId: String, keyMomentId: String, gameId: String, transcriptId: String, text: String) async {
@@ -53,7 +88,7 @@ final class CommentSectionViewModel: ObservableObject {
                 
                 // Refresh comments after adding
                 print("loading comments")
-                await loadComments(teamId: teamId, keyMomentId: keyMomentId)
+                await loadCommentsForKeyMoment(teamId: teamId, keyMomentId: keyMomentId)
             } catch {
                 print("Error adding comment: \(error)")
             }

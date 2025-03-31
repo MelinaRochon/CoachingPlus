@@ -149,17 +149,21 @@ struct CoachSpecificFootageView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .task {
                 do {
+                    print("Navigating to CoachSpecificTranscriptView with teamDocId: \(teamDocId), gameId: \(gameId)")
+
                     try await viewModel.getSelectedGameInfo(gameId: gameId, teamDocId: teamDocId)
                     if let selectedGame = viewModel.selectedGame {
                         if let startTime = selectedGame.game.startTime {
                             gameStartTime = startTime
                         }
-                    } 
+                    }
+                    print("1")
                     try await transcriptModel.loadFirstThreeTranscripts(gameId: gameId, teamDocId: teamDocId)
                     
                     if !transcriptModel.recordings.isEmpty {
                         transcriptsFound = true
                     }
+                    print("2")
                     try await transcriptModel.loadFirstThreeKeyMoments(gameId: gameId, teamDocId: teamDocId)
                     if !transcriptModel.keyMoments.isEmpty {
                         keyMomentsFound = true

@@ -191,9 +191,12 @@ struct CoachMyTeamView: View {
     private func refreshData() {
         Task {
             do {
+                print("Navigating to CoachSpecificFootageView with teamDocId: \(teamDocId)")
+
                 // Load team data from the view model
                 try await teamModel.getTeam(teamId: teamId)
                 self.teamDocId = teamModel.team?.id ?? "" // Set the team document ID
+                print("----TEAMDOCID: \(self.teamDocId)")
                 
                 // Load games and players associated with the team
                 try await gameModel.getAllGames(teamId: teamId)

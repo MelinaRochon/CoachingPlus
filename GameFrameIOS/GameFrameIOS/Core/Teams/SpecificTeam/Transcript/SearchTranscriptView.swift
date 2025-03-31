@@ -24,7 +24,8 @@ struct SearchTranscriptView: View {
                     if !transcriptModel.recordings.isEmpty {
                         ForEach(transcriptModel.recordings, id: \.id) { recording in
                             HStack(alignment: .top) {
-                                NavigationLink(destination: CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId, recording: recording)) {
+                                NavigationLink(destination:
+                                                CoachSpecificTranscriptView(gameId: gameId, teamDocId: teamDocId, recording: recording)) {
                                     HStack(alignment: .top) {
                                         let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
                                         Text(formatDuration(durationInSeconds)).bold().font(.headline)
@@ -47,6 +48,7 @@ struct SearchTranscriptView: View {
             }
         }.task {
             do {
+                print("Navigating with teamDocId: \(teamDocId), gameId: \(gameId)")
                 try await transcriptModel.loadAllTranscripts(gameId: gameId, teamDocId: teamDocId)
             } catch {
                 print("Could not load transcripts. error: \(error)")
