@@ -9,6 +9,8 @@ import Foundation
 
 struct keyMomentTranscript {
     let id: Int
+    let keyMomentId: String // referenced key moment
+    let transcriptId: String // referenced key moment
     let transcript: String // transcription
     let frameStart: Date // transcription start
     let frameEnd: Date // transcription end
@@ -57,7 +59,10 @@ final class AudioRecordingViewModel: ObservableObject {
             let transcriptDTO = TranscriptDTO(keyMomentId: keyMomentDocId!, transcript: transcription, language: "English", generatedBy: authUser.uid, confidence: confidence, gameId: gameId)
             
             // Add a new transcript to the database
-            try await TranscriptManager.shared.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO)
+            guard let transcriptDocId = try await TranscriptManager.shared.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
+                print("Error: the transcript doc ID is nil.")
+                return
+            }
             
             var feedbackForArray: [PlayerTranscriptInfo] = []
 //        if feedbackFor == "none" {
@@ -79,7 +84,7 @@ final class AudioRecordingViewModel: ObservableObject {
                 
                 // Add a new recording to the array
                 let recordingsLength = self.recordings.count
-                let newRecording = keyMomentTranscript(id: recordingsLength, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
+                let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: keyMomentDocId!, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
 
                 self.recordings.append(newRecording)
             } else {
@@ -124,7 +129,7 @@ final class AudioRecordingViewModel: ObservableObject {
                 let tmpPlayer = try await getAllPlayersInfo(feedbackFor: keyMoment.feedbackFor)
                 
                 // Create a new object
-                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
+                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
                 
                 // Adding new element to the array
                 self.recordings.append(keyMomentTranscript)
