@@ -89,7 +89,7 @@ final class TranscriptManager {
     func getTranscript(teamId: String, gameId: String, transcriptId: String) async throws -> DBTranscript? {
         // Make sure the game document can be found under the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("getTranscript: Could not find team id. Aborting")
             return nil
         }
         
@@ -100,7 +100,7 @@ final class TranscriptManager {
     func getAllTranscripts(teamId: String, gameId: String) async throws -> [DBTranscript]? {
         // Make sure the game document can be found under the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("getAllTranscripts: Could not find team id. Aborting")
             return nil
         }
         
@@ -122,11 +122,11 @@ final class TranscriptManager {
     }
         
     /** POST - Add a new transcript to the database */
-    func addNewTranscript(teamId: String, transcriptDTO: TranscriptDTO) async throws {
+    func addNewTranscript(teamId: String, transcriptDTO: TranscriptDTO) async throws -> String?{
         // Make sure the collection path can be found
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
-            return
+            print("addNewTranscript: Could not find team id. Aborting")
+            return nil
         }
 
         let transcriptDocument = transcriptCollection(teamDocId: teamDocId, gameDocId: transcriptDTO.gameId).document()
@@ -135,15 +135,22 @@ final class TranscriptManager {
         // create the transcript object
         let transcript = DBTranscript(transcriptId: documentId, transcriptDTO: transcriptDTO)
         
-        // Add the transcript to the database
-        try transcriptDocument.setData(from: transcript, merge: false)
+        do {
+                // Add the transcript to the database
+                try await transcriptDocument.setData(from: transcript, merge: false)
+                print("Successfully added transcript with ID: \(documentId)")
+                return documentId // ✅ Return the generated transcript ID
+            } catch {
+                print("Error saving transcript: \(error.localizedDescription)")
+                return nil
+            }
     }
     
     /** DELETE - Remove a transcript from the database */
     func removeTranscript(teamId: String, gameId: String, transcriptId: String) async throws {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
-            print("Could not find team id. Aborting")
+            print("removeTranscript: Could not find team id. Aborting")
             return
         }
 
