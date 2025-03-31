@@ -29,15 +29,10 @@ import Firebase
  for navigation control.
  */
 struct CoachAddingGameView: View {
-    /// The model for managing team data, passed as an observed object to track changes.
-    @ObservedObject var teamModel: TeamModel
 
     /// ViewModel for managing the data related to adding a new game
     @StateObject private var gameModel = GameModel()
     
-    /// Holds the unique identifier for the team associated with the game.
-    @State private var teamId = ""
-
     /// Stores the title or name of the game (e.g., match name or event title).
     @State private var title = ""
     
@@ -69,6 +64,9 @@ struct CoachAddingGameView: View {
     @State private var hours: Int = 0
     @State private var minutes: Int = 0
     
+    /// Stores the team information
+    @State var team: DBTeam
+    
     /// Options for reminder time before the event
     let timeOptions = [("At time of event", 0), ("5 minutes before", 5), ("10 minutes before", 10), ("15 minutes before", 15), ("30 minutes before", 30), ("1 hour before", 60)]
     
@@ -94,9 +92,7 @@ struct CoachAddingGameView: View {
                         HStack {
                             Text("Team")
                             Spacer()
-                            if let team = teamModel.team {
-                                Text(team.teamNickname).foregroundStyle(.secondary).multilineTextAlignment(.leading)
-                            }
+                            Text(team.teamNickname).foregroundStyle(.secondary).multilineTextAlignment(.leading)
                         }
                         
                         // Section for selecting the game location
@@ -213,16 +209,12 @@ struct CoachAddingGameView: View {
                         
                         // Retrieve the duration
                         duration = ((3600 * hours) + (60 * minutes))
-                        
-                        if let team = teamModel.team {
-                            teamId = team.teamId
-                        } // set the selected team id
-                        
+                                                
                         // Attempt to add the new game to the database
                         Task {
                             do {
                                 let finalLocation = getFinalLocation()
-                                let gameDTO = GameDTO(title: title, duration: duration, location: finalLocation, scheduledTimeReminder: scheduledTimeReminder, startTime: startTime, timeBeforeFeedback: timeBeforeFeedback, timeAfterFeedback: timeAfterFeedback, recordingReminder: recordingReminder, teamId: teamId)
+                                let gameDTO = GameDTO(title: title, duration: duration, location: finalLocation, scheduledTimeReminder: scheduledTimeReminder, startTime: startTime, timeBeforeFeedback: timeBeforeFeedback, timeAfterFeedback: timeAfterFeedback, recordingReminder: recordingReminder, teamId: team.teamId)
 
                                 let canDismiss = try await gameModel.addNewGame(gameDTO: gameDTO) // add new game to the database
                                 if canDismiss {
@@ -305,5 +297,7 @@ extension CoachAddingGameView: GameProtocol {
 
 
 #Preview {
-    CoachAddingGameView(teamModel: TeamModel())
+    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
+
+    CoachAddingGameView(team: team)
 }

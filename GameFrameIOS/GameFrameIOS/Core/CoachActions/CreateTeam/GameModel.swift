@@ -20,8 +20,6 @@ final class GameModel: ObservableObject {
         }
         
         self.games = tmpGames
-        
-        //print("Games: \(games)")
     }
     
     func addNewGame(gameDTO: GameDTO) async throws -> Bool {
