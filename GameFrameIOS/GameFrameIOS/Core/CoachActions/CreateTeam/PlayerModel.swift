@@ -60,7 +60,7 @@ final class PlayerModel: ObservableObject {
     /// - Throws: An error if any database request fails.
     func getAllPlayers(invites: [String], players: [String]) async throws {
         // Temporary array to store player details before updating the `players` state variable.
-        var tmpArrayPlayer: [User_Status] = []
+        var tmpArrayPlayer: [User_Status] = [] 
         
         // Process pending invites and retrieve user details.
         for inviteDocId in invites {
@@ -122,10 +122,10 @@ final class PlayerModel: ObservableObject {
     ///   - teamId: The ID of the team the player is joining.
     ///   - inviteDocId: The invitation document ID linked to the player.
     /// - Returns: `true` if the operation succeeds, `false` otherwise.
-    func addPlayerToTeam(teamId: String, inviteDocId: String) async throws -> Bool {
+    func addPlayerToTeam(teamDocId: String, inviteDocId: String) async throws -> Bool {
         do {
             // Add the player's invite to the team document in the database.
-            try await TeamManager.shared.addInviteToTeam(id: teamId, inviteDocId: inviteDocId)
+            try await TeamManager.shared.addInviteToTeam(id: teamDocId, inviteDocId: inviteDocId)
             return true
         } catch {
             print("Failed to add player to the team.. \(error.localizedDescription)")
