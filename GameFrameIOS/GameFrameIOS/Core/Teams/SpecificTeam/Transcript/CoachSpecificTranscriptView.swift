@@ -7,118 +7,120 @@
 
 import SwiftUI
 
+/// `CoachSpecificTranscriptView` displays details for a specific transcript from a game.
+/// It shows game information, transcript text, associated players, and comments.
 struct CoachSpecificTranscriptView: View {
     
-//    @State var gameId: String // Game ID
-//    @State var teamDocId: String // Team document ID
-//    @State var recording: keyMomentTranscript? // Optional key moment transcript
+    /// State variable to track whether the edit mode is active.
     @State private var isEditing: Bool = false
     
-//    @StateObject private var transcriptViewModel = TranscriptViewModel()
+    /// View model responsible for handling comments.
     @StateObject private var commentViewModel = CommentSectionViewModel()
+    
+    /// View model responsible for handling transcript-related operations.
     @StateObject private var transcriptModel = TranscriptModel()
     
+    /// The game associated with the transcript.
     @State var game: DBGame
+    
+    /// The team associated with the game.
     @State var team: DBTeam
+    
+    /// The specific transcript being displayed.
     @State var transcript: keyMomentTranscript?
 
+    /// Stores player details for whom feedback is provided in this transcript.
     @State private var feedbackFor: [PlayerNameAndPhoto]? = []
-
+    
     var body: some View {
         NavigationView {
             ScrollView {
-//                if let game = transcriptViewModel.game {
-                    VStack {
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(game.title).font(.title2)
-                                Spacer()
-                            }
-                            
-                            if let transcript = transcript {
-                                HStack {
-                                    Text("Transcript #\(transcript.id + 1)")
-                                        .font(.headline)
-                                    Spacer()
-                                }
-                                .padding(.bottom, -2)
-                            }
-                            
-                            HStack {
-                                VStack(alignment: .leading) {
-//                                    if let team = transcriptViewModel.team {
-                                        Text(team.name)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.black.opacity(0.9))
-//                                    }
-                                    if let transcript = transcript {
-                                        Text(transcript.frameStart.formatted(.dateTime.year().month().day().hour().minute()))
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                Spacer()
-                            }
+                VStack {
+                    
+                    // Game title and transcript information section.
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text(game.title).font(.title2)
+                            Spacer()
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 3)
-
-                        Divider().padding(.vertical, 2)
                         
+                        // Displays the transcript ID if available.
                         if let transcript = transcript {
-                            // Transcription section
+                            HStack {
+                                Text("Transcript #\(transcript.id + 1)")
+                                    .font(.headline)
+                                Spacer()
+                            }
+                            .padding(.bottom, -2)
+                        }
+                        
+                        // Displays team name and transcript creation time.
+                        HStack {
                             VStack(alignment: .leading) {
-                                if let gameStartTime = game.startTime {
-                                    let durationInSeconds = transcript.frameStart.timeIntervalSince(gameStartTime)
-                                    Text(formatDuration(durationInSeconds))
-                                        .font(.headline)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal)
-                                        .padding(.bottom, 2)
-                                    
-                                    Text(transcript.transcript)
-                                        .font(.caption)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal)
+                                Text(team.name)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.black.opacity(0.9))
+                                if let transcript = transcript {
+                                    Text(transcript.frameStart.formatted(.dateTime.year().month().day().hour().minute()))
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
                                 }
                             }
-                            .padding(.vertical, 10)
-
-                            // Feedback for Section
-                            if let feedbackFor = feedbackFor {
-                                VStack(alignment: .leading) {
-                                    Text("Feedback For")
-                                        .font(.headline)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.top, 10)
-                                    
-//                                    ForEach(feedbackFor, id: \.playerId) { player in
-                                        HStack {
-//                                            Image(systemName: "person.circle")
-//                                                .resizable()
-//                                                .frame(width: 22, height: 22)
-//                                                .foregroundStyle(.gray)
-//                                                .padding(.vertical, 5)
-                                            Text(feedbackFor.map { $0.name}.joined(separator: ", ")).font(.caption).padding(.top, 5)
-                                        }.multilineTextAlignment(.leading)
-//                                    }
-                                }.padding(.horizontal)
-                            }
-                            VStack {
-                                Divider()
-                                // Comment Section View
-                                CommentSectionView(
-                                    viewModel: commentViewModel,
-                                    teamDocId: team.id,
-                                    keyMomentId: "\(transcript.keyMomentId)",
-                                    gameId: game.gameId,
-                                    transcriptId: "\(transcript.transcriptId)"
-                                )
-                            }
-                            .frame(maxHeight: .infinity, alignment: .bottom)
+                            Spacer()
                         }
                     }
-//                }
+                    .padding(.horizontal)
+                    .padding(.top, 3)
+                    
+                    Divider().padding(.vertical, 2)
+                    
+                    if let transcript = transcript {
+                        // Displays the transcript text along with its timestamp relative to game start.
+                        VStack(alignment: .leading) {
+                            if let gameStartTime = game.startTime {
+                                let durationInSeconds = transcript.frameStart.timeIntervalSince(gameStartTime)
+                                Text(formatDuration(durationInSeconds))
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal)
+                                    .padding(.bottom, 2)
+                                
+                                Text(transcript.transcript)
+                                    .font(.caption)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal)
+                            }
+                        }
+                        .padding(.vertical, 10)
+                        
+                        // Feedback for Section
+                        if let feedbackFor = feedbackFor {
+                            // Displays a list of players for whom the feedback applies.
+                            VStack(alignment: .leading) {
+                                Text("Feedback For")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.top, 10)
+                                
+                                HStack {
+                                    Text(feedbackFor.map { $0.name}.joined(separator: ", ")).font(.caption).padding(.top, 5)
+                                }.multilineTextAlignment(.leading)
+                            }.padding(.horizontal)
+                        }
+                        VStack {
+                            Divider()
+                            // Comment section allowing users to view and add comments for the transcript.
+                            CommentSectionView(
+                                viewModel: commentViewModel,
+                                teamDocId: team.id,
+                                keyMomentId: "\(transcript.keyMomentId)",
+                                gameId: game.gameId,
+                                transcriptId: "\(transcript.transcriptId)"
+                            )
+                        }
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                    }
+                }
             }
             .task {
                 do {
@@ -130,12 +132,6 @@ struct CoachSpecificTranscriptView: View {
                         let fbFor: [String] = feedback.map { $0.playerId }
                         feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
                     }
-//                    try await transcriptViewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
-//                    let feedbackFor = transcript!.feedbackFor ?? []
-                    
-                    // Add a new key moment to the database
-//                    let fbFor: [String] = feedbackFor.map { $0.playerId }
-//                    try await transcriptViewModel.getFeebackFor(feedbackFor: fbFor)
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
                 }
@@ -180,6 +176,6 @@ struct CoachSpecificTranscriptView: View {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
     
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
-
+    
     CoachSpecificTranscriptView(game: game, team: team, transcript: nil)
 }

@@ -7,10 +7,27 @@
 
 import SwiftUI
 
+/**
+ `CommentSectionView` is a SwiftUI view that displays the comments for a specific game transcript.
+ It allows users to view existing comments, add new comments, and provides a user-friendly interface for interacting with the comments section.
+ */
 struct CommentSectionView: View {
+    /**
+     The view model that handles the business logic for fetching and adding comments.
+     It is an `ObservedObject` because it needs to be updated whenever its state changes (e.g., when new comments are loaded or added).
+    */
     @ObservedObject var viewModel: CommentSectionViewModel
+
+    /**
+     A state variable to hold the text of the new comment as the user types it.
+     This is a two-way binding between the text field and the view model, allowing dynamic updates.
+    */
     @State private var newComment: String = ""
 
+    /**
+     The identifiers for the specific team, key moment, game, and transcript related to the comments.
+     These IDs are passed to the view to identify the context for which comments are being displayed and added.
+    */
     var teamDocId: String
     var keyMomentId: String
     var gameId: String

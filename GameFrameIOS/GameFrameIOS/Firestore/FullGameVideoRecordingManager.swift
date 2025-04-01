@@ -8,15 +8,37 @@
 import Foundation
 import FirebaseFirestore
 
+/**
+ This struct represents a full game video recording in the Firestore database. It contains all the necessary details
+ related to a video recording of a soccer game, such as the game ID, the uploader's ID, the URL of the video,
+ the start and end times of the video, and the associated team's ID.
+
+ The struct is `Codable`, meaning it can be easily serialized and deserialized to and from Firestore documents.
+
+ Properties:
+ - `id`: A unique identifier for the video recording document in Firestore.
+ - `gameId`: The ID of the game associated with the video recording.
+ - `uploadedBy`: The ID or username of the person who uploaded the video.
+ - `fileURL`: The URL to access the video file. It can be nil if the file URL is not available.
+ - `startTime`: The start time of the video recording.
+ - `endTime`: The end time of the video recording. This can be nil if the recording has no specified end time.
+ - `teamId`: The ID of the team associated with the game and video recording.
+
+ The struct includes methods for encoding and decoding data for Firestore operations and a custom initializer to
+ initialize it from a Data Transfer Object (DTO) (`FullGameVideoRecordingDTO`).
+
+ This model helps in storing and retrieving the full game video recording details from Firestore.
+ */
 struct DBFullGameVideoRecording: Codable {
-    let id: String
-    let gameId: String
-    let uploadedBy: String
-    let fileURL: String?
-    let startTime: Date
-    let endTime: Date?
-    let teamId: String
-    
+    let id: String          // The unique identifier of the video recording document.
+    let gameId: String      // The ID of the game that this video recording is related to.
+    let uploadedBy: String  // The ID or username of the person who uploaded the video.
+    let fileURL: String?    // The URL to access the video file (optional because it might not be set yet).
+    let startTime: Date     // The start time of the video recording.
+    let endTime: Date?      // The end time of the video recording (optional because it may not be provided yet).
+    let teamId: String      // The ID of the team associated with the video recording.
+
+    // Initializer that is used to create an instance of DBFullGameVideoRecording from individual parameters.
     init(id: String,
          gameId: String,
          uploadedBy: String,
@@ -34,6 +56,7 @@ struct DBFullGameVideoRecording: Codable {
         self.teamId = teamId
     }
     
+    // Initializer that creates a DBFullGameVideoRecording instance using a DTO (Data Transfer Object).
     init(id: String, fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) {
         self.id = id
         self.gameId = fullGameVideoRecordingDTO.gameId
@@ -44,6 +67,7 @@ struct DBFullGameVideoRecording: Codable {
         self.teamId = fullGameVideoRecordingDTO.teamId
     }
     
+    // Coding keys for mapping properties to Firestore field names.
     enum CodingKeys: String, CodingKey {
         case id = "id"
         case gameId = "game_id"
@@ -54,6 +78,7 @@ struct DBFullGameVideoRecording: Codable {
         case teamId = "team_id"
     }
     
+    // Decoding initializer to map Firestore fields to the struct properties.
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)
@@ -65,6 +90,7 @@ struct DBFullGameVideoRecording: Codable {
         self.teamId = try container.decode(String.self, forKey: .teamId)
     }
     
+    // Encoding method to serialize the struct into Firestore fields.
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.id, forKey: .id)
@@ -77,21 +103,73 @@ struct DBFullGameVideoRecording: Codable {
     }
 }
 
+
+/**
+ This singleton class manages all interactions with Firestore related to full game video recordings. It provides methods
+ for adding, retrieving, and managing full game video recordings within the Firestore database for a given team.
+
+ Key responsibilities of this class:
+ - Retrieving a specific full game video recording document using the team's and recording's document IDs.
+ - Accessing the collection of full game video recordings for a specific team.
+ - Adding a new full game video recording to Firestore, including the necessary validation of the team's existence and
+   mapping the provided DTO to a Firestore document.
+
+ The class uses Firestore's `DocumentReference` and `CollectionReference` to access and manage video recording data in
+ the Firestore database. It ensures that all video recordings are correctly stored and retrieved for the appropriate team
+ and game.
+
+ This manager follows the Singleton design pattern, meaning there is only one instance of this class in the app. This
+ instance is accessed via the `shared` static property.
+
+ Methods:
+ - `fullGameVideoRecordingDocument(teamDocId:fgDocId:)`: Returns a reference to a specific full game video recording document.
+ - `fullGameVideoRecordingCollection(teamDocId:)`: Returns a reference to the collection of full game video recordings for a team.
+ - `addFullGameVideoRecording(fullGameVideoRecordingDTO:)`: Adds a new full game video recording to Firestore.
+
+ This class acts as the interface between the app and the Firestore database for full game video recording operations.
+ */
 final class FullGameVideoRecordingManager {
     static let shared = FullGameVideoRecordingManager()
     private init() {}
     
-    /** Returns a specific full game video recording document */
+    // MARK: - Private Helper Methods
+
+        /**
+         * Returns a reference to a specific full game video recording document in Firestore.
+         * - Parameters:
+         *   - teamDocId: The document ID of the team to which the video recording belongs.
+         *   - fgDocId: The document ID of the full game video recording.
+         * - Returns: A `DocumentReference` pointing to the specified full game video recording document in Firestore.
+         */
     func fullGameVideoRecordingDocument(teamDocId: String, fgDocId: String) -> DocumentReference {
         return fullGameVideoRecordingCollection(teamDocId: teamDocId).document(fgDocId)
     }
     
-    /** Returns the full game video recording collection */
+    
+    /**
+     * Returns a reference to the full game video recording collection for a specific team.
+     * - Parameters:
+     *   - teamDocId: The document ID of the team to which the video recordings belong.
+     * - Returns: A `CollectionReference` to the team's full game video recording collection in Firestore.
+     */
     func fullGameVideoRecordingCollection(teamDocId: String) -> CollectionReference {
         return TeamManager.shared.teamCollection.document(teamDocId).collection("fg_video_recording")
     }
     
-    /** Add a full game video recording to the database */
+
+    // MARK: - Public Methods
+
+    /**
+     * Adds a new full game video recording to the Firestore database.
+     * - Parameters:
+     *   - fullGameVideoRecordingDTO: The `FullGameVideoRecordingDTO` object containing the data for the new full game video recording.
+     * - Throws: Throws an error if there is an issue creating or saving the video recording to Firestore.
+     * - Description: This method will:
+     *   1. Ensure the team ID exists by querying the `TeamManager`.
+     *   2. Create a new document for the full game video recording in the team's collection.
+     *   3. Map the provided `FullGameVideoRecordingDTO` to a `DBFullGameVideoRecording` object.
+     *   4. Save the new video recording to Firestore.
+     */
     func addFullGameVideoRecording(fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws {
         //Create new full game video recording
         do {

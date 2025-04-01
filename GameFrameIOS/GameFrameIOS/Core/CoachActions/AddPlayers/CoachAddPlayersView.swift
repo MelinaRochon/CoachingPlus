@@ -26,11 +26,8 @@ struct GetTeam: Equatable {
 */
 struct CoachAddPlayersView: View {
     
-    /// ViewModels to manage the data and logic related to adding players
-//    @ObservedObject var teamModel: TeamModel
-    
-    /// Observes and manages the team-related data, such as team details, players, and team operations.
-    
+    // MARK: - State Properties
+
     /// A state object that handles the logic related to the players (e.g., adding and managing players).
     @StateObject private var playerModel = PlayerModel()
 
@@ -78,8 +75,9 @@ struct CoachAddPlayersView: View {
     
     @State var team: DBTeam
     
+    // MARK: - View
+
     var body: some View {
-        
         NavigationView {
             VStack {
                 Form {
@@ -127,35 +125,31 @@ struct CoachAddPlayersView: View {
                     Button("Add") {
                         Task {
                             do {
-//                                if let team = teamModel.team {
-//                                    try await TeamManager.shared.doesTeamExist(teamId: team.teamId)
-                                    
-                                    authenticationModel.email = email
-                                    let verifyEmail = try await authenticationModel.verifyEmailAddress()
-                                    
-                                    if verifyEmail != nil {
-                                        // A user exists. Error
-                                        showErrorAlert = true
-                                        return
-                                    }
-                                    // Create a new user
-                                    let user = UserDTO(userId: nil, email: email, userType: "Player", firstName: firstName, lastName: lastName)
-                                    let userDocId = try await userModel.addUser(userDTO: user)
-                                    
-                                    // Create a new player
-                                    let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                    let playerDocId = try await playerModel.addPlayer(playerDTO: player)
-                                    
-                                    // Create a new invite
-                                    let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)
-                                    let inviteDocId = try await inviteModel.addInvite(inviteDTO: invite)
-                                    
-                                    let canDismiss = try await playerModel.addPlayerToTeam(teamId: team.teamId, inviteDocId: inviteDocId) // to add player
-                                    
-                                    if canDismiss {
-                                        dismiss() // Dismiss the full-screen cover
-                                    }
-//                                }
+                                authenticationModel.email = email
+                                let verifyEmail = try await authenticationModel.verifyEmailAddress()
+                                
+                                if verifyEmail != nil {
+                                    // A user exists. Error
+                                    showErrorAlert = true
+                                    return
+                                }
+                                // Create a new user
+                                let user = UserDTO(userId: nil, email: email, userType: "Player", firstName: firstName, lastName: lastName)
+                                let userDocId = try await userModel.addUser(userDTO: user)
+                                
+                                // Create a new player
+                                let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
+                                let playerDocId = try await playerModel.addPlayer(playerDTO: player)
+                                
+                                // Create a new invite
+                                let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)
+                                let inviteDocId = try await inviteModel.addInvite(inviteDTO: invite)
+                                
+                                let canDismiss = try await playerModel.addPlayerToTeam(teamId: team.teamId, inviteDocId: inviteDocId) // to add player
+                                
+                                if canDismiss {
+                                    dismiss() // Dismiss the full-screen cover
+                                }
                             } catch {
                                 print(error)
                             }
@@ -176,6 +170,8 @@ struct CoachAddPlayersView: View {
     }
 }
 
+
+// MARK: - Add Player validation
 
 /// Extension of the `CoachAddPlayersView` that conforms to the `PlayerProtocol`.
 /// This extension provides a computed property to validate the player's data before adding them to the team.

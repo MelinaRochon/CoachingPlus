@@ -12,30 +12,52 @@ import TranscriptionKit
 import AVKit
 
 /***
- This structure is called to start an audio recording. When an audio recording starts, it transcribes the
- speech to text, and adds it as a new keyMoment and a new transcript object to the database.
+ This view is responsible for handling audio recording during a game session. It starts and stops audio recordings, manages transcriptions, and adds the resulting transcripts as key moments to the database.
+ The user can start/stop the recording with a button, view saved transcripts, and associate the transcription with players based on the content.
+
+ It also provides a navigation link to the main tab view once the recording ends.
+
+ Key Responsibilities:
+ - Initialize and manage audio recording using AVFoundation.
+ - Transcribe the audio to text and associate the transcription with specific players.
+ - Store and display the resulting transcripts.
+ - Allow the user to end the recording and navigate to the main view.
  */
 struct AudioRecordingView: View {
+    
+    // MARK: - ViewModel and State Variables
+        
+    // AudioRecordingModel that manages key moments and transcripts
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     
+    // The start time of the recording
     @State private var recordingStartTime: Date?
+    
+    // Unique identifiers for the game and team
     @State private var gameId: String = ""
     @State var teamId: String = ""
+    
+    // State to control the visibility of the stop recording alert
     @State private var showStopRecordingAlert: Bool = false
+    
+    // Navigation state for transitioning back to the main page
     @State private var navigateToHome = false
     
+    // Timer and speech recognition states
     @State var timer = ScrumTimer()
     @Binding var errorWrapper: ErrorWrapper?
     @State var speechRecognizer = SpeechRecognizer()
     @State private var isRecording = false
     
-    // creating instance for recording
+    // Audio recording session and recorder states
     @State var session : AVAudioSession!
     @State var recorder: AVAudioRecorder!
     @State var alert: Bool = false
     
-    // Fetch Audios
+    // Array to hold recorded audio file URLs
     @State var audios: [URL] = []
+    
+    // MARK: - Body
     
     var body: some View {
         NavigationView {
@@ -139,6 +161,9 @@ struct AudioRecordingView: View {
         }.navigationBarBackButtonHidden(true)
     }
     
+    // MARK: - Helper Functions
+    
+    /// Handles the change of recording state (start/stop)
     func handleRecordingStateChange(_ isRecording: Bool) {
         if isRecording {
             // Start Recording: Capture start time
@@ -182,7 +207,10 @@ struct AudioRecordingView: View {
         }
     }
     
-    /** Initialize the audio recording */
+    
+    // MARK: - Helper Functions
+
+    /// Initializes the audio recording session
     private func initializeAudioRecording() {
         do {
             let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -204,7 +232,8 @@ struct AudioRecordingView: View {
         }
     }
     
-    /** Start the transcript and save the start time when recording. */
+    
+    /// Starts the transcription process
     private func startRecording() {
         speechRecognizer.resetTranscript() // reset the transcription
         speechRecognizer.startTranscribing() // start the speech to text transcript
@@ -213,13 +242,15 @@ struct AudioRecordingView: View {
         recordingStartTime = Date()
     }
     
-    /** End the transcript after a delay of half a second to make sure all the speech to text was transcribed successfully and stop the transcript */
+    
+    /// Ends the transcription process after a delay to ensure all speech is transcribed
     private func endRecording() async throws {
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5-second delay
         speechRecognizer.stopTranscribing()
     }
     
-    /** Find the player that is associated to the transcription */
+    
+    /// Attempts to associate the transcription with a player by matching names or nicknames
     private func getPlayerAssociatedToTranscript(transcript: String) async throws -> PlayerTranscriptInfo? {
         var playerAssociated: PlayerTranscriptInfo? = nil
         if let players = audioRecordingModel.players {
@@ -248,7 +279,8 @@ struct AudioRecordingView: View {
         return nil
     }
     
-    /** Scroll to bottom of the list - helper function */
+    
+    /// Scrolls the list to the most recent transcript
     private func scrollToBottom(proxy: ScrollViewProxy, newCount: Int) {
         guard let lastItem = audioRecordingModel.recordings.last else { return }
         DispatchQueue.main.async {
@@ -258,12 +290,14 @@ struct AudioRecordingView: View {
         }
     }
     
+    
     /** This function stops the recording manually */
     func stopRecordingManually() {
         handleRecordingStateChange(false)
     }
+    
         
-    /** Get all the saved audio files in the directory */
+    /// Fetches all saved audio files from the document directory
     func getAudios() {
         do {
             let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -286,7 +320,12 @@ struct AudioRecordingView: View {
 }
 
 
-/** This structure is called to show the player's names associated with the saved feedback (transcript) */
+/**
+ This structure displays a row of a saved audio recording's transcript with the associated players' names.
+
+ - `recording`: The transcript of the recording containing the key moment's data.
+ - `players`: A list of players to be checked against the transcript to determine if feedback was given to any specific player.
+ */
 struct RecordingRowView: View {
     var recording: keyMomentTranscript
     var players: [PlayerTranscriptInfo]? = []
@@ -294,21 +333,28 @@ struct RecordingRowView: View {
     var body: some View {
         VStack {
             HStack (alignment: .center) {
+                // Calculate the duration of the recording from the start and end times
                 let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
+                // Display the formatted duration of the recording
                 Text(formatDuration(durationInSeconds)).bold().font(.headline)
                 VStack {
                     Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                    
+                    // Check if the recording has feedback associated with it
                     if let feedbackFor = recording.feedbackFor {
-                        // check if the feedback for array is the same length as the number of players on the team
+                        // Check if feedback matches the number of players on the team
                         if let playersOnTeam = players {
                             if feedbackFor.count == playersOnTeam.count {
+                                // If feedback is given to all players, display "All"
                                 HStack {
                                     Text("All").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
                                 }
                             } else {
+                                // Otherwise, display the names of specific players that received feedback
                                 PlayersNameView(feedbackFor: feedbackFor)
                             }
                         } else {
+                            // If no player list is available, still show the feedback names
                             PlayersNameView(feedbackFor: feedbackFor)
                         }
                     }
@@ -318,15 +364,22 @@ struct RecordingRowView: View {
     }    
 }
 
-/** This structure is called when the player's name needs to be showed once the audio recording has been saved */
+
+/**
+ This structure displays the names of players who received feedback associated with a transcript.
+
+ - `feedbackFor`: A list of players who were given feedback in the recording, based on the transcript.
+ */
 private struct PlayersNameView: View {
     var feedbackFor: [PlayerTranscriptInfo]? = []
 
     var body: some View {
         HStack {
+            // Loop through the feedback array and display each player's name
             if let players = feedbackFor {
                 ForEach(players, id: \.playerId) { player in
                     HStack {
+                        // Display player's first and last name
                         Text("\(player.firstName) \(player.lastName) ").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
                     }.tag(player.playerId as String)
                 }

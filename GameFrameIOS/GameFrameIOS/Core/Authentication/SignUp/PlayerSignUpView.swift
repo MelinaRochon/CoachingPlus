@@ -10,6 +10,8 @@ import SwiftUI
 /// The `PlayerSignUpView` struct is a SwiftUI view responsible for displaying the player's sign-up form.
 struct PlayerSignUpView: View {
     
+    // MARK: - State Properties
+
     /// The view model (AuthenticationModel) is observed and passed from the parent view to manage the player's authentication data.
     @ObservedObject var viewModel: AuthenticationModel
 
@@ -19,6 +21,8 @@ struct PlayerSignUpView: View {
     /// Binding to control the visibility of the sign-in view in the parent view.
     @Binding var showSignInView: Bool
     
+    // MARK: - View
+
     var body: some View {
         VStack(spacing: 20) {
             
@@ -111,6 +115,8 @@ struct PlayerSignUpView: View {
     }
 }
 
+
+// MARK: - Signup validation
 
 /// Extension that conforms the PlayerSignUpView to the AuthenticationSignUpProtocol, which defines validation logic.
 extension PlayerSignUpView: AuthenticationSignUpProtocol {

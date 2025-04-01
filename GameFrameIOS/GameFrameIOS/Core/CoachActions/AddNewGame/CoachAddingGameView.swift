@@ -30,6 +30,8 @@ import Firebase
  */
 struct CoachAddingGameView: View {
 
+    // MARK: - State Properties
+
     /// ViewModel for managing the data related to adding a new game
     @StateObject private var gameModel = GameModel()
     
@@ -81,6 +83,9 @@ struct CoachAddingGameView: View {
     @State private var feedbackBeforeTimeLabel = "10 seconds"
     @State private var feedbackAfterTimeLabel = "10 seconds"
     
+    
+    // MARK: - View
+
     var body: some View {
         NavigationView {
             VStack(alignment: .leading) {
@@ -238,6 +243,8 @@ struct CoachAddingGameView: View {
     }
     
     
+    // MARK: - Functions
+    
     /// Converts the given number of hours and minutes to a Firestore `Timestamp` object.
     ///
     /// This function takes the current date and time, adds the specified number of hours and minutes to it,
@@ -279,6 +286,9 @@ struct CoachAddingGameView: View {
         }
     }
 }
+
+
+// MARK: - Adding Game Validation
 
 
 /// Extension to conform to the `GameProtocol` for `CoachAddingGameView`.

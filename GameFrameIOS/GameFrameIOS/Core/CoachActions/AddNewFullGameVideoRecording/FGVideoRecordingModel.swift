@@ -25,6 +25,7 @@ import SwiftUI
  */
 @MainActor
 final class FGVideoRecordingModel: ObservableObject {
+    
     // MARK: - Published Properties
        
     /// URL of the video file.

@@ -7,34 +7,40 @@
 
 import SwiftUI
 
-/** Shows all transcripts saved using a list */
+/// A view that displays all saved transcripts in a list format.
 struct SearchTranscriptView: View {
+    /// The text entered by the user to search for transcripts.
     @State private var searchText: String = ""
     
-//    @State var gameId: String // scheduled game id is passed when this view is called
-//    @State var teamDocId: String // scheduled game id is passed when this view is called
-//    
-//    @StateObject private var transcriptModel = TranscriptViewModel()
-    
+    /// The game associated with the transcripts.
     @State var game: DBGame
+    
+    /// The team associated with the game.
     @State var team: DBTeam
+    
+    /// A list of transcripts related to the game.
     @State var transcripts: [keyMomentTranscript]?
-
+    
     var body: some View {
         NavigationView {
-            
             VStack {
                 List {
+                    // Checks if there are any transcripts available.
                     if let recordings = transcripts {
                         if !recordings.isEmpty {
                             ForEach(recordings, id: \.id) { recording in
                                 HStack(alignment: .top) {
+                                    /// Navigation to `CoachSpecificTranscriptView` when a transcript is selected.
                                     NavigationLink(destination:
                                                     CoachSpecificTranscriptView(game: game, team: team, transcript: recording)) {
                                         HStack(alignment: .top) {
+                                            
+                                            // Calculates the duration of the transcript.
                                             let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
                                             Text(formatDuration(durationInSeconds)).bold().font(.headline)
                                             Spacer()
+                                            
+                                            // Displays the transcript.
                                             Text("Transcript: \(recording.transcript)")
                                                 .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
                                                 .padding(.top, 4)
@@ -53,14 +59,6 @@ struct SearchTranscriptView: View {
                 .scrollContentBackground(.hidden)
             }
         }
-//        .task {
-//            do {
-//                print("Navigating with teamDocId: \(teamDocId), gameId: \(gameId)")
-//                try await transcriptModel.loadAllTranscripts(gameId: gameId, teamDocId: teamDocId)
-//            } catch {
-//                print("Could not load transcripts. error: \(error)")
-//            }
-//        }
     }
 }
 

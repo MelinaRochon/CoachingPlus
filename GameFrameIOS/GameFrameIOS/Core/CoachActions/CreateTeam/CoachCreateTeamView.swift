@@ -10,58 +10,90 @@ import SFSymbolsPicker
 import SwiftData
 
 /**
- `CoachCreateTeamView.swift` defines the interface for coaches to create a new team.
+ `CoachCreateTeamView.swift` provides an interface for coaches to create a new team.
 
  ## Overview:
- This view provides a form where a coach can input the details of a new team, including:
- - **Team Name** and **Nickname** (nickname limited to 10 characters)
+ This view presents a form where a coach can enter details for a new team, including:
+ - **Team Name** and **Nickname** (nickname is limited to 10 characters)
  - **Sport**, **Gender**, and **Age Group** selection
- - **Optional Team Logo and Color Selection**
+ - **Optional customization**: Team logo and color selection
 
  ## Features:
- - Uses a `ViewModel` to manage team creation logic and Firebase interactions.
- - Custom pickers for selecting team attributes.
+ - Uses a `ViewModel` to handle team creation logic and Firebase interactions.
+ - Custom pickers for selecting sport, gender, and age group.
  - Prevents invalid input (e.g., nickname length limit, required fields).
- - Displays alerts when an error occurs.
- - Handles form dismissal after successful team creation.
+ - Displays alerts if an error occurs.
+ - Automatically dismisses after successful team creation.
 
  ## User Flow:
- 1. Coach enters team details.
- 2. Upon submission, the form validates input and attempts to create a new team.
+ 1. Coach enters the team details.
+ 2. The form validates input and attempts to create a new team.
  3. If successful, the view dismisses; otherwise, an error message appears.
 
  ## Dependencies:
- - `TeamModel` for managing data.
- - `CustomPicker` for selection inputs.
- - `SFSymbolsPicker` for symbol selection (future enhancement).
+ - `TeamModel` for handling team-related data operations.
+ - `CustomPicker` for dropdown selections.
+ - `SFSymbolsPicker` for selecting an optional team logo (future enhancement).
 
  */
 struct CoachCreateTeamView: View {
-    // Dismiss environment variable for going back to the Teams page
+    
+    // MARK: - State Properties
+
+    /// Allows dismissing the view to return to the previous screen.
     @Environment(\.dismiss) var dismiss
     
-    // ViewModel to manage team creation and related state
+    /// ViewModel to manage team creation and interactions with the database.
     @StateObject private var viewModel = TeamModel()
     
-    // Options for sport, gender, and age group selection
+    /// Predefined list of sports available for selection.
     let sportOptions = ["Soccer", "Hockey", "Basketball"]
+
+    /// Predefined list of gender options for team categorization.
     let genderOptions = ["Female", "Male", "Mixed", "Other"]
-    let ageGroupOptions = ["U3", "U4", "U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12", "U13", "U14", "U15", "U16", "U17", "U18", "18+", "Senior", "None"]
-        
+
+    /// Predefined list of age groups for team classification.
+    let ageGroupOptions = [
+        "U3", "U4", "U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12",
+        "U13", "U14", "U15", "U16", "U17", "U18", "18+", "Senior", "None"
+    ]
+
+    // MARK: - User Input States for Team Details
+
+    /// The name of the team entered by the user.
     @State private var name = ""
-    @State private var nickname = "" // 10 characters
+
+    /// The team's nickname, limited to 10 characters.
+    @State private var nickname = ""
+
+    // The selected sport for the team (default is "Soccer").
     @State private var sport = "Soccer"
+
+    /// URL string for the team’s logo (if provided).
     @State private var logoURL = ""
-    @State private var colourHex: String = "#0000FF" // Default to blue
+
+    /// The team's selected color in HEX format (default is blue: "#0000FF").
+    @State private var colourHex: String = "#0000FF"
+
+    /// The selected gender classification for the team (default is "Mixed").
     @State private var gender = "Mixed"
+
+    /// The selected age group for the team (default is "None").
     @State private var ageGrp = "None"
+
+    /// Stores error or informational messages to display in an alert.
     @State private var alertMessage = ""
+
+    /// Controls whether an alert message is shown to the user.
     @State private var showAlert = false
 
+    /// Converts the stored hex color into a SwiftUI `Color` object.
     private var colour: Color {
         return Color(hex: colourHex) ?? .blue
     }
     
+    // MARK: - View
+
     var body: some View {
         NavigationView {
             VStack {
@@ -193,6 +225,8 @@ struct CoachCreateTeamView: View {
     }
     
     
+    // MARK: - Functions
+
     /// Updates the team's color by converting the selected SwiftUI `Color` to a HEX string.
     /// If the conversion fails, it defaults to black ("#000000").
     /// - Parameter color: The `Color` selected by the user from the color picker.
@@ -201,6 +235,8 @@ struct CoachCreateTeamView: View {
     }
 }
 
+
+// MARK: - Create team validation
 
 /// Extension to conform `CoachCreateTeamView` to `TeamProtocol`,
 /// adding validation logic for team creation.

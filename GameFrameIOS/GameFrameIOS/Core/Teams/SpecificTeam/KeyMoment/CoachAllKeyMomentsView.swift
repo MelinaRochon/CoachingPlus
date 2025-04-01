@@ -71,7 +71,6 @@ struct CoachAllKeyMomentsView: View {
                 
                 SearchKeyMomentsView(game: game, team: team, keyMoments: keyMoments, userType: "Coach")
                 
-                
             }// Show filters
             .sheet(isPresented: $showFilterSelector, content: {
                 NavigationStack {

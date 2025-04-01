@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// **Note** To be added in a future release
 struct CoachRecordingView: View {
     var body: some View {
         NavigationView {

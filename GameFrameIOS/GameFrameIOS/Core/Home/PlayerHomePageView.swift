@@ -7,15 +7,46 @@
 
 import SwiftUI
 
+/**
+ The `PlayerHomePageView` is the main view for the player’s homepage. This screen displays two sections:
+ - **Scheduled Games**: Future games the player is scheduled for, with a preview of the next games and a link to view all scheduled games.
+ - **Recent Footage**: Past games where footage is available, with a preview of the last games and a link to view all recent footage.
+ 
+ The view also handles error display, loading state, and scrolling behavior. It uses a `GameModel` to fetch the games associated with the player and separates them into past and future categories.
+
+ - **State Properties**:
+    - `gameModel`: A view model responsible for loading game data and managing the state related to games.
+    - `recentGamesFound`: Boolean indicating whether recent games are available for the player.
+    - `futureGamesFound`: Boolean indicating whether future games are scheduled for the player.
+    - `pastGames`: A list of past games (recent footage) that the player has participated in.
+    - `futureGames`: A list of upcoming scheduled games for the player.
+    - `showErrorMessage`: A flag to control when to display an error message.
+    - `scrollToTop`: A flag used to reset the scroll view to the top when the view appears.
+
+ - **View Structure**:
+    - The `NavigationStack` is used to allow navigation between views.
+    - **Scheduled Games Section**: Displays a preview of upcoming games and a link to view all scheduled games.
+    - **Recent Footage Section**: Displays a preview of past games with footage and a link to view all recent games.
+    - A `CustomUIFields.loadingSpinner` is shown when both past and future games are empty to indicate that data is still loading.
+
+ - **Game Data Fetching and Filtering**:
+    - The games are loaded using the `gameModel.loadAllAssociatedGames()` function.
+    - Once the games are fetched, they are filtered into future and past games based on their start time and duration using the `filterGames` function.
+
+ - **Error Handling**:
+    - If an error occurs while loading the games, an alert is shown with an error message.
+
+ - **Functions**:
+    - `filterGames`: This function categorizes the fetched games into `futureGames` and `pastGames` based on the current date and time. It compares the game’s end time with the current date to determine if the game is upcoming or has already occurred.
+
+*/
 struct PlayerHomePageView: View {
     
     // MARK: - State Properties
     
     /// ViewModel responsible for loading game data.
     @StateObject private var gameModel = GameModel()
-    
-    //    @StateObject private var viewModel = HomePageViewModel()
-    
+        
     /// Indicates whether recent games are available.
     @State private var recentGamesFound: Bool = false
     

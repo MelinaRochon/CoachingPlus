@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// **Note** To be added in a future release
 struct CoachFullGameTranscriptView: View {
     var body: some View {
         Text("Full Game Transcript!")

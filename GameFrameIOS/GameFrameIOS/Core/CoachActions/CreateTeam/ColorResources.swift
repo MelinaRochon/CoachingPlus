@@ -51,16 +51,16 @@ extension Color {
 
     
     /// Converts `Color` to a HEX string (e.g., `#FF5733`).
-        /// This function provides a way to convert a `Color` instance to its corresponding HEX
-        /// string representation, useful when you need to work with HEX format colors in the app.
-        ///
-        /// - Returns: A HEX string representing the color in the format `#RRGGBB`, or `nil` if
-        ///           the conversion fails.
-        ///
-        /// Example usage:
-        /// ```swift
-        /// let hexString = color.toHex()
-        /// ```
+    /// This function provides a way to convert a `Color` instance to its corresponding HEX
+    /// string representation, useful when you need to work with HEX format colors in the app.
+    ///
+    /// - Returns: A HEX string representing the color in the format `#RRGGBB`, or `nil` if
+    ///           the conversion fails.
+    ///
+    /// Example usage:
+    /// ```swift
+    /// let hexString = color.toHex()
+    /// ```
     func toHex() -> String? {
         guard let components = UIColor(self).cgColor.components else { return nil }
         let red = Int((components[0] * 255).rounded())

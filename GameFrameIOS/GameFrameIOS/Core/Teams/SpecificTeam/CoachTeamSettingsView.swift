@@ -7,20 +7,26 @@
 
 import SwiftUI
 
-/// A view that allows the coach to view and manage the settings of a specific team.
+
+/// A view that allows a coach to manage and review the settings of a specific team.
+///
+/// ## Features:
+/// - Displays team information such as name, nickname, age group, sport, gender, and access code.
+/// - Allows the coach to copy the team’s access code for sharing.
+/// - Shows a list of players associated with the team.
+/// - Provides a navigation toolbar with a "Done" button to dismiss the view.
 struct CoachTeamSettingsView: View {
-    /// The model for managing team data, passed as an observed object to track changes.
-//    @ObservedObject var teamModel: TeamModel
     
     /// Temporary storage for the list of players associated with the team.
     @State var players: [User_Status] = []
     
-    /// Environment value to dismiss the current view and return to the previous one.
-    @Environment(\.dismiss) var dismiss // Allows the user to go back
+    /// Environment value to dismiss the current view and return to the previous screen.
+    @Environment(\.dismiss) var dismiss
 
-    /// State to track whether the "Copied!" message should be shown when the access code is copied.
-    @State private var showCopiedMessage = false // To show "Copied!" message
+    /// Tracks whether the "Copied!" message should be displayed when the access code is copied.
+    @State private var showCopiedMessage = false
 
+    /// The team whose settings are being displayed.
     @State var team: DBTeam
     
     var body: some View {

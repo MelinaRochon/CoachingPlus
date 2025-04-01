@@ -8,47 +8,61 @@
 
 import SwiftUI
 
-/*** Player profile */
-struct CoachPlayerProfileView: View {
-    //@State var playerId: String = "";
+/**
+ This view represents a coach's interface for viewing and editing a player's profile.
+
+ The `CoachPlayerProfileView` allows the coach to view detailed information about a player's profile,
+ including their name, nickname, jersey number, gender, date of birth, and guardian information (if available).
+ The coach can toggle between viewing the player's profile and editing specific information, such as the nickname
+ and jersey number.
+
+ ## Key Features:
+ - **Profile Picture**: Displays a default system image if the player does not have a custom profile image.
+ - **Personal Information**: Shows the player's name, email, jersey number, and other personal details (birthdate, gender).
+ - **Guardian Information**: Displays the player's guardian name, email, and phone number, if provided.
+ - **Feedback Section**: Shows a list of game-related feedback (e.g., key moments from games) with placeholders for the actual data.
+ - **Edit Mode**: The coach can toggle between view mode and edit mode. In edit mode, fields like the nickname and jersey number can be modified.
+ 
+ ## Fetching Data:
+ - The player profile data is asynchronously loaded when the view appears, using the `.task` modifier.
+ - The `profileModel.loadPlayer()` function fetches the player's profile and updates the UI with the latest data.
+ - If the coach updates the player's nickname or jersey number, the changes are sent back to the database using the `profileModel.updatePlayerInformation()` function.
+
+ ## Usage:
+ - The `CoachPlayerProfileView` is typically used in a coach's section of the app, allowing them to view and modify player details.
+ - It is designed to be navigated within a `NavigationStack` and can be integrated into the app's navigation hierarchy.
+ */struct CoachPlayerProfileView: View {
+    // MARK: - State Properties
+        
+    /// Player document ID - used to fetch data for a specific player.
     @State var playerDocId: String = ""
+    
+    /// User document ID - used to fetch data for the associated user (coach).
     @State var userDocId: String = ""
     
-    @State private var guardianName: String = "" // Bind to TextField
-    @State private var guardianEmail: String = "" // Bind to TextField
-    @State private var guardianPhone: String = "" // Bind to TextField
-    @State private var nickname: String = ""
-    @State private var jerseyNum: Int = 0
+    /// Guardian details are bound to the respective TextFields, so the user can view/edit them.
+    @State private var guardianName: String = "" // Guardian's name
+    @State private var guardianEmail: String = "" // Guardian's email
+    @State private var guardianPhone: String = "" // Guardian's phone number
     
+    /// Player profile details such as nickname and jersey number.
+    @State private var nickname: String = "" // Nickname of the player
+    @State private var jerseyNum: Int = 0 // Jersey number of the player
+    
+    /// State variable to track whether the profile is being edited.
     @State private var isEditing: Bool = false
     
+    /// Array containing possible genders for the player.
     let genders = ["Female", "Male", "Other"]
     
+    /// The view model responsible for handling the player's profile data.
     @StateObject private var profileModel = CoachProfileViewModel()
+    
+    // MARK: - View
     
     var body: some View {
         NavigationStack {
-            
             VStack{
-                
-                
-                // profile picture
-                /*if let selectedImage = inputImage {
-                 Image(uiImage: selectedImage).profileImageStyle()
-                 } else {
-                 profile.defaultProfilePicture
-                 .profileImageStyle()
-                 .onTapGesture {
-                 showImagePicker = true
-                 }
-                 //.onChange(of: inputImage) {_ in loadImage()}
-                 .sheet(isPresented: $showImagePicker) {
-                 ImagePicker(image: $inputImage)
-                 }
-                 }*/
-                
-                // Header
-                
                 if let user = profileModel.user {
                     VStack {
                         Image(systemName: "person.crop.circle").resizable().frame(width: 80, height: 80).foregroundStyle(.gray)
@@ -56,7 +70,6 @@ struct CoachPlayerProfileView: View {
                             .clipped()
                             .overlay(){
                                 ZStack{
-                                    
                                     // border
                                     RoundedRectangle(cornerRadius: 100).stroke(.white, lineWidth: 4)
                                 }
@@ -69,35 +82,32 @@ struct CoachPlayerProfileView: View {
                             }
                             Text(user.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
                         }
-                        
                     }
                     
                     // Player information
                     List {
                         Section {
-                                if let player = profileModel.player {
-                                    if isEditing {
-                                        HStack {
-                                            Text("Jersey #").foregroundStyle(.primary)
-                                            Spacer()
-                                            TextField("Jersey #", text: Binding(get: { String(jerseyNum)}, set: { val in
-                                                // Convert String back to Int and update the player model
-                                                if let newInt = Int(val) {
-                                                    jerseyNum = newInt
-                                                }
-                                            }))
-                                            .multilineTextAlignment(.trailing)
-                                        }
-                                    }
-                                    
+                            if let player = profileModel.player {
+                                if isEditing {
                                     HStack {
-                                        Text("Nickname")
+                                        Text("Jersey #").foregroundStyle(.primary)
                                         Spacer()
-                                        TextField("Nickname", text: $nickname).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
+                                        TextField("Jersey #", text: Binding(get: { String(jerseyNum)}, set: { val in
+                                            // Convert String back to Int and update the player model
+                                            if let newInt = Int(val) {
+                                                jerseyNum = newInt
+                                            }
+                                        }))
+                                        .multilineTextAlignment(.trailing)
                                     }
-                                    
                                 }
-                            
+                                
+                                HStack {
+                                    Text("Nickname")
+                                    Spacer()
+                                    TextField("Nickname", text: $nickname).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
+                                }
+                            }
                             
                             HStack {
                                 Text("Date of birth")
@@ -106,7 +116,7 @@ struct CoachPlayerProfileView: View {
                                     .foregroundStyle(.secondary)
                                     .multilineTextAlignment(.trailing)
                             }
-                            //.disabled(true)
+                            
                             if let player = profileModel.player {
                                 HStack {
                                     Text("Gender")
@@ -114,8 +124,6 @@ struct CoachPlayerProfileView: View {
                                     Text(player.gender ?? "").foregroundStyle(.secondary)
                                 }
                             }
-                            //.disabled(true)
-                            
                         }
                                                     
                         if ((guardianName != "") || (guardianEmail != "") || (guardianPhone != "")) {
@@ -147,33 +155,7 @@ struct CoachPlayerProfileView: View {
                             }
                         }
                         
-                        // Feedback section
-                        Section (header: Text("Feedback")) {
-                            HStack (alignment: .center) {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 110, height: 60)
-                                    .cornerRadius(10)
-                                
-                                VStack {
-                                    Text("Game A vs Y").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    Text("Key moment #2").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    Text("mm/dd/yyyy, hh:mm:ss").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                            }
-                            HStack (alignment: .center) {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 110, height: 60)
-                                    .cornerRadius(10)
-                                
-                                VStack {
-                                    Text("Game A vs Y").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    Text("Key moment #1").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    Text("mm/dd/yyyy, hh:mm:ss").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                            }
-                        }
+                        // TODO: - Add the feedback section associated to the player
                     }
                 }
             }
@@ -219,7 +201,6 @@ struct CoachPlayerProfileView: View {
                     }
                 }
             }
-            
         }
     }
 }

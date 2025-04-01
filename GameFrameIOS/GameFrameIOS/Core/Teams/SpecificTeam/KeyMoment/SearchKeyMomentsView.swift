@@ -18,9 +18,6 @@ struct SearchKeyMomentsView: View {
     /// The text entered by the user in the search bar.
     @State private var searchText: String = ""
     
-    /// View model responsible for fetching and managing transcript data.
-    @StateObject private var transcriptModel = TranscriptViewModel()
-    
     /// The game for which key moments are being searched.
     @State var game: DBGame
     
