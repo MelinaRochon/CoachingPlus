@@ -33,11 +33,6 @@ struct MessageInputView: View {
                     .foregroundColor(.blue)
             }
         }
-        //.padding()
-        /*.background(
-            RoundedRectangle(cornerRadius: 25)
-                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-        )*/
         .padding(.horizontal)
     }
 

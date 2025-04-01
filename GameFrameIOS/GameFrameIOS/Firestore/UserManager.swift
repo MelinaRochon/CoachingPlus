@@ -8,7 +8,8 @@
 import Foundation
 import FirebaseFirestore
 
-// Codable: Allows to convert and deconvert the structure
+/// Represents a user in the Firebase database.
+/// This structure conforms to the Codable protocol to allow encoding and decoding to/from JSON.
 struct DBUser: Codable {
     let id: String
     let userId: String?
@@ -22,6 +23,7 @@ struct DBUser: Codable {
     var phone: String?
     var country: String?
     
+    // Initializes a user from Firebase authentication details.
     init(auth: AuthDataResultModel, userType: String) {
         self.id = ""
         self.userId = auth.uid
@@ -36,6 +38,7 @@ struct DBUser: Codable {
         self.phone = nil
     }
     
+    // Initializes a user from a UserDTO object.
     init(id: String, userDTO: UserDTO) {
         self.id = id
         self.userId = userDTO.userId
@@ -50,6 +53,7 @@ struct DBUser: Codable {
         self.phone = userDTO.phone
     }
     
+    // Custom initialization with all fields.
     init(
         id: String,
         userId: String? = nil,
@@ -76,6 +80,7 @@ struct DBUser: Codable {
         self.phone = phone
     }
     
+    // Enum to match keys used in the Firebase database.
     enum CodingKeys: String, CodingKey {
         case id = "id"
         case userId = "user_id"
@@ -122,33 +127,49 @@ struct DBUser: Codable {
     
 }
 
+/// Represents a user's group membership.
 struct GrpMembership {
     let id: String
     let paymentPlan: String
     let dateJoined: Date
 }
 
+/// Manages user-related operations such as retrieving, creating, and updating users.
 final class UserManager {
     
     static let shared = UserManager()
-    private init() { } // TO DO - Will need to use something else than singleton
+    private init() { } // TODO: - Will need to use something else than singleton
     
-    /** Returns the user collection */
-    private let userCollection = Firestore.firestore().collection("users") // user collection
     
-    /** Returns the user document */
+    /// Reference to the users collection in Firestore.
+    private let userCollection = Firestore.firestore().collection("users")
+    
+    /// Returns a reference to a specific user document by ID.
+    /// - Parameter id: The unique identifier of the user.
+    /// - Returns: A reference to the user's document in Firestore.
     private func userDocument(id: String) -> DocumentReference {
         userCollection.document(id)
     }
             
-    /** GET - Get user type */
+    
+    /**
+     GET - Retrieves the authenticated user's type from the database.
+     - Throws: An error if the user is not authenticated or if retrieval fails.
+     - Returns: The user type (e.g., "coach", "player").
+    */
     func getUserType() async throws -> String {
         // returns the user type!
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         return try await getUser(userId: authUser.uid)!.userType
     }
     
-    /** POST - Creates a new user in the database */
+    
+    /**
+     POST - Creates a new user in the database.
+     - Parameter userDTO: The data transfer object containing user information to be saved.
+     - Throws: An error if the user creation fails.
+     - Returns: The document ID of the newly created user.
+     */
     func createNewUser(userDTO: UserDTO) async throws -> String {
         let userDocument = userCollection.document()
         let documentId = userDocument.documentID // get the document id
@@ -160,7 +181,13 @@ final class UserManager {
         return documentId
     }
         
-    /** GET - Gets the user information from the database */
+    
+    /**
+     GET - Retrieves user information from the database by user ID.
+     - Parameter userId: The unique user ID.
+     - Throws: An error if retrieval fails.
+     - Returns: The DBUser object containing the user information, or nil if the user is not found.
+     */
     func getUser(userId: String) async throws -> DBUser? {
         let snapshot = try await userCollection.whereField("user_id", isEqualTo: userId).getDocuments()
         
@@ -169,12 +196,24 @@ final class UserManager {
 
     }
     
-    /** GET - Gets the user information from the database */
+    
+    /**
+     GET - Retrieves user information from the database using document ID.
+     - Parameter id: The document ID of the user.
+     - Throws: An error if retrieval fails.
+     - Returns: The DBUser object containing the user information, or nil if not found.
+     */
     func getUserWithDocId(id: String) async throws -> DBUser? {
         return try await userDocument(id: id).getDocument(as: DBUser.self)
     }
 
-    /** GET - Returns the user information from the user's email address */
+    
+    /**
+     GET - Retrieves user information by their email address.
+     - Parameter email: The user's email address.
+     - Throws: An error if retrieval fails.
+     - Returns: The DBUser object containing the user information, or nil if the user is not found.
+     */
     func getUserWithEmail(email: String) async throws -> DBUser? {
         let snapshot = try await userCollection.whereField("email", isEqualTo: email).getDocuments()
         
@@ -182,25 +221,48 @@ final class UserManager {
         return try doc.data(as: DBUser.self)
     }
     
-    /** PUT - Update the coach profile on the user collection from the database */
+    
+    /**
+     PUT - Updates the coach's profile in the user collection.
+     - Parameter user: The DBUser object containing the updated user information.
+     - Throws: An error if the update fails.
+     */
     func updateCoachProfile(user: DBUser) async throws {
         let data: [String: Any] = [
             DBUser.CodingKeys.phone.rawValue: user.phone
         ]
         
-        // TO DO - Update this function!!!! Currently not working....
-        
+        // TODO: - Update this function!!!! Currently not working....
 //        try await userDocument().updateData(data as [AnyHashable : Any])
-
 //        try await userDocument(userId: user.userId).updateData(data as [AnyHashable : Any])
     }
     
-    /** GET - Get the user information from its user doc id */
+    
+    /**
+     GET - Finds a user by document ID.
+     - Parameter id: The unique document ID of the user.
+     - Throws: An error if retrieval fails.
+     - Returns: The DBUser object containing the user's information, or nil if not found.
+     */
     func findUserWithId(id: String) async throws -> DBUser? {
         return try await userDocument(id: id).getDocument(as: DBUser.self)
     }
     
-    /** PUT - Update the user DTO in the database */
+    
+    /**
+     PUT - Updates user details in the database.
+     - Parameters:
+        - id: The unique document ID of the user to update.
+        - email: The new email address.
+        - userTpe: The new user type (e.g., "coach", "player").
+        - firstName: The new first name.
+        - lastName: The new last name.
+        - dob: The new date of birth.
+        - phone: The new phone number (optional).
+        - country: The new country (optional).
+        - userId: The Firebase user ID.
+     - Throws: An error if the update fails.
+     */
     func updateUserDTO(id: String, email: String, userTpe: String, firstName: String, lastName: String, dob: Date, phone: String?, country: String?, userId: String) async throws {
         
         let data: [String: Any] = [

@@ -1,7 +1,23 @@
 import SwiftUI
 
+/**  This SwiftUI view represents the landing page of the app. It serves as the first screen
+  users encounter when they open the app and provides navigation to other important
+  sections of the app like the login screen, About page, and pricing information.
+
+  The landing page includes:
+  - A header section with the app name ("GameFrame") and tagline ("leveling up your game").
+  - A "Log in" button that navigates to the login screen.
+  - A "How we roll" section that leads to an informational page about the app.
+  - A call-to-action section where users can create an account either as a coach or player.
+  - A link to the Pricing page.
+
+  The view uses a ZStack for layering the elements and provides a clean and organized layout
+  using navigation links for smooth transitions to other views. The screen is scrollable to
+  accommodate various sections without cluttering the UI.
+*/
 struct LandingPageView: View {
     
+    /// Binding variable to control navigation to the Sign In view
     @Binding var showSignInView: Bool
     
     var body: some View {
@@ -112,36 +128,6 @@ struct LandingPageView: View {
                     }
                 }
             }
-            /*.toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("GameFrame")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Text("leveling up your game")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                        }
-                        
-                        
-                    }.frame(height: 80)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(destination: LoginChoiceView(showSignInView: $showSignInView)) {
-                        HStack {
-                            Text("Log in")
-                                .foregroundColor(.gray)
-                            
-                            Image(systemName: "person.circle")
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(.gray)
-                        }.padding(.top)
-                    }.frame(height: 80)
-                }
-            }*/
             }.frame(maxWidth: .infinity)
         }
     }

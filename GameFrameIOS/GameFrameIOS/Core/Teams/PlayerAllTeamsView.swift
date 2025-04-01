@@ -7,48 +7,77 @@
 
 import SwiftUI
 
+
+/// `PlayerAllTeamsView` is a SwiftUI view that displays a list of teams a player is associated with.
+/// This view also provides functionality for the player to enter a "group code" to join a new team.
+///
+/// ### Key Features:
+/// 1. **List of Teams**: Displays the player's current teams in a list. If no teams are found, a message "No teams found." is shown.
+///    - Each team in the list is tappable and navigates to `PlayerMyTeamView` where the player can interact with the team's details.
+/// 2. **Group Code for Joining Teams**: The player can enter a group code to join a new team. When the user taps "Enter Code", a text field appears where the player can enter the group code.
+///    - If the group code is valid, the player is added to the team. Otherwise, an error message is shown.
+/// 3. **Error Handling**: If the group code is invalid or there is an error when adding the player to the team, error alerts are displayed.
 struct PlayerAllTeamsView: View {
-    @State private var showTextField = false // Controls visibility of text field
-    @State private var groupCode: String = "" // Stores entered text
-    @State private var showInitialView = true // Tracks if "Have a Group Code?" and "Enter Code" should be shown
-    //    @StateObject private var viewModel = AllTeamsViewModel()
     
+    /// Controls the visibility of the text field for entering the group code
+    /// This state variable determines whether the user should see the input field
+    /// for entering a team access code or not.
+    @State private var showTextField = false
+
+    /// Stores the group code entered by the player
+    /// This is a temporary variable that holds the code entered by the player
+    /// to join a new team. It is submitted when the player clicks the "Submit" button.
+    @State private var groupCode: String = ""
+
+    /// Tracks whether the initial view (the "Have a Group Code?" text and the "Enter Code" button) should be shown
+    /// This is used to toggle between the initial "Have a Group Code?" message and the input field for the code.
+    /// When the player decides to enter a code, this view will hide and show the code entry field instead.
+    @State private var showInitialView = true
+
+    /// A state object that holds the team model, which handles team-related data and logic
+    /// This object is used to fetch the list of teams, validate access codes, and add the player to a team.
     @StateObject private var teamModel = TeamModel()
-    
+
+    /// Holds the list of teams that the player is currently part of
+    /// This state variable stores the teams fetched from the backend or database. It is updated when the data is loaded.
     @State private var teams: [DBTeam]?
+
+    /// Controls whether an alert should be shown when an invalid access code is entered
+    /// This state variable is triggered if the player submits a group code that doesn't match any team.
     @State private var showErrorAccessCode: Bool = false
+
+    /// Controls whether an error alert should be shown if there is an issue adding the player to the team
+    /// If an error occurs when trying to add the player to the team, this flag will display a related alert.
     @State private var showError: Bool = false
- 
+
     var body: some View {
         NavigationView {
             VStack {
                 
                 Divider() // This adds a divider after the title
-//                if !teams.isEmpty {
-                    List {
-                        Section(header: HStack {
-                            Text("My Teams") // Section header text
-                            Spacer() // Push the button to the right
-                        }) {
-                            if let teams = teams {
-                                if !teams.isEmpty {
-                                    ForEach(teams, id: \.name) { team in
-                                        NavigationLink(destination: PlayerMyTeamView(selectedTeam: team)
-                                        ) {
-                                            HStack {
-                                                Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
-                                                Text(team.name)
-                                            }
+                List {
+                    Section(header: HStack {
+                        Text("My Teams") // Section header text
+                        Spacer() // Push the button to the right
+                    }) {
+                        if let teams = teams {
+                            if !teams.isEmpty {
+                                ForEach(teams, id: \.name) { team in
+                                    NavigationLink(destination: PlayerMyTeamView(selectedTeam: team)
+                                    ) {
+                                        HStack {
+                                            Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
+                                            Text(team.name)
                                         }
                                     }
-                                } else {
-                                    Text("No teams found.").font(.caption).foregroundStyle(.secondary)
                                 }
+                            } else {
+                                Text("No teams found.").font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     }
-                    .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-//                }
+                }
+                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
                 
                 Spacer()
                 VStack {
@@ -102,9 +131,7 @@ struct PlayerAllTeamsView: View {
                                         let tmpTeam = try await teamModel.validateTeamAccessCode(accessCode: groupCode)
                                         do {
                                             let newTeam = try await teamModel.addingPlayerToTeam(team: tmpTeam)
-//                                            if var teams = teams {
                                             teams!.append(newTeam!)
-//                                            }
                                             groupCode = "" // Reset input field
                                         } catch {
                                             print("Error when adding user to team. \(error)")

@@ -8,6 +8,9 @@
 import Foundation
 import FirebaseFirestore
 
+/// Represents a team in the database with all necessary properties.
+/// This structure conforms to `Codable` to support encoding and decoding
+/// between Swift objects and Firestore documents.
 struct DBTeam: Codable {
     let id: String
     let teamId: String
@@ -121,6 +124,9 @@ struct DBTeam: Codable {
     }
 }
 
+
+/// Manages operations related to teams, such as fetching, updating, and creating teams in Firestore.
+/// This class follows a singleton pattern to ensure a single instance is used throughout the app.
 final class TeamManager {
     
     static let shared = TeamManager()
@@ -129,12 +135,17 @@ final class TeamManager {
     let teamCollection = Firestore.firestore().collection("teams") // team collection
 
 
-    /** Returns a specific team document */
+    /// Returns a reference to a specific team document in Firestore.
+    /// - Parameter id: Firestore document ID of the team.
+    /// - Returns: A `DocumentReference` pointing to the team document.
     private func teamDocument(id: String) -> DocumentReference {
         teamCollection.document(id)
     }
     
-    /** Returns the team's information from the database */
+    
+    /// Retrieves a team by its team ID.
+    /// - Parameter teamId: The system-assigned team ID.
+    /// - Returns: A `DBTeam` instance if found, otherwise `nil`.
     func getTeam(teamId: String) async throws -> DBTeam? {
         print("in TeamManager, teamId: \(teamId)")
         let snapshot = try await teamCollection.whereField("team_id", isEqualTo: teamId).getDocuments()
@@ -145,10 +156,19 @@ final class TeamManager {
 
     }
     
+    
+    /// Retrieves a team by its Firestore document ID.
+    /// - Parameter docId: Firestore document ID of the team.
+    /// - Returns: A `DBTeam` instance.
     func getTeamWithDocId(docId: String) async throws -> DBTeam {
         try await teamDocument(id: docId).getDocument(as: DBTeam.self)
     }
     
+    
+    /// Retrieves a team using the access code.
+    /// - Parameters:
+    ///   - accessCpde: Team access code.
+    ///   - Returns: A `DBTeam` instance, if found, otherwise `nil`
     func getTeamWithAccessCode(accessCode: String) async throws -> DBTeam? {
         let snapshot = try await teamCollection.whereField("access_code", isEqualTo: accessCode).getDocuments()
         print("passe bien ici")
@@ -156,13 +176,19 @@ final class TeamManager {
         return try doc.data(as: DBTeam.self)
     }
     
-    /** Returns the team name's information from the database */
+    
+    /// Retrieves a team name by its team ID.
+    /// - Parameter teamId: The system-assigned team ID.
+    /// - Returns: A `String` with the team name,.
     func getTeamName(teamId: String) async throws -> String {
         let team = try await getTeam(teamId: teamId)!
         return team.name
     }
         
-    /** PUT - Add a player id to the 'players' array !NEEDS to be tested! */
+    /// Adds a player to the team.
+    /// - Parameters:
+    ///   - id: Firestore document ID of the team.
+    ///   - playerId: ID of the player to be added.
     func addPlayerToTeam(id: String, playerId: String) async throws {
         let data: [String: Any] = [
             DBTeam.CodingKeys.players.rawValue: FieldValue.arrayUnion([playerId])
@@ -172,7 +198,10 @@ final class TeamManager {
         try await teamDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** DELETE - Remove a player from the team */
+    /// Removes a player from the team.
+    /// - Parameters:
+    ///   - id: Firestore document ID of the team.
+    ///   - playerId: ID of the player to be removed.
     func removePlayerFromTeam(id: String, playerId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
@@ -183,7 +212,10 @@ final class TeamManager {
         try await teamDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** PUT - Add a coach id to the 'coaches' array !NEEDS to be tested! */
+    /// Adds a coach to the team.
+    /// - Parameters:
+    ///   - id: Firestore document ID of the team.
+    ///   - coachId: ID of the coach to be added.
     func addCoachToTeam(id: String, coachId: String) async throws {
         let data: [String: Any] = [
             DBTeam.CodingKeys.coaches.rawValue: FieldValue.arrayUnion([coachId])
@@ -193,7 +225,11 @@ final class TeamManager {
         try await teamDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** PUT - Add an invite doc id to the 'invites' array !NEEDS to be tested! */
+    
+    /// Adds an invite to the team.
+    /// - Parameters:
+    ///   - id: Firestore document ID of the team.
+    ///   - inviteDocId: Firestore document ID of the invite.
     func addInviteToTeam(id: String, inviteDocId: String) async throws {
         let data: [String: Any] = [
             DBTeam.CodingKeys.invites.rawValue: FieldValue.arrayUnion([inviteDocId])
@@ -205,7 +241,11 @@ final class TeamManager {
         print("Updated the team doc: \(id) by adding a new invite: \(inviteDocId)")
     }
     
-    /** DELETE - Remove an invite from the team */
+    
+    /// Removes an invite from the team.
+    /// - Parameters:
+    ///   - id: Firestore document ID of the team.
+    ///   - inviteDocId: Firestore document ID of the invite.
     func removeInviteFromTeam(id: String, inviteDocId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
@@ -216,7 +256,11 @@ final class TeamManager {
         try await teamDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** DELETE - Remove a coach from the team */
+    
+    /// Removes a coach from the team.
+    /// - Parameters:
+    ///   - id: Firestore document ID of the team.
+    ///   - coachId: ID of the coach to be removed.
     func removeCoachFromTeam(id: String, coachId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
@@ -228,8 +272,11 @@ final class TeamManager {
     }
     
 
+    /// Creates a new team in Firestore and associates it with a coach.
+    /// - Parameters:
+    ///   - coachId: The ID of the coach creating the team.
+    ///   - teamDTO: The data transfer object containing team details.
     func createNewTeam(coachId: String, teamDTO: TeamDTO) async throws {
-//        let coachID = auth.uid
         do {
             print("Sending team to Firestore: \(teamDTO)")
             // verifie coach valide
@@ -243,39 +290,16 @@ final class TeamManager {
             
             // Add the team in the coach's document
             try await CoachManager.shared.addTeamToCoach(coachId: coachId, teamId: teamDTO.teamId)
-//            let coachRef = Firestore.firestore().collection("users").document(coachId)
-//                    try await coachRef.updateData([
-//                        "teams_coaching": FieldValue.arrayUnion([team.teamId])
-//                    ])
-            print("Team created!")
         } catch let error as NSError {
             print("Error creating team: \(error.localizedDescription)")
             throw error
         }
-        
-        
-        // ajouter dans collection coach valeur teamId (dans array)
-        
-        // chercher coachId et inserer dans attribut coaches
-        
-//        var userData: [String:Any] = [
-//            "user_id": auth.uid,
-//            "date_created": Timestamp(),
-//            "user_type": userType
-//        ]
-//        
-//        if let email = auth.email {
-//            userData["email"] = email
-//        }
-//        
-//        if let photoUrl = auth.photoUrl {
-//            userData["photo_url"] = photoUrl
-//        }
-        
-        // Create a new user, with the document id set as the user id
-//        try await Firestore.firestore().collection("teams").document(auth.uid).setData(userData, merge: false)
     }
     
+    
+    /// Checks whether a team exists in the database.
+    /// - Parameter teamId: The team ID to check.
+    /// - Returns: `true` if the team exists, otherwise `false`.
     func doesTeamExist(teamId: String) async throws -> Bool {
         let snapshot = try await teamCollection.whereField("team_id", isEqualTo: teamId)
             .limit(to: 1) // Limit to 1 for efficiency
@@ -284,7 +308,8 @@ final class TeamManager {
         return !snapshot.documents.isEmpty
     }
     
-    // Generates an 8-character unique team access code
+    /// Generates a unique 8-character access code for a team.
+    /// - Returns: A unique alphanumeric access code.
     func generateUniqueTeamAccessCode() async throws -> String {
         let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 

@@ -1,5 +1,16 @@
 import SwiftUI
 
+/** A SwiftUI view that serves as the main tab navigation for the player's section of the app.
+  It displays a custom tab bar for easy navigation between different sections like:
+  - Home
+  - Activity (Notifications)
+  - Teams
+  - Profile
+
+  The view supports:
+  - Navigation between different tabs.
+  - Custom tab bar with icons and labels, which dynamically changes based on the selected tab.
+*/
 struct PlayerMainTabView: View {
     @State private var selectedTab: Int = 0 // Track selected tab
     @Binding var showLandingPageView: Bool

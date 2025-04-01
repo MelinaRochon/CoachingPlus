@@ -7,24 +7,54 @@
 
 import SwiftUI
 
-/*** Player profile */
-struct PlayerProfileView: View {
-    @Binding var showLandingPageView: Bool
-    @StateObject private var viewModel = PlayerProfileModel()
+/**
+  This file defines the `PlayerProfileView` SwiftUI view, which is responsible for displaying
+  and editing the player's profile information in the "GameFrameIOS" application. It allows
+  users (coaches or players) to view and modify various details about a player's profile, such as:
 
+  - Name and nickname
+  - Jersey number
+  - Guardian information (name, email, phone)
+  - Date of birth and gender
+  - Profile picture (optional)
+
+  The view includes functionality for:
+  - Viewing the player's current information in a non-editable format
+  - Switching to an editable mode where the user can modify certain fields
+  - Saving or canceling changes
+  - Logging out and resetting the password
+
+  The view uses a `PlayerProfileModel` view model to handle the business logic, data fetching,
+  and updating player information. It also supports conditional sections for displaying feedback,
+  and allows for managing user interactions via the toolbar for saving or editing information.
+
+  The view is integrated with the app's navigation system, providing a seamless user experience for
+  managing player profiles.
+*/
+struct PlayerProfileView: View {
+    
+    /// A binding to control whether the landing page should be displayed
+    @Binding var showLandingPageView: Bool
+    
+    /// ViewModel to handle the player data and operations
+    @StateObject private var viewModel = PlayerProfileModel()
+    
+    /// Boolean flag to toggle between viewing and editing the profile
     @State private var isEditing = false // Edit the profile
     
-    // Fields that can be updated by the user
-    @State private var guardianName: String = "" // Bind to TextField
-    @State private var guardianEmail: String = "" // Bind to TextField
-    @State private var guardianPhone: String = "" // Bind to TextField
-    @State private var jersey: Int = 0
-    @State private var nickname: String = ""
-    @State private var inputImage: UIImage?
+    /// State properties to hold editable user information
+    @State private var guardianName: String = "" // Name of the guardian (editable)
+    @State private var guardianEmail: String = "" // Guardian's email (editable)
+    @State private var guardianPhone: String = "" // Guardian's phone (editable)
+    @State private var jersey: Int = 0 // Player's jersey number (editable)
+    @State private var nickname: String = "" // Player's nickname (editable)
+    @State private var inputImage: UIImage? // Image for the player profile (not yet implemented)
     
+    /// Gender options for the player
     let genders = ["Female", "Male", "Other"]
     
-    init( showLandingPageView: Binding<Bool>) {
+    /// Initializer to bind the showLandingPageView state
+    init(showLandingPageView: Binding<Bool>) {
         self._showLandingPageView = showLandingPageView
     }
     
@@ -34,13 +64,11 @@ struct PlayerProfileView: View {
                 VStack{
                     if let user = viewModel.user {
                         VStack {
-                            
                             Image(systemName: "person.crop.circle").resizable().frame(width: 80, height: 80).foregroundStyle(.gray)
                                 .clipShape(Circle())
                                 .clipped()
                                 .overlay(){
                                     ZStack{
-                                        
                                         // border
                                         RoundedRectangle(cornerRadius: 100).stroke(.white, lineWidth: 4)
                                     }
@@ -50,16 +78,9 @@ struct PlayerProfileView: View {
                             if !isEditing {
                                 Text("\(user.firstName) \(user.lastName)").font(.title)
                                 if let player = viewModel.player {
-                                    //                                    if let jerseyNum = player.jerseyNum {
-                                    //Image(systemName: "\(String(jerseyNum)).circle").resizable().frame(width: 30, height: 30).foregroundStyle(.white).clipShape(Circle())
-                                    //                                    }
                                     Text("# \((player.jerseyNum == -1) ? "TBD" : String(player.jerseyNum))").font(.subheadline)
-                                    
                                 }
-                                
-                                //if let email = user.email {
-                                    Text(user.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
-                                //}
+                                Text(user.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
                             }
                             
                         }
@@ -68,11 +89,9 @@ struct PlayerProfileView: View {
                         // Player information
                         List {
                             Section {
-                                
                                 // Show email, name and player number if the user is editing
                                 // Here you bind the `viewModel.player.jerseyNum` directly
                                 if isEditing {
-                                    
                                     HStack {
                                         Text("Name").foregroundStyle(.secondary)
                                         Spacer()
@@ -94,9 +113,7 @@ struct PlayerProfileView: View {
                                     HStack {
                                         Text("Email").foregroundStyle(.secondary)
                                         Spacer()
-                                        //if let email = user.email {
-                                            Text(user.email).foregroundStyle(.secondary)
-                                        //}
+                                        Text(user.email).foregroundStyle(.secondary)
                                     }
                                 }
                                 
@@ -187,36 +204,9 @@ struct PlayerProfileView: View {
                             }
                             
                             if !isEditing {
-                                // Feedback section
-                                Section (header: Text("Feedback")) {
-                                    HStack (alignment: .center) {
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.3))
-                                            .frame(width: 110, height: 60)
-                                            .cornerRadius(10)
-                                        
-                                        VStack {
-                                            Text("Game A vs Y").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            Text("Key moment #2").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            Text("mm/dd/yyyy, hh:mm:ss").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                        }
-                                    }
-                                    HStack (alignment: .center) {
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.3))
-                                            .frame(width: 110, height: 60)
-                                            .cornerRadius(10)
-                                        
-                                        VStack {
-                                            Text("Game A vs Y").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            Text("Key moment #1").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            Text("mm/dd/yyyy, hh:mm:ss").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                        }
-                                    }
-                                }
+                                // TODO: - Add the feedback section of feedback associated to the player
                                 
                                 Section {
-                                    
                                     // Reset password button
                                     Button("Reset password") {
                                         Task {
@@ -286,12 +276,16 @@ struct PlayerProfileView: View {
         }
     }
     
+    
+    /// Toggle editing mode
     private func editInfo() {
         withAnimation {
             isEditing.toggle()
         }
     }
     
+    
+    /// Save updated player information
     private func saveInfo() {
         withAnimation {
             isEditing.toggle()

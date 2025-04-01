@@ -21,22 +21,37 @@ import SwiftUI
  This form ensures that the necessary configurations are made before launching the recording process.
  */
 struct CoachRecordingConfigView: View {
-    // Allows dismissing the view to return to the previous screen
-    @Environment(\.dismiss) var dismiss
     
-    // ViewModel to manage the list of teams
+    // MARK: - State Properties
+
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
+
+    /// ViewModel to manage the list of teams
     @StateObject private var teamModel = TeamModel() // Fetches the list of teams
 
-    
-    // State variables for managing user selections and app state
+    /// State variables for managing user selections and app state
+    /// This variable stores the ID of the team the user selects. It's optional to account for the case when no team is selected.
     @State private var selectedTeamId: String? = nil // Holds the selected team ID
+
+    /// This variable holds the label for the selected recording type. It defaults to "Video", but the user can select a different type (e.g., Audio).
     @State private var selectedRecordingTypeLabel: String = "Video" // Default recording type is Video
+
+    /// This variable tracks whether Apple Watch recording is enabled. It is a Boolean, where `true` means recording is enabled and `false` means it's not.
     @State private var selectedAppleWatchUseLabel: Bool = false // Indicates if Apple Watch recording is enabled
+
+    /// This variable controls whether or not an alert should be displayed to the user. It is set to `true` if no teams are available, and `false` by default.
     @State private var showNoTeamsAlert = false  // State to manage alert visibility
-    @State private var navigateToCreateTeam = false // State variable for navigation
     
+    /// This variable is used to manage navigation to the "Create Team" view. When set to `true`, the view navigates to the team creation screen.
+    @State private var navigateToCreateTeam = false // State variable for navigation
+
+    /// This variable holds the list of teams the user is coaching. It's optional because it can be nil when no teams are fetched or assigned to the user.
     @State private var teamsCoaching: [DBTeam]?
     
+    
+    // MARK: - View
+
     var body: some View {
         NavigationView {
             VStack {
@@ -124,21 +139,28 @@ struct CoachRecordingConfigView: View {
         }
     }
     
+    
+    // MARK: - Private functions
+
+    /// Loads the list of teams the user is coaching and sets the default selection.
     private func loadTeams() {
         Task {
-            // Load Teams on View Appear
             do {
+                // Fetch all teams the user is coaching asynchronously
                 self.teamsCoaching = try await teamModel.loadAllTeams()
+                
                 if let teamsCoaching = teamsCoaching {
                     if let firstTeam = teamsCoaching.first {
+                        // If there are teams available, select the first team by default
                         selectedTeamId = firstTeam.teamId
                     } else {
-                        // No teams
+                        // If no teams are available, show an alert to inform the user
                         showNoTeamsAlert = true
                     }
                 }
             } catch {
-                print("Error when loading the team information for the coachRecordingconfigView \(error)")
+                // Handle errors that occur while loading teams
+                print("Error when loading the team information for the CoachRecordingConfigView: \(error)")
             }
         }
     }

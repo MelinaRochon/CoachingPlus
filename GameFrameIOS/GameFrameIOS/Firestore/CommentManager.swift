@@ -8,6 +8,7 @@
 import Foundation
 import FirebaseFirestore
 
+/// Model representing a comment in the database
 struct DBComment: Codable {
     let commentId: String
     let keyMomentId: String
@@ -17,6 +18,7 @@ struct DBComment: Codable {
     let comment: String
     let createdAt: Date
     
+    // Initializer for creating a comment with all fields
     init(commentId: String, keyMomentId: String, gameId: String, transcriptId: String, uploadedBy: String, comment: String, createdAt: Date) {
         self.commentId = commentId
         self.keyMomentId = keyMomentId
@@ -27,6 +29,7 @@ struct DBComment: Codable {
         self.createdAt = createdAt
     }
     
+    // Initializer using a CommentDTO object
     init(commentId: String, commentDTO: CommentDTO) {
         self.commentId = commentId
         self.keyMomentId = commentDTO.keyMomentId
@@ -37,6 +40,7 @@ struct DBComment: Codable {
         self.createdAt = commentDTO.createdAt
     }
     
+    // Enum for coding keys used in encoding and decoding
     enum CodingKeys: String, CodingKey {
         case commentId = "comment_id"
         case keyMomentId = "key_moment_id"
@@ -47,7 +51,7 @@ struct DBComment: Codable {
         case createdAt = "created_at"
     }
 
-    
+    // Decode the comment data from a decoder
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.commentId = try container.decode(String.self, forKey: .commentId)
@@ -58,7 +62,8 @@ struct DBComment: Codable {
         self.comment = try container.decode(String.self, forKey: .comment)
         self.createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
-        
+     
+    // Encode the comment data to an encoder
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.commentId, forKey: .commentId)
@@ -71,21 +76,49 @@ struct DBComment: Codable {
     }
 }
 
+
+/// Manager for interacting with comment data in Firestore
 final class CommentManager {
+    
     static let shared = CommentManager()
     private init() { } // TO DO - Will need to use something else than singleton
     
-    /** Returns a specific comment document */
+    
+    // MARK: - Private Helper Methods
+
+    /**
+     * Returns a reference to a specific comment document in the Firestore database
+     * - Parameters:
+     *   - teamDocId: The document ID of the team
+     *   - commentDocId: The document ID of the comment
+     * - Returns: A `DocumentReference` pointing to the specific comment document
+     */
     func commentDocument(teamDocId: String, commentDocId: String) -> DocumentReference {
         return commentCollection(teamDocId: teamDocId).document(commentDocId)
     }
 
-    /** Returns the comment collection */
+    
+    /**
+     * Returns a reference to the comments collection for a specific team
+     * - Parameters:
+     *   - teamDocId: The document ID of the team
+     * - Returns: A `CollectionReference` to the team's comments collection in Firestore
+     */
     func commentCollection(teamDocId: String) -> CollectionReference {
         return TeamManager.shared.teamCollection.document(teamDocId).collection("comments")
     }
     
-    /** GET - Returns a specific comment document from the database */
+    
+    // MARK: - Public Methods
+
+    /**
+     * Fetches a specific comment from the Firestore database
+     * - Parameters:
+     *   - teamId: The ID of the team to which the comment belongs
+     *   - commentDocId: The ID of the comment to fetch
+     * - Returns: The `DBComment` object containing the comment's data, or `nil` if not found
+     * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comment
+     */
     func getComment(teamId: String, commentDocId: String) async throws -> DBComment? {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
@@ -93,10 +126,18 @@ final class CommentManager {
             return nil
         }
         
+        // Fetch the comment document and map it to the `DBComment` model
         return try await commentDocument(teamDocId: teamDocId, commentDocId: commentDocId).getDocument(as: DBComment.self)
     }
     
-    /** GET - Returns all comments from the database */
+    
+    /**
+     * Fetches all comments for a specific team from the Firestore database
+     * - Parameters:
+     *   - teamId: The ID of the team for which comments should be fetched
+     * - Returns: An array of `DBComment` objects containing all comments for the team, or `nil` if no comments are found
+     * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comments
+     */
     func getAllComments(teamId: String) async throws -> [DBComment]? {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
@@ -111,7 +152,15 @@ final class CommentManager {
         }
     }
     
-    /** GET - Returns all comments that are associated to a specific key moment from the database */
+    
+    /**
+     * Fetches all comments associated with a specific key moment from the Firestore database
+     * - Parameters:
+     *   - teamId: The ID of the team whose comments should be fetched
+     *   - keyMomentId: The key moment ID to filter comments by
+     * - Returns: An array of `DBComment` objects that are associated with the specified key moment, or `nil` if none are found
+     * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comments
+     */
     func getAllCommentsForSpecificKeyMomentId(teamId: String, keyMomentId: String) async throws -> [DBComment]? {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
@@ -126,7 +175,15 @@ final class CommentManager {
         }
     }
     
-    /** GET - Returns all comments that are associated to a specific transcript from the database */
+
+    /**
+     * Fetches all comments associated with a specific transcript ID from the Firestore database
+     * - Parameters:
+     *   - teamDocId: The document ID of the team
+     *   - transcriptId: The transcript ID to filter comments by
+     * - Returns: An array of `DBComment` objects that are associated with the specified transcript, or `nil` if none are found
+     * - Throws: Throws an error if there is an issue fetching the comments
+     */
     func getAllCommentsForSpecificTranscriptId(teamDocId: String, transcriptId: String) async throws -> [DBComment]? {
         
         let query = try await commentCollection(teamDocId: teamDocId).whereField("transcript_id", isEqualTo: transcriptId).getDocuments()
@@ -136,7 +193,14 @@ final class CommentManager {
         }
     }
     
-    /** POST - Add a new comment to the database */
+    
+    /**
+     * Adds a new comment to the Firestore database
+     * - Parameters:
+     *   - teamDocId: The document ID of the team to which the comment should be added
+     *   - commentDTO: The `CommentDTO` object containing the comment data to be added
+     * - Throws: Throws an error if there is an issue adding the comment to Firestore
+     */
     func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
         print("in manager!")
         print("teamId: \(teamDocId)")
@@ -156,7 +220,14 @@ final class CommentManager {
         print("done!")
     }
     
-    /** DELETE - Remove a comment from the database */
+    
+    /**
+     * Removes a comment from the Firestore database
+     * - Parameters:
+     *   - teamId: The ID of the team from which the comment should be removed
+     *   - commentId: The ID of the comment to be removed
+     * - Throws: Throws an error if there is an issue deleting the comment
+     */
     func removeComment(teamId: String, commentId: String) async throws {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {

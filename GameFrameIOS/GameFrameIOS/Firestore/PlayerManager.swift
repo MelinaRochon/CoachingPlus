@@ -8,7 +8,11 @@
 import Foundation
 import FirebaseFirestore
 
-struct DBPlayer: Codable { 
+/**
+ A struct representing a player in the database.
+ This structure conforms to Codable to easily encode/decode data from Firestore.
+ */
+struct DBPlayer: Codable {
     let id: String
     let playerId: String?
     var jerseyNum: Int
@@ -17,9 +21,7 @@ struct DBPlayer: Codable {
     let profilePicture: String?
     let teamsEnrolled: [String] // TODO: Think about leaving it as it is or putting it as optional
     
-    
     // Guardian information - optional
-    
     var guardianName: String?
     var guardianEmail: String?
     var guardianPhone: String?
@@ -123,12 +125,22 @@ final class PlayerManager {
     
     private let playerCollection = Firestore.firestore().collection("players") // user collection
     
-    /** Returns the player document */
+    /**
+     Returns a reference to a specific player document by ID.
+     - Parameter id: The unique player document ID.
+     - Returns: A `DocumentReference` to the player's Firestore document.
+     */
     private func playerDocument(id: String) -> DocumentReference {
         playerCollection.document(id)
     }
     
-    /** POST - Creates a new player in the database */
+    
+    /**
+     Creates a new player in the Firestore database.
+     - Parameter playerDTO: A `PlayerDTO` object containing player information.
+     - Returns: The newly created player's document ID.
+     - Throws: An error if creating the player document fails.
+     */
     func createNewPlayer(playerDTO: PlayerDTO) async throws -> String {
         let playerDocument = playerCollection.document()
         let documentId = playerDocument.documentID // get the document id
@@ -139,14 +151,27 @@ final class PlayerManager {
         return documentId
     }
     
-    /** GET - Returns the player's information from the database by finding the user's document, with the userId */
+    
+     /**
+      Fetches a player's information from the Firestore database by player ID.
+      - Parameter playerId: The player's ID used to find the corresponding player document.
+      - Returns: A `DBPlayer` object containing player data, or `nil` if not found.
+      - Throws: An error if fetching the player document fails.
+      */
     func getPlayer(playerId: String) async throws -> DBPlayer? {
         let query = try await playerCollection.whereField("player_id", isEqualTo: playerId).getDocuments()
         guard let doc = query.documents.first else { return nil }
         return try doc.data(as: DBPlayer.self)
     }
     
-    /** GET - Returns the player using the player's document id */
+    
+    /**
+     Fetches a player by their document ID.
+     
+     - Parameter id: The unique player document ID.
+     - Returns: A `DBPlayer` object containing player data, or `nil` if not found.
+     - Throws: An error if fetching the player document fails.
+     */
     func findPlayerWithId(id: String) async throws -> DBPlayer? {
         return try await playerDocument(id: id).getDocument(as: DBPlayer.self)
     }
@@ -163,7 +188,14 @@ final class PlayerManager {
         return decoder
     }()
     
-    /** PUT - Updates the guardian name in the player's profile - NOT used? */
+    
+    /**
+     Updates the guardian's name for a specific player.
+     
+     - Parameter id: The unique player document ID.
+     - Parameter name: The new guardian's name to update in the player document.
+     - Throws: An error if updating the document fails.
+     */
     func updateGuardianName(id: String, name: String) async throws {
         let data: [String: Any] = [
             DBPlayer.CodingKeys.guardianName.rawValue: name
@@ -172,7 +204,13 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** DELETE - Remove all the guardian information from the player's document */
+   
+    /**
+     Removes all guardian information from a player's document.
+     
+     - Parameter id: The unique player document ID.
+     - Throws: An error if updating the document fails.
+     */
     func removeGuardianInfo(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianName.rawValue: nil,
@@ -183,7 +221,14 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** PUT - Add to the 'teamsEnrolled' array the teamId */
+    
+    /**
+     Adds a team to the list of teams the player is enrolled in.
+     
+     - Parameter id: The unique player document ID.
+     - Parameter teamId: The team ID to add to the player's list of enrolled teams.
+     - Throws: An error if updating the document fails.
+     */
     func addTeamToPlayer(id: String, teamId: String) async throws {
         let data: [String: Any] = [
             DBPlayer.CodingKeys.teamsEnrolled.rawValue: FieldValue.arrayUnion([teamId])
@@ -193,7 +238,12 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** DELETE - Remove a team id in the  'teamsEnrolled' array */
+    /**
+    DELETE - Removes a team ID from the 'teamsEnrolled' array in Firestore.
+    - Parameter id: The unique player document ID.
+    - Parameter teamId: The team ID to remove from the player's list of enrolled teams.
+    - Throws: An error if updating the document fails.
+    */
     func removeTeamFromPlayer(id: String, teamId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
@@ -204,7 +254,12 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** DELETE - Remove the guardian name from the player's document */
+    
+    /**
+     DELETE - Removes the guardian's name from the player's document in Firestore.
+     - Parameter id: The unique player document ID.
+     - Throws: An error if updating the document fails.
+     */
     func removeGuardianInfoName(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianName.rawValue: nil
@@ -213,7 +268,13 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** DELETE - Remove the guardian email address from the player's document */
+    
+    /**
+     DELETE - Removes the guardian's email address from the player's document in Firestore.
+     
+     - Parameter id: The unique player document ID.
+     - Throws: An error if updating the document fails.
+     */
     func removeGuardianInfoEmail(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianEmail.rawValue: nil
@@ -222,7 +283,13 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** DELETE - Remove the guardian phone number from the player's document */
+    
+    /**
+     DELETE - Removes the guardian's phone number from the player's document in Firestore.
+     
+     - Parameter id: The unique player document ID.
+     - Throws: An error if updating the document fails.
+     */
     func removeGuardianInfoPhone(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianPhone.rawValue: nil
@@ -231,7 +298,13 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    /** PUT - Updates the player's information on the 'player' collection */
+    
+    /**
+     PUT - Updates the player's information in Firestore.
+     
+     - Parameter player: A `DBPlayer` object containing updated player information.
+     - Throws: An error if updating the document fails.
+     */
     func updatePlayerInfo(player: DBPlayer) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.jerseyNum.rawValue: player.jerseyNum,
@@ -243,7 +316,15 @@ final class PlayerManager {
         try await playerDocument(id: player.id).updateData(data as [AnyHashable: Any])
     }
     
-    /** PUT - Update the player's jersey and nickname information in the database */
+    
+    /**
+     PUT - Updates the player's jersey number and nickname in Firestore.
+     
+     - Parameter playerDocId: The unique player document ID.
+     - Parameter jersey: The new jersey number for the player.
+     - Parameter nickname: The new nickname for the player.
+     - Throws: An error if updating the document fails.
+     */
     func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.jerseyNum.rawValue: jersey,
@@ -254,7 +335,14 @@ final class PlayerManager {
         try await playerDocument(id: playerDocId).updateData(data as [AnyHashable: Any])
     }
     
-    /** PUT - Updatethe player's id in the database */
+    
+    /**
+     PUT - Updates the player's unique ID in Firestore.
+     
+     - Parameter id: The unique player document ID.
+     - Parameter playerId: The new player ID.
+     - Throws: An error if updating the document fails.
+     */
     func updatePlayerId(id: String, playerId: String) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.playerId.rawValue: playerId,
@@ -262,7 +350,14 @@ final class PlayerManager {
         try await playerDocument(id: id).updateData(data as [AnyHashable: Any])
     }
     
-    /** GET - Returns all teams that the player is enrolled */
+    
+    /**
+     PUT - Updates the player's unique ID in Firestore.
+     
+     - Parameter id: The unique player document ID.
+     - Parameter playerId: The new player ID.
+     - Throws: An error if updating the document fails.
+     */
     func getTeamsEnrolled(playerId: String) async throws -> [GetTeam] {
         
         let player = try await getPlayer(playerId: playerId)!
@@ -283,6 +378,14 @@ final class PlayerManager {
         return teams
     }
     
+    
+    /**
+     GET - Fetches all teams that the player is enrolled in as full `DBTeam` objects.
+     
+     - Parameter playerId: The player's ID used to retrieve enrolled teams.
+     - Returns: An array of `DBTeam` objects representing the full team data.
+     - Throws: An error if fetching the player's document or teams fails.
+     */
     func getAllTeamsEnrolled(playerId: String) async throws -> [DBTeam]? {
         
         let player = try await getPlayer(playerId: playerId)!
@@ -295,7 +398,6 @@ final class PlayerManager {
         for document in snapshot.documents {
             if let team = try? document.data(as: DBTeam.self) {
                 // Add a Team object with the teamId and team name
-//                let teamObject = GetTeam(teamId: team.teamId, name: team.name, nickname: team.teamNickname)
                 teams.append(team)
             }
         }
@@ -303,7 +405,15 @@ final class PlayerManager {
         return teams
     }
     
-    /** GET - Returns if the player is enrolled to the specified team or not */
+    
+    /**
+     GET - Checks if the player is enrolled in a specific team.
+     
+     - Parameter playerId: The player's ID used to check enrollment.
+     - Parameter teamId: The team ID to check for enrollment.
+     - Returns: A boolean indicating whether the player is enrolled in the team.
+     - Throws: An error if fetching the player's document fails.
+     */
     func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
         let player = try await getPlayer(playerId: playerId)!
         print("player info: \(player)")
