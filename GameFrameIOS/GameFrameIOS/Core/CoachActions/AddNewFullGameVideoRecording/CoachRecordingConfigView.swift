@@ -60,7 +60,7 @@ struct CoachRecordingConfigView: View {
                             
                             // Recording Type Picker (Video or Audio)
                             CustomPicker(
-                                title: "Recording Typess",
+                                title: "Recording Types",
                                 options: AppData.recordingOptions, // List of recording options (e.g., "Video", "Audio Only")
                                 displayText: { $0 }, // Display text for each option (directly using the string)
                                 selectedOption: $selectedRecordingTypeLabel
@@ -75,16 +75,20 @@ struct CoachRecordingConfigView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 
                 // Button to start the recording (Video or Audio)
-                if selectedRecordingTypeLabel == "Video" {
-                    NavigationLink(destination: CoachRecordingView()) {
-                        
-                        // Custom Styled 'Start Video Recording' button
-                        CustomUIFields.styledHStack(content: {
-                            Text("Start Video Recording").font(.title2).bold()
-                        }, background: selectedTeamId != nil ? .red : .gray)
-                        
-                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
-                } else {
+                
+                // Uncomment when video recording is available!
+                
+//                if selectedRecordingTypeLabel == "Video" {
+//                    NavigationLink(destination: CoachRecordingView()) {
+//                        
+//                        // Custom Styled 'Start Video Recording' button
+//                        CustomUIFields.styledHStack(content: {
+//                            Text("Start Video Recording").font(.title2).bold()
+//                        }, background: selectedTeamId != nil ? .red : .gray)
+//                        
+//                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
+//                } else
+                if (selectedRecordingTypeLabel == "Audio Only"){
                     NavigationLink(destination: AudioRecordingView(teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
                         
                         // Custom Styled 'Start Audio Recording' button
