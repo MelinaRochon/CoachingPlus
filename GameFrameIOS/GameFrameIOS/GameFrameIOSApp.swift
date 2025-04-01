@@ -11,10 +11,6 @@ import FirebaseCore
 
 @main
 struct GameFrameIOSApp: App {
-//    @StateObject private var authViewModel = AuthViewModel() // Manage user authentication state
-    
-//    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    
     init(){
         FirebaseApp.configure()
     }
@@ -34,34 +30,8 @@ struct GameFrameIOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-//            if authViewModel.isLoggedIn {
-//                            if authViewModel.userRole == .coach {
-//                                CoachMainTabView(showLandingPageView: .constant(false))
-//                            } else {
-//                                PlayerMainTabView(showLandingPageView: .constant(false))
-//                            }
-//                        } else {
-//                            LoginChoiceView(authViewModel: authViewModel) // Redirect to login if not authenticated
-//                        }
-            //PlayerMainTabView(showLandingPageView: .constant(false))
             RootView()
-            //ContentView()
-                //.environment(\.font, Font.custom("WorkSans", size: 16))
-//                .workSansFont(size: 16) // Apply work sans globally
-            //NavigationStack {
-            //AuthenticationView()
-            /*RootView().environment(\.font, Font.custom("WorkSans", size: 16))*/ //.environment(\.font, Font.custom("WorkSans", size: 16))
-                //.workSansFont(size: 16) // Apply work sans globally
-            //}
         }
         .modelContainer(sharedModelContainer)
     }
 }
-
-/*class AppDelegate: NSObject, UIApplicationDelegate {
-  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-    FirebaseApp.configure()
-      print("Configured Firebase!")
-    return true
-  }
-}*/
