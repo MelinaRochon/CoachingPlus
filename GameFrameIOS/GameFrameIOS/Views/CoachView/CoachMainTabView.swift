@@ -84,7 +84,7 @@ struct CoachMainTabView: View {
         }
         // Show CoachRecordingView when the plus button is clicked
         .fullScreenCover(isPresented: $showCoachRecordingConfig) {
-            CoachRecordingConfigView()
+            CoachRecordingConfigView(showLandingPageView: $showLandingPageView)
         }.navigationBarBackButtonHidden(true) // ✅ Hides the back button
     }
 

@@ -27,6 +27,8 @@ struct AudioRecordingView: View {
     
     // MARK: - ViewModel and State Variables
         
+    @Binding var showLandingPageView: Bool
+
     // AudioRecordingModel that manages key moments and transcripts
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     
@@ -57,6 +59,11 @@ struct AudioRecordingView: View {
     // Array to hold recorded audio file URLs
     @State var audios: [URL] = []
     
+//    init(teamId: String, errorWrapper: ErrorWrapper?, showLandingPageView: Binding<Bool>) {
+//        self.teamId = teamId
+//        self.errorWrapper = errorWrapper
+//        self._showLandingPageView = showLandingPageView
+//    }
     // MARK: - Body
     
     var body: some View {
@@ -92,7 +99,7 @@ struct AudioRecordingView: View {
                 }
                 
                 /** Link to go back to the main tab */
-                NavigationLink(destination: CoachMainTabView(showLandingPageView: .constant(false)), isActive: $navigateToHome) { EmptyView()
+                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView), isActive: $navigateToHome) { EmptyView()
                 }
                 
             }
@@ -192,6 +199,8 @@ struct AudioRecordingView: View {
                         
                         // Get the player that is associated to the transcript
                         let feedbackFor = try await getPlayerAssociatedToTranscript(transcript: transcript)
+                        
+                        print("feedbackFor: \(feedbackFor)")
                         
                         // Cut the transcript to see if the name of the player is in the transcript
                         // See which player the transcript is associated to
@@ -316,7 +325,7 @@ struct AudioRecordingView: View {
 }
 
 #Preview {
-    AudioRecordingView(teamId: "", errorWrapper: .constant(nil))
+    AudioRecordingView(showLandingPageView: .constant(false), teamId: "", errorWrapper: .constant(nil))
 }
 
 

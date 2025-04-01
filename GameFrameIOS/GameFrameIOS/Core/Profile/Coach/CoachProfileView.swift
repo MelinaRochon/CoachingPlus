@@ -199,10 +199,10 @@ import SwiftUI
                                      Button("Log out") {
                                          Task {
                                              do {
-                                                 try viewModel.logOut()
+                                                 try await viewModel.logOut()
                                                  showLandingPageView = true
                                              } catch {
-                                                 print(error)
+                                                 print("Error when logging out... \(error)")
                                              }
                                          }
                                      }

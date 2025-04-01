@@ -27,6 +27,8 @@ struct CoachRecordingConfigView: View {
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
 
+    @Binding var showLandingPageView: Bool
+
     /// ViewModel to manage the list of teams
     @StateObject private var teamModel = TeamModel() // Fetches the list of teams
 
@@ -104,7 +106,7 @@ struct CoachRecordingConfigView: View {
 //                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
 //                } else
                 if (selectedRecordingTypeLabel == "Audio Only"){
-                    NavigationLink(destination: AudioRecordingView(teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
+                    NavigationLink(destination: AudioRecordingView(showLandingPageView: $showLandingPageView, teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
                         
                         // Custom Styled 'Start Audio Recording' button
                         CustomUIFields.styledHStack(content: {
@@ -115,7 +117,7 @@ struct CoachRecordingConfigView: View {
                 }
                 Spacer()
                 
-                NavigationLink(destination: CoachMainTabView(showLandingPageView: .constant(false)), isActive: $navigateToCreateTeam) {
+                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView), isActive: $navigateToCreateTeam) {
                     EmptyView()
                 }
             }.toolbar {
@@ -171,5 +173,5 @@ struct CoachRecordingConfigView: View {
 }
 
 #Preview {
-    CoachRecordingConfigView()
+    CoachRecordingConfigView(showLandingPageView: .constant(false))
 }

@@ -83,9 +83,12 @@ final class AuthenticationModel: ObservableObject {
     /// - Parameter userType: The type of user being created, either "Coach" or "Player".
     /// - Throws: An error if the sign-up fails (e.g., email already in use or issues with team validation).
     func signUp(userType: UserType) async throws {
-        guard try await verifyEmailAddress() == nil else {
-            print("User already exists with this email. Abort")
-            return
+        let verifyUser =  try await verifyEmailAddress()
+        if let verifyUser = verifyUser {
+            if verifyUser.userId != nil {
+                print("User already exists with this email. Abort")
+                return
+            }
         }
         
         // Create a new user in Firebase Authentication.

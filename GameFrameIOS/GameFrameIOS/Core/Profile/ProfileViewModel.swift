@@ -32,7 +32,8 @@ final class PlayerProfileModel: ObservableObject {
      Logs out the current authenticated user.
      - This function calls `signOut()` from the `AuthenticationManager` to log the user out of the system. After the logout, the user's session is terminated.
      - Throws: It can throw an error if there’s an issue during the sign-out process.
-     */    func logOut() throws {
+     */
+    func logOut() throws {
         try AuthenticationManager.shared.signOut()
     }
     

@@ -75,6 +75,8 @@ final class AudioRecordingModel: ObservableObject {
                 fbFor = feedbackFor.map { [$0.playerId] } ?? []
             }
             
+            print("fbFor test : \(fbFor)")
+            
             // Get authenticated coach ID
             let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
             
@@ -101,7 +103,7 @@ final class AudioRecordingModel: ObservableObject {
             
             // Retrieve associated players
             var feedbackForArray: [PlayerTranscriptInfo] = []
-            /** Following code will be used in a future feature - adapting the feedback to multiple people */
+            // Following code will be used in a future feature - adapting the feedback to multiple people
             /********
              if feedbackFor == "none" {
              feedbackForArray = []
