@@ -139,14 +139,14 @@ struct CoachAddPlayersView: View {
                                 
                                 // Create a new player
                                 let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                let playerDocId = try await playerModel.addPlayer(playerDTO: player)
+                                let playerDocId = try await PlayerManager.shared.createNewPlayer(playerDTO: player)
                                 
                                 // Create a new invite
                                 let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)
                                 let inviteDocId = try await inviteModel.addInvite(inviteDTO: invite)
                                 
-                                let canDismiss = try await playerModel.addPlayerToTeam(teamId: team.teamId, inviteDocId: inviteDocId) // to add player
-                                
+                                let canDismiss = try await playerModel.addPlayerToTeam(teamDocId: team.id, inviteDocId: inviteDocId)
+                                    
                                 if canDismiss {
                                     dismiss() // Dismiss the full-screen cover
                                 }

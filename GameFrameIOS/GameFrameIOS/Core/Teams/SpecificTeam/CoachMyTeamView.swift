@@ -41,6 +41,8 @@ struct CoachMyTeamView: View {
     /// View model for managing player data.
     @StateObject private var playerModel = PlayerModel()
     
+    @StateObject private var teamModel = TeamModel()
+    
     /// The team whose settings are being viewed and modified.
     @State var selectedTeam: DBTeam
     
@@ -185,11 +187,13 @@ struct CoachMyTeamView: View {
                 // Load games and players associated with the team
                 try await gameModel.getAllGames(teamId: selectedTeam.teamId)
                 
+                self.selectedTeam = try await TeamManager.shared.getTeam(teamId: selectedTeam.teamId)!
                 guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TODO: - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
                     return
                 }
+                
                 guard let tmpInvites = selectedTeam.invites else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TODO: Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
@@ -197,7 +201,6 @@ struct CoachMyTeamView: View {
                 }
 
                 try await playerModel.getAllPlayers(invites: tmpInvites, players: tmpPlayers)
-
             } catch {
                 // Print error message if data fetching fails
                 print("Error occurred when getting the team games data: \(error.localizedDescription)")
