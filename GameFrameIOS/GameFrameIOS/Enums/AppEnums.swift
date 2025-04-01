@@ -50,3 +50,12 @@ enum TeamValidationError: Error {
     case userExists
     case noTeamExist
 }
+
+
+/// **GameValidationError**: Enum representing different error status type
+/// - This enum represents error states encountered during team-related validation, such as verifying a team’s access code.
+/// - `invalidStartTime`: Represents the error that occurs when the start time of the game is invalid (nil).
+/// - It conforms to the `Error` protocol, meaning it can be used as a type of error in Swift's error handling system. This error type helps in managing team-related validation failures gracefully.
+enum GameValidationError: Error {
+    case invalidStartTime
+}

@@ -40,6 +40,26 @@ final class GameModel: ObservableObject {
     }
     
     
+    // MARK: - Fetch a Game for a Team
+    
+    /// Retrieves a game associated with a given team.
+    ///
+    /// - Parameters:
+    ///  - teamId: The ID of the team for which to fetch the game.
+    ///  - gameId: The ID of the game to fetch
+    /// - Throws: An error if fetching fails.
+    func getGame (teamId: String, gameId: String) async throws -> DBGame? {
+        // Get the list of games, if they exists.
+        guard let game = try await GameManager.shared.getGame(gameId: gameId, teamId: teamId) else {
+            print("Could not load game. Abort...")
+            return nil
+        }
+        
+        // Update the published games list with the fetched data.
+        return game
+    }
+    
+    
     // MARK: - Add a New Game
       
     /// Adds a new game to the database.

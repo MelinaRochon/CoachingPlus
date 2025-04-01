@@ -64,6 +64,9 @@ struct AllScheduledGamesView: View {
             .background(Color.white) // Set background color to white for the List
         }
         .searchable(text: $searchText)
+        .navigationTitle(Text("All Scheduled Games"))
+        .navigationBarTitleDisplayMode(.inline)
+
     }
 }
 

@@ -100,12 +100,11 @@ struct CoachSpecificTranscriptView: View {
                                 Text("Feedback For")
                                     .font(.headline)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.top, 10)
                                 
                                 HStack {
-                                    Text(feedbackFor.map { $0.name}.joined(separator: ", ")).font(.caption).padding(.top, 5)
+                                    Text(feedbackFor.map { $0.name}.joined(separator: ", ")).font(.caption).padding(.top, 2)
                                 }.multilineTextAlignment(.leading)
-                            }.padding(.horizontal)
+                            }.padding(.horizontal).padding(.vertical, 10)
                         }
                         VStack {
                             Divider()
@@ -138,36 +137,36 @@ struct CoachSpecificTranscriptView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    // Action for sharing
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                }
-                .foregroundColor(.red)
-            }
+//            ToolbarItem(placement: .topBarTrailing) {
+//                Button {
+//                    // Action for sharing
+//                } label: {
+//                    Image(systemName: "square.and.arrow.up")
+//                }
+//                .foregroundColor(.red)
+//            }
             
-            ToolbarItem(placement: .topBarTrailing) {
-                if !isEditing {
-                    Button {
-                        withAnimation {
-                            isEditing.toggle()
-                        }
-                    } label: {
-                        Text("Edit")
-                    }
-                    .foregroundColor(.red)
-                } else {
-                    Button {
-                        withAnimation {
-                            isEditing.toggle()
-                        }
-                    } label: {
-                        Text("Save")
-                    }
-                    .foregroundColor(.red)
-                }
-            }
+//            ToolbarItem(placement: .topBarTrailing) {
+//                if !isEditing {
+//                    Button {
+//                        withAnimation {
+//                            isEditing.toggle()
+//                        }
+//                    } label: {
+//                        Text("Edit")
+//                    }
+//                    .foregroundColor(.red)
+//                } else {
+//                    Button {
+//                        withAnimation {
+//                            isEditing.toggle()
+//                        }
+//                    } label: {
+//                        Text("Save")
+//                    }
+//                    .foregroundColor(.red)
+//                }
+//            }
         }
     }
 }

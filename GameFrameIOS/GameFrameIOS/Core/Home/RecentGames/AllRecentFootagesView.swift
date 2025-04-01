@@ -66,6 +66,8 @@ struct AllRecentFootageView: View {
             .background(Color.white) // Set background color to white for the List
         }
         .searchable(text: $searchText)
+        .navigationTitle(Text("All Recent Games"))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

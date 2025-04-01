@@ -31,7 +31,8 @@ struct AudioRecordingView: View {
 
     // AudioRecordingModel that manages key moments and transcripts
     @StateObject private var audioRecordingModel = AudioRecordingModel()
-    
+    @StateObject private var gameModel = GameModel()
+
     // The start time of the recording
     @State private var recordingStartTime: Date?
     
@@ -59,6 +60,8 @@ struct AudioRecordingView: View {
     // Array to hold recorded audio file URLs
     @State var audios: [URL] = []
     
+    @State private var gameStartTime: Date = Date()
+    
 //    init(teamId: String, errorWrapper: ErrorWrapper?, showLandingPageView: Binding<Bool>) {
 //        self.teamId = teamId
 //        self.errorWrapper = errorWrapper
@@ -74,7 +77,7 @@ struct AudioRecordingView: View {
                         List {
                             Section(header: Text("Transcripts added")) {
                                 ForEach(audioRecordingModel.recordings, id: \.id) { recording in
-                                    RecordingRowView(recording: recording, players: audioRecordingModel.players)
+                                    RecordingRowView(recording: recording, players: audioRecordingModel.players, gameStart: gameStartTime)
                                 }
                             }
                         }
@@ -145,6 +148,13 @@ struct AudioRecordingView: View {
                     
                     // Load the players of the team for the transcription
                     try await audioRecordingModel.loadPlayersForTranscription(teamId: teamId)
+                    
+                    // Get the game
+                    let game = try await gameModel.getGame(teamId: teamId, gameId: gameId)
+                    if game == nil {
+                        throw GameValidationError.invalidStartTime
+                    }
+                    self.gameStartTime = game!.startTime ?? Date()
                     
                     // Initialising the audio recorder
                     self.session = AVAudioSession.sharedInstance()
@@ -334,20 +344,23 @@ struct AudioRecordingView: View {
 
  - `recording`: The transcript of the recording containing the key moment's data.
  - `players`: A list of players to be checked against the transcript to determine if feedback was given to any specific player.
+ - `gameStart`: The game start time to show the time the transcription started since the begining of the game.
  */
 struct RecordingRowView: View {
     var recording: keyMomentTranscript
     var players: [PlayerTranscriptInfo]? = []
-
+    var gameStart: Date
+    
     var body: some View {
         VStack {
             HStack (alignment: .center) {
                 // Calculate the duration of the recording from the start and end times
-                let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
+                let durationInSeconds = recording.frameStart.timeIntervalSince(gameStart)
                 // Display the formatted duration of the recording
-                Text(formatDuration(durationInSeconds)).bold().font(.headline)
+                Text(formatDuration(durationInSeconds)).bold().font(.headline).frame(width: 85)
+
                 VStack {
-                    Text("Transcript: \(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                    Text("\(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
                     
                     // Check if the recording has feedback associated with it
                     if let feedbackFor = recording.feedbackFor {
@@ -356,7 +369,7 @@ struct RecordingRowView: View {
                             if feedbackFor.count == playersOnTeam.count {
                                 // If feedback is given to all players, display "All"
                                 HStack {
-                                    Text("All").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                                    Text("All").font(.caption).foregroundStyle(Color.orange).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
                                 }
                             } else {
                                 // Otherwise, display the names of specific players that received feedback
@@ -389,7 +402,7 @@ private struct PlayersNameView: View {
                 ForEach(players, id: \.playerId) { player in
                     HStack {
                         // Display player's first and last name
-                        Text("\(player.firstName) \(player.lastName) ").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                        Text("\(player.firstName) \(player.lastName) ").font(.caption).foregroundStyle(Color.red).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
                     }.tag(player.playerId as String)
                 }
             }

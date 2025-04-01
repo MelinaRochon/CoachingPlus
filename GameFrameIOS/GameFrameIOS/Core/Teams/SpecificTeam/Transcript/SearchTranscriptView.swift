@@ -29,26 +29,26 @@ struct SearchTranscriptView: View {
                     if let recordings = transcripts {
                         if !recordings.isEmpty {
                             ForEach(recordings, id: \.id) { recording in
-                                HStack(alignment: .top) {
+                                HStack(alignment: .center) {
                                     /// Navigation to `CoachSpecificTranscriptView` when a transcript is selected.
                                     NavigationLink(destination:
                                                     CoachSpecificTranscriptView(game: game, team: team, transcript: recording)) {
-                                        HStack(alignment: .top) {
-                                            
-                                            // Calculates the duration of the transcript.
-                                            let durationInSeconds = recording.frameEnd.timeIntervalSince(recording.frameStart)
-                                            Text(formatDuration(durationInSeconds)).bold().font(.headline)
-                                            Spacer()
-                                            
-                                            // Displays the transcript.
-                                            Text("Transcript: \(recording.transcript)")
-                                                .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
-                                                .padding(.top, 4)
-                                            
-                                            Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                        HStack(alignment: .center) {
+                                            if let gameStartTime = game.startTime {
+                                                // Calculates the duration of the transcript.
+                                                let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
+                                                Text(formatDuration(durationInSeconds)).bold().font(.headline)
+                                                Spacer()
+                                                
+                                                // Displays the transcript.
+                                                Text("Transcript: \(recording.transcript)")
+                                                    .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3)
+                                                    .padding(.top, 4)
+                                                Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                            }
                                         }.tag(recording.id as Int)
                                     }
-                                }
+                                }.padding(.vertical, 2)
                             }
                         }
                     }

@@ -157,7 +157,7 @@ struct CoachHomePageView: View {
         }
         .background(Color(UIColor.white))
         .navigationTitle(Text("Home"))
-        .navigationBarTitleDisplayMode(.large)
+        //.navigationBarTitleDisplayMode(.large)
     }
     
     
