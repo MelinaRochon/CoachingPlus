@@ -170,7 +170,7 @@ struct CoachMyTeamView: View {
             }
             .sheet(isPresented: $isTeamSettingsEnabled) {
                 // Sheet to modify team settings
-                CoachTeamSettingsView(team: selectedTeam, players: playerModel.players)
+                CoachTeamSettingsView(players: playerModel.players, team: selectedTeam)
             }
         }
     }
@@ -187,7 +187,7 @@ struct CoachMyTeamView: View {
                 
                 guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
-                    // TO DO - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
+                    // TODO: - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
                     return
                 }
                 guard let tmpInvites = selectedTeam.invites else {

@@ -18,24 +18,24 @@ struct teamIdName {
 final class AllTeamsViewModel: ObservableObject {
     @Published var teams: [GetTeam] = []
     
-    func loadAllTeams() async throws {
-        
-        // Get the user id
-        let authUser = try await AuthenticationManager.shared.getAuthenticatedUser()
-        
-        // get the user type
-        let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
-                
-        if (userType == "Coach") {
-            let tmpTeams = try await CoachManager.shared.loadTeamsCoaching(coachId: authUser.uid)
-            if tmpTeams != nil {
-                self.teams = tmpTeams!
-            }
-        } else {
-            // player
-            teams = try await PlayerManager.shared.getTeamsEnrolled(playerId: authUser.uid)
-        }
-    }
+//    func loadAllTeams() async throws {
+//        
+//        // Get the user id
+//        let authUser = try await AuthenticationManager.shared.getAuthenticatedUser()
+//        
+//        // get the user type
+//        let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
+//                
+//        if (userType == "Coach") {
+//            let tmpTeams = try await CoachManager.shared.loadTeamsCoaching(coachId: authUser.uid)
+//            if tmpTeams != nil {
+//                self.teams = tmpTeams!
+//            }
+//        } else {
+//            // player
+//            teams = try await PlayerManager.shared.getTeamsEnrolled(playerId: authUser.uid)
+//        }
+//    }
      
     func validateAccessCode(accessCode: String) async throws {
         // Get the user id

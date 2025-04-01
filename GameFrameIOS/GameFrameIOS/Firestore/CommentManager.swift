@@ -127,9 +127,9 @@ final class CommentManager {
     }
     
     /** GET - Returns all comments that are associated to a specific transcript from the database */
-    func getAllCommentsForSpecificTranscriptId(teamId: String, transcriptId: String) async throws -> [DBComment]? {
+    func getAllCommentsForSpecificTranscriptId(teamDocId: String, transcriptId: String) async throws -> [DBComment]? {
         
-        let query = try await commentCollection(teamDocId: teamId).whereField("transcript_id", isEqualTo: transcriptId).getDocuments()
+        let query = try await commentCollection(teamDocId: teamDocId).whereField("transcript_id", isEqualTo: transcriptId).getDocuments()
         
         return query.documents.compactMap { document in
             try? document.data(as: DBComment.self)
@@ -137,13 +137,13 @@ final class CommentManager {
     }
     
     /** POST - Add a new comment to the database */
-    func addNewComment(teamId: String, commentDTO: CommentDTO) async throws {
+    func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
         print("in manager!")
-        print("teamId: \(teamId)")
+        print("teamId: \(teamDocId)")
         print("trying to add comment: \(commentDTO)")
 
         // Make sure the team document can be found with the team id given
-        let teamDocId = try await TeamManager.shared.getTeamWithDocId(docId: teamId).id
+        let teamDocId = try await TeamManager.shared.getTeamWithDocId(docId: teamDocId).id
 
         let commentDocument = commentCollection(teamDocId: teamDocId).document()
         let documentId = commentDocument.documentID // get the document ID

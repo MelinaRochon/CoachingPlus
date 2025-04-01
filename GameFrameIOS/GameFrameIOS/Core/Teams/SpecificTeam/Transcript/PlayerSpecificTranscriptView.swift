@@ -8,17 +8,26 @@
 import SwiftUI
 
 struct PlayerSpecificTranscriptView: View {
-    @State var gameId: String // game Id
-    @State var teamDocId: String // team document id
-    @State var recording: keyMomentTranscript?
+//    @State var gameId: String // game Id
+//    @State var teamDocId: String // team document id
+//    @State var recording: keyMomentTranscript?
     @State private var isEditing: Bool = false
     
-    @StateObject private var viewModel = TranscriptViewModel()
+//    @StateObject private var viewModel = TranscriptViewModel()
+    @StateObject private var transcriptModel = TranscriptModel()
+    @StateObject private var commentViewModel = CommentSectionViewModel()
+
+    @State var game: DBGame
+    @State var team: DBTeam
+    @State var transcript: keyMomentTranscript?
+
+    @State private var feedbackFor: [PlayerNameAndPhoto]? = []
+
     
     var body: some View {
         NavigationView {
             ScrollView {
-                if let game = viewModel.game {
+//                if let game = viewModel.game {
                     
                     VStack {
                         VStack (alignment: .leading) {
@@ -27,20 +36,20 @@ struct PlayerSpecificTranscriptView: View {
                                 Spacer()
                                 
                             }
-                            if let recording = recording {
+                            if let transcript = transcript {
                                 HStack {
-                                    Text("Transcript #\(recording.id+1)").font(.headline)
+                                    Text("Transcript #\(transcript.id+1)").font(.headline)
                                     Spacer()
                                 }.padding(.bottom, -2)
                             }
                             
                             HStack {
                                 VStack(alignment: .leading) {
-                                    if let team = viewModel.team {
+//                                    if let team = viewModel.team {
                                         Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))
-                                    }
-                                    if let recording = recording {
-                                        Text(recording.frameStart.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
+//                                    }
+                                    if let transcript = transcript {
+                                        Text(transcript.frameStart.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
                                     }
                                 }
                                 Spacer()
@@ -50,18 +59,18 @@ struct PlayerSpecificTranscriptView: View {
                         Divider().padding(.vertical, 2)
                         
                         // Transcription section
-                        if let recording = recording {
+                        if let transcript = transcript {
                             // Transcription section
                             VStack(alignment: .leading) {
-                                if let gameStartTime = viewModel.gameStartTime {
-                                    let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
+                                if let gameStartTime = game.startTime {
+                                    let durationInSeconds = transcript.frameStart.timeIntervalSince(gameStartTime)
                                     Text(formatDuration(durationInSeconds)).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal).padding(.bottom, 2)
                                     
-                                    Text("\(recording.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
+                                    Text("\(transcript.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
                                 }
                             }.padding(.bottom, 10).padding(.top)
                             
-                            if let feedbackFor = viewModel.feedbackFor {
+                            if let feedbackFor = feedbackFor {
                                 // Feedback for section
                                 VStack(alignment: .leading) {
                                     Text("Feedback For").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 10)
@@ -75,24 +84,31 @@ struct PlayerSpecificTranscriptView: View {
                             }
                             VStack {
                                 Divider()
-                                
-                                // TODO: Comment section
-                                //CommentSectionView()
+                                // Comment Section View
+                                CommentSectionView(
+                                    viewModel: commentViewModel,
+                                    teamDocId: team.id,
+                                    keyMomentId: "\(transcript.keyMomentId)",
+                                    gameId: game.gameId,
+                                    transcriptId: "\(transcript.transcriptId)"
+                                )
                                 
                             }
                             .frame(maxHeight: .infinity, alignment: .bottom)
                         }
                     }
-                }
+//                }
             }
             .task {
                 do {
-                    try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
-                    let feedbackFor = recording!.feedbackFor ?? []
-                    
-                    // Add a new key moment to the database
-                    let fbFor: [String] = feedbackFor.map { $0.playerId }
-                    try await viewModel.getFeebackFor(feedbackFor: fbFor)
+//                    try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
+                    if let transcript = transcript {
+                        let feedback = transcript.feedbackFor ?? []
+                        
+                        // Add a new key moment to the database
+                        let fbFor: [String] = feedback.map { $0.playerId }
+                        feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
+                    }
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
                 }
@@ -102,5 +118,9 @@ struct PlayerSpecificTranscriptView: View {
 }
 
 #Preview {
-    PlayerSpecificTranscriptView(gameId: "", teamDocId: "", recording: nil)
+    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
+    
+    let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
+
+    PlayerSpecificTranscriptView(game: game, team: team, transcript: nil)
 }

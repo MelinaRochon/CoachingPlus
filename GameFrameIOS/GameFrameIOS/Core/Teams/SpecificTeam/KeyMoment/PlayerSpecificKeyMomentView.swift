@@ -1,15 +1,13 @@
 //
-//  CoachSpecificKeyMomentView.swift
+//  PlayerSpecificKeyMomentView.swift
 //  GameFrameIOS
 //
-//  Created by Mélina Rochon on 2025-02-05.
+//  Created by Caterina Bosi on 2025-02-05.
 //
 
 import SwiftUI
 
-/** This structure shows all details associated to a specific key moment, including the feedback given from the coach,
-    the transcription, and comments conversations between the players concerned and the coach */
-struct CoachSpecificKeyMomentView: View {
+struct PlayerSpecificKeyMomentView: View {
     @State private var progress: Double = 0.0
     @State private var comment: String = ""
     @State private var totalDuration: Double = 180 // Example: 3 minutes (180 seconds)
@@ -37,6 +35,7 @@ struct CoachSpecificKeyMomentView: View {
                     VStack (alignment: .leading) {
                         HStack(spacing: 0) {
                             Text(game.title).font(.title2)
+                            Text("Inside player specific key moments")
                             Spacer()
                         }
                         
@@ -164,5 +163,5 @@ struct CoachSpecificKeyMomentView: View {
 
     let specificKeyMoment = keyMomentTranscript(id: 1, keyMomentId: "keyMoment1", transcriptId: "1", transcript: "This is a test", frameStart: Date(), frameEnd: Date(), feedbackFor: [])
     
-    CoachSpecificKeyMomentView(game: game, team: team, specificKeyMoment: specificKeyMoment)
+    PlayerSpecificKeyMomentView(game: game, team: team, specificKeyMoment: specificKeyMoment)
 }

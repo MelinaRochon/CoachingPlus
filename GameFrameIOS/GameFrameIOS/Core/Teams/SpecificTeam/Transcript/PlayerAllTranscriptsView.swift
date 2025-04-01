@@ -11,13 +11,17 @@ struct PlayerAllTranscriptsView: View {
     @State private var searchText: String = ""
     @State private var showFilterSelector = false
     
-    @State var gameId: String // scheduled game id is passed when this view is called
-    @State var teamDocId: String // scheduled game id is passed when this view is called
-    @StateObject private var viewModel = TranscriptViewModel()
+//    @State var gameId: String // scheduled game id is passed when this view is called
+//    @State var teamDocId: String // scheduled game id is passed when this view is called
+//    @StateObject private var viewModel = TranscriptViewModel()
+
+    @State var game: DBGame
+    @State var team: DBTeam
+    @State var transcripts: [keyMomentTranscript]?
 
     var body: some View {
         NavigationView {
-            if let game = viewModel.game {
+//            if let game = viewModel.game {
                 
                 VStack (alignment: .leading) {
                     VStack (alignment: .leading) {
@@ -33,9 +37,9 @@ struct PlayerAllTranscriptsView: View {
                         
                         HStack {
                             VStack(alignment: .leading) {
-                                if let team = viewModel.team {
+//                                if let team = viewModel.team {
                                     Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))
-                                }
+//                                }
                                 if let startTime = game.startTime {
                                     Text(startTime.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
                                 }
@@ -56,24 +60,29 @@ struct PlayerAllTranscriptsView: View {
                     
                     Divider().padding(.vertical, 2)
                     
-                    SearchTranscriptView(gameId: gameId, teamDocId: teamDocId)
+                    SearchTranscriptView(game: game, team: team, transcripts: transcripts)
                 }// Show filters
                 .sheet(isPresented: $showFilterSelector, content: {
                     FilterTranscriptsListView().presentationDetents([.medium])
                 })
                 
-            }
-        }.task {
-            do {
-                try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
-            } catch {
-                print("Error when loading all key moments. \(error)")
-            }
+//            }
         }
+//        .task {
+//            do {
+//                try await viewModel.loadGameDetails(gameId: gameId, teamDocId: teamDocId)
+//            } catch {
+//                print("Error when loading all key moments. \(error)")
+//            }
+//        }
         
     }
 }
 
 #Preview {
-    PlayerAllTranscriptsView(gameId: "", teamDocId: "")
+    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
+    
+    let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
+
+    PlayerAllTranscriptsView(game: game, team: team, transcripts: [])
 }

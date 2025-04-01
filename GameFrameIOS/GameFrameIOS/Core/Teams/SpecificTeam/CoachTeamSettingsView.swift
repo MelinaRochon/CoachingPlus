@@ -10,7 +10,7 @@ import SwiftUI
 /// A view that allows the coach to view and manage the settings of a specific team.
 struct CoachTeamSettingsView: View {
     /// The model for managing team data, passed as an observed object to track changes.
-    @ObservedObject var teamModel: TeamModel
+//    @ObservedObject var teamModel: TeamModel
     
     /// Temporary storage for the list of players associated with the team.
     @State var players: [User_Status] = []
@@ -21,12 +21,13 @@ struct CoachTeamSettingsView: View {
     /// State to track whether the "Copied!" message should be shown when the access code is copied.
     @State private var showCopiedMessage = false // To show "Copied!" message
 
+    @State var team: DBTeam
+    
     var body: some View {
         // Navigation view that allows for navigation between views and displaying a toolbar.
         NavigationView {
             VStack {
                 // Check if the team data is available and unwrap it.
-                if let team = teamModel.team {
                     // Team Name Title
                     Text(team.name)
                         .font(.largeTitle)
@@ -125,7 +126,6 @@ struct CoachTeamSettingsView: View {
                     }
                     
                     Spacer()
-                }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -141,5 +141,7 @@ struct CoachTeamSettingsView: View {
 }
 
 #Preview {
-    CoachTeamSettingsView(teamModel: TeamModel(), players: [])
+    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
+
+    CoachTeamSettingsView(players: [], team: team)
 }

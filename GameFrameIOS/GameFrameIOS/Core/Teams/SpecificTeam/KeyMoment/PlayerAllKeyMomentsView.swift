@@ -1,26 +1,24 @@
 //
-//  CoachAllKeymomentsView.swift
+//  PlayerAllKeyMomentsView.swift
 //  GameFrameIOS
 //
-//  Created by Mélina Rochon on 2025-02-11.
+//  Created by Caterina Bosi on 2025-02-18.
 //
 
 import SwiftUI
 
-/*** Shows all recorded key moments from a specific game. */
-struct CoachAllKeyMomentsView: View {
+struct PlayerAllKeyMomentsView: View {
     @State private var searchText: String = ""
     @State private var showFilterSelector = false
     
 //    @State var gameId: String // scheduled game id is passed when this view is called
 //    @State var teamDocId: String // scheduled game id is passed when this view is called
 //    @StateObject private var viewModel = KeyMomentViewModel()
-
     @State var game: DBGame
     @State var team: DBTeam
     
     @State var keyMoments: [keyMomentTranscript]?
-    
+
     var body: some View {
         NavigationView {
 //            if let game = viewModel.game {
@@ -38,6 +36,7 @@ struct CoachAllKeyMomentsView: View {
                             }
                         }
                         
+                        
                         HStack {
                             VStack(alignment: .leading) {
 //                                if let team = viewModel.team {
@@ -49,23 +48,12 @@ struct CoachAllKeyMomentsView: View {
                                 }
                             }
                             Spacer()
-                            // Edit Icon
-                            Button(action: {}) {
-                                Image(systemName: "pencil.and.outline")
-                                    .foregroundColor(.blue) // Adjust color
-                            }
-                            // Share Icon
-                            Button(action: {}) {
-                                Image(systemName: "square.and.arrow.up")
-                                    .foregroundColor(.blue) // Adjust color
-                            }
                         }
                     }.padding(.leading).padding(.trailing).padding(.top, 3)
                     
                     Divider().padding(.vertical, 2)
                     
-                    SearchKeyMomentsView(game: game, team: team, keyMoments: keyMoments, userType: "Coach")
-                    
+                    SearchKeyMomentsView(game: game, team: team, keyMoments: keyMoments, userType: "Player")
                     
                 }// Show filters
                 .sheet(isPresented: $showFilterSelector, content: {
@@ -84,10 +72,9 @@ struct CoachAllKeyMomentsView: View {
                             .navigationTitle("Filter Options")
                             .navigationBarTitleDisplayMode(.inline)
                     }
-                        
                 })
+                
 //            }
-            
         }
 //        .task {
 //            do {
@@ -98,11 +85,11 @@ struct CoachAllKeyMomentsView: View {
 //        }
     }
 }
-
+    
 #Preview {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
     
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
 
-    CoachAllKeyMomentsView(game: game, team: team, keyMoments: [])
+    PlayerAllKeyMomentsView(game: game, team: team, keyMoments: [])
 }

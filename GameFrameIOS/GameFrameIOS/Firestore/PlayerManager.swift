@@ -283,6 +283,26 @@ final class PlayerManager {
         return teams
     }
     
+    func getAllTeamsEnrolled(playerId: String) async throws -> [DBTeam]? {
+        
+        let player = try await getPlayer(playerId: playerId)!
+        
+        // Fetch the team documents with the IDs from the user's itemsArray
+        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled).getDocuments()
+
+        // Map the documents to Team objects and get their names
+        var teams: [DBTeam] = []
+        for document in snapshot.documents {
+            if let team = try? document.data(as: DBTeam.self) {
+                // Add a Team object with the teamId and team name
+//                let teamObject = GetTeam(teamId: team.teamId, name: team.name, nickname: team.teamNickname)
+                teams.append(team)
+            }
+        }
+            
+        return teams
+    }
+    
     /** GET - Returns if the player is enrolled to the specified team or not */
     func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
         let player = try await getPlayer(playerId: playerId)!

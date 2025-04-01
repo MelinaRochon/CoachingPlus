@@ -30,14 +30,14 @@ final class CommentSectionViewModel: ObservableObject {
             }
     
     /** Fetch all comments for the given transcript */
-    func loadCommentsForTranscript(teamId: String, transcriptId: String) async {
-            guard !teamId.isEmpty, !transcriptId.isEmpty else {
+    func loadCommentsForTranscript(teamDocId: String, transcriptId: String) async {
+            guard !teamDocId.isEmpty, !transcriptId.isEmpty else {
                 print("Invalid teamId or transcriptId")
                 return
             }
             
         do {
-            if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificTranscriptId(teamId: teamId, transcriptId: transcriptId) {
+            if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: transcriptId) {
                 
                 var updatedComments: [DBComment] = []
                 
@@ -70,10 +70,10 @@ final class CommentSectionViewModel: ObservableObject {
         }
 
         /** Add a new comment to the Firestore database */
-        func addComment(teamId: String, keyMomentId: String, gameId: String, transcriptId: String, text: String) async {
+        func addComment(teamDocId: String, keyMomentId: String, gameId: String, transcriptId: String, text: String) async {
             do {
-                print("In CommentSectionViewModel, teamId: \(teamId)")
-                guard !teamId.isEmpty, !keyMomentId.isEmpty, !text.isEmpty else {
+                print("In CommentSectionViewModel, teamId: \(teamDocId)")
+                guard !teamDocId.isEmpty, !keyMomentId.isEmpty, !text.isEmpty else {
                             print("Invalid input values, cannot add comment")
                             return
                         }
@@ -88,12 +88,12 @@ final class CommentSectionViewModel: ObservableObject {
                     createdAt: Date()
                 )
                 print("trying to add comment: \(text)")
-                try await CommentManager.shared.addNewComment(teamId: teamId, commentDTO: newComment)
+                try await CommentManager.shared.addNewComment(teamDocId: teamDocId, commentDTO: newComment)
                 print("success!")
                 
                 // Refresh comments after adding
                 print("loading comments")
-                await loadCommentsForTranscript(teamId: teamId, transcriptId: transcriptId)
+                await loadCommentsForTranscript(teamDocId: teamDocId, transcriptId: transcriptId)
             } catch {
                 print("Error adding comment: \(error)")
             }

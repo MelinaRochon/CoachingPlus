@@ -48,4 +48,5 @@ enum StatusEnum {
 enum TeamValidationError: Error {
     case invalidAccessCode
     case userExists
+    case noTeamExist
 }

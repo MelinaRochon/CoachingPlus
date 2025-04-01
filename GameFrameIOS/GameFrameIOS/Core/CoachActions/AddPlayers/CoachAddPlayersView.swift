@@ -27,7 +27,7 @@ struct GetTeam: Equatable {
 struct CoachAddPlayersView: View {
     
     /// ViewModels to manage the data and logic related to adding players
-    @ObservedObject var teamModel: TeamModel
+//    @ObservedObject var teamModel: TeamModel
     
     /// Observes and manages the team-related data, such as team details, players, and team operations.
     
@@ -75,6 +75,8 @@ struct CoachAddPlayersView: View {
 
     /// A boolean to control the visibility of an error alert, indicating invalid data or issues in player addition.
     @State private var showErrorAlert: Bool = false
+    
+    @State var team: DBTeam
     
     var body: some View {
         
@@ -125,8 +127,8 @@ struct CoachAddPlayersView: View {
                     Button("Add") {
                         Task {
                             do {
-                                if let team = teamModel.team {
-                                    try await TeamManager.shared.doesTeamExist(teamId: team.teamId)
+//                                if let team = teamModel.team {
+//                                    try await TeamManager.shared.doesTeamExist(teamId: team.teamId)
                                     
                                     authenticationModel.email = email
                                     let verifyEmail = try await authenticationModel.verifyEmailAddress()
@@ -153,7 +155,7 @@ struct CoachAddPlayersView: View {
                                     if canDismiss {
                                         dismiss() // Dismiss the full-screen cover
                                     }
-                                }
+//                                }
                             } catch {
                                 print(error)
                             }
@@ -190,5 +192,7 @@ extension CoachAddPlayersView: PlayerProtocol {
 
 
 #Preview {
-    CoachAddPlayersView(teamModel: TeamModel())
+    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
+
+    CoachAddPlayersView(team: team)
 }

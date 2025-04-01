@@ -15,7 +15,11 @@ import SwiftUI
 struct CoachAllTeamsView: View {
 //    @State private var showAlert = false
 
-    @StateObject private var viewModel = AllTeamsViewModel()
+//    @StateObject private var viewModel = AllTeamsViewModel()
+    @StateObject private var teamModel = TeamModel()
+    
+    @State private var teams: [DBTeam]?
+    
     @State private var showCreateTeam: Bool = false // Toggle to create a team
     var body: some View {
         NavigationStack {
@@ -32,15 +36,19 @@ struct CoachAllTeamsView: View {
                                 Text("Add +")
                             }
                         }) {
-                            if !viewModel.teams.isEmpty {
-                                ForEach(viewModel.teams, id: \.name) { team in
-                                    NavigationLink(destination: CoachMyTeamView(teamNickname: team.nickname, teamId: team.teamId, teamModel: TeamModel()))
-                                    {
-                                        HStack {
-                                            Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
-                                            Text(team.name)
+                            if let teams = teams {
+                                if !teams.isEmpty {
+                                    ForEach(teams, id: \.name) { team in
+                                        NavigationLink(destination: CoachMyTeamView(selectedTeam: team))
+                                        {
+                                            HStack {
+                                                Image(systemName: "tshirt") // TODO: Will need to change the team's logo in the future
+                                                Text(team.name)
+                                            }
                                         }
                                     }
+                                } else {
+                                    Text("No teams found.").font(.caption).foregroundStyle(.secondary)
                                 }
                             }
                         }
@@ -50,7 +58,7 @@ struct CoachAllTeamsView: View {
             .navigationTitle(Text("Teams"))
             .task {
                 do {
-                    try await viewModel.loadAllTeams()
+                    self.teams = try await teamModel.loadAllTeams()
                     
                 } catch {
                     print("Error. Aborting... \(error)")
@@ -60,12 +68,6 @@ struct CoachAllTeamsView: View {
         }
         .sheet(isPresented: $showCreateTeam, onDismiss: refreshTeams) {
             CoachCreateTeamView()
-//                .gesture(DragGesture().onChanged { _ in
-//                    showAlert = true
-//                })
-//                .alert("Drag Detected", isPresented: $showAlert) {
-//                    Button("OK", role: .cancel) { }
-//                }
         }
 
     }
@@ -73,7 +75,10 @@ struct CoachAllTeamsView: View {
     private func refreshTeams() {
         Task {
             do {
-                try await viewModel.loadAllTeams()
+                self.teams = try await teamModel.loadAllTeams()
+//                
+//                
+//                try await viewModel.loadAllTeams()
                 
             } catch {
                 print("Error occured when refreshing teams. Aborting... \(error)")

@@ -141,4 +141,30 @@ final class CoachManager {
         return nil
         
     }
+    
+    /** GET - Returns all the teams that the coach is coaching from the database */
+    func loadAllTeamsCoaching(coachId: String) async throws -> [DBTeam]? {
+        
+        let coach = try await getCoach(coachId: coachId)!
+        if let teamsCoaching = coach.teamsCoaching {
+            if teamsCoaching != [] {
+                // Fetch the team documents with the IDs from the user's itemsArray
+                let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: teamsCoaching).getDocuments()
+                // Map the documents to Team objects and get their names
+                var teams: [DBTeam] = []
+                for document in snapshot.documents {
+                    if let team = try? document.data(as: DBTeam.self) {
+                        // Add a Team object with the teamId and team name
+//                        let teamObject = GetTeam(teamId: team.teamId, name: team.name, nickname: team.teamNickname)
+                        teams.append(team)
+                    }
+                }
+                
+                return teams
+            }
+        }
+        
+        return nil
+        
+    }
 }

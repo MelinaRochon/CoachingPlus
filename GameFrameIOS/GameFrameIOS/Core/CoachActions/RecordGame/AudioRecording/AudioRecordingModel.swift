@@ -38,11 +38,24 @@ final class AudioRecordingModel: ObservableObject {
     /** Adds a new recording - adds a new keyMoment and transcript in the database. Update the recordings array */
     func addRecording(recordingStart: Date, recordingEnd: Date, transcription: String, feedbackFor: PlayerTranscriptInfo?) async throws {
             do {
+                print("When we enter addRecording: feedbackFor: \(feedbackFor)")
+                
+                print("And player's equiavalent to: \(players)")
+
+                var fbFor: [String]
+                if feedbackFor == nil {
+                    // Associate the feedback to every player on the team
+                    fbFor = players!.map { $0.playerId }
+                } else {
+                    // Add a new key moment to the database
+                    fbFor = feedbackFor.map { [$0.playerId] } ?? []
+                }
+                // Add a new key moment object
+                print("feedback for: \(fbFor)")
+
                 // Get the id of the authenticated user (coach)
                 let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-                // Add a new key moment to the database
-                let fbFor: [String] = feedbackFor.map { [$0.playerId] } ?? []
-                // Add a new key moment object
+                    
                 let keyMomentDTO = KeyMomentDTO(fullGameId: nil, gameId: gameId, uploadedBy: authUser.uid, audioUrl: nil, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: fbFor)
                 // Add a new key moment to the database
                 let keyMomentDocId = try await KeyMomentManager.shared.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)

@@ -25,7 +25,8 @@ struct CoachRecordingConfigView: View {
     @Environment(\.dismiss) var dismiss
     
     // ViewModel to manage the list of teams
-    @StateObject private var teamsViewModel = AllTeamsViewModel() // Fetches the list of teams
+    @StateObject private var teamModel = TeamModel() // Fetches the list of teams
+
     
     // State variables for managing user selections and app state
     @State private var selectedTeamId: String? = nil // Holds the selected team ID
@@ -34,36 +35,40 @@ struct CoachRecordingConfigView: View {
     @State private var showNoTeamsAlert = false  // State to manage alert visibility
     @State private var navigateToCreateTeam = false // State variable for navigation
     
+    @State private var teamsCoaching: [DBTeam]?
+    
     var body: some View {
         NavigationView {
             VStack {
                 Form {
-                    // Recording Settings Section
-                    Section(header: Text("Recording Settings")) {
-                        // Team Selection Picker
-                        CustomPicker(
-                            title: "Select Team",
-                            options: teamsViewModel.teams.compactMap { $0.teamId },
-                            displayText: { teamId in
-                                // Display the team name corresponding to the selected team ID
-                                teamsViewModel.teams.first(where: { $0.teamId == teamId })?.name ?? "Unknown Team"
-                            },
-                            selectedOption: Binding(
-                                get: { selectedTeamId ?? (teamsViewModel.teams.first?.teamId ?? "") }, // Default to the first team
-                                set: { selectedTeamId = $0 } // Update the selected team ID
+                    if let teams = teamsCoaching {
+                        // Recording Settings Section
+                        Section(header: Text("Recording Settings")) {
+                            // Team Selection Picker
+                            CustomPicker(
+                                title: "Select Team",
+                                options: teams.compactMap { $0.teamId },
+                                displayText: { teamId in
+                                    // Display the team name corresponding to the selected team ID
+                                    teams.first(where: { $0.teamId == teamId })?.name ?? "Unknown Team"
+                                },
+                                selectedOption: Binding(
+                                    get: { selectedTeamId ?? (teams.first?.teamId ?? "") }, // Default to the first team
+                                    set: { selectedTeamId = $0 } // Update the selected team ID
+                                )
                             )
-                        )
-                        
-                        // Recording Type Picker (Video or Audio)
-                        CustomPicker(
-                            title: "Recording Typess",
-                            options: AppData.recordingOptions, // List of recording options (e.g., "Video", "Audio Only")
-                            displayText: { $0 }, // Display text for each option (directly using the string)
-                            selectedOption: $selectedRecordingTypeLabel
-                        ).pickerStyle(SegmentedPickerStyle())
-                        
-                        // Apple Watch Recording Toggle
-                        Toggle("Use Apple Watch for Recording", isOn: $selectedAppleWatchUseLabel)
+                            
+                            // Recording Type Picker (Video or Audio)
+                            CustomPicker(
+                                title: "Recording Typess",
+                                options: AppData.recordingOptions, // List of recording options (e.g., "Video", "Audio Only")
+                                displayText: { $0 }, // Display text for each option (directly using the string)
+                                selectedOption: $selectedRecordingTypeLabel
+                            ).pickerStyle(SegmentedPickerStyle())
+                            
+                            // Apple Watch Recording Toggle
+                            Toggle("Use Apple Watch for Recording", isOn: $selectedAppleWatchUseLabel)
+                        }
                     }
                 }
                 .navigationTitle("Start a Recording")
@@ -113,21 +118,27 @@ struct CoachRecordingConfigView: View {
                     Text("OK")
                 }
             }
-            .task {
-                // Load Teams on View Appear
-                if selectedTeamId == nil {
-                    do {
-                        try await teamsViewModel.loadAllTeams()
-                        if let firstTeam = teamsViewModel.teams.first {
-                            selectedTeamId = firstTeam.teamId
-                        } else {
-                            // No teams
-                            showNoTeamsAlert = true
-                        }
-                    } catch {
-                        print("Error when loading the team information for the coachRecordingconfigView \(error)")
+            .onAppear {
+                loadTeams()
+            }
+        }
+    }
+    
+    private func loadTeams() {
+        Task {
+            // Load Teams on View Appear
+            do {
+                self.teamsCoaching = try await teamModel.loadAllTeams()
+                if let teamsCoaching = teamsCoaching {
+                    if let firstTeam = teamsCoaching.first {
+                        selectedTeamId = firstTeam.teamId
+                    } else {
+                        // No teams
+                        showNoTeamsAlert = true
                     }
                 }
+            } catch {
+                print("Error when loading the team information for the coachRecordingconfigView \(error)")
             }
         }
     }

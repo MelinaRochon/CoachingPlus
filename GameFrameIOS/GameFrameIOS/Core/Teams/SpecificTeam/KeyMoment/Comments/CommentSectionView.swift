@@ -11,7 +11,7 @@ struct CommentSectionView: View {
     @ObservedObject var viewModel: CommentSectionViewModel
     @State private var newComment: String = ""
 
-    var teamId: String
+    var teamDocId: String
     var keyMomentId: String
     var gameId: String
     var transcriptId: String
@@ -21,19 +21,20 @@ struct CommentSectionView: View {
             Text("Comments")
                 .font(.headline)
                 .padding(.horizontal)
+                .padding(.top)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
                     if viewModel.comments.isEmpty {
-                                            Text("No comments yet. Be the first to comment!")
-                                                .foregroundColor(.gray)
-                                                .padding()
-                                        }
+                        Text("No comments yet. Be the first to comment!").font(.caption)
+                            .foregroundColor(.gray)
+                            .padding()
+                    }
                     ForEach(viewModel.comments, id: \.commentId) { comment in
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "person.circle.fill")
                                 .resizable()
-                                .frame(width: 36, height: 36)
+                                .frame(width: 30, height: 30)
                                 .foregroundColor(.gray)
 
                             VStack(alignment: .leading, spacing: 4) {
@@ -61,7 +62,8 @@ struct CommentSectionView: View {
                 }
             }
             .frame(height: 200)
-
+            
+            Spacer()
             // Comment Input Section
             HStack {
                 TextField("Write a comment...", text: $newComment)
@@ -71,8 +73,8 @@ struct CommentSectionView: View {
                 Button(action: {
                     Task {
                         if !newComment.trimmingCharacters(in: .whitespaces).isEmpty {
-                            print("in CommentSectionView, teamId: \(teamId)")
-                            await viewModel.addComment(teamId: teamId, keyMomentId: keyMomentId, gameId: gameId, transcriptId: transcriptId, text: newComment)
+                            print("in CommentSectionView, teamId: \(teamDocId)")
+                            await viewModel.addComment(teamDocId: teamDocId, keyMomentId: keyMomentId, gameId: gameId, transcriptId: transcriptId, text: newComment)
                             DispatchQueue.main.async {
                                 newComment = "" // Clear input field safely
                             }
@@ -87,7 +89,7 @@ struct CommentSectionView: View {
             .padding(.horizontal)
         }
         .task {
-            await viewModel.loadCommentsForTranscript(teamId: teamId, transcriptId: transcriptId)
+            await viewModel.loadCommentsForTranscript(teamDocId: teamDocId, transcriptId: transcriptId)
         }
     }
 }
@@ -95,7 +97,7 @@ struct CommentSectionView: View {
 #Preview {
     CommentSectionView(
         viewModel: CommentSectionViewModel(),
-        teamId: "mockTeamId",
+        teamDocId: "mockTeamId",
         keyMomentId: "mockKeyMomentId",
         gameId: "mockGameId",
         transcriptId: "mockTranscriptId"
