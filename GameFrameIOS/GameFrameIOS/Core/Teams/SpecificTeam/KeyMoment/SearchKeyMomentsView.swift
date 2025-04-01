@@ -7,19 +7,30 @@
 
 import SwiftUI
 
+/// A view that displays a searchable list of key moments for a given game.
+///
+/// ### Features:
+/// - Displays a list of key moments with timestamps and transcript previews.
+/// - Allows users to search for key moments.
+/// - Navigates to the detailed key moment view when a moment is selected.
 struct SearchKeyMomentsView: View {
+    
+    /// The text entered by the user in the search bar.
     @State private var searchText: String = ""
-
-//    @State var gameId: String // scheduled game id is passed when this view is called
-//    @State var teamDocId: String // scheduled game id is passed when this view is called
-
+    
+    /// View model responsible for fetching and managing transcript data.
     @StateObject private var transcriptModel = TranscriptViewModel()
-
+    
+    /// The game for which key moments are being searched.
     @State var game: DBGame
+    
+    /// The team associated with the game.
     @State var team: DBTeam
-
+    
+    /// A list of key moments retrieved for the given game.
     @State var keyMoments: [keyMomentTranscript]?
     
+    /// The user type (e.g., Coach or Player) to customize the experience.
     @State var userType: String
 
     var body: some View {
@@ -60,20 +71,11 @@ struct SearchKeyMomentsView: View {
                 .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search key moments" )
             }
         }
-//        .task {
-//            do {
-//                try await transcriptModel.getGameStartTime(gameId: gameId, teamDocId: teamDocId)
-//                try await transcriptModel.loadFirstThreeTranscripts(gameId: gameId, teamDocId: teamDocId)
-//            } catch {
-//                print("Problem when loading the key moments: \(error)")
-//            }
-//        }
     }
 }
 
 #Preview {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
-    
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
 
     SearchKeyMomentsView(game: game, team: team, keyMoments: [], userType: "Player")
