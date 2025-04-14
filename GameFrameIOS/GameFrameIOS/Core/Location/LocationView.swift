@@ -47,12 +47,6 @@ struct LocationView: View {
                                 }
                                 
                             }
-                            
-//                            HStack(alignment: .bottom) {
-//                                Button("Open in maps"){
-//                                    
-//                                }.buttonStyle(.borderedProminent)
-//                            }
                         } else {
                             ContentUnavailableView("No Results", systemImage: "questionmark.square.dashed")
                         }
@@ -74,7 +68,6 @@ struct LocationView: View {
                                         .font(.caption).foregroundStyle(.secondary)
                                 }.foregroundColor(Color.black)
                             }
-                            
                         }
                     }
                 

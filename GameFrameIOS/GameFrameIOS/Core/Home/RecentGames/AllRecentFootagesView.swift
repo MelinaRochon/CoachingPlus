@@ -50,6 +50,8 @@ struct AllRecentFootageView: View {
         }
     }
     
+    @State private var groupedGames: [(label: String, games: [HomeGameDTO])]? = nil
+    
     // MARK: - View
 
     var body: some View {
@@ -57,21 +59,42 @@ struct AllRecentFootageView: View {
             List  {
                 Section {
                     if !pastGames.isEmpty {
-                        ForEach(filteredGames, id: \.game.gameId) { pastGame in
-                            NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame, userType: userType)) {
-                                HStack {
-                                    CustomUIFields.gameVideoPreviewStyle()
-                                    
-                                    VStack {
-                                        Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                        Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                        Text( formatStartTime(pastGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+//                        ForEach(filteredGames, id: \.game.gameId) { pastGame in
+//                            NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame, userType: userType)) {
+//                                HStack {
+//                                    CustomUIFields.gameVideoPreviewStyle()
+//                                    
+//                                    VStack {
+//                                        Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+//                                        Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+//                                        Text( formatStartTime(pastGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+//                                    }
+//                                }
+//                            }
+//                        }
+                    } else {
+                        Text("No games found.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                if let groupedGames = groupedGames {
+                    ForEach (groupedGames, id: \.label) { group in
+                        
+                        
+                        Section(header: Text(group.label)) {
+                            ForEach(group.games, id: \.game.gameId) { pastGame in
+                                NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame, userType: userType)) {
+                                    HStack {
+                                        CustomUIFields.gameVideoPreviewStyle()
+                                        
+                                        VStack {
+                                            Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                            Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                            Text( formatStartTime(pastGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                                        }
                                     }
                                 }
                             }
                         }
-                    } else {
-                        Text("No games found.").font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -81,9 +104,69 @@ struct AllRecentFootageView: View {
             .navigationTitle(Text("All Recent Games"))
             .navigationBarTitleDisplayMode(.inline)
         }
+        .task{
+            self.groupedGames = groupGamesByWeek(pastGames)
+        }
+    }
+    
+    private func groupGamesByWeek(_ games: [HomeGameDTO]) -> [(label: String, games: [HomeGameDTO])] {
+        let calendar = Calendar.current
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        let now = Date()
+        let grouped = Dictionary(grouping: games) { game -> Date in
+            game.game.startTime?.startOfWeek(using: calendar) ?? Date().startOfWeek(using: calendar)
+//            game -> String in
+//            if let startTime = game.game.startTime {
+//            let weeksAgo = game.game.startTime?.weeksAgo(from: now) ?? 0
+//                switch weeksAgo {
+//                case 0: return "This Week"
+//                case 1: return "Last Week"
+//                default: return "\(weeksAgo) Weeks Ago"
+//                }
+            
+//            }
+        }
+        
+        return grouped
+            .sorted { $0.key < $1.key } // newest first
+            .map { (startOfWeek, games) in
+                let endOfWeek = startOfWeek.endOfWeek(using: calendar)
+                let weeksAgo = calendar.dateComponents([.weekOfYear], from: startOfWeek, to: now.startOfWeek()).weekOfYear ?? 0
+
+                let label: String
+                switch weeksAgo {
+                case 0:
+                    label = "This Week"
+                case 1:
+                    label = "Last Week"
+                default:
+                    label = "\(formatter.string(from: startOfWeek)) – \(formatter.string(from: endOfWeek))"
+                }
+                return (label: label, games: games.sorted { $0.game.startTime ?? Date() > $1.game.startTime ?? Date() })
+            }
+//            .map { (key, games) in (label: key, games: games.sorted { $0.game.startTime ?? Date() > $1.game.startTime ?? Date() }) }
     }
 }
 
 #Preview {
     AllRecentFootageView(pastGames: [], userType: "Player")
 }
+
+//extension Date {
+//    func startOfWeek(using calendar: Calendar = .current) -> Date {
+//        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
+//        return calendar.date(from: components)!
+//    }
+//    
+//    func endOfWeek(using calendar: Calendar = .current) -> Date {
+//        let start = self.startOfWeek(using: calendar)
+//        return calendar.date(byAdding: .day, value: 6, to: start)!
+//    }
+//    func weeksAgo(from date: Date) -> Int {
+//        let calendar = Calendar.current
+//        let startOfSelfWeek = self.startOfWeek()
+//        let startOfReferenceWeek = date.startOfWeek()
+//        return calendar.dateComponents([.weekOfYear], from: startOfSelfWeek, to: startOfReferenceWeek).weekOfYear ?? 0
+//    }
+//}
