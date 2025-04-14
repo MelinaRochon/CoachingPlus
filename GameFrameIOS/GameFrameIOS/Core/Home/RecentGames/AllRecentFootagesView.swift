@@ -37,14 +37,27 @@ struct AllRecentFootageView: View {
     /// Stores the type of user (e.g., "Coach", "Player"), fetched dynamically.
     @State var userType: String
 
+    /// Filters the games
+    var filteredGames: [HomeGameDTO] {
+        if searchText.isEmpty {
+            return pastGames
+        } else {
+            return pastGames.filter { game in
+                game.game.title.lowercased().contains(searchText.lowercased()) ||
+                game.team.name.lowercased().contains(searchText.lowercased()) ||
+                game.team.teamNickname.lowercased().contains(searchText.lowercased())
+            }
+        }
+    }
+    
     // MARK: - View
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List  {
                 Section {
                     if !pastGames.isEmpty {
-                        ForEach(pastGames, id: \.game.gameId) { pastGame in
+                        ForEach(filteredGames, id: \.game.gameId) { pastGame in
                             NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame, userType: userType)) {
                                 HStack {
                                     CustomUIFields.gameVideoPreviewStyle()
@@ -64,10 +77,10 @@ struct AllRecentFootageView: View {
             }
             .listStyle(PlainListStyle()) // Optional: Make the list style more simple
             .background(Color.white) // Set background color to white for the List
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Search Recent Games"))
+            .navigationTitle(Text("All Recent Games"))
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .searchable(text: $searchText)
-        .navigationTitle(Text("All Recent Games"))
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
