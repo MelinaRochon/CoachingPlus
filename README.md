@@ -16,5 +16,5 @@ See [Wiki](https://github.com/MelinaRochon/Capstone_Group24/wiki/About).
 
 
 ## Branches
-`main` - Contains all files and data up to March 31, 2025.
+`main` - Contains all files and data up to March 31, 2025.   
 `beta_v1` - Includes all updates to date, with full functionality for the first beta version.
