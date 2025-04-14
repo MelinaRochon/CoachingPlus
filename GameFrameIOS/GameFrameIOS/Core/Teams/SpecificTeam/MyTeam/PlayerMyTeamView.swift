@@ -86,36 +86,14 @@ struct PlayerMyTeamView: View {
                     //                    }
                     
                     if let groupedGames = groupedGames {
-                        //                        ForEach (groupedGames, id: \.label) { group in
-                        //                            Section(header: Text(group.label)) {
-                        //                                ForEach(group.games, id: \.gameId) { game in
-                        //                                    NavigationLink(destination: PlayerSpecificFootageView(game: game, team: selectedTeam)) {
-                        //                                        HStack (alignment: .top) {
-                        //                                            // Displaying the game preview image and information
-                        //                                            CustomUIFields.gameVideoPreviewStyle()
-                        //
-                        //                                            VStack {
-                        //                                                Text(game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                        //
-                        //                                                Text(formatStartTime(game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                        //                                                if let startTime = game.startTime {
-                        //                                                    let gameEndTime = startTime.addingTimeInterval(TimeInterval(game.duration))
-                        //                                                    if gameEndTime > Date() {
-                        //                                                        Text("Scheduled Game").font(.caption).bold().foregroundColor(Color.green).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                        //                                                    }
-                        //                                                }
-                        //                                            }
-                        //                                        }
-                        //                                    }
-                        //                                }
-                        //                            }
-                        //                        }
-                        GroupedGamesListView(
+                        GroupedGamesList(
                             groupedGames: groupedGames,
                             selectedTeam: selectedTeam,
                             destinationBuilder: { game in
                                 AnyView(PlayerSpecificFootageView(game: game, team: selectedTeam))
-                            }
+                            },
+                            showUpcomingGames: true,
+                            showRecentGames: true
                         )
                     } else {
                         Text("No saved footage.").font(.caption).foregroundStyle(.secondary)

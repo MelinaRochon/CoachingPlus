@@ -101,6 +101,9 @@ final class PlayerModel: ObservableObject {
             tmpArrayPlayer.append(newPlayerObject) // add player to the list of players on the team
         }
         
+        // filter the players array
+        tmpArrayPlayer.sort { $0.firstName < $1.firstName }
+        
         // Update the published players list with the newly fetched data.
         self.players = tmpArrayPlayer
     }

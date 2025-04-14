@@ -91,16 +91,14 @@ struct PlayerHomePageView: View {
                             if !futureGames.isEmpty {
                                 
                                 // Loop through games and show a preview of the next 3 games
-                                ForEach(futureGames.prefix(3), id: \.game.gameId) { scheduledGame in
-                                    NavigationLink(destination: SelectedScheduledGameView(selectedGame: scheduledGame, userType: "Player")) {
-                                        VStack {
-                                            Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.black)
-                                            
-                                            Text(scheduledGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.secondary)
-                                            Text(formatStartTime(scheduledGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.black)
-                                        }
-                                    }.foregroundColor(.black)
-                                }
+                                GameList(
+                                    games: futureGames,
+                                    prefix: 3,
+                                    gameType: .scheduled,
+                                    destinationBuilder: { game in
+                                        AnyView(SelectedScheduledGameView(selectedGame: game, userType: "Player"))
+                                    }
+                                )
                             } else {
                                 Text("No scheduled game at the moment.").font(.caption).foregroundColor(.secondary)
                             }
@@ -125,21 +123,14 @@ struct PlayerHomePageView: View {
                             
                             if !pastGames.isEmpty {
                                 // Loop through games and show a preview of the past 3 games
-                                ForEach(pastGames.prefix(3), id: \.game.gameId) { pastGame in
-                                    NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame, userType: "Player")) {
-                                        HStack {
-                                            CustomUIFields.gameVideoPreviewStyle()
-                                            
-                                            VStack {
-                                                Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                                Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                                Text(formatStartTime(pastGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                                
-                                                Divider().background(content: { Color.gray.opacity(0.3) })
-                                            }
-                                        }
-                                    }.foregroundColor(.black)
-                                }
+                                GameList(
+                                    games: pastGames,
+                                    prefix: 3,
+                                    gameType: .recent,
+                                    destinationBuilder: { game in 
+                                        AnyView(SelectedRecentGameView(selectedGame: game, userType: "Player"))
+                                    }
+                                )
                             } else {
                                 Text("No recent games at the moment.").font(.caption).foregroundColor(.secondary)
                             }

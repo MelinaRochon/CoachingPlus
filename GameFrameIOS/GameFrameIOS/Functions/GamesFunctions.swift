@@ -23,19 +23,23 @@ func groupGamesByWeek(_ games: [DBGame]) -> [(label: String, games: [DBGame])] {
     formatter.dateStyle = .medium
     let now = Date()
     
+    let futureGames = games.filter { ($0.startTime ?? now) > now }
+    let pastGames = games.filter { ($0.startTime ?? now) <= now }
+
+    
     // Group games by the start of their week.
-    let grouped = Dictionary(grouping: games) { game -> Date in
+    let groupedPast = Dictionary(grouping: pastGames) { game -> Date in
         game.startTime?.startOfWeek(using: calendar) ?? Date().startOfWeek(using: calendar)
     }
     
-    return grouped
-        .sorted { $0.key < $1.key } // Sort weeks in ascending order (oldest first)
+    let sortedGroupedPast: [(String, [DBGame])] = groupedPast
+        .sorted { $0.key > $1.key } // Sort weeks in ascending order (oldest last)
         .map { (startOfWeek, games) in
             
             let endOfWeek = startOfWeek.endOfWeek(using: calendar)
             
             // Determine how many weeks ago this group is from now
-            let weeksAgo = calendar.dateComponents([.weekOfYear], from: startOfWeek, to: now.startOfWeek()).weekOfYear ?? 0
+            let weeksAgo = startOfWeek.weeksAgo(from: now)
             
             // Label the section based on how recent the week is
             let label: String
@@ -51,4 +55,13 @@ func groupGamesByWeek(_ games: [DBGame]) -> [(label: String, games: [DBGame])] {
             // Sort games within each section by descending start time
             return (label: label, games: games.sorted { $0.startTime ?? Date() > $1.startTime ?? Date() })
         }
+    
+    // Combine into one list
+    var result: [(String, [DBGame])] = []
+    if !futureGames.isEmpty {
+        result.append(("Upcoming Games", futureGames.sorted { $0.startTime ?? now > $1.startTime ?? now }))
+    }
+    result.append(contentsOf: sortedGroupedPast)
+    
+    return result
 }

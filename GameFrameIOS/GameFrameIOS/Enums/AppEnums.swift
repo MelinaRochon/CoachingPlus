@@ -59,3 +59,14 @@ enum TeamValidationError: Error {
 enum GameValidationError: Error {
     case invalidStartTime
 }
+
+
+/// **GameTypeEnum**: Enum representing the different states or categories a game can fall into.
+/// - `scheduled`: The game is planned for a future date and has not yet started.
+/// - `recent`: The game has already occurred and is available for viewing.
+/// - `inProgress`: The game is currently ongoing.
+enum GameTypeEnum {
+    case scheduled
+    case recent
+    case inProgress
+}

@@ -59,19 +59,14 @@ struct CoachHomePageView: View {
                             // Display preview of upcoming games
                             if !futureGames.isEmpty {
                                 // Loop through games and show a preview of the next 3 games only
-                                ForEach(futureGames.prefix(3), id: \.game.gameId) { scheduledGame in
-                                    HStack(alignment: .top) {
-                                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: scheduledGame, userType: "Coach")
-                                        ) {
-                                            VStack {
-                                                Text(scheduledGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                                
-                                                Text(scheduledGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                                Text(formatStartTime(scheduledGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                            }
-                                        }.foregroundColor(.black)
+                                GameList(
+                                    games: futureGames,
+                                    prefix: 3,
+                                    gameType: .scheduled,
+                                    destinationBuilder: { game in
+                                        AnyView(SelectedScheduledGameView(selectedGame: game, userType: "Coach"))
                                     }
-                                }
+                                )
                             } else {
                                 Text("No scheduled game.").font(.caption).foregroundColor(.secondary)
                             }
@@ -98,19 +93,14 @@ struct CoachHomePageView: View {
                             
                             // Display preview of recent games
                             if !pastGames.isEmpty {
-                                ForEach(pastGames.prefix(3), id: \.game.gameId) { pastGame in
-                                    NavigationLink(destination: SelectedRecentGameView(selectedGame: pastGame, userType: "Coach")) {
-                                        HStack {
-                                            CustomUIFields.gameVideoPreviewStyle()
-                                            
-                                            VStack {
-                                                Text(pastGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black)
-                                                Text(pastGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black)
-                                                Text(formatStartTime(pastGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black)
-                                            }
-                                        }
+                                GameList(
+                                    games: pastGames,
+                                    prefix: 3,
+                                    gameType: .recent,
+                                    destinationBuilder: { game in
+                                        AnyView(SelectedRecentGameView(selectedGame: game, userType: "Coach"))
                                     }
-                                }
+                                )
                             } else {
                                 Text("No recent games.").font(.caption).foregroundColor(.secondary)
                             }
@@ -128,7 +118,6 @@ struct CoachHomePageView: View {
                             proxy.scrollTo(0, anchor: .top) // Scroll to top when view appears
                         }
                     }
-                    
                 }
             }
             .task {
@@ -157,7 +146,6 @@ struct CoachHomePageView: View {
         }
         .background(Color(UIColor.white))
         .navigationTitle(Text("Home"))
-        //.navigationBarTitleDisplayMode(.large)
     }
     
     

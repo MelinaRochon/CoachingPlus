@@ -10,10 +10,10 @@
 
 import Foundation
 
-/** Converts a time interval (in seconds) into a formatted string (HH:MM:SS).
- - Parameter duration: The time interval in seconds.
- - Returns: A formatted string in "HH:MM:SS" format.
- */
+/// Converts a time interval (in seconds) into a formatted string (HH:MM:SS).
+/// - Parameter duration: The time interval in seconds.
+/// - Returns: A formatted string in "HH:MM:SS" format.
+///
 func formatDuration(_ duration: TimeInterval) -> String {
     let hours = Int(duration) / 3600
     let minutes = (Int(duration) % 3600) / 60
@@ -21,10 +21,11 @@ func formatDuration(_ duration: TimeInterval) -> String {
     return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
 }
 
-/** Converts a time duration from seconds into hours and minutes.
- - Parameter seconds: The total time in seconds.
- - Returns: A tuple containing the equivalent hours (int) and minutes
- */
+
+/// Converts a time duration from seconds into hours and minutes.
+/// - Parameter seconds: The total time in seconds.
+/// - Returns: A tuple containing the equivalent hours (int) and minutes
+///
 func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
     let hours = seconds / 3600
     let minutes = (seconds % 3600) / 60
@@ -32,29 +33,51 @@ func convertSecondsToHoursMinutes(seconds: Int) -> (hours: Int, minutes: Int) {
 }
 
 
-/***Format the entered phone number to (XXX)-XXX-XXXX
- Formats the given phone number string into a standard phone number format: (XXX)-XXX-XXXX.
+/// Utility function to filter an array of games based on a search text.
+/// The function searches for the `searchText` in the game title, team name, or team nickname.
+/// - Parameter games: An array of `HomeGameDTO` objects to be filtered.
+/// - Parameter searchText: The text used for filtering the games. The function checks for matches in
+///                         the game title, team name, or team nickname.
+/// - Returns: A filtered array of `HomeGameDTO` objects that match the search criteria.
+///           If the `searchText` is empty, the original `games` array is returned without filtering.
+func filterGames(_ games: [HomeGameDTO], with searchText: String) -> [HomeGameDTO] {
+    if searchText.isEmpty {
+        // If search text is empty, return the original list of games
+        return games
+    } else {
+        // Filter games based on the search text matching the title, team name, or team nickname
+        return games.filter { game in
+            game.game.title.lowercased().contains(searchText.lowercased()) ||
+            game.team.name.lowercased().contains(searchText.lowercased()) ||
+            game.team.teamNickname.lowercased().contains(searchText.lowercased())
+        }
+    }
+}
 
- This function takes an unformatted string containing digits and formats it into a phone number format
- that matches the pattern (XXX)-XXX-XXXX, where 'X' represents a digit. Any non-numeric characters
- in the input string will be ignored, and only numeric digits will be used.
 
- If there are more than 10 digits in the input string, only the first 10 digits are used for formatting.
- If there are fewer than 10 digits, the function will format whatever digits are available and leave
- the remaining positions empty in the result.
- 
- - Parameter number: A string representing the phone number, which may contain non-numeric characters.
+/// Format the entered phone number to (XXX)-XXX-XXXX
+/// Formats the given phone number string into a standard phone number format: (XXX)-XXX-XXXX.
+///
+/// This function takes an unformatted string containing digits and formats it into a phone number format
+/// that matches the pattern (XXX)-XXX-XXXX, where 'X' represents a digit. Any non-numeric characters
+/// in the input string will be ignored, and only numeric digits will be used.
+///
+/// If there are more than 10 digits in the input string, only the first 10 digits are used for formatting.
+/// If there are fewer than 10 digits, the function will format whatever digits are available and leave
+/// the remaining positions empty in the result.
+///
+/// - Parameter number: A string representing the phone number, which may contain non-numeric characters.
+/// - Returns: A string formatted as a phone number in the form of (XXX)-XXX-XXXX.
+///
+/// Examples:
+/// ```
+///    Input: "1234567890"
+///    Output: "(123)-456-7890"
+///
+///    Input: "1-234-567-890"
+///    Output: "(123)-456-7890"
+/// ```
 
- - Returns: A string formatted as a phone number in the form of (XXX)-XXX-XXXX.
- 
- Examples:
- 
-    Input: "1234567890"
-    Output: "(123)-456-7890"
-
-    Input: "1-234-567-890"
-    Output: "(123)-456-7890"
-**/
 func formatPhoneNumber(_ number: String) -> String {
     // Keep only digits
     let digits = number.filter { $0.isNumber }
