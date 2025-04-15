@@ -163,6 +163,15 @@ final class TranscriptModel: ObservableObject {
         
         return playerObject
     }
+    
+    
+    func getAudioFileUrl(keyMomentId: String, gameId: String, teamId: String) async throws -> String? {
+        guard let keyMomentAudioURL = try await KeyMomentManager.shared.getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentId)?.audioUrl else {
+            return nil
+        }
+        
+        return keyMomentAudioURL
+    }
 
     
     /// Retrieves the names and profile pictures of players mentioned in feedback.

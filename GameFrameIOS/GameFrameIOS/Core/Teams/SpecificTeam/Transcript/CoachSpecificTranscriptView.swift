@@ -32,6 +32,8 @@ struct CoachSpecificTranscriptView: View {
     /// Stores player details for whom feedback is provided in this transcript.
     @State private var feedbackFor: [PlayerNameAndPhoto]? = []
     
+    @State private var audioFileRetrieved: Bool = false;
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -77,6 +79,15 @@ struct CoachSpecificTranscriptView: View {
                     if let transcript = transcript {
                         // Displays the transcript text along with its timestamp relative to game start.
                         VStack(alignment: .leading) {
+                            
+                            if audioFileRetrieved {
+                                let localAudioURL = FileManager.default
+                                    .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                                    .appendingPathComponent("downloaded_audio.m4a")
+                                
+                                AudioPlayerView(audioURL: localAudioURL)
+                                
+                            }
                             if let gameStartTime = game.startTime {
                                 let durationInSeconds = transcript.frameStart.timeIntervalSince(gameStartTime)
                                 Text(formatDuration(durationInSeconds))
@@ -167,6 +178,39 @@ struct CoachSpecificTranscriptView: View {
 //                    .foregroundColor(.red)
 //                }
 //            }
+        }
+        .task {
+            // Fetch the audio url
+            print("TRANSCRIPT INFO: \(transcript)")
+            if let transcript = transcript {
+                do {
+                    let audioURL = try await transcriptModel.getAudioFileUrl(keyMomentId: transcript.keyMomentId, gameId: game.gameId, teamId: team.teamId)
+                    
+                    if let url = audioURL {
+                        // Fetch audio file from db
+                        let storageRef = StorageManager.shared.getAudioURL(path: url)
+                        
+                        let localURL = FileManager.default
+                            .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                            .appendingPathComponent("downloaded_audio.m4a")
+                        
+                        
+                        
+                        storageRef.write(toFile: localURL) { url, error in
+                            if let error = error {
+                                print("❌ Failed to download audio: \(error.localizedDescription)")
+                            } else {
+                                print("✅ Audio downloaded to: \(url?.path ?? "")")
+                                // You can now use this local file (e.g., to play it)
+                                audioFileRetrieved = true
+                            }
+                        }
+                    }
+
+                } catch {
+                    print("ERROR WHEN fetching AUDIO url: \(error)")
+                }
+            }
         }
     }
 }

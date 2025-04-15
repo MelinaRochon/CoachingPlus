@@ -10,6 +10,7 @@ import TimerKit
 import AVFoundation
 import TranscriptionKit
 import AVKit
+import FirebaseStorage
 
 /***
  This view is responsible for handling audio recording during a game session. It starts and stops audio recordings, manages transcriptions, and adds the resulting transcripts as key moments to the database.
@@ -126,6 +127,7 @@ struct AudioRecordingView: View {
                                 do {
                                     try await audioRecordingModel.endAudioRecordingGame(teamId: teamId, gameId: gameId)
                                     // Go back to the main page
+                                    removeAllTempAudioFiles(count: self.audios.count)
                                     navigateToHome = true
                                     
                                 } catch {
@@ -166,10 +168,13 @@ struct AudioRecordingView: View {
                         if !status {
                             // error msg
                             self.alert.toggle()
-                        } else {
-                            // if permission is granted, fetching data
-                            self.getAudios()
                         }
+                        //self.audios.removeAll()
+
+//                        else {
+//                            // if permission is granted, fetching data
+//                            self.getAudios()
+//                        }
                     }
                 } catch {
                     print("Error when loading the audio recording transcripts. Error: \(error)")
@@ -179,7 +184,7 @@ struct AudioRecordingView: View {
     }
     
     // MARK: - Helper Functions
-    
+        
     /// Handles the change of recording state (start/stop)
     func handleRecordingStateChange(_ isRecording: Bool) {
         if isRecording {
@@ -193,7 +198,7 @@ struct AudioRecordingView: View {
         } else {
             // Stop Recording: Save to recordings
             self.recorder.stop()
-            self.getAudios() // updating data
+//            self.getAudios() // updating data
             
             if let startTime = recordingStartTime {
                 let endTime = Date()
@@ -214,7 +219,9 @@ struct AudioRecordingView: View {
                         
                         // Cut the transcript to see if the name of the player is in the transcript
                         // See which player the transcript is associated to
-                        try await audioRecordingModel.addRecording(recordingStart: startTime, recordingEnd: endTime, transcription: transcript, feedbackFor: feedbackFor)
+                        try await audioRecordingModel.addRecording(recordingStart: startTime, recordingEnd: endTime, transcription: transcript, feedbackFor: feedbackFor, numAudioFiles: self.audios.count )
+                        
+                        print("AUDIO: \(self.audios)")
                     } catch {
                         errorWrapper = ErrorWrapper(error: error, guidance: "Error when saving the audio recording. Please try again later.")
                     }
@@ -231,10 +238,16 @@ struct AudioRecordingView: View {
 
     /// Initializes the audio recording session
     private func initializeAudioRecording() {
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        
+        let audioDir = url.appendingPathComponent("audio/\(teamId)/\(gameId)", isDirectory: true)
+
         do {
-            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            
-            let fileName = url.appendingPathComponent("test\(self.audios.count + 1).m4a")
+
+            try FileManager.default.createDirectory(at: audioDir, withIntermediateDirectories: true)
+            let tempURL =  audioDir.appendingPathComponent("\(self.audios.count + 1).m4a")
+//            let tempURL = url.appendingPathComponent("audio/\(teamId)/\(gameId)/\(self.audios.count + 1)")
+//                .appendingPathExtension("m4a")
             let settings = [
                 AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
                 AVSampleRateKey: 12000,
@@ -242,15 +255,86 @@ struct AudioRecordingView: View {
                 AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
             ]
             
-            self.recorder = try AVAudioRecorder(url: fileName, settings: settings)
-            print("Saving audio file at: \(fileName.path)")
+            
+            self.recorder = try AVAudioRecorder(url: tempURL, settings: settings)
+            
+            self.audios.append(tempURL)
+            print("Saving audio file at: \(tempURL.path)")
             
             self.recorder.record()
         } catch {
-            print(error.localizedDescription)
+            print("❌ Failed to create audio directory: \(error.localizedDescription)")
         }
     }
     
+    func removeAllTempAudioFiles(count: Int) {
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+
+        for index in 1...count {
+            let fileURL = documentsURL
+                .appendingPathComponent("audio/\(teamId)/\(gameId)/\(index)")
+                .appendingPathExtension("m4a")
+
+            if fileManager.fileExists(atPath: fileURL.path) {
+                do {
+                    try fileManager.removeItem(at: fileURL)
+                    print("✅ Deleted: \(fileURL.lastPathComponent)")
+                } catch {
+                    print("❌ Failed to delete \(fileURL.lastPathComponent): \(error.localizedDescription)")
+                }
+            } else {
+                print("⚠️ File not found: \(fileURL.path)")
+            }
+
+        }
+    }
+    
+    //Saving audio file at: /Users/melina_rochon/Library/Developer/CoreSimulator/Devices/FA1F232C-56E4-4236-B408-CDDF90C3F447/data/Containers/Data/Application/55697331-1F14-4225-82C3-7A2F203DDB43/Documents/test55.m4a
+
+//    let audioURL = URL(fileURLWithPath: "/path/to/audio.m4a")
+//    uploadAudioFile(localFile: audioURL, fileName: "coach_feedback_001.m4a") { result in
+//        switch result {
+//        case .success(let url):
+//            print("Audio uploaded! File available at: \(url)")
+//        case .failure(let error):
+//            print("Upload failed: \(error.localizedDescription)")
+//        }
+//    }
+//
+//    
+//    func uploadAudioFile(localFile: URL, fileName: String, completion: @escaping (Result<URL, Error>) -> Void) {
+//        // 1. Create a reference to the location in Firebase Storage
+////        let storageRef = Storage.storage().reference().child("audio/\(fileName)")
+//        
+//        let fileName = "\(UUID().uuidString).m4a"
+//        let path = "audio/\(teamId)/\(gameId)/\(fileName)"
+//        let audioRef = StorageManager.shared.storage.child(path)
+//        
+////        let bucket = "gs://gameframe-4ea7d.firebasestorage.app"
+////        let storagePath = "\(bucket)/audio/\(fileName)"
+//        
+//        // 2. Upload the file
+//        let uploadTask = audioRef.putFile(from: localFile, metadata: nil) { metadata, error in
+//            if let error = error {
+//                completion(.failure(error))
+//                return
+//            }
+//
+//            // 3. Once uploaded, get the download URL
+//            audioRef.downloadURL { url, error in
+//                if let error = error {
+//                    completion(.failure(error))
+//                    return
+//                }
+//
+//                if let downloadURL = url {
+//                    completion(.success(downloadURL))
+//                }
+//            }
+//        }
+//    }
+
     
     /// Starts the transcription process
     private func startRecording() {
@@ -266,6 +350,28 @@ struct AudioRecordingView: View {
     private func endRecording() async throws {
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5-second delay
         speechRecognizer.stopTranscribing()
+        
+//        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+//
+//        let audioFilename = "test29.m4a"
+//
+//        // Construct the full local file URL
+//        let localURL = documentsPath.appendingPathComponent(audioFilename)
+//
+//        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
+//            .appendingPathComponent(UUID().uuidString)
+//            .appendingPathExtension("m4a")
+//        
+//        uploadAudioFile(localFile: localURL, fileName: "coach_feedback_test.m4a") { result in
+//            switch result {
+//            case .success(let url):
+//                print("Audio uploaded! File available at: \(url)")
+//            case .failure(let error):
+//                print("Upload failed: \(error.localizedDescription)")
+//            }
+//        }
+
+
     }
     
     
@@ -317,19 +423,51 @@ struct AudioRecordingView: View {
     
         
     /// Fetches all saved audio files from the document directory
+//    func getAudios() {
+//        let fileManager = FileManager.default
+//
+//        let folderURL = URL(fileURLWithPath: NSTemporaryDirectory())
+//            .appendingPathComponent("audio/\(teamId)/\(gameId)", isDirectory: true)
+//
+//        do {
+////            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+//
+////            do {
+//            let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
+//
+//            // fetch all data from document directory...
+////            let results = try FileManager.default.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil, options: .producesRelativePathURLs)
+//            let audioFiles = fileURLs.filter { $0.pathExtension == "m4a" }
+//
+//            // Add all the files in the audio array
+//            for i in audioFiles {
+//                self.audios.append(i)
+//            }
+//        } catch {
+//            print("ALLLOSSS>>>> \(error.localizedDescription)")
+//        }
+//    }
+    
     func getAudios() {
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+
+        let folderURL = documentsURL
+            .appendingPathComponent("audio/\(teamId)/\(gameId)", isDirectory: true)
+
         do {
-            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            
-            // fetch all data from document directory...
-            let results = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .producesRelativePathURLs)
-            
-            // Add all the files in the audio array
-            for i in results {
-                self.audios.append(i)
-            }
+            // Get all files in the specified folder
+            let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
+
+            // Filter only .m4a audio files
+            let audioFiles = fileURLs.filter { $0.pathExtension.lowercased() == "m4a" }
+
+            // Append to your audio list
+            self.audios.append(contentsOf: audioFiles)
+
+            print("✅ Found \(audioFiles.count) audio files.")
         } catch {
-            print(error.localizedDescription)
+            print("❌ Failed to get audio files: \(error.localizedDescription)")
         }
     }
 }
