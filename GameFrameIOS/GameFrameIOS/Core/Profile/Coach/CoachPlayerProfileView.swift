@@ -51,6 +51,9 @@ import SwiftUI
     
     /// State variable to track whether the profile is being edited.
     @State private var isEditing: Bool = false
+     
+     /// State variable to track whether the player profile is being removed.
+     @State private var removePlayer: Bool = false
     
     /// Array containing possible genders for the player.
     let genders = ["Female", "Male", "Other"]
@@ -156,8 +159,29 @@ import SwiftUI
                         }
                         
                         // TODO: - Add the feedback section associated to the player
+                        
+//                        Section {
+//                            Button(role: .destructive) {
+//                                removePlayer.toggle()
+//                            } label: {
+//                                Text("Remove player")
+//                            }
+//                        }
                     }
                 }
+            }
+            .alert("Removing Player", isPresented: $removePlayer) {
+//                Button("Cancel") {
+//                    // Nothing...
+//                }
+                
+                Button(role: .destructive) {
+                    
+                } label: {
+                    Text("Remove")
+                }
+            } message: {
+                Text("Are you sure you want to remove this player from the team? This action cannot be undone.")
             }
             .task {
                 do {

@@ -86,26 +86,6 @@ struct CoachMyTeamView: View {
                 // Main list that dynamically changes based on the selected segment
                 if (selectedSegmentIndex == 0) {
                     
-                    HStack(alignment: .bottom) {
-                        Spacer() // Pushes the button to the right
-                        
-                        HStack(alignment: .center) {
-                            Spacer()
-                            Button(action: {
-                                isGamesSettingsEnabled.toggle()
-                            }) {
-                                HStack {
-                                    Text("Filter")
-                                    Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                                }.foregroundStyle(.red)
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(.gray)
-                        }
-                        //.padding(.horizontal)
-                    }.padding(.top, 5).padding(.horizontal)
-                    Divider()
-                    
                     List {
                         // "Footage" section: Displays games related to the team
                         // Looping through games related to the team
@@ -213,11 +193,11 @@ struct CoachMyTeamView: View {
                                 Button (action: {
                                     isGamesSettingsEnabled = false // Close the filter options
                                 }) {
-                                    Text("Done")
+                                    Text("Done").foregroundStyle(.red)
                                 }
                             }
                         }
-                        .navigationTitle("Footage Options")
+                        .navigationTitle("Filtering Options")
                         .navigationBarTitleDisplayMode(.inline)
                 }
             }

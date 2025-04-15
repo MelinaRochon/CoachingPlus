@@ -131,6 +131,13 @@ final class CoachProfileViewModel: ObservableObject {
             // Refresh the user object after updating
             self.user = try await UserManager.shared.getUser(userId: userId)
         }
+    }
+    
+    
+    /// Remove a player from the database
+    func removePlayer() {
         
+        // TODO: Remove a player from db cannot be done.
+        guard let player else { return }
     }
 }

@@ -45,7 +45,7 @@ struct UpcomingGameSectionView: View {
                 }
                 
                 // Section for choosing which group of players to show using a picker
-                Section(header: Text("Players Settings")) {
+                Section(header: Text("Player Settings")) {
                     Picker("Show Players", selection: $showPlayersIndex) {
                         ForEach(showPlayers.indices, id: \.self) { i in
                             Text(self.showPlayers[i])

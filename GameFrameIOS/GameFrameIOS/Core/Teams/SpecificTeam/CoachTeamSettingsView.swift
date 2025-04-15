@@ -49,71 +49,65 @@ struct CoachTeamSettingsView: View {
                     // List displaying the various team settings (nickname, age group, sport, gender, access code).
                     List {
                         // Section Title
-                        Text("Team Settings")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        // Team Nickname
-                        HStack {
-                            Text("Nickname")
-                            Spacer()
-                            Text(team.teamNickname)
-                                .foregroundColor(.secondary)
-                        }
-
-                        // Age Group
-                        HStack {
-                            Text("Age Group")
-                            Spacer()
-                            Text(team.ageGrp)
-                                .foregroundColor(.secondary)
-                        }
-
-                        // Sport
-                        HStack {
-                            Text("Sport")
-                            Spacer()
-                            Text(team.sport)
-                                .foregroundColor(.secondary)
-                        }
-
-                        // Gender
-                        HStack {
-                            Text("Gender")
-                            Spacer()
-                            Text(team.gender.capitalized)
-                                .foregroundColor(.secondary)
-                        }
-
-                        // Access Code with Copy Button & Tooltip
-                        HStack {
-                            Text("Access Code")
-                            Spacer()
-                            Text(team.accessCode ?? "N/A")
-                                .foregroundColor(.secondary).padding(.trailing, 5)
+                        Section(header: Text("Team Settings")) {
+                            // Team Nickname
+                            HStack {
+                                label(text: "Nickname", systemImage: "person.2.fill")
+                                Spacer()
+                                Text(team.teamNickname)
+                                    .foregroundColor(.secondary)
+                            }
                             
-                            // Copy Button
-                            Button(action: {
-                                UIPasteboard.general.string = team.accessCode ?? ""
-                                showCopiedMessage = true
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                    showCopiedMessage = false
+                            // Age Group
+                            HStack {
+                                label(text: "Age Group", systemImage: "calendar.and.person")
+                                Spacer()
+                                Text(team.ageGrp)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            // Sport
+                            HStack {
+                                label(text: "Sport", systemImage: "soccerball")
+                                Spacer()
+                                Text(team.sport)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            // Gender
+                            HStack {
+                                label(text: "Gender", systemImage: "figure")
+                                Spacer()
+                                Text(team.gender.capitalized)
+                                    .foregroundColor(.secondary)
+                            }
+                                                        
+                            // Access Code with Copy Button & Tooltip
+                            HStack {
+                                label(text: "Access Code", systemImage: "qrcode") //.foregroundStyle(.red)
+                                Spacer()
+                                Text(team.accessCode ?? "N/A")
+                                    .foregroundColor(.secondary).padding(.trailing, 5)
+                                
+                                // Copy Button
+                                Button(action: {
+                                    UIPasteboard.general.string = team.accessCode ?? ""
+                                    showCopiedMessage = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                        showCopiedMessage = false
+                                    }
+                                }) {
+                                    Image(systemName: "doc.on.doc.fill")
+                                        .foregroundColor(.gray)
                                 }
-                            }) {
-                                Image(systemName: "doc.on.doc.fill")
-                                    .foregroundColor(.gray)
                             }
                         }
                         
                         Section(header: Text("Players")) {
                             if !players.isEmpty {
                                 ForEach(players, id: \.playerDocId) { player in
-                                    HStack {
-                                        Image(systemName: "person")
-                                            .foregroundColor(.blue)
-                                        
-                                        Text("\(player.firstName) \(player.lastName)")
-                                    }
+                                    
+                                    label(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
                                 }
                             } else {
                                 Text("No players found.").font(.caption).foregroundStyle(.secondary)
@@ -138,10 +132,29 @@ struct CoachTeamSettingsView: View {
                     Button {
                         dismiss()
                     } label: {
-                        Text("Done").font(.subheadline)
+                        Text("Done").font(.subheadline).foregroundStyle(.red)
                     }
                 }
             }
+        }
+    }
+    
+    
+    /// A reusable SwiftUI view that displays a horizontal label with a red SF Symbol icon and text.
+    ///
+    /// - Parameters:
+    ///   - text: The text to display next to the icon.
+    ///   - systemImage: The name of the SF Symbol to use as the icon.
+    ///
+    /// - Returns: A `View` containing an `HStack` with a red icon and a label.
+    @ViewBuilder
+    private func label(text: String, systemImage: String) -> some View {
+        HStack {
+            Image(systemName: systemImage)
+                .frame(width: 25)
+                .foregroundStyle(.red) // Red icon
+            Text(text)
+                .foregroundStyle(.primary) // Default text color
         }
     }
 }
