@@ -217,10 +217,10 @@ struct PlayerProfileView: View {
                                                 print(error)
                                             }
                                         }
-                                    }
+                                    }.foregroundStyle(.red)
                                     
                                     // Logout button
-                                    Button("Log out") {
+                                    Button{
                                         Task {
                                             do {
                                                 try viewModel.logOut()
@@ -229,8 +229,9 @@ struct PlayerProfileView: View {
                                                 print(error)
                                             }
                                         }
-                                    }
-                                    
+                                    } label: {
+                                        Text("Log out").foregroundStyle(.red)
+                                    }                                    
                                 }
                             }
                         }
@@ -255,12 +256,12 @@ struct PlayerProfileView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !isEditing {
                         Button(action: editInfo) {
-                            Text("Edit")
+                            Text("Edit").foregroundStyle(.red)
                         }
                         
                     } else {
                         Button(action: saveInfo) {
-                            Text("Save")
+                            Text("Save").foregroundStyle(.red)
                         }
                     }
                 }
@@ -268,7 +269,7 @@ struct PlayerProfileView: View {
                 if isEditing {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(action: editInfo) {
-                            Text("Cancel")
+                            Text("Cancel").foregroundStyle(.red)
                         }
                     }
                 }

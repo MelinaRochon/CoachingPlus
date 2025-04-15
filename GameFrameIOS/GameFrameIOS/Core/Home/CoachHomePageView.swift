@@ -48,9 +48,9 @@ struct CoachHomePageView: View {
                             NavigationLink(destination: AllScheduledGamesView(futureGames: futureGames, userType: "Coach")) {
                                 Text("Scheduled Games")
                                     .font(.headline)
-                                    .foregroundColor(futureGamesFound ? .blue : .secondary)
+                                    .foregroundColor(futureGamesFound ? .red : .secondary)
                                 
-                                Image(systemName: "chevron.right").foregroundColor(futureGamesFound ? .blue : .secondary)
+                                Image(systemName: "chevron.right").foregroundColor(futureGamesFound ? .red : .secondary)
                                 Spacer()
                             }
                             .padding(.bottom, 4)
@@ -82,9 +82,9 @@ struct CoachHomePageView: View {
                                 HStack {
                                     Text("Recent Games")
                                         .font(.headline)
-                                        .foregroundColor(recentGamesFound ? .blue : .secondary)
+                                        .foregroundColor(recentGamesFound ? .red : .secondary)
                                     
-                                    Image(systemName: "chevron.right").foregroundColor(recentGamesFound ? .blue : .secondary)
+                                    Image(systemName: "chevron.right").foregroundColor(recentGamesFound ? .red : .secondary)
                                     Spacer()
                                 }
                             }
@@ -113,7 +113,8 @@ struct CoachHomePageView: View {
                             CustomUIFields.loadingSpinner("Loading games...")
                         }
                         
-                    }.onAppear {
+                    }
+                    .onAppear {
                         DispatchQueue.main.async {
                             proxy.scrollTo(0, anchor: .top) // Scroll to top when view appears
                         }
@@ -143,9 +144,10 @@ struct CoachHomePageView: View {
                     Text("OK")
                 }
             }
+            .background(Color(UIColor.white))
+            .navigationTitle(Text("Home"))
         }
-        .background(Color(UIColor.white))
-        .navigationTitle(Text("Home"))
+        
     }
     
     

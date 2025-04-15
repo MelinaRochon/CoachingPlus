@@ -66,7 +66,7 @@ struct PlayerAllTeamsView: View {
                                     NavigationLink(destination: PlayerMyTeamView(selectedTeam: team)
                                     ) {
                                         HStack {
-                                            Image(systemName: "tshirt") // TO DO - Will need to change the team's logo in the future
+                                            Image(systemName: "tshirt").foregroundStyle(.red) // TO DO - Will need to change the team's logo in the future
                                             Text(team.name)
                                         }
                                     }

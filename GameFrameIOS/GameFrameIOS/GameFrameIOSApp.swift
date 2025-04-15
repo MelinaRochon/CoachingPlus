@@ -13,6 +13,11 @@ import FirebaseCore
 struct GameFrameIOSApp: App {
     init(){
         FirebaseApp.configure()
+        
+        UINavigationBar.appearance().tintColor = .red // ← this affects buttons
+        
+        // Optional: UITabBar tint if you're using tabs too
+        UITabBar.appearance().tintColor = .red
     }
     
     var sharedModelContainer: ModelContainer = {

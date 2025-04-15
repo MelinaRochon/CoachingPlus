@@ -1,5 +1,5 @@
 //
-//  SwiftUIView.swift
+//  TeamSectionView.swift
 //  GameFrameIOS
 //
 //  Created by Mélina Rochon on 2025-04-14.
@@ -15,11 +15,12 @@ import SwiftUI
 ///   - showRecentGames: A binding to a Boolean that controls whether past games are shown.
 ///   - showPlayers: A binding to an array of player filter options (e.g., "All Players").
 ///   - showPlayersIndex: A binding to the currently selected index in the `showPlayers` array.
-struct UpcomingGameSectionView: View {
+struct TeamSectionView: View {
     @Binding var showUpcomingGames: Bool
     @Binding var showRecentGames: Bool
     @Binding var showPlayers: [String]
     @Binding var showPlayersIndex: Int
+    @State var userType: String
     
     var body: some View {
         VStack {
@@ -43,12 +44,13 @@ struct UpcomingGameSectionView: View {
                         }
                     }
                 }
-                
-                // Section for choosing which group of players to show using a picker
-                Section(header: Text("Player Settings")) {
-                    Picker("Show Players", selection: $showPlayersIndex) {
-                        ForEach(showPlayers.indices, id: \.self) { i in
-                            Text(self.showPlayers[i])
+                if userType == "Coach" {
+                    // Section for choosing which group of players to show using a picker
+                    Section(header: Text("Player Settings")) {
+                        Picker("Show Players", selection: $showPlayersIndex) {
+                            ForEach(showPlayers.indices, id: \.self) { i in
+                                Text(self.showPlayers[i])
+                            }
                         }
                     }
                 }

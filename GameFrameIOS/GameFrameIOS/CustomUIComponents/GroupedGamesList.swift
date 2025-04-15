@@ -32,6 +32,8 @@ struct GroupedGamesList: View {
     let groupedGames: [(label: String, games: [DBGame])]
     let selectedTeam: DBTeam?
     let destinationBuilder: (DBGame) -> AnyView
+    let upcomingGamedestinationBuilder: (DBGame) -> AnyView
+
     let showUpcomingGames: Bool
     let showRecentGames: Bool
     
@@ -52,7 +54,7 @@ struct GroupedGamesList: View {
                     GamesList(
                         games: upcomingGames.games,
                         destinationBuilder: { game in
-                            destinationBuilder(game)
+                            upcomingGamedestinationBuilder(game)
                         }
                     )
                 }
@@ -203,6 +205,9 @@ struct GroupedGamesList: View {
                 selectedTeam: exampleTeam,
                 destinationBuilder: { game in
                     AnyView(CoachSpecificFootageView(game: game, team: exampleTeam))
+                },
+                upcomingGamedestinationBuilder: { game in
+                    AnyView(GameDetailsView(selectedGame: game, team: exampleTeam, userType: "Coach"))
                 },
                 showUpcomingGames: true,
                 showRecentGames: true

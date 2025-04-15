@@ -111,7 +111,7 @@ struct CoachRecordingConfigView: View {
                         // Custom Styled 'Start Audio Recording' button
                         CustomUIFields.styledHStack(content: {
                             Text("Start Audio Recording").font(.title2).bold()
-                        }, background: selectedTeamId != nil ? .red : .gray)
+                        }, background: selectedTeamId != nil ? .black : .gray)
                         
                     }.disabled(selectedTeamId == nil) // Disable button if no team is selected
                 }
@@ -127,7 +127,7 @@ struct CoachRecordingConfigView: View {
                         dismiss() // Dismiss the view
                     }) {
                         HStack {
-                            Text("Cancel")
+                            Text("Cancel").foregroundStyle(.red)
                         }
                     }
                 }

@@ -122,6 +122,7 @@ struct SelectedRecentGameView: View {
             
                 Spacer()
             }
+            
         }
         .task {
             if let selectedGame = selectedGame {

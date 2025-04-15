@@ -194,7 +194,7 @@ import SwiftUI
                                                  print(error)
                                              }
                                          }
-                                     }
+                                     }.foregroundStyle(.red)
                                      
                                      Button("Log out") {
                                          Task {
@@ -205,7 +205,7 @@ import SwiftUI
                                                  print("Error when logging out... \(error)")
                                              }
                                          }
-                                     }
+                                     }.foregroundStyle(.red)
                                  }
                              }
                              
@@ -231,12 +231,12 @@ import SwiftUI
                  ToolbarItem(placement: .navigationBarTrailing) {
                      if !isEditing {
                          Button(action: editInfo) {
-                             Text("Edit")
+                             Text("Edit").foregroundStyle(.red)
                          }
                          
                      } else {
                          Button(action: saveInfo) {
-                             Text("Save")
+                             Text("Save").foregroundStyle(.red)
                          }
                      }
                  }
@@ -244,7 +244,7 @@ import SwiftUI
                  if isEditing {
                      ToolbarItem(placement: .navigationBarLeading) {
                          Button(action: editInfo) {
-                             Text("Cancel")
+                             Text("Cancel").foregroundStyle(.red)
                          }
                      }
                  }

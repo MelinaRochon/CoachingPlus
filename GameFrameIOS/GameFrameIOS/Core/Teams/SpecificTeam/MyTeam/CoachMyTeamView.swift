@@ -96,6 +96,9 @@ struct CoachMyTeamView: View {
                                 destinationBuilder: { game in
                                     AnyView(CoachSpecificFootageView(game: game, team: selectedTeam))
                                 },
+                                upcomingGamedestinationBuilder: { game in
+                                    AnyView(SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: "Coach"))
+                                },
                                 showUpcomingGames: showUpcomingGames,
                                 showRecentGames: showRecentGames
                             )
@@ -147,7 +150,7 @@ struct CoachMyTeamView: View {
                     Button(action: {
                         isGamesSettingsEnabled.toggle()
                     }) {
-                        Label("Settings", systemImage: "line.3.horizontal.decrease.circle")
+                        Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
                     }
                     .tint(.red)
                 }
@@ -186,7 +189,7 @@ struct CoachMyTeamView: View {
             }
             .sheet(isPresented: $isGamesSettingsEnabled) {
                 NavigationStack {
-                    UpcomingGameSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex)
+                    TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: "Coach")
                         .presentationDetents([.medium])
                         .toolbar {
                             ToolbarItem {

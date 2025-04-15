@@ -111,7 +111,7 @@ struct AudioRecordingView: View {
                     Button {
                         showStopRecordingAlert.toggle()
                     } label: {
-                        Text("End Recording")
+                        Text("End Recording").foregroundStyle(.red)
                     }.alert("Are you sure you want to stop recording?", isPresented: $showStopRecordingAlert) {
                         Button(role: .cancel) {
                             // Handle the cancelation
@@ -132,7 +132,7 @@ struct AudioRecordingView: View {
                                     print("Error when ending recording. ")
                                 }
                             }
-                        }
+                        }.foregroundStyle(.red)
                     }
                 }
             }

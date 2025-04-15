@@ -48,6 +48,22 @@ struct PlayerMyTeamView: View {
     
     @State private var groupedGames: [(label: String, games: [DBGame])]? = nil
     
+    /// Toggles the visibility of the games settings view (e.g., filters or display preferences).
+    @State private var isGamesSettingsEnabled: Bool = false
+
+    /// Controls whether upcoming games should be shown in the list.
+    @State private var showUpcomingGames = false
+
+    /// Controls whether recent (past) games should be shown in the list.
+    @State private var showRecentGames = true
+    
+    /// Defines the available filter options for displaying players in the UI.
+    @State private var showPlayers = ["All Players", "Accepted Players", "Invited Players"]
+
+    /// Tracks the currently selected index in the `showPlayers` filter array.
+    @State private var showPlayersIndex = 0
+
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -61,8 +77,11 @@ struct PlayerMyTeamView: View {
                             destinationBuilder: { game in
                                 AnyView(PlayerSpecificFootageView(game: game, team: selectedTeam))
                             },
-                            showUpcomingGames: true,
-                            showRecentGames: true
+                            upcomingGamedestinationBuilder: { game in
+                                AnyView(SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: "Player"))
+                            },
+                            showUpcomingGames: showUpcomingGames,
+                            showRecentGames: showRecentGames
                         )
                     } else {
                         Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
@@ -81,13 +100,39 @@ struct PlayerMyTeamView: View {
                     Button(action: {
                         isTeamSettingsEnabled.toggle() // Toggle team settings visibility
                     }) {
-                        Label("Settings", systemImage: "gear").foregroundStyle(.red) // Settings icon with label
+                        Label("Settings", systemImage: "gear")
+                    }.tint(.red) // Settings icon with label
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        isGamesSettingsEnabled.toggle()
+                    }) {
+                        Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
                     }
+                    .tint(.red)
                 }
             }
             .sheet(isPresented: $isTeamSettingsEnabled) {
                 // Sheet to modify team settings
                 CoachTeamSettingsView(players: playerModel.players, team: selectedTeam)
+            }
+            .sheet(isPresented: $isGamesSettingsEnabled) {
+                NavigationStack {
+                    TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: "Player")
+                        .presentationDetents([.height(300)])
+                        .toolbar {
+                            ToolbarItem {
+                                Button (action: {
+                                    isGamesSettingsEnabled = false // Close the filter options
+                                }) {
+                                    Text("Done").foregroundStyle(.red)
+                                }
+                            }
+                        }
+                        .navigationTitle("Filtering Options")
+                        .navigationBarTitleDisplayMode(.inline)
+                }
             }
         }
     }

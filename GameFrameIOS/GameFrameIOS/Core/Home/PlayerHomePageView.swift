@@ -79,9 +79,9 @@ struct PlayerHomePageView: View {
                             NavigationLink(destination: AllScheduledGamesView(futureGames: futureGames, userType: "Player")) {
                                 Text("Scheduled Games")
                                     .font(.headline)
-                                    .foregroundColor(futureGamesFound ? .blue : .secondary)
+                                    .foregroundColor(futureGamesFound ? .red : .secondary)
                                 
-                                Image(systemName: "chevron.right").foregroundColor(futureGamesFound ? .blue : .secondary)
+                                Image(systemName: "chevron.right").foregroundColor(futureGamesFound ? .red : .secondary)
                                 Spacer()
                             }
                             .padding(.bottom, 4)
@@ -113,9 +113,9 @@ struct PlayerHomePageView: View {
                             NavigationLink(destination: AllRecentFootageView(pastGames: pastGames, userType: "Player")) {
                                 Text("Recent Footage")
                                     .font(.headline)
-                                    .foregroundColor(recentGamesFound ? .blue : .secondary)
+                                    .foregroundColor(recentGamesFound ? .red : .secondary)
                                 
-                                Image(systemName: "chevron.right").foregroundColor(recentGamesFound ? .blue : .secondary)
+                                Image(systemName: "chevron.right").foregroundColor(recentGamesFound ? .red : .secondary)
                                 Spacer()
                             }
                             .padding(.bottom, 4)
@@ -173,10 +173,10 @@ struct PlayerHomePageView: View {
                     Text("OK")
                 }
             }
-        }
-        .background(Color(UIColor.white))
-        .navigationTitle(Text("Home"))
-        .navigationBarTitleDisplayMode(.large)
+            .background(Color(UIColor.white))
+            .navigationTitle(Text("Home"))
+            .navigationBarTitleDisplayMode(.large)
+        }        
     }
     
     
@@ -216,4 +216,18 @@ struct PlayerHomePageView: View {
 
 #Preview {
     PlayerHomePageView()
+}
+
+extension UINavigationBarAppearance {
+    func setColor(title: UIColor? = nil) {
+        configureWithTransparentBackground()
+        if let titleColor = title {
+            largeTitleTextAttributes = [.foregroundColor: titleColor]
+            titleTextAttributes = [.foregroundColor: titleColor]
+        }
+//        backgroundColor = background
+        UINavigationBar.appearance().scrollEdgeAppearance = self
+        UINavigationBar.appearance().standardAppearance = self
+        UINavigationBar.appearance().tintColor = UIColor.red
+    }
 }
