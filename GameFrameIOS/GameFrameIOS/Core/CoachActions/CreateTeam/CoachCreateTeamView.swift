@@ -162,7 +162,7 @@ struct CoachCreateTeamView: View {
                     Button(action: {
                         dismiss() // Dismiss the full-screen cover
                     }) {
-                        Text("Cancel")
+                        Text("Cancel").foregroundStyle(.red)
                     }
                 }
                 
@@ -208,7 +208,7 @@ struct CoachCreateTeamView: View {
                             }
                         }
                     }) {
-                        Text("Create")
+                        Text("Create").foregroundStyle(addTeamIsValid ? .red : .gray)
                     }
                     .disabled(!addTeamIsValid)
                 }

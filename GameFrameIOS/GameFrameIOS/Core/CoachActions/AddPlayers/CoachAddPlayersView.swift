@@ -117,12 +117,12 @@ struct CoachAddPlayersView: View {
                         dismiss() // Dismiss the full-screen cover
                     }) {
                         HStack {
-                            Text("Cancel")
+                            Text("Cancel").foregroundStyle(.red)
                         }
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add") {
+                    Button{
                         Task {
                             do {
                                 authenticationModel.email = email
@@ -154,6 +154,8 @@ struct CoachAddPlayersView: View {
                                 print(error)
                             }
                         }
+                    } label: {
+                        Text("Add").foregroundStyle(addPlayerToTeamIsValid ? .red : .gray)
                     }
                     .disabled(!addPlayerToTeamIsValid)
                 }

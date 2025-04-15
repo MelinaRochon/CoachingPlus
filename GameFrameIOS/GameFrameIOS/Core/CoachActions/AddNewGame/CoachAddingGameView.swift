@@ -185,7 +185,7 @@ struct CoachAddingGameView: View {
                     Button(action: {
                         dismiss() // Dismiss the full-screen cover
                     }) {
-                        Text("Cancel")
+                        Text("Cancel").foregroundStyle(.red)
                     }
                 }
                 
@@ -232,7 +232,7 @@ struct CoachAddingGameView: View {
                         }
                         
                     }) {
-                        Text("Done")
+                        Text("Done").foregroundStyle(addGameIsValid ? .red : .gray)
                     }
                     .disabled(!addGameIsValid)
                 }

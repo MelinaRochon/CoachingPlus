@@ -51,7 +51,7 @@ struct AllScheduledGamesView: View {
     // MARK: - View
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List  {
                 Section {
                     // Scheduled Games Section

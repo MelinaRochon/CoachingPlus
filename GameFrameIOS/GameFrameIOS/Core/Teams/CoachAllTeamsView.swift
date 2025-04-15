@@ -46,12 +46,12 @@ struct CoachAllTeamsView: View {
                 List {
                     Section(header: HStack {
                         Text("My Teams") // Section header text
-                        Spacer() // Push the button to the right
-                        Button{
-                            showCreateTeam.toggle()
-                        } label: {
-                            Text("Add +")
-                        }
+//                        Spacer() // Push the button to the right
+//                        Button{
+//                            showCreateTeam.toggle()
+//                        } label: {
+//                            Text("Add +")
+//                        }
                     }) {
                         if let teams = teams {
                             if !teams.isEmpty {
@@ -59,7 +59,7 @@ struct CoachAllTeamsView: View {
                                     NavigationLink(destination: CoachMyTeamView(selectedTeam: team))
                                     {
                                         HStack {
-                                            Image(systemName: "tshirt") // TODO: Will need to change the team's logo in the future
+                                            Image(systemName: "tshirt").foregroundStyle(.red) // TODO: Will need to change the team's logo in the future
                                             Text(team.name)
                                         }
                                     }
@@ -73,6 +73,15 @@ struct CoachAllTeamsView: View {
                 .listStyle(PlainListStyle()) // Optional: Make the list style more simple
             }
             .navigationTitle(Text("Teams"))
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showCreateTeam.toggle()
+                    } label: {
+                        Label("Add Team", systemImage: "plus")
+                    }.tint(.red)
+                }
+            }
             .task {
                 do {
                     self.teams = try await teamModel.loadAllTeams()
