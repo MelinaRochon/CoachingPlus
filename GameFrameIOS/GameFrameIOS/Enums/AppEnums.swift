@@ -70,3 +70,14 @@ enum GameTypeEnum {
     case recent
     case inProgress
 }
+ 
+
+/// **TranscriptTypeEnum**: An enumeration that defines the different types of transcripts that can be displayed.
+/// - `transcript`: Represents a regular transcript, typically short and tied to a specific moment.
+/// - `keyMoment`: Represents a key moment transcript, likely marked as important or noteworthy within the game.
+/// - `fullGame`: Represents the full game transcript, covering the entire duration without filtering key segments.
+enum TranscriptTypeEnum {
+    case transcript
+    case keyMoment
+    case fullGame
+}

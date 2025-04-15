@@ -109,6 +109,38 @@ final class PlayerModel: ObservableObject {
     }
     
     
+    /// Asynchronously retrieves full names of players based on their user IDs.
+    ///
+    /// This function loops through a list of player IDs, fetches their user data asynchronously
+    /// using `UserManager.shared.getUser`, and constructs an array of full names.
+    /// If any user ID fails to return a valid user, the function prints an error and returns `nil`.
+    ///
+    /// - Parameter players: An array of player IDs (as Strings).
+    /// - Returns: An optional array of full player names (`[String]?`). Returns `nil` if a user cannot be found.
+    /// - Throws: An error if the `getUser` call fails.
+    func getAllPlayersNames(players: [String]) async throws -> [(String, String)]? {
+        
+        var tmpPlayersNames: [(String, String)] = [("0", "All")]
+        
+        // Process each player ID and retrieve their corresponding user data.
+        for playerId in players {
+            // Attempt to get user data from UserManager.
+            guard let user = try await UserManager.shared.getUser(userId: playerId) else {
+                print("Could not find the user's info.. Aborting")
+                return nil // Return nil if any player info is missing.
+            }
+            
+            // Construct full name and append to the result list.
+            let name = user.firstName + " " + user.lastName
+            
+            tmpPlayersNames.append((playerId, name))
+        }
+        
+        // Return the list of player names.
+        return tmpPlayersNames
+    }
+    
+    
     /// Creates a new player entry in the database.
     ///
     /// - Parameter playerDTO: The `PlayerDTO` object containing player details.

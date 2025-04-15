@@ -55,6 +55,37 @@ func filterGames(_ games: [HomeGameDTO], with searchText: String) -> [HomeGameDT
 }
 
 
+/// Utility function to filter an array of transcripts based on a search text.
+/// The function searches for the `searchText` in the transcript title, time (duration), or player name.
+/// - Parameter transcripts: An array of `keyMomentTranscript` objects to be filtered.
+/// - Parameter game: A `DBGame` object to be used for filterering the duration.
+/// - Parameter searchText: The text used for filtering the games. The function checks for matches in
+///                         the game title, team name, or team nickname.
+/// - Returns: A filtered array of `keyMomentTranscript` objects that match the search criteria.
+///           If the `searchText` is empty, the original `transcripts` array is returned without filtering.
+func filterTranscripts(_ transcripts: [keyMomentTranscript], _ game: DBGame, with searchText: String) -> [keyMomentTranscript] {
+    if searchText.isEmpty {
+        // If search text is empty, return the original list of games
+        return transcripts
+    } else {
+        // Filter games based on the search text matching the title, team name, or team nickname
+        if let gameStartTime = game.startTime {
+            return transcripts.filter { transcript in
+                let durationInSeconds = transcript.frameStart.timeIntervalSince(gameStartTime)
+                let duration = formatDuration(durationInSeconds)
+                
+                return transcript.transcript.lowercased().contains(searchText.lowercased()) ||
+                duration.contains(searchText)
+            }
+        }
+        
+        return transcripts.filter { transcript in
+            transcript.transcript.lowercased().contains(searchText.lowercased())
+        }
+    }
+}
+
+
 /// Format the entered phone number to (XXX)-XXX-XXXX
 /// Formats the given phone number string into a standard phone number format: (XXX)-XXX-XXXX.
 ///

@@ -26,57 +26,150 @@ struct PlayerAllTranscriptsView: View {
     /// List of transcripts for the game.
     @State var transcripts: [keyMomentTranscript]?
     
+    /// Indicates whether the transcripts should be sorted by time (duration).
+    /// - If `true`, transcripts are sorted by their `frameStart` time (chronological order).
+    /// - If `false`, transcripts are sorted alphabetically by the transcript content.
+    @State private var sortByTime: Bool = true
+
+    /// Indicates whether the transcripts should be filtered by player.
+    /// - If `true`, only transcripts related to the selected player (via `playerSelectedIndex`) will be shown.
+    /// - If `false`, all transcripts are shown regardless of player association.
+    @State private var sortByPlayer: Bool = false
+
+    /// Holds a list of all player names paired with their corresponding player IDs.
+    /// - Format: `(playerId, playerName)`
+    /// - Used for filtering transcripts and displaying player names in pickers or filters.
+    @State private var playersNames: [(String, String)] = []
+
+    /// The index of the currently selected player in the `playersNames` array.
+    /// - `0` typically represents a special "All players" option.
+    /// - Used to filter transcripts to only those related to the selected player.
+    @State private var playerSelectedIndex: Int = 0
+    
+    /// Holds the list of filtered transcripts.
+    @State private var filteredTranscripts: [keyMomentTranscript] = []
+
+    /// The view model responsible for managing player-related data and logic.
+    /// - Declared as `@StateObject` to ensure it's created once and retained during the view’s lifecycle.
+    /// - Used to fetch, store, and interact with players' data (e.g., names, selection, filtering).
+    @StateObject private var playerModel = PlayerModel()
+
+    
     var body: some View {
-        NavigationView {
-            VStack (alignment: .leading) {
-                
-                // Header section displaying game and team details.
-                VStack (alignment: .leading) {
-                    HStack(spacing: 0) {
-                        Text(game.title).font(.title2)
-                        Spacer()
-                        
-                        // Button to toggle filter options.
-                        Button (action: {
-                            showFilterSelector.toggle()
-                        }) {
-                            Image(systemName: "line.3.horizontal.decrease.circle").resizable().frame(width: 20, height: 20)
-                        }
+        NavigationStack {
+            List {
+                // Checks if there are any transcripts available.
+                if let recordings = transcripts {
+                    if !recordings.isEmpty {
+                        SearchTranscriptView(
+                            transcripts: filteredTranscripts,
+                            prefix: nil,
+                            transcriptType: .transcript,
+                            game: game,
+                            team: team,
+                            destinationBuilder: { recording in
+                                AnyView(CoachSpecificTranscriptView(game: game, team: team, transcript: recording))
+                            }
+                        )
+                    } else {
+                        Text("No transcripts found.").font(.caption).foregroundStyle(.secondary)
                     }
-                    
-                    // Displays the team name and game start time.
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))
-                            if let startTime = game.startTime {
-                                Text(startTime.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+            .listStyle(PlainListStyle())
+            .sheet(isPresented: $showFilterSelector, content: {
+                /// The filter options sheet is presented when the user taps the filter button.
+                /// This view provides an interface to filter the displayed transcripts.
+                NavigationStack {
+                    FilterTranscriptsListView(
+                        sortByTime: $sortByTime,
+                        sortByPlayer: $sortByPlayer,
+                        playersNames: $playersNames,
+                        playerSelectedIndex: $playerSelectedIndex,
+                        userType: .player
+                    )
+                    .presentationDetents([.height(200)])
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button (action: {
+                                showFilterSelector = false // Close the filter options
+                            }) {
+                                Text("Done")
                             }
                         }
-                        Spacer()
-                        // Edit Icon
-                        // TODO: - Implement button functionnality in next release
-//                        Button(action: {}) {
-//                            Image(systemName: "pencil.and.outline")
-//                                .foregroundColor(.blue) // Adjust color
-//                        }
-                        // Share Icon
-                        // TODO: - Implement button functionnality in next release
-//                        Button(action: {}) {
-//                            Image(systemName: "square.and.arrow.up")
-//                                .foregroundColor(.blue) // Adjust color
-//                        }
                     }
-                }.padding(.leading).padding(.trailing).padding(.top, 3)
-                
-                Divider().padding(.vertical, 2)
-                
-                /// Displays the search and transcript list view.
-                SearchTranscriptView(game: game, team: team, transcripts: transcripts)
-            }
-            // Sheet to display filter options.
-            .sheet(isPresented: $showFilterSelector, content: {
-                FilterTranscriptsListView().presentationDetents([.medium])
+                    .navigationTitle("Filter Options")
+                    .navigationBarTitleDisplayMode(.inline)
+                }
             })
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack {
+                        Text("All Transcripts").font(.headline)
+                        Text(game.title).font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button{
+                        showFilterSelector.toggle()
+                    } label: {
+                        Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                    }
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search transcripts")
+            .scrollContentBackground(.hidden)
+            .overlay {
+                if let recordings = transcripts {
+                    if !recordings.isEmpty && filteredTranscripts.isEmpty && searchText != "" {
+                        ContentUnavailableView {
+                            Label("No Results", systemImage: "magnifyingglass")
+                        } description: {
+                            Text("Try to search for another transcript.")
+                        }
+                    }
+                }
+            }
+            .onChange(of: searchText) {
+                if let recordings = transcripts {
+                    if !recordings.isEmpty && searchText != "" {
+                        print("Filtering: \(searchText)")
+                        self.filteredTranscripts = filterTranscripts(filteredTranscripts, game, with: searchText)
+                    }
+                    else {
+                        self.filteredTranscripts = recordings
+                        sortByPlayer = false
+                        playerSelectedIndex = 0
+                    }
+                }
+            }
+            .onChange(of: sortByTime) {
+                if sortByTime {
+                    filteredTranscripts = filteredTranscripts.sorted(by: { $0.frameStart < $1.frameStart })
+                } else {
+                    // sort by alphabetical order
+                    filteredTranscripts = filteredTranscripts.sorted(by: { $0.transcript < $1.transcript })
+                }
+            }
+            .onAppear {
+                if let recordings = transcripts {
+                    self.filteredTranscripts = recordings
+                    print(filteredTranscripts)
+                }
+                
+                Task {
+                    do {
+                        // Get all player's name
+                        if let players = team.players {
+                            playersNames = try await playerModel.getAllPlayersNames(players: players) ?? []
+                        }
+                    } catch {
+                        print("Error. Aborting...")
+                    }
+                }
+            }
         }
     }
 }

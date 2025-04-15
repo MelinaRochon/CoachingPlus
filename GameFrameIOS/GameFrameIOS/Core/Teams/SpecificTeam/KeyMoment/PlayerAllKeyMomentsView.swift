@@ -62,23 +62,23 @@ struct PlayerAllKeyMomentsView: View {
                 SearchKeyMomentsView(game: game, team: team, keyMoments: keyMoments, userType: "Player")
                 
             }// Show filters
-            .sheet(isPresented: $showFilterSelector, content: {
-                NavigationStack {
-                    FilterTranscriptsListView()
-                        .presentationDetents([.medium])
-                        .toolbar {
-                            ToolbarItem {
-                                Button (action: {
-                                    showFilterSelector = false // Close the filter options
-                                }) {
-                                    Text("Done")
-                                }
-                            }
-                        }
-                        .navigationTitle("Filter Options")
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-            })
+//            .sheet(isPresented: $showFilterSelector, content: {
+//                NavigationStack {
+//                    FilterTranscriptsListView()
+//                        .presentationDetents([.medium])
+//                        .toolbar {
+//                            ToolbarItem {
+//                                Button (action: {
+//                                    showFilterSelector = false // Close the filter options
+//                                }) {
+//                                    Text("Done")
+//                                }
+//                            }
+//                        }
+//                        .navigationTitle("Filter Options")
+//                        .navigationBarTitleDisplayMode(.inline)
+//                }
+//            })
             
         }
     }
