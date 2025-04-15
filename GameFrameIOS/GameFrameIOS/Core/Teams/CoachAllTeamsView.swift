@@ -79,7 +79,7 @@ struct CoachAllTeamsView: View {
                         showCreateTeam.toggle()
                     } label: {
                         Label("Add Team", systemImage: "plus")
-                    }.tint(.red)
+                    }
                 }
             }
             .task {

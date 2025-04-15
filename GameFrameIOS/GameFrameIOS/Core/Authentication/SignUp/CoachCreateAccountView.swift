@@ -84,7 +84,11 @@ struct CoachCreateAccountView: View {
                             .autocapitalization(.none)
                             .autocorrectionDisabled(true)
                             .keyboardType(.phonePad) // Shows phone-specific keyboard
-
+                            .onChange(of: viewModel.phone) { newVal in
+                                // Formats the phone number when it changes
+                                viewModel.phone = formatPhoneNumber(newVal)
+                            }
+                        
                         // Country Picker
                         HStack {
                             Text("Country or region")

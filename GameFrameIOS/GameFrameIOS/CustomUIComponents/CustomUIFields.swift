@@ -112,7 +112,7 @@ struct CustomUIFields {
 
     static func linkButton(_ placeholder: String) -> some View {
         Text(placeholder)
-            .foregroundColor(.blue)
+            .foregroundColor(.red)
             .font(.footnote)
             .underline()
     }
@@ -134,6 +134,7 @@ struct CustomUIFields {
             ProgressView(placeholder)
                 .progressViewStyle(CircularProgressViewStyle())
                 .padding()
+                .tint(.gray)
         }
     }
 }

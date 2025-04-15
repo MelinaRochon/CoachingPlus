@@ -127,7 +127,7 @@ struct CoachRecordingConfigView: View {
                         dismiss() // Dismiss the view
                     }) {
                         HStack {
-                            Text("Cancel").foregroundStyle(.red)
+                            Text("Cancel")
                         }
                     }
                 }

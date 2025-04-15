@@ -16,71 +16,79 @@ struct LocationView: View {
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             VStack {
-                    if (locationSearchService.results.isEmpty) {
-                        if let location = location {
-                            VStack(alignment: .center) {
-                                Text("Selected Location").font(.title3).bold()
-                                Text(" \(location.title) \(location.subtitle)").font(.subheadline).multilineTextAlignment(.center).padding(.horizontal)
-                                
-                                Button("Open in maps") {
-                                    var subtitle = location.subtitle
-                                    if (subtitle == "Search Nearby") {
-                                        if let url = URL(string: "maps://?q=\(location.title)") {
-                                            if UIApplication.shared.canOpenURL(url) {
-                                                UIApplication.shared.open(url)
-                                            } else {
-                                                print("Could not open Maps URL")
-                                            }
+                if (locationSearchService.results.isEmpty) {
+                    if let location = location {
+                        VStack(alignment: .center) {
+                            Text("Selected Location").font(.title3).bold()
+                            Text(" \(location.title) \(location.subtitle)").font(.subheadline).multilineTextAlignment(.center).padding(.horizontal)
+                            
+                            Button("Open in maps") {
+                                var subtitle = location.subtitle
+                                if (subtitle == "Search Nearby") {
+                                    if let url = URL(string: "maps://?q=\(location.title)") {
+                                        if UIApplication.shared.canOpenURL(url) {
+                                            UIApplication.shared.open(url)
+                                        } else {
+                                            print("Could not open Maps URL")
                                         }
-                                        subtitle = ""
-                                    } else {
-                                        if let url = URL(string: "maps://?address=\(location.title) \(subtitle)") {
-                                            if UIApplication.shared.canOpenURL(url) {
-                                                UIApplication.shared.open(url)
-                                            } else {
-                                                print("Could not open Maps URL")
-                                            }
+                                    }
+                                    subtitle = ""
+                                } else {
+                                    if let url = URL(string: "maps://?address=\(location.title) \(subtitle)") {
+                                        if UIApplication.shared.canOpenURL(url) {
+                                            UIApplication.shared.open(url)
+                                        } else {
+                                            print("Could not open Maps URL")
                                         }
                                     }
                                 }
-                                
                             }
-                        } else {
-                            ContentUnavailableView("No Results", systemImage: "questionmark.square.dashed")
+                            
                         }
                     } else {
-                        List(locationSearchService.results, id: \.id) { result in
-                            Button{
-                                location = result
-                                
-                                // Fetch full details (address and coordinates)
-                                locationSearchService.resolveFullDetails(for: result)
-                                print("Selected Location: \(result)")
-                                print("full address: \(result.title) \(result.subtitle)")
-                                
-                                dismissView() // go back to the game form
-                            } label: {
-                                VStack(alignment: .leading) {
-                                    Text(result.title)
-                                    Text(result.subtitle)
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }.foregroundColor(Color.black)
-                            }
+                        ContentUnavailableView.search(text: locationSearchService.query)
+                    }
+                } else {
+                    List(locationSearchService.results, id: \.id) { result in
+                        Button{
+                            location = result
+                            
+                            // Fetch full details (address and coordinates)
+                            locationSearchService.resolveFullDetails(for: result)
+                            print("Selected Location: \(result)")
+                            print("full address: \(result.title) \(result.subtitle)")
+                            
+                            dismissView() // go back to the game form
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(result.title)
+                                Text(result.subtitle)
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }.foregroundColor(Color.black)
                         }
                     }
-                
-            }.searchable(text: $locationSearchService.query, prompt: "Search a location")
-                .navigationTitle("Game Location")
-                .navigationBarTitleDisplayMode(.inline)
-                .onChange(of: locationSearchService.query) { newQuery in
-                    if newQuery.isEmpty {
-                        // Handle cancel action (query cleared)
-                        handleSearchCancel()
+                }
+            }
+            .searchable(text: $locationSearchService.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search a location")
+            .navigationTitle("Game Location")
+            .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: locationSearchService.query) { newQuery in
+                if newQuery.isEmpty {
+                    // Handle cancel action (query cleared)
+                    handleSearchCancel()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismissView()
                     }
                 }
+            }
         }
+        .navigationBarBackButtonHidden(true)
     }
     
     // Action to handle when search is canceled (query cleared)

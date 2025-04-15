@@ -126,7 +126,7 @@ struct PlayerMyTeamView: View {
                                 Button (action: {
                                     isGamesSettingsEnabled = false // Close the filter options
                                 }) {
-                                    Text("Done").foregroundStyle(.red)
+                                    Text("Done")
                                 }
                             }
                         }

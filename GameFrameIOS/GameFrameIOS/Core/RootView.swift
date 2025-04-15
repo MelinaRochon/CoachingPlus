@@ -24,7 +24,7 @@ struct RootView: View {
                 NavigationStack {
                     // Passing the binding to control the sign-in view display
                     UserTypeRootView(showSignInView: $showSignInView)
-                }
+                }.tint(.red)
             }
         }
         .onAppear {
@@ -38,7 +38,7 @@ struct RootView: View {
             // The landing page view that allows the user to sign in or sign up
             NavigationStack {
                 LandingPageView(showSignInView: $showSignInView)
-            }
+            }.tint(.red)
         }
     }
 }

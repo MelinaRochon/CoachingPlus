@@ -160,7 +160,7 @@ struct PlayerProfileView: View {
                                                 guardianName = "" // reset the guardian name
                                             } label: {
                                                 Image(systemName: "trash")
-                                            }.tint(.red)
+                                            }
                                         }
                                     }
                                     
@@ -178,7 +178,7 @@ struct PlayerProfileView: View {
                                                 guardianEmail = ""
                                             } label: {
                                                 Image(systemName: "trash")
-                                            }.tint(.red)
+                                            }
                                         }
                                     }
                                     
@@ -197,7 +197,7 @@ struct PlayerProfileView: View {
                                                 
                                             } label: {
                                                 Image(systemName: "trash")
-                                            }.tint(.red)
+                                            }
                                         }
                                     }
                                 }
@@ -217,7 +217,7 @@ struct PlayerProfileView: View {
                                                 print(error)
                                             }
                                         }
-                                    }.foregroundStyle(.red)
+                                    }
                                     
                                     // Logout button
                                     Button{
@@ -230,7 +230,7 @@ struct PlayerProfileView: View {
                                             }
                                         }
                                     } label: {
-                                        Text("Log out").foregroundStyle(.red)
+                                        Text("Log out")
                                     }                                    
                                 }
                             }
@@ -256,12 +256,12 @@ struct PlayerProfileView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !isEditing {
                         Button(action: editInfo) {
-                            Text("Edit").foregroundStyle(.red)
+                            Text("Edit")
                         }
                         
                     } else {
                         Button(action: saveInfo) {
-                            Text("Save").foregroundStyle(.red)
+                            Text("Save")
                         }
                     }
                 }
@@ -269,7 +269,7 @@ struct PlayerProfileView: View {
                 if isEditing {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(action: editInfo) {
-                            Text("Cancel").foregroundStyle(.red)
+                            Text("Cancel")
                         }
                     }
                 }

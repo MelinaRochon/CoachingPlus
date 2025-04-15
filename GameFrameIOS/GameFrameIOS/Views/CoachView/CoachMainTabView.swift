@@ -74,7 +74,7 @@ struct CoachMainTabView: View {
                     Image(systemName: "plus.circle.fill")
                         .resizable()
                         .frame(width: 80, height: 80) // Adjust size
-                        .foregroundColor(.gray)
+                        .foregroundColor(.gray) // .red
                         .background(Color.white)
                         .clipShape(Circle())
                         .shadow(radius: 20) // Floating effect

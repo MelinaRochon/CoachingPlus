@@ -35,18 +35,8 @@ struct AllScheduledGamesView: View {
     /// Stores the type of user (e.g., "Coach", "Player"), fetched dynamically.
     @State var userType: String
     
-    /// Filters the games
-    var filteredGames: [HomeGameDTO] {
-        if searchText.isEmpty {
-            return futureGames
-        } else {
-            return futureGames.filter { game in
-                game.game.title.lowercased().contains(searchText.lowercased()) ||
-                game.team.name.lowercased().contains(searchText.lowercased()) ||
-                game.team.teamNickname.lowercased().contains(searchText.lowercased())
-            }
-        }
-    }
+    /// Holds the list of filtered scheduled games.
+    @State private var filteredGames: [HomeGameDTO] = []
 
     // MARK: - View
 
@@ -57,17 +47,14 @@ struct AllScheduledGamesView: View {
                     // Scheduled Games Section
                     if !futureGames.isEmpty {
                         // Show all the scheduled Games
-                        ForEach(filteredGames, id: \.game.gameId) { futureGame in
-                            NavigationLink(destination: SelectedScheduledGameView(selectedGame: futureGame, userType: userType)) {
-                                HStack {
-                                    VStack {
-                                        Text(futureGame.game.title).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                        Text(futureGame.team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                        Text(formatStartTime(futureGame.game.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                    }
-                                }
+                        GameList(
+                            games: filteredGames,
+                            prefix: 5,
+                            gameType: .scheduled,
+                            destinationBuilder: { game in
+                                AnyView(SelectedScheduledGameView(selectedGame: game, userType: userType))
                             }
-                        }
+                        )
                     } else {
                         Text("No scheduled games found.").font(.caption).foregroundStyle(.secondary)
                     }
@@ -78,6 +65,26 @@ struct AllScheduledGamesView: View {
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Search Scheduled Games"))
             .navigationTitle(Text("All Scheduled Games"))
             .navigationBarTitleDisplayMode(.inline)
+            .overlay {
+                if !futureGames.isEmpty && filteredGames.isEmpty && searchText != "" {
+                    ContentUnavailableView {
+                        Label("No Results", systemImage: "magnifyingglass")
+                    } description: {
+                        Text("Try to search for another scheduled game.")
+                    }
+                }
+            }
+            .onChange(of: searchText) {
+                if !futureGames.isEmpty && searchText != "" {
+                    self.filteredGames = filterGames(futureGames, with: searchText)
+                }
+                else {
+                    self.filteredGames = futureGames
+                }
+            }
+            .onAppear {
+                self.filteredGames = futureGames
+            }
         }
     }
 }

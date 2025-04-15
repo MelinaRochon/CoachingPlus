@@ -162,7 +162,7 @@ struct CoachCreateTeamView: View {
                     Button(action: {
                         dismiss() // Dismiss the full-screen cover
                     }) {
-                        Text("Cancel").foregroundStyle(.red)
+                        Text("Cancel")
                     }
                 }
                 

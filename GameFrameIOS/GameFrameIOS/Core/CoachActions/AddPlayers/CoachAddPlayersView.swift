@@ -117,7 +117,7 @@ struct CoachAddPlayersView: View {
                         dismiss() // Dismiss the full-screen cover
                     }) {
                         HStack {
-                            Text("Cancel").foregroundStyle(.red)
+                            Text("Cancel")
                         }
                     }
                 }

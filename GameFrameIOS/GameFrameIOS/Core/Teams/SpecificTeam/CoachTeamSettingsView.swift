@@ -84,7 +84,7 @@ struct CoachTeamSettingsView: View {
                                                         
                             // Access Code with Copy Button & Tooltip
                             HStack {
-                                label(text: "Access Code", systemImage: "qrcode") //.foregroundStyle(.red)
+                                label(text: "Access Code", systemImage: "qrcode")
                                 Spacer()
                                 Text(team.accessCode ?? "N/A")
                                     .foregroundColor(.secondary).padding(.trailing, 5)
@@ -132,7 +132,7 @@ struct CoachTeamSettingsView: View {
                     Button {
                         dismiss()
                     } label: {
-                        Text("Done").font(.subheadline).foregroundStyle(.red)
+                        Text("Done").font(.subheadline)
                     }
                 }
             }
