@@ -160,6 +160,12 @@ import SwiftUI
                                      TextField("Phone", text: $phone).disabled(!isEditing)
                                          .foregroundStyle(isEditing ? .primary : .secondary)
                                          .multilineTextAlignment(.trailing)
+                                         .autocapitalization(.none)
+                                         .autocorrectionDisabled(true)
+                                         .keyboardType(.phonePad)
+                                         .onChange(of: phone) { newVal in
+                                             phone = formatPhoneNumber(newVal)
+                                         }
                                  }
                              }
                              

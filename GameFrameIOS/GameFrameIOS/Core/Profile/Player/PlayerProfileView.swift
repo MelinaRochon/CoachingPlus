@@ -190,6 +190,13 @@ struct PlayerProfileView: View {
                                                 .disabled(!isEditing)
                                                 .multilineTextAlignment(.trailing)
                                                 .foregroundStyle(isEditing ? .primary : .secondary)
+                                            
+                                                .autocapitalization(.none)
+                                                .autocorrectionDisabled(true)
+                                                .keyboardType(.phonePad)
+                                                .onChange(of: guardianPhone) { newVal in
+                                                    guardianPhone = formatPhoneNumber(newVal)
+                                                }
                                         }.swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                             Button {
                                                 viewModel.removeGuardianPhone()
