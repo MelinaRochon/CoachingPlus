@@ -127,6 +127,7 @@ final class CoachProfileViewModel: ObservableObject {
         user.phone = phone
         Task {
             // Call UserManager to update the coach's profile
+            print("phone number is \(phone) & user.phone is: \(user.phone)")
             try await UserManager.shared.updateCoachProfile(user: user)
             // Refresh the user object after updating
             self.user = try await UserManager.shared.getUser(userId: userId)

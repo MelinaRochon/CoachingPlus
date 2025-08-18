@@ -14,8 +14,8 @@ struct AppData {
     static let countries = ["United States", "Canada", "United Kingdom", "Australia"]
     
     /// A list of available recording options
-    //static let recordingOptions = ["Video", "Audio Only"]
-    static let recordingOptions = ["Audio Only"]
+    static let recordingOptions = ["Video", "Audio Only"]
+//    static let recordingOptions = ["Audio Only"]
 
     /// An array of tuples representing the recording options available on the home page.
     /// Each tuple contains:

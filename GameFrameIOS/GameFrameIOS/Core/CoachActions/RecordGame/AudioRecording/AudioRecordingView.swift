@@ -49,7 +49,10 @@ struct AudioRecordingView: View {
     
     // Timer and speech recognition states
     @State var timer = ScrumTimer()
-    @Binding var errorWrapper: ErrorWrapper?
+//    @Binding var errorWrapper: ErrorWrapper?
+    
+    @State private var errorWrapper: ErrorWrapper?
+
     @State var speechRecognizer = SpeechRecognizer()
     @State private var isRecording = false
     
@@ -473,7 +476,9 @@ struct AudioRecordingView: View {
 }
 
 #Preview {
-    AudioRecordingView(showLandingPageView: .constant(false), teamId: "", errorWrapper: .constant(nil))
+    AudioRecordingView(showLandingPageView: .constant(false), teamId: "")
+
+//    AudioRecordingView(showLandingPageView: .constant(false), teamId: "", errorWrapper: .constant(nil))
 }
 
 

@@ -232,9 +232,7 @@ final class UserManager {
             DBUser.CodingKeys.phone.rawValue: user.phone
         ]
         
-        // TODO: - Update this function!!!! Currently not working....
-//        try await userDocument().updateData(data as [AnyHashable : Any])
-//        try await userDocument(userId: user.userId).updateData(data as [AnyHashable : Any])
+        try await userDocument(id: user.id).updateData(data as [AnyHashable : Any])
     }
     
     

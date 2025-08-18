@@ -38,7 +38,8 @@ struct SearchTranscriptView: View {
                 Text(formatDuration(durationInSeconds))
                     .bold()
                     .font(.headline)
-                    .frame(width: 75)
+                    .frame(width: 80)
+                    .multilineTextAlignment(.leading)
                 Spacer()
                 
                 VStack(alignment: .leading) {

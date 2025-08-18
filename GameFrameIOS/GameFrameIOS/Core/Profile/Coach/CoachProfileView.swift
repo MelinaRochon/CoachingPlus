@@ -249,7 +249,7 @@ import SwiftUI
                  
                  if isEditing {
                      ToolbarItem(placement: .navigationBarLeading) {
-                         Button(action: editInfo) {
+                         Button(action: cancelInfo) {
                              Text("Cancel")
                          }
                      }
@@ -272,6 +272,19 @@ import SwiftUI
          }
      }
      
+     /// Toggles the editing mode on and off and removes all unsaved data
+     private func cancelInfo() {
+         withAnimation {
+             isEditing.toggle()
+         }
+         
+         // Remove unsaved data
+         if let user = viewModel.user {
+             if let userPhone = user.phone {
+                 phone = userPhone
+             }
+         }
+     }
      
      /// Saves the updated profile information when in editing mode
      private func saveInfo() {

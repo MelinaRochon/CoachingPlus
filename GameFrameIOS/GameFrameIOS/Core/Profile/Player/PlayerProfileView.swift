@@ -190,7 +190,6 @@ struct PlayerProfileView: View {
                                                 .disabled(!isEditing)
                                                 .multilineTextAlignment(.trailing)
                                                 .foregroundStyle(isEditing ? .primary : .secondary)
-                                            
                                                 .autocapitalization(.none)
                                                 .autocorrectionDisabled(true)
                                                 .keyboardType(.phonePad)
@@ -275,7 +274,7 @@ struct PlayerProfileView: View {
                 
                 if isEditing {
                     ToolbarItem(placement: .navigationBarLeading) {
-                        Button(action: editInfo) {
+                        Button(action: cancelInfo) {
                             Text("Cancel")
                         }
                     }
@@ -292,6 +291,23 @@ struct PlayerProfileView: View {
         }
     }
     
+    /// Toggles the editing mode on and off and removes all unsaved data
+    private func cancelInfo() {
+        withAnimation {
+            isEditing.toggle()
+        }
+        
+        // Remove unsaved data
+        if let player = viewModel.player {
+            if let userPhone = player.guardianPhone {
+                guardianPhone = userPhone
+            }
+            jersey = player.jerseyNum
+            nickname = player.nickName ?? ""
+            guardianName = player.guardianName ?? ""
+            guardianEmail = player.guardianEmail ?? ""
+        }
+    }
     
     /// Save updated player information
     private func saveInfo() {

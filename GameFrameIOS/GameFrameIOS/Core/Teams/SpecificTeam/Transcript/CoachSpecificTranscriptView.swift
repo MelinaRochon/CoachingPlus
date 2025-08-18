@@ -86,8 +86,8 @@ struct CoachSpecificTranscriptView: View {
                                     .appendingPathComponent("downloaded_audio.m4a")
                                 
                                 AudioPlayerView(audioURL: localAudioURL)
-                                
                             }
+                            
                             if let gameStartTime = game.startTime {
                                 let durationInSeconds = transcript.frameStart.timeIntervalSince(gameStartTime)
                                 Text(formatDuration(durationInSeconds))
@@ -148,36 +148,37 @@ struct CoachSpecificTranscriptView: View {
             }
         }
         .toolbar {
-//            ToolbarItem(placement: .topBarTrailing) {
-//                Button {
-//                    // Action for sharing
-//                } label: {
-//                    Image(systemName: "square.and.arrow.up")
-//                }
-//                .foregroundColor(.red)
-//            }
-            
-//            ToolbarItem(placement: .topBarTrailing) {
-//                if !isEditing {
-//                    Button {
-//                        withAnimation {
-//                            isEditing.toggle()
-//                        }
-//                    } label: {
-//                        Text("Edit")
-//                    }
-//                    .foregroundColor(.red)
-//                } else {
-//                    Button {
-//                        withAnimation {
-//                            isEditing.toggle()
-//                        }
-//                    } label: {
-//                        Text("Save")
-//                    }
-//                    .foregroundColor(.red)
-//                }
-//            }
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        // Action for sharing
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .padding(.bottom, 6)
+                    }
+                    .foregroundColor(.red)
+                
+                    if !isEditing {
+                        Button {
+                            withAnimation {
+                                isEditing.toggle()
+                            }
+                        } label: {
+                            Text("Edit")
+                        }
+                        .frame(width: 40)
+                        .foregroundColor(.red)
+                    } else {
+                        Button {
+                            withAnimation {
+                                isEditing.toggle()
+                            }
+                        } label: {
+                            Text("Save")
+                        }
+                        .frame(width: 40)
+                        .foregroundColor(.red)
+                    }
+                }
         }
         .task {
             // Fetch the audio url
@@ -219,6 +220,7 @@ struct CoachSpecificTranscriptView: View {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
     
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
-    
-    CoachSpecificTranscriptView(game: game, team: team, transcript: nil)
+    NavigationStack {
+        CoachSpecificTranscriptView(game: game, team: team, transcript: nil)
+    }
 }

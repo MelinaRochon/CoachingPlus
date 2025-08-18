@@ -93,7 +93,7 @@ struct CoachRecordingConfigView: View {
                 
                 // Button to start the recording (Video or Audio)
                 
-                // Uncomment when video recording is available!
+                // TODO : Uncomment when video recording is available!
                 
 //                if selectedRecordingTypeLabel == "Video" {
 //                    NavigationLink(destination: CoachRecordingView()) {
@@ -106,8 +106,9 @@ struct CoachRecordingConfigView: View {
 //                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
 //                } else
                 if (selectedRecordingTypeLabel == "Audio Only"){
-                    NavigationLink(destination: AudioRecordingView(showLandingPageView: $showLandingPageView, teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
-                        
+//                    NavigationLink(destination: AudioRecordingView(showLandingPageView: $showLandingPageView, teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
+                    NavigationLink(destination: AudioRecordingView(showLandingPageView: $showLandingPageView, teamId: selectedTeamId!)) {
+
                         // Custom Styled 'Start Audio Recording' button
                         CustomUIFields.styledHStack(content: {
                             Text("Start Audio Recording").font(.title2).bold()
@@ -115,11 +116,11 @@ struct CoachRecordingConfigView: View {
                         
                     }.disabled(selectedTeamId == nil) // Disable button if no team is selected
                 }
-                Spacer()
-                
-                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView), isActive: $navigateToCreateTeam) {
-                    EmptyView()
-                }
+//                Spacer()
+//                
+//                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView), isActive: $navigateToCreateTeam) {
+//                    EmptyView()
+//                }
             }.toolbar {
                 // Cancel Button (Top Left)
                 ToolbarItem(placement: .topBarLeading) { // Back button on the top left
