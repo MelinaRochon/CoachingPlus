@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import UIKit
+import CoreTransferable
 
 /// `CoachSpecificTranscriptView` displays details for a specific transcript from a game.
 /// It shows game information, transcript text, associated players, and comments.
@@ -39,18 +41,20 @@ struct CoachSpecificTranscriptView: View {
     @State private var playersFeedback: [PlayerFeedback] = []
     
     /// Whether the associated audio file has been downloaded and is available for playback.
-   @State private var audioFileRetrieved: Bool = false
-   
-   /// Tracks whether transcript text is being edited separately.
-   @State private var editTranscript: Bool = false
-   
-   /// View model responsible for fetching player information.
-   @StateObject private var playerModel = PlayerModel()
+    @State private var audioFileRetrieved: Bool = false
+
+    /// Tracks whether transcript text is being edited separately.
+    @State private var editTranscript: Bool = false
+
+    /// View model responsible for fetching player information.
+    @StateObject private var playerModel = PlayerModel()
+    
     
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack {
+//                ShareButton(content:
+                                VStack {
                     
                     // Game title and transcript information section.
                     VStack(alignment: .leading) {
@@ -145,6 +149,7 @@ struct CoachSpecificTranscriptView: View {
                         .frame(maxHeight: .infinity, alignment: .bottom)
                     }
                 }
+//                )
             }
             .task {
                 do {
@@ -207,13 +212,13 @@ struct CoachSpecificTranscriptView: View {
         }
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Button {
-                    // Action for sharing
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .padding(.bottom, 6)
-                }
-                .foregroundColor(.red)
+//                Button {
+//
+//                } label: {
+//                    Image(systemName: "square.and.arrow.up")
+//                        .padding(.bottom, 6)
+//                }
+//                .foregroundColor(.red)
                 
                 if !isEditing {
                     Button {
@@ -397,4 +402,58 @@ struct CheckboxRow: View {
     NavigationStack {
         CoachSpecificTranscriptView(game: game, team: team, transcript: nil)
     }
+}
+
+
+extension View {
+    func snapshot() -> UIImage {
+        let controller = UIHostingController(rootView: self)
+        let view = controller.view
+
+        let targetSize = controller.view.intrinsicContentSize
+        view?.bounds = CGRect(origin: .zero, size: targetSize)
+        view?.backgroundColor = .clear
+
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            view?.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+        }
+    }
+}
+
+
+struct ShareButton<Content: View>: View {
+    let content: Content
+    @State private var isSharing = false
+    @State private var image: UIImage?
+
+    var body: some View {
+        VStack {
+            content
+
+            Button {
+                image = content.snapshot()
+                isSharing = true
+            } label: {
+                Label("Share Page", systemImage: "square.and.arrow.up")
+            }
+            .padding()
+            .sheet(isPresented: $isSharing) {
+                if let image = image {
+                    ActivityView(activityItems: [image])
+                }
+            }
+        }
+    }
+}
+
+struct ActivityView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    let applicationActivities: [UIActivity]? = nil
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

@@ -103,6 +103,12 @@ import SwiftUI
                                         }))
                                         .multilineTextAlignment(.trailing)
                                     }
+                                    
+                                    HStack {
+                                        Text("Email")
+                                        Spacer()
+                                        Text(user.email).foregroundStyle(.secondary).disabled(true).multilineTextAlignment(.trailing)
+                                    }
                                 }
                                 
                                 HStack {
@@ -129,13 +135,33 @@ import SwiftUI
                             }
                         }
                                                     
-                        if ((guardianName != "") || (guardianEmail != "") || (guardianPhone != "")) {
-                            
+                        if isEditing {
+                            Section (header: Text("Guardian Information")) {
+                                HStack {
+                                    Text("Name")
+                                    Spacer()
+                                    TextField("Name", text: $guardianName).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
+                                }
+
+                                HStack {
+                                    Text("Email")
+                                    Spacer()
+                                    TextField("Email", text: $guardianEmail).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
+                                }
+
+                                HStack {
+                                    Text("Phone")
+                                    Spacer()
+                                    TextField("Phone", text: $guardianPhone).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
+                                }
+                            }
+                        } else if !isEditing && ((guardianName != "") || (guardianEmail != "") || (guardianPhone != "")) {
                             Section (header: Text("Guardian Information")) {
                                 if guardianName != "" {
                                     HStack {
                                         Text("Name")
                                         Spacer()
+                                        
                                         Text(guardianName).foregroundStyle(.secondary)
                                     }
                                 }
@@ -155,6 +181,21 @@ import SwiftUI
                                         Text(guardianPhone).foregroundStyle(.secondary)
                                     }
                                 }
+                            }
+                        }
+                        
+                        if isEditing {
+                            Button("Cancel") {
+                                if let player = profileModel.player {
+                                    guardianName = player.guardianName ?? ""
+                                    guardianEmail = player.guardianEmail ?? ""
+                                    guardianPhone = player.guardianPhone ?? ""
+                                    nickname = player.nickName ?? ""
+                                    jerseyNum = player.jerseyNum
+                                }
+                                withAnimation {
+                                    isEditing.toggle()
+                                } // edit the player's profile
                             }
                         }
                         
@@ -191,7 +232,7 @@ import SwiftUI
                         guardianEmail = player.guardianEmail ?? ""
                         guardianPhone = player.guardianPhone ?? ""
                         nickname = player.nickName ?? ""
-                        jerseyNum = player.jerseyNum ?? 0
+                        jerseyNum = player.jerseyNum
                     }
 
                 } catch {
@@ -203,7 +244,9 @@ import SwiftUI
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !isEditing {
                         Button {
-                            isEditing.toggle() // edit the player's profile
+                            withAnimation {
+                                isEditing.toggle()
+                            } // edit the player's profile
                         } label : {
                             Text("Edit")
                         }
@@ -218,7 +261,9 @@ import SwiftUI
                                     print("Error when updating the player's information. \(error)")
                                 }
                             }
-                            isEditing.toggle() // edit the player's profile
+                            withAnimation {
+                                isEditing.toggle()
+                            } // edit the player's profile
                         } label : {
                             Text("Save")
                         }
