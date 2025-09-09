@@ -12,10 +12,10 @@ struct keyMomentTranscript {
     let id: Int
     let keyMomentId: String // referenced key moment
     let transcriptId: String // referenced key moment
-    let transcript: String // transcription
+    var transcript: String // transcription
     let frameStart: Date // transcription start
     let frameEnd: Date // transcription end
-    let feedbackFor: [PlayerTranscriptInfo]?
+    var feedbackFor: [PlayerTranscriptInfo]?
 }
  
 /// Holds information about a player associated with a transcript.

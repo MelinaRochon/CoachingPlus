@@ -179,36 +179,51 @@ final class TranscriptModel: ObservableObject {
     /// - Parameter feedbackFor: An array of player IDs.
     /// - Returns: An array of `PlayerNameAndPhoto` objects containing player names and profile pictures.
     /// - Throws: An error if retrieval fails.
-    func getFeebackFor(feedbackFor: [String]) async throws -> [PlayerNameAndPhoto]? {
-        // Ensure the feedback list is not empty.
-        if !feedbackFor.isEmpty {
-            
-            var tmpPlayers: [PlayerNameAndPhoto] = []
-            // There are players associated to the feedback
-            for feedbackId in feedbackFor {
-                
-                // Retrieve the player record.
-                guard let player = try await PlayerManager.shared.getPlayer(playerId: feedbackId) else {
-                    print("No player found with this player id. Aborting..")
-                    return nil
-                }
-                
-                // Retrieve the user's name.
-                guard let user = try await UserManager.shared.getUser(userId: player.playerId!) else {
-                    print("No user found with this player id. Aborting..")
-                    return nil
-                }
-                
-                let playerName = (user.firstName + " " + user.lastName)
-                
-                // Create a structured player object.
-                let newPlayer = PlayerNameAndPhoto(playerId: player.playerId!, name: playerName, photoURL: nil)
-                tmpPlayers.append(newPlayer)
+    func getFeebackFor(feedbackFor: [String]) async throws -> [PlayerNameAndPhoto] {
+        var results: [PlayerNameAndPhoto] = []
+        for id in feedbackFor {
+            if let user = try await UserManager.shared.getUser(userId: id) {
+                print("player: \(user.firstName) \(user.lastName)")
+                results.append(
+                    PlayerNameAndPhoto(playerId: id, name: user.firstName + " " + user.lastName, photoURL: nil)
+                )
             }
-            
-            return tmpPlayers
+        }
+        return results
+    }
+    
+    
+    /// Updates transcript information in the database.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: Firestore document ID for the team.
+    ///   - teamId: Team identifier.
+    ///   - gameId: Game identifier.
+    ///   - transcriptId: Transcript identifier.
+    ///   - feedbackFor: Optional list of players receiving feedback.
+    ///   - transcript: Optional updated transcript text.
+    ///
+    /// - Throws: If updating feedback or transcript fails.
+    func updateTranscriptInfo(
+        teamDocId: String,
+        teamId: String,
+        gameId: String,
+        transcriptId: String,
+        feedbackFor: [PlayerNameAndPhoto]?,
+        transcript: String?
+    ) async throws {
+        if let feedbackFor = feedbackFor {
+            try await KeyMomentManager.shared.updateFeedbackFor(
+                transcriptId: transcriptId,
+                gameId: gameId,
+                teamId: teamId,
+                teamDocId: teamDocId,
+                feedbackFor: feedbackFor // save selected players
+            )
         }
         
-        return nil
+        if let transcript = transcript {
+            try await TranscriptManager.shared.updateTranscript(teamDocId: teamDocId, gameId: gameId, transcriptId: transcriptId, transcript: transcript)
+        }
     }
 }

@@ -247,5 +247,37 @@ final class KeyMomentManager {
 
         try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentId).delete()
     }
-
+    
+    
+    /// Updates the list of players who received feedback for a transcript.
+    ///
+    /// - Parameters:
+    ///   - transcriptId: The transcript identifier.
+    ///   - gameId: The game identifier.
+    ///   - teamId: The team identifier.
+    ///   - teamDocId: Firestore document ID for the team.
+    ///   - feedbackFor: List of players to save as feedback recipients.
+    ///
+    /// - Throws: If fetching the transcript or updating Firestore fails.
+    func updateFeedbackFor(
+        transcriptId: String,
+        gameId: String,
+        teamId: String,
+        teamDocId: String,
+        feedbackFor: [PlayerNameAndPhoto]
+    ) async throws {
+        let feedbackData = feedbackFor.map { $0.playerId }
+        
+        guard let keyMomentId = try await TranscriptManager.shared.getTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)?.keyMomentId else {
+            print("Unable to get key moment id for transcript \(transcriptId).")
+            return
+        }
+        
+        try await KeyMomentManager.shared.keyMomentDocument(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentId)
+            .updateData([
+                "feedback_for": feedbackData
+            ])
+    }
 }
+
+

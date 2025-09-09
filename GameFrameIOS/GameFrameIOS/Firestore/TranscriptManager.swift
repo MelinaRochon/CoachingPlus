@@ -187,7 +187,14 @@ final class TranscriptManager {
     }
     
     
-    /// Removes a transcript from Firestore.
+    /// Deletes a transcript from Firestore for the given team and game.
+    ///
+    /// - Parameters:
+    ///   - teamId: The team identifier.
+    ///   - gameId: The game identifier.
+    ///   - transcriptId: The transcript identifier to remove.
+    ///
+    /// - Throws: If the team cannot be found or the delete operation fails.
     func removeTranscript(teamId: String, gameId: String, transcriptId: String) async throws {
         // Make sure the team document can be found with the team id given
         guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
@@ -196,5 +203,24 @@ final class TranscriptManager {
         }
 
         try await transcriptDocument(teamDocId: teamDocId, gameDocId: gameId, transcriptId: transcriptId).delete()
+    }
+    
+    
+    /// Updates the transcript text in Firestore for a given game and team.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: Firestore document ID for the team.
+    ///   - gameId: Identifier for the game.
+    ///   - transcriptId: Identifier for the transcript to update.
+    ///   - transcript: The new transcript text to save.
+    ///
+    /// - Throws: If the Firestore update fails.
+    func updateTranscript(teamDocId: String, gameId: String, transcriptId: String, transcript: String) async throws {
+        let data: [String:Any?] = [
+            DBTranscript.CodingKeys.transcript.rawValue: transcript
+        ]
+        
+        try await transcriptDocument(teamDocId: teamDocId, gameDocId: gameId, transcriptId: transcriptId)
+            .updateData(data as [AnyHashable : Any])
     }
 }

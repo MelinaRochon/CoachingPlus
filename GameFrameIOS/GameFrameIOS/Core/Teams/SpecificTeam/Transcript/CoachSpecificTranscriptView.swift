@@ -30,9 +30,22 @@ struct CoachSpecificTranscriptView: View {
     @State var transcript: keyMomentTranscript?
 
     /// Stores player details for whom feedback is provided in this transcript.
-    @State private var feedbackFor: [PlayerNameAndPhoto]? = []
+    @State private var feedbackFor: [PlayerNameAndPhoto] = []
     
-    @State private var audioFileRetrieved: Bool = false;
+    /// Stores the editable transcript text when in edit mode.
+    @State private var feedbackTranscript: String = ""
+    
+    /// Stores all players mapped into a feedback structure with selection state.
+    @State private var playersFeedback: [PlayerFeedback] = []
+    
+    /// Whether the associated audio file has been downloaded and is available for playback.
+   @State private var audioFileRetrieved: Bool = false
+   
+   /// Tracks whether transcript text is being edited separately.
+   @State private var editTranscript: Bool = false
+   
+   /// View model responsible for fetching player information.
+   @StateObject private var playerModel = PlayerModel()
     
     var body: some View {
         NavigationView {
@@ -105,18 +118,19 @@ struct CoachSpecificTranscriptView: View {
                         .padding(.vertical, 10)
                         
                         // Feedback for Section
-                        if let feedbackFor = feedbackFor {
-                            // Displays a list of players for whom the feedback applies.
-                            VStack(alignment: .leading) {
-                                Text("Feedback For")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                
-                                HStack {
-                                    Text(feedbackFor.map { $0.name}.joined(separator: ", ")).font(.caption).padding(.top, 2)
-                                }.multilineTextAlignment(.leading)
-                            }.padding(.horizontal).padding(.vertical, 10)
-                        }
+                        VStack(alignment: .leading) {
+                            Text("Feedback For")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            HStack {
+                                Text(feedbackFor.map { $0.name }.joined(separator: ", "))
+                                    .font(.caption)
+                                    .padding(.top, 2)
+                            }
+                            .multilineTextAlignment(.leading)
+                        }.padding(.horizontal).padding(.vertical, 10)
+                        
                         VStack {
                             Divider()
                             // Comment section allowing users to view and add comments for the transcript.
@@ -135,54 +149,101 @@ struct CoachSpecificTranscriptView: View {
             .task {
                 do {
                     print("CoachSpecificTranscript, teamDocId: \(team.id)")
+                    
                     if let transcript = transcript {
-                        let feedback = transcript.feedbackFor ?? []
-                        
-                        // Add a new key moment to the database
-                        let fbFor: [String] = feedback.map { $0.playerId }
-                        feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
+                        if !isEditing
+                        {
+                            let feedback = transcript.feedbackFor ?? []
+                            
+                            // Add a new key moment to the database
+                            let fbFor: [String] = feedback.map { $0.playerId }
+                            feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
+                            feedbackTranscript = transcript.transcript
+                        }
                     }
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
                 }
             }
+            .sheet(isPresented: $isEditing) {
+                NavigationView {
+                    FeedbackForView(allPlayers: team.players, feedbackTranscript: $feedbackTranscript, playersFeedback: $playersFeedback)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button(action: {
+                                    resetData()
+                                    isEditing = false // Dismiss the full-screen cover
+                                }) {
+                                    Text("Cancel")
+                                }
+                            }
+                            
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button(action: {
+                                    saveData()
+                                    isEditing = false // Dismiss the full-screen cover
+                                }) {
+                                    Text("Save")
+                                }
+                            }
+                        }
+                        .task {
+                            do {
+                                if let allPlayers = team.players {
+                                    let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
+                                    // Map to include selection state
+                                    playersFeedback = players.map { (id, name, photoUrl) in
+                                        let isSelected = feedbackFor.contains { $0.playerId == id }
+                                        return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
+                                    }
+                                }
+                                
+                            } catch {
+                                print("Error when fetching specific footage info: \(error)")
+                            }
+                        }
+                }
+            }
         }
         .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        // Action for sharing
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                            .padding(.bottom, 6)
-                    }
-                    .foregroundColor(.red)
-                
-                    if !isEditing {
-                        Button {
-                            withAnimation {
-                                isEditing.toggle()
-                            }
-                        } label: {
-                            Text("Edit")
-                        }
-                        .frame(width: 40)
-                        .foregroundColor(.red)
-                    } else {
-                        Button {
-                            withAnimation {
-                                isEditing.toggle()
-                            }
-                        } label: {
-                            Text("Save")
-                        }
-                        .frame(width: 40)
-                        .foregroundColor(.red)
-                    }
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                Button {
+                    // Action for sharing
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .padding(.bottom, 6)
                 }
+                .foregroundColor(.red)
+                
+                if !isEditing {
+                    Button {
+                        withAnimation {
+                            isEditing.toggle()
+                        }
+                    } label: {
+                        Text("Edit")
+                    }
+                    .frame(width: 40)
+                    .foregroundColor(.red)
+                }
+//                                    // If you want transcript itself updated too, mutate it:
+//                                    // var updatedTranscript = transcript
+//                                    var updatedTranscript = transcript
+//                                    updatedTranscript.feedbackFor = feedbackFor.map { player in
+//                                        PlayerTranscriptInfo(
+//                                            playerId: player.playerId,
+//                                            firstName: player.name.components(separatedBy: " ").first ?? "",
+//                                            lastName: player.name.components(separatedBy: " ").dropFirst().joined(separator: " "),
+//                                            nickname: nil,
+//                                            jersey: 0 // or some default
+//                                        )
+//                                    }
+//                                    self.transcript = updatedTranscript
+//                                }
+            }
         }
         .task {
             // Fetch the audio url
-            print("TRANSCRIPT INFO: \(transcript)")
             if let transcript = transcript {
                 do {
                     let audioURL = try await transcriptModel.getAudioFileUrl(keyMomentId: transcript.keyMomentId, gameId: game.gameId, teamId: team.teamId)
@@ -195,8 +256,6 @@ struct CoachSpecificTranscriptView: View {
                             .urls(for: .documentDirectory, in: .userDomainMask)[0]
                             .appendingPathComponent("downloaded_audio.m4a")
                         
-                        
-                        
                         storageRef.write(toFile: localURL) { url, error in
                             if let error = error {
                                 print("❌ Failed to download audio: \(error.localizedDescription)")
@@ -207,12 +266,127 @@ struct CoachSpecificTranscriptView: View {
                             }
                         }
                     }
-
                 } catch {
                     print("ERROR WHEN fetching AUDIO url: \(error)")
                 }
             }
         }
+    }
+    
+    
+    /// Saves the updated transcript data to Firestore.
+    ///
+    /// - Updates `feedbackFor` with the players that were selected in the UI.
+    /// - Persists transcript text and feedbackFor players to the database.
+    /// - Updates the local transcript state with the edited values.
+    ///
+    /// Errors are caught and logged if saving fails.
+    private func saveData() {
+        Task {
+            do {
+                feedbackFor = playersFeedback
+                    .filter { $0.isSelected }
+                    .map { PlayerNameAndPhoto(playerId: $0.id, name: $0.name, photoURL: $0.photoUrl) }
+                
+                if let transcript = transcript {
+                    try await transcriptModel.updateTranscriptInfo(teamDocId: team.id, teamId: team.teamId, gameId: game.gameId, transcriptId: transcript.transcriptId, feedbackFor: feedbackFor, transcript: feedbackTranscript)
+                }
+                
+                playersFeedback = []
+                transcript?.transcript = feedbackTranscript
+                
+            } catch {
+                // Print error message if saving data fails
+                print("Error occurred when saving the transcript data: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    
+    /// Resets the feedback transcript text field to the original transcript content.
+    ///
+    /// - If `transcript` exists, it restores `feedbackTranscript` with its value.
+    /// - If `transcript` is `nil`, it resets to an empty string.
+    private func resetData() {
+        feedbackTranscript = transcript?.transcript ?? ""
+    }
+}
+
+
+/// Represents a player with associated feedback selection state.
+struct PlayerFeedback: Identifiable, Equatable {
+    /// The player’s unique ID.
+    let id: String
+    /// Full display name of the player.
+    var name: String
+    /// Optional profile photo URL of the player.
+    let photoUrl: URL?
+    /// Whether this player has been selected for feedback.
+    var isSelected: Bool
+}
+
+
+/// A view for editing feedback players and transcript text.
+struct FeedbackForView: View {
+    
+    /// All player IDs available in the team.
+    @State var allPlayers: [String]?
+    
+    /// Binding to the editable transcript text.
+    @Binding var feedbackTranscript: String
+    
+    /// Binding to the list of players with feedback selection state.
+    @Binding var playersFeedback: [PlayerFeedback]
+    
+    /// Transcript model used for fetching and updating transcript data.
+    @StateObject private var transcriptModel = TranscriptModel()
+        
+    var body: some View {
+        VStack {
+            Form {
+                Section (header: Text("Transcript")) {
+                    TextField("Enter your text", text: $feedbackTranscript, axis: .vertical)
+                        .lineLimit(5)
+                }
+                
+                Section (header: Text("Choose Players for Feedback")) {
+                    List {
+                        ForEach($playersFeedback) { $player in
+                            CheckboxRow(
+                                title: player.name,
+                                isChecked: $player.isSelected
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/// A row with a player’s name and a checkmark toggle for feedback selection.
+struct CheckboxRow: View {
+    
+    /// Display name of the player.
+    let title: String
+    
+    /// Whether the checkbox is selected.
+    @Binding var isChecked: Bool
+    
+    var body: some View {
+        Button {
+            isChecked.toggle()
+        } label: {
+            HStack {
+                Image(systemName: isChecked ? "checkmark.circle.fill" : "minus.circle.fill")
+                    .foregroundColor(isChecked ? .blue : .red)
+                Text(title)
+                    .foregroundColor(.primary)
+                Spacer()
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

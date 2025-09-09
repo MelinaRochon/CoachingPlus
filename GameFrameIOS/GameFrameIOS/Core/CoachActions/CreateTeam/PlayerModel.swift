@@ -119,7 +119,7 @@ final class PlayerModel: ObservableObject {
     /// - Returns: An optional array of full player names (`[String]?`). Returns `nil` if a user cannot be found.
     /// - Throws: An error if the `getUser` call fails.
     func getAllPlayersNames(players: [String]) async throws -> [(String, String)]? {
-        
+
         var tmpPlayersNames: [(String, String)] = [("0", "All")]
         
         // Process each player ID and retrieve their corresponding user data.
@@ -138,6 +138,31 @@ final class PlayerModel: ObservableObject {
         
         // Return the list of player names.
         return tmpPlayersNames
+    }
+    
+    
+    /// Returns player IDs, names, and optional photo URLs for a list of player IDs.
+    ///
+    /// - Parameter players: List of player IDs to fetch.
+    /// - Returns: An array of tuples `(id, name, photoUrl)`.
+    /// - Throws: If fetching user data fails.
+    func getAllPlayersNamesAndUrl(players: [String]) async throws -> [(String, String, URL?)] {
+        
+        var results: [(String, String, URL?)] = [] ; //[("0", "All", nil)]
+        
+        for playerId in players {
+            guard let user = try await UserManager.shared.getUser(userId: playerId) else {
+                print("getAllPlayersNamesAndUrl : Could not find user \(playerId)")
+                continue
+            }
+            
+            let name = user.firstName + " " + user.lastName
+            let photoUrl = user.photoUrl // or however your User object stores it
+            
+            results.append((playerId, name, photoUrl) as! (String, String, URL?))
+        }
+        
+        return results
     }
     
     

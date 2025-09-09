@@ -10,6 +10,22 @@ import SwiftUI
 /// The main home page for a coach, displaying upcoming scheduled games and recent game recordings.
 /// This view fetches the coach's associated games and categorizes them into past and future games.
 struct CoachHomePageView: View {
+    
+    @State private var selectedTab: Tab = .scheduled
+
+       enum Tab: String, CaseIterable, Identifiable {
+           case scheduled = "Scheduled Games"
+           case recent = "Recent Games"
+
+           var id: String { self.rawValue }
+
+           var iconName: String {
+               switch self {
+               case .scheduled: return "calendar.badge.clock"
+               case .recent: return "camera.badge.clock"
+               }
+           }
+       }
 
     // MARK: - State Properties
 
@@ -34,14 +50,28 @@ struct CoachHomePageView: View {
     /// Tracks whether the ScrollView should reset to the top.
     @State private var scrollToTop: Bool = false
     
+    @State private var selectedSegmentIndex: Int = 0
+    @State private var segmentTypes: [String] = ["Scheduled Games", "Recent Games"]
+    @State private var imageTypes: [String] = ["calendar.badge.clock", "camera.badge.clock"]
     // MARK: - View
 
     var body: some View {
         NavigationStack {
             Divider()
+            
+//            Picker("Type of selection", selection: $selectedTab) {
+//                Label(Tab.scheduled.rawValue, systemImage: Tab.scheduled.iconName).tag(Tab.scheduled)
+//                Label(Tab.recent.rawValue, systemImage: Tab.recent.iconName).tag(Tab.recent)
+//            }
+//            .pickerStyle(.segmented)
+//            .padding(.leading)
+//            .padding(.trailing)
+
             ScrollView {
                 ScrollViewReader { proxy in
                     VStack {
+                        
+                        
                         // Scheduled Games Sectio
                         VStack(alignment: .leading, spacing: 10) {
                             // Navigation link to view all scheduled games
