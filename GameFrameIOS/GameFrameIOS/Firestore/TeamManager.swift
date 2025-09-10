@@ -14,13 +14,13 @@ import FirebaseFirestore
 struct DBTeam: Codable {
     let id: String
     let teamId: String
-    let name: String
-    let teamNickname: String
+    var name: String
+    var teamNickname: String
     let sport: String
     let logoUrl: String?
     let colour: String?
-    let gender: String
-    let ageGrp: String
+    var gender: String
+    var ageGrp: String
     let accessCode: String?
     let coaches: [String]
     let players: [String]?
@@ -330,5 +330,44 @@ final class TeamManager {
 
             // If code exists, loop to generate another
         }
+    }
+    
+    
+    /// Updates the fields of a team document in Firestore (or another data source).
+    ///
+    /// - Parameters:
+    ///   - id: The unique identifier of the team document to update.
+    ///   - name: Optional new name for the team. If `nil`, the name field will not be updated.
+    ///   - nickname: Optional new nickname for the team. If `nil`, the nickname field will not be updated.
+    ///   - ageGrp: Optional new age group for the team. If `nil`, the age group field will not be updated.
+    ///   - gender: Optional new gender value for the team. If `nil`, the gender field will not be updated.
+    ///
+    /// - Throws: Rethrows any errors from Firestore’s `updateData` call.
+    func updateTeamSettings(id: String, name: String?, nickname: String?, ageGrp: String?, gender: String?) async throws {
+        var data: [String: Any] = [:]
+        if let name = name {
+            data[DBTeam.CodingKeys.name.rawValue] = name
+        }
+        
+        if let nickname = nickname {
+            data[DBTeam.CodingKeys.teamNickname.rawValue] = nickname
+        }
+        
+        if let ageGrp = ageGrp {
+            data[DBTeam.CodingKeys.ageGrp.rawValue] = ageGrp
+        }
+        
+        if let gender = gender {
+            data[DBTeam.CodingKeys.gender.rawValue] = gender
+        }
+        
+        // Only update if data is not empty
+        guard !data.isEmpty else {
+            print("No changes to update")
+            return
+        }
+        
+        // Update the document asynchronously
+        try await teamDocument(id: id).updateData(data as [AnyHashable : Any])
     }
 }

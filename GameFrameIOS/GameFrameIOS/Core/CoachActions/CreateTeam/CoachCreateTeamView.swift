@@ -49,15 +49,6 @@ struct CoachCreateTeamView: View {
     /// Predefined list of sports available for selection.
     let sportOptions = ["Soccer", "Hockey", "Basketball"]
 
-    /// Predefined list of gender options for team categorization.
-    let genderOptions = ["Female", "Male", "Mixed", "Other"]
-
-    /// Predefined list of age groups for team classification.
-    let ageGroupOptions = [
-        "U3", "U4", "U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12",
-        "U13", "U14", "U15", "U16", "U17", "U18", "18+", "Senior", "None"
-    ]
-
     // MARK: - User Input States for Team Details
 
     /// The name of the team entered by the user.
@@ -125,14 +116,14 @@ struct CoachCreateTeamView: View {
                         
                         CustomPicker(
                             title: "Gender",
-                            options: genderOptions,
+                            options: AppData.genderOptions,
                             displayText: { $0 },
                             selectedOption: $gender
                         )
                         
                         CustomPicker(
                             title: "Age group",
-                            options: ageGroupOptions,
+                            options: AppData.ageGroupOptions,
                             displayText: { $0 },
                             selectedOption: $ageGrp
                         )

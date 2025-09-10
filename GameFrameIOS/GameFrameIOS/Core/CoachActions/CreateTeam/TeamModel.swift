@@ -147,4 +147,22 @@ final class TeamModel: ObservableObject {
         return team
     }
     
+    
+    /// Updates the settings of a specific team in the data source (e.g., Firestore).
+    ///
+    /// - Parameters:
+    ///   - id: The unique document ID of the team to update.
+    ///   - name: The new team name, or `nil` if it hasn’t changed.
+    ///   - nickname: The new team nickname, or `nil` if it hasn’t changed.
+    ///   - ageGrp: The new age group, or `nil` if it hasn’t changed.
+    ///   - gender: The new gender value, or `nil` if it hasn’t changed.
+    ///
+    /// - Throws: Rethrows any errors encountered during the update process.
+    /// - Note: This function is asynchronous and must be called from within an `async` context.
+    ///         Internally, it forwards the request to `TeamManager.shared.updateTeamSettings`.
+    func updatingTeamSettings(id: String, name: String?, nickname: String?, ageGrp: String?, gender: String?) async throws {
+        print("testttttt")
+        try await TeamManager.shared.updateTeamSettings(id: id, name: name, nickname: nickname, ageGrp: ageGrp, gender: gender)
+    }
+    
 }

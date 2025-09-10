@@ -52,14 +52,15 @@ import SwiftUI
     /// State variable to track whether the profile is being edited.
     @State private var isEditing: Bool = false
      
-     /// State variable to track whether the player profile is being removed.
-     @State private var removePlayer: Bool = false
+    /// State variable to track whether the player profile is being removed.
+    @State private var removePlayer: Bool = false
     
     /// Array containing possible genders for the player.
     let genders = ["Female", "Male", "Other"]
     
     /// The view model responsible for handling the player's profile data.
     @StateObject private var profileModel = CoachProfileViewModel()
+    @StateObject private var playerModel = PlayerProfileModel()
     
     // MARK: - View
     
@@ -186,12 +187,20 @@ import SwiftUI
                         
                         if isEditing {
                             Button("Cancel") {
-                                if let player = profileModel.player {
-                                    guardianName = player.guardianName ?? ""
-                                    guardianEmail = player.guardianEmail ?? ""
-                                    guardianPhone = player.guardianPhone ?? ""
-                                    nickname = player.nickName ?? ""
-                                    jerseyNum = player.jerseyNum
+                                Task {
+                                    do {
+                                        try await profileModel.loadPlayer(userDocId: userDocId, playerDocId: playerDocId) // get the player's information
+                                        if let player = profileModel.player {
+                                            guardianName = player.guardianName ?? ""
+                                            guardianEmail = player.guardianEmail ?? ""
+                                            guardianPhone = player.guardianPhone ?? ""
+                                            nickname = player.nickName ?? ""
+                                            jerseyNum = player.jerseyNum
+                                        }
+                                        
+                                    } catch {
+                                        print("Error when loading player. \(error)")
+                                    }
                                 }
                                 withAnimation {
                                     isEditing.toggle()
@@ -255,8 +264,13 @@ import SwiftUI
                              // send the info to the database
                             Task {
                                 do {
-                                    profileModel.updatePlayerInformation(jersey: jerseyNum, nickname: nickname)
-                                    print("Player updated")
+//                                    profileModel.updatePlayerInformation(jersey: jerseyNum, nickname: nickname)
+                                    if let player = profileModel.player {
+                                        playerModel.player = player
+                                        playerModel.updatePlayerInformation(jersey: jerseyNum, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
+                                        print("Player updated")
+                                    }
+                                    
                                 } catch {
                                     print("Error when updating the player's information. \(error)")
                                 }

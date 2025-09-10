@@ -29,12 +29,31 @@ struct CoachTeamSettingsView: View {
     /// The team whose settings are being displayed.
     @State var team: DBTeam
     
+    /// Tracks whether the view is currently in editing mode.
+    @State private var isEditing = false
+    
+    /// Holds the team’s **name** while editing.
+    @State private var name: String = ""
+    
+    /// Holds the team’s **nickname** while editing.
+    @State private var nickname: String = ""
+    
+    /// Holds the team’s **age group** while editing.
+    @State private var ageGroup: String = "None"
+    
+    /// Holds the team’s **gender** while editing.
+    @State private var gender: String = "Mixed"
+    
+    /// Observable object that manages team data operations.
+    @StateObject private var teamModel = TeamModel()
+    
     var body: some View {
         // Navigation view that allows for navigation between views and displaying a toolbar.
         NavigationView {
             VStack {
                 // Check if the team data is available and unwrap it.
-                    // Team Name Title
+                // Team Name Title
+                if !isEditing {
                     Text(team.name)
                         .font(.largeTitle)
                         .bold()
@@ -43,98 +62,237 @@ struct CoachTeamSettingsView: View {
                         .padding(.top, 5)
                         .padding(.bottom, 5)
                         .padding(.horizontal)
-                    
-                    Divider()
-                    
-                    // List displaying the various team settings (nickname, age group, sport, gender, access code).
-                    List {
-                        // Section Title
-                        Section(header: Text("Team Settings")) {
-                            // Team Nickname
-                            HStack {
-                                label(text: "Nickname", systemImage: "person.2.fill")
-                                Spacer()
-                                Text(team.teamNickname)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            // Age Group
-                            HStack {
-                                label(text: "Age Group", systemImage: "calendar.and.person")
-                                Spacer()
-                                Text(team.ageGrp)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            // Sport
-                            HStack {
-                                label(text: "Sport", systemImage: "soccerball")
-                                Spacer()
-                                Text(team.sport)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            // Gender
-                            HStack {
-                                label(text: "Gender", systemImage: "figure")
-                                Spacer()
-                                Text(team.gender.capitalized)
-                                    .foregroundColor(.secondary)
-                            }
-                                                        
-                            // Access Code with Copy Button & Tooltip
-                            HStack {
-                                label(text: "Access Code", systemImage: "qrcode")
-                                Spacer()
-                                Text(team.accessCode ?? "N/A")
-                                    .foregroundColor(.secondary).padding(.trailing, 5)
-                                
-                                // Copy Button
-                                Button(action: {
-                                    UIPasteboard.general.string = team.accessCode ?? ""
-                                    showCopiedMessage = true
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                        showCopiedMessage = false
-                                    }
-                                }) {
-                                    Image(systemName: "doc.on.doc.fill")
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                        }
-                        
-                        Section(header: Text("Players")) {
-                            if !players.isEmpty {
-                                ForEach(players, id: \.playerDocId) { player in
-                                    
-                                    label(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
-                                }
-                            } else {
-                                Text("No players found.").font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                    .listStyle(.plain)
-                    
-                    // Show "Copied!" message
-                    if showCopiedMessage {
-                        Text("Copied!")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .transition(.opacity)
-                            .padding(.top, 5)
-                    }
-                    
-                    Spacer()
+                        .foregroundColor(.primary)
+                }
+                
+                Divider()
+                
+                // List displaying the various team settings (nickname, age group, sport, gender, access code).
+                teamList.listStyle(.plain)
+                
+                // Show "Copied!" message
+                if showCopiedMessage {
+                    Text("Copied!")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .transition(.opacity)
+                        .padding(.top, 5)
+                }
+                
+                Spacer()
+            }
+            .task {
+                do {
+                    nickname = team.teamNickname
+                    ageGroup = team.ageGrp
+                    gender = team.gender
+                    name = team.name
+                } catch {
+                    print(error.localizedDescription)
+                }
             }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Text("Done").font(.subheadline)
+                ToolbarItem(placement: .topBarLeading) {
+                    if !isEditing {
+                        Button {
+                            withAnimation {
+                                isEditing = true
+                            }
+                        } label : {
+                            Text("Edit")
+                        }
+                    } else {
+                        Button {
+                            withAnimation {
+                                isEditing = false
+                            }
+                            
+                            nickname = team.teamNickname
+                            ageGroup = team.ageGrp
+                            gender = team.gender
+                            name = team.name
+                        } label : {
+                            Text("Cancel")
+                        }
                     }
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    
+                    if !isEditing {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Text("Done").font(.subheadline)
+                        }
+                    } else {
+                        Button {
+                            savingTeamSettings()
+                            withAnimation {
+                                isEditing = false
+                            }
+                        } label : {
+                            Text("Save")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    
+    /// A reusable computed view that displays the team’s settings and players in a `List`.
+    ///
+    /// ## Features:
+    /// - **Team Settings section**:
+    ///   - Displays the team’s name, nickname, age group, sport, gender, and access code.
+    ///   - In **editing mode**, allows inline editing with `TextField` and `CustomPicker` components.
+    ///   - Provides a copy button for the team’s access code with a temporary "Copied!" tooltip.
+    ///
+    /// - **Players section** (shown only when not editing):
+    ///   - Lists all players associated with the team.
+    ///   - If no players are available, displays a placeholder message.
+    var teamList: some View {
+        List {
+            // Section Title
+            Section(header: Text("Team Settings")) {
+                // Team Name
+                if isEditing {
+                    HStack {
+                        label(text: "Team Name", systemImage: "figure.indoor.soccer")
+                        Spacer()
+                        TextField("Name", text: $name).foregroundColor(.primary).multilineTextAlignment(.trailing)
+                    }
+                }
+                
+                // Team Nickname
+                HStack {
+                    label(text: "Nickname", systemImage: "person.2.fill")
+                    Spacer()
+                    if isEditing {
+                        TextField("Nickname", text: $nickname).foregroundColor(.primary).multilineTextAlignment(.trailing)
+                    } else {
+                        Text(team.teamNickname)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // Age Group
+                HStack {
+                    label(text: "Age Group", systemImage: "calendar.and.person")
+                    Spacer()
+                    if isEditing {
+                        CustomPicker(
+                            title: "",
+                            options: AppData.ageGroupOptions,
+                            displayText: { $0 },
+                            selectedOption: $ageGroup
+                        )
+                    } else {
+                        Text(team.ageGrp)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // Sport
+                HStack {
+                    label(text: "Sport", systemImage: "soccerball")
+                    Spacer()
+                    Text(team.sport)
+                        .foregroundColor(.secondary)
+                }
+                
+                // Gender
+                HStack {
+                    label(text: "Gender", systemImage: "figure")
+                    Spacer()
+                    if isEditing {
+                        CustomPicker(
+                            title: "",
+                            options: AppData.genderOptions,
+                            displayText: { $0 },
+                            selectedOption: $gender
+                        )
+                    } else {
+                        Text(team.gender.capitalized)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                                            
+                // Access Code with Copy Button & Tooltip
+                HStack {
+                    label(text: "Access Code", systemImage: "qrcode")
+                    Spacer()
+                    Text(team.accessCode ?? "N/A")
+                        .foregroundColor(.secondary).padding(.trailing, 5)
+                    
+                    // Copy Button
+                    Button(action: {
+                        UIPasteboard.general.string = team.accessCode ?? ""
+                        showCopiedMessage = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            showCopiedMessage = false
+                        }
+                    }) {
+                        Image(systemName: "doc.on.doc.fill")
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
+            
+            if !isEditing {
+                Section(header: Text("Players")) {
+                    if !players.isEmpty {
+                        ForEach(players, id: \.playerDocId) { player in
+                            label(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
+                        }
+                    } else {
+                        Text("No players found.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    /// Saves the updated team settings to Firestore (or the data model).
+    /// - Compares the current field values with the existing `team` object.
+    /// - Only sends changed values to `updatingTeamSettings`, otherwise passes `nil`.
+    /// - Updates the local `team` object so UI stays in sync.
+    private func savingTeamSettings() {
+        Task {
+            do {
+                var teamNickname: String? = nickname
+                var teamAgeGrp : String? = ageGroup
+                var teamGender : String? = gender
+                var teamName : String? = name
+                                
+                if nickname == team.teamNickname {
+                    teamNickname = nil
+                } else {
+                    team.teamNickname = nickname
+                }
+                
+                if ageGroup == team.ageGrp {
+                    teamAgeGrp = nil
+                } else {
+                    team.ageGrp = ageGroup
+                }
+                
+                if gender == team.gender {
+                    teamGender = nil
+                } else {
+                    team.gender = gender
+                }
+                
+                if name == team.name {
+                    teamName = nil
+                } else {
+                    team.name = name
+                }
+                
+                try await teamModel.updatingTeamSettings(id: team.id, name: teamName, nickname: teamNickname, ageGrp: teamAgeGrp, gender: teamGender)
+            } catch {
+                print(error.localizedDescription)
             }
         }
     }
