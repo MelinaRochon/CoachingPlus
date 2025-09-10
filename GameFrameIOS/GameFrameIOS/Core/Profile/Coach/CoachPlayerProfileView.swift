@@ -264,13 +264,10 @@ import SwiftUI
                              // send the info to the database
                             Task {
                                 do {
-//                                    profileModel.updatePlayerInformation(jersey: jerseyNum, nickname: nickname)
                                     if let player = profileModel.player {
                                         playerModel.player = player
                                         playerModel.updatePlayerInformation(jersey: jerseyNum, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                        print("Player updated")
                                     }
-                                    
                                 } catch {
                                     print("Error when updating the player's information. \(error)")
                                 }

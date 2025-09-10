@@ -161,7 +161,6 @@ final class TeamModel: ObservableObject {
     /// - Note: This function is asynchronous and must be called from within an `async` context.
     ///         Internally, it forwards the request to `TeamManager.shared.updateTeamSettings`.
     func updatingTeamSettings(id: String, name: String?, nickname: String?, ageGrp: String?, gender: String?) async throws {
-        print("testttttt")
         try await TeamManager.shared.updateTeamSettings(id: id, name: name, nickname: nickname, ageGrp: ageGrp, gender: gender)
     }
     
