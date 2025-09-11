@@ -50,7 +50,7 @@ struct AudioPlayerView: View {
                             if !editing && audioPlayerVM.isPlaying {
                                 audioPlayerVM.seek(to: audioPlayerVM.progress)
                             }
-                        },
+                        }
                     )
                     .tint(.gray)
                     .frame(height: 30)

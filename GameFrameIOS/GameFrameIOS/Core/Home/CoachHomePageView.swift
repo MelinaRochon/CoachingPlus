@@ -59,14 +59,14 @@ struct CoachHomePageView: View {
         NavigationStack {
             Divider()
             
-//            Picker("Type of selection", selection: $selectedTab) {
-//                Label(Tab.scheduled.rawValue, systemImage: Tab.scheduled.iconName).tag(Tab.scheduled)
-//                Label(Tab.recent.rawValue, systemImage: Tab.recent.iconName).tag(Tab.recent)
-//            }
-//            .pickerStyle(.segmented)
-//            .padding(.leading)
-//            .padding(.trailing)
-
+            //            Picker("Type of selection", selection: $selectedTab) {
+            //                Label(Tab.scheduled.rawValue, systemImage: Tab.scheduled.iconName).tag(Tab.scheduled)
+            //                Label(Tab.recent.rawValue, systemImage: Tab.recent.iconName).tag(Tab.recent)
+            //            }
+            //            .pickerStyle(.segmented)
+            //            .padding(.leading)
+            //            .padding(.trailing)
+            
             ScrollView {
                 ScrollViewReader { proxy in
                     VStack {
@@ -179,7 +179,6 @@ struct CoachHomePageView: View {
         }
         
     }
-    
     
     // MARK: - Functions
 

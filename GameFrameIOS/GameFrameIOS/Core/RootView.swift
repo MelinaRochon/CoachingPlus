@@ -21,10 +21,9 @@ struct RootView: View {
     var body: some View {
         ZStack {
             if !showSignInView {
-                NavigationStack {
                     // Passing the binding to control the sign-in view display
                     UserTypeRootView(showSignInView: $showSignInView)
-                }.tint(.red)
+                .tint(.red)
             }
         }
         .onAppear {
