@@ -41,7 +41,7 @@ import FirebaseFirestore
  */
 struct DBGame: Codable {
     let gameId: String
-    let title: String
+    var title: String
     let duration: Int
     let location: String?
     let scheduledTimeReminder: Int // in minutes
@@ -303,6 +303,22 @@ final class GameManager {
             DBGame.CodingKeys.duration.rawValue: duration
         ]
         
+        try await gameDocument(teamDocId: teamDocId, gameId: gameId).updateData(data as [AnyHashable: Any])
+    }
+    
+    
+    /// Updates the title of a specific game document in Firestore (or the data source).
+    ///
+    /// - Parameters:
+    ///   - gameId: The unique identifier of the game document to update.
+    ///   - teamDocId: The unique identifier of the parent team document containing the game.
+    ///   - title: The new title string to assign to the game.
+    ///
+    /// - Throws: Rethrows any errors that occur during the Firestore update operation.
+    func updateGameTitle(gameId: String, teamDocId: String, title: String) async throws {
+        let data: [String:Any] = [
+            DBGame.CodingKeys.title.rawValue: title
+        ]
         try await gameDocument(teamDocId: teamDocId, gameId: gameId).updateData(data as [AnyHashable: Any])
     }
 }
