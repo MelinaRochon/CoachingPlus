@@ -143,4 +143,20 @@ final class GameModel: ObservableObject {
         return games
     }
     
+    
+    /// Wrapper function that updates the title of a game by delegating to `GameManager`.
+    ///
+    /// - Parameters:
+    ///   - gameId: The unique identifier of the game document to update.
+    ///   - teamDocId: The unique identifier of the parent team document containing the game.
+    ///   - title: The new title string to assign to the game.
+    ///
+    /// ## Behavior:
+    /// - Forwards the update request to `GameManager.shared.updateGameTitle`.
+    /// - Keeps the view model / UI layer decoupled from the underlying data manager logic.
+    ///
+    /// - Throws: Rethrows any errors thrown by `GameManager.updateGameTitle`.
+    func updateGameTitle(gameId: String, teamDocId: String, title: String) async throws {
+        try await GameManager.shared.updateGameTitle(gameId: gameId, teamDocId: teamDocId, title: title)
+    }
 }
