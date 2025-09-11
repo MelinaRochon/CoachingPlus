@@ -139,6 +139,19 @@ final class TranscriptManager {
         }
     }
     
+    
+    func getTranscriptsPreviewWithDocId(teamDocId: String, gameId: String) async throws -> [DBTranscript]? {
+        
+        // Get all documents in the transcript collection
+        let snapshot = try await transcriptCollection(teamDocId: teamDocId, gameDocId: gameId)
+            .limit(to: 3)
+            .getDocuments()
+        
+        return snapshot.documents.compactMap { document in
+            try? document.data(as: DBTranscript.self)
+        }
+    }
+    
 
     /// Retrieves all transcripts for a game using document IDs.
     /// - Parameters:

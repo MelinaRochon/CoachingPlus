@@ -29,6 +29,93 @@ final class TranscriptModel: ObservableObject {
         return try await UserManager.shared.getUser(userId: authUser.uid)
     }
     
+    /// Retrieves all transcripts and key moments for a specific game.
+    ///
+    /// - Parameters:
+    ///   - gameId: The unique identifier for the game.
+    ///   - teamDocId: The unique identifier for the team.
+    /// - Returns: A tuple containing two optional arrays:
+    ///   - The first array contains key moment transcripts for recorded clips.
+    ///   - The second array contains key moments for full-game analysis.
+    /// - Throws: An error if the retrieval process fails.
+    func getAllTranscripts(gameId: String, teamDocId: String) async throws -> [keyMomentTranscript]? {
+        do {
+            // Retrieve all transcripts associated with the game.
+            guard let transcripts = try await TranscriptManager.shared.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
+                print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
+                return nil
+            }
+
+            // Retrieve the authenticated user.
+            guard let user = try await getUser() else {
+                print("Could not get user. Aborting..")
+                return nil
+            }
+            
+            // Retrieve all key moments
+            guard let keyMoment = try await KeyMomentManager.shared.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
+                print("No key moment found. Aborting..")
+                return nil
+            }
+            
+            let keyMomentsDict = Dictionary(uniqueKeysWithValues: keyMoment.map { ($0.keyMomentId, $0) })
+
+            var allUserIds: Set<String> = []
+            for km in keyMoment {
+                if let feedbackFor = km.feedbackFor {
+                    allUserIds.formUnion(feedbackFor)
+                }
+            }
+            
+            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds))
+            let playersDict = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.playerId, $0) })
+
+            // Lists to store processed transcripts and key moments.
+            var allRecordings: [keyMomentTranscript] = []
+
+            for transcript in transcripts {
+                
+                // Retrieve the key moment associated with the transcript.
+                guard let keyMoment = keyMomentsDict[transcript.keyMomentId] else {
+                    print("Key moment not found for transcript \(transcript.transcriptId)")
+                    continue
+                }
+                
+                var feedbackPlayers: [PlayerTranscriptInfo]? = []
+                if let feedbackFor = keyMoment.feedbackFor {
+                    // Players only see their own feedback for privacy reasons
+                    if user.userType == "Player", let userId = user.userId {
+                        if feedbackFor.contains(userId), let p = playersDict[userId] {
+                            feedbackPlayers = [p]
+                        }
+                    } else {
+                        // Coaches can see all key moments, so no filtering is needed.
+                        feedbackPlayers = feedbackFor.compactMap { playersDict[$0] }
+                    }
+                }
+                
+                let newTranscript = keyMomentTranscript(
+                    id: allRecordings.count,
+                    keyMomentId: transcript.keyMomentId,
+                    transcriptId: transcript.transcriptId,
+                    transcript: transcript.transcript,
+                    frameStart: keyMoment.frameStart,
+                    frameEnd: keyMoment.frameEnd,
+                    feedbackFor: feedbackPlayers
+                )
+                
+                allRecordings.append(newTranscript)
+            }
+
+            // Sort transcripts by start frame to maintain chronological order.
+            return allRecordings.sorted(by: { $0.frameStart < $1.frameStart })
+                    
+        } catch {
+            print("Error when loading the recordings from the database. Error: \(error)")
+            return nil
+        }
+    }
+        
     
     /// Retrieves all transcripts and key moments for a specific game.
     ///
@@ -53,67 +140,180 @@ final class TranscriptModel: ObservableObject {
                 return (nil, nil)
             }
             
-            // Lists to store processed transcripts and key moments.
+            guard let keyMoments = try await KeyMomentManager.shared.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
+                print("No key moment found. Aborting..")
+                return (nil, nil)
+            }
+            
+            let keyMomentsDict = Dictionary(uniqueKeysWithValues: keyMoments.map { ($0.keyMomentId, $0) })
+
+            // Collect all unique user IDs referenced in feedbackFor
+            var allUserIds: Set<String> = []
+            for km in keyMoments {
+                if let feedbackFor = km.feedbackFor {
+                    allUserIds.formUnion(feedbackFor)
+                }
+            }
+
+            // Fetch all players in a single batch
+            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds))
+            let playersDict = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.playerId, $0) })
+
+            // Process transcripts with in-memory lookups only
             var allRecordings: [keyMomentTranscript] = []
             var allKeyMoments: [keyMomentTranscript] = []
 
             for transcript in transcripts {
-                let keyMomentDocId = transcript.keyMomentId // get the key moment document id to be fetched
-                
-                // Retrieve the key moment associated with the transcript.
-                guard let keyMoment = try await KeyMomentManager.shared.getKeyMomentWithDocId(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentDocId) else {
-                    print("No key moment found. Aborting..")
-                    return (nil, nil)
+                guard let keyMoment = keyMomentsDict[transcript.keyMomentId] else {
+                    print("Key moment not found for transcript \(transcript.transcriptId)")
+                    continue
                 }
-                
-                // Track the index positions for adding new transcripts.
+
                 let recordingsLength = allRecordings.count
                 let keyMomentsLength = allKeyMoments.count
-                
-                if let userId = user.userId {
-                    if user.userType == "Player" {
-                        // Players should only see key moments that are directed at them for privacy reasons.
-                        if let feedbackFor = keyMoment.feedbackFor {
-                            if feedbackFor.contains(userId) {
-                                // Only show feedback for the player, not everyone it is addressed to
-                                // Reason: Privacy reasons!
-                                let tmpPlayer = try await getAllPlayersInfo(feedbackFor: [userId])
-                                let newKeyMomTranscript = keyMomentTranscript(id: recordingsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
-                                
-                                // Adding new element to the transcripts array
-                                allRecordings.append(newKeyMomTranscript)
-                                
-                                if keyMoment.fullGameId != nil {
-                                    let newKeyMomTranscript = keyMomentTranscript(id: keyMomentsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
-                                    
-                                    // Adding new element to the transcripts array
-                                    allKeyMoments.append(newKeyMomTranscript)
-                                }
-                            }
+
+                var feedbackPlayers: [PlayerTranscriptInfo]? = []
+                if let feedbackFor = keyMoment.feedbackFor {
+                    if user.userType == "Player", let userId = user.userId {
+                        // Player only sees their own feedback
+                        if feedbackFor.contains(userId), let p = playersDict[userId] {
+                            feedbackPlayers = [p]
                         }
                     } else {
-                        // Coaches can see all key moments, so no filtering is needed.
-                        let tmpPlayer = try await getAllPlayersInfo(feedbackFor: keyMoment.feedbackFor)
-                        
-                        let newKeyMomTranscript = keyMomentTranscript(id: recordingsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
-                        
-                        // Adding new element to the array
-                        allRecordings.append(newKeyMomTranscript)
-                        
-                        if keyMoment.fullGameId != nil {
-                            let newKeyMomTranscript = keyMomentTranscript(id: keyMomentsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
-                            
-                            // Adding new element to the transcripts array
-                            allKeyMoments.append(newKeyMomTranscript)
-                        }
+                        // Coach sees all feedback players
+                        feedbackPlayers = feedbackFor.compactMap { playersDict[$0] }
                     }
                 }
+
+                // Add transcript
+                let newTranscript = keyMomentTranscript(
+                    id: recordingsLength,
+                    keyMomentId: transcript.keyMomentId,
+                    transcriptId: transcript.transcriptId,
+                    transcript: transcript.transcript,
+                    frameStart: keyMoment.frameStart,
+                    frameEnd: keyMoment.frameEnd,
+                    feedbackFor: feedbackPlayers
+                )
+                allRecordings.append(newTranscript)
+
+                // Add to key moments list only if it's tied to a full game
+                if keyMoment.fullGameId != nil {
+                    let newKeyMom = keyMomentTranscript(
+                        id: keyMomentsLength,
+                        keyMomentId: transcript.keyMomentId,
+                        transcriptId: transcript.transcriptId,
+                        transcript: transcript.transcript,
+                        frameStart: keyMoment.frameStart,
+                        frameEnd: keyMoment.frameEnd,
+                        feedbackFor: feedbackPlayers
+                    )
+                    allKeyMoments.append(newKeyMom)
+                }
+            }
+
+            // 7. Sort chronologically
+            let sortedTranscripts = allRecordings.sorted { $0.frameStart < $1.frameStart }
+            let sortedKeyMoments = allKeyMoments.sorted { $0.frameStart < $1.frameStart }
+
+            return (sortedTranscripts, sortedKeyMoments)
+        } catch {
+            print("Error when loading the recordings from the database. Error: \(error)")
+            return (nil, nil)
+        }
+    }
+    
+    
+    func getPreviewTranscriptsAndKeyMoments(gameId: String, teamDocId: String) async throws -> ([keyMomentTranscript]?, [keyMomentTranscript]?) {
+        do {
+            // Retrieve the first three transcripts associated with the game.
+            guard let transcripts = try await TranscriptManager.shared.getTranscriptsPreviewWithDocId(teamDocId: teamDocId, gameId: gameId) else {
+                print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
+                return (nil, nil)
             }
             
-            // Sort transcripts by start frame to maintain chronological order.
-            let sortedTranscripts = allRecordings.sorted(by: { $0.frameStart < $1.frameStart})
-            let sortedKeyMoments = allKeyMoments.sorted(by: { $0.frameStart < $1.frameStart})
+            // Retrieve the authenticated user.
+            guard let user = try await getUser() else {
+                print("Could not get user. Aborting..")
+                return (nil, nil)
+            }
             
+            guard let keyMoments = try await KeyMomentManager.shared.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
+                print("No key moment found. Aborting..")
+                return (nil, nil)
+            }
+            
+            let keyMomentsDict = Dictionary(uniqueKeysWithValues: keyMoments.map { ($0.keyMomentId, $0) })
+
+            // Collect all unique user IDs referenced in feedbackFor
+            var allUserIds: Set<String> = []
+            for km in keyMoments {
+                if let feedbackFor = km.feedbackFor {
+                    allUserIds.formUnion(feedbackFor)
+                }
+            }
+
+            // Fetch all players in a single batch
+            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds))
+            let playersDict = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.playerId, $0) })
+
+            // Process transcripts with in-memory lookups only
+            var allRecordings: [keyMomentTranscript] = []
+            var allKeyMoments: [keyMomentTranscript] = []
+
+            for transcript in transcripts {
+                guard let keyMoment = keyMomentsDict[transcript.keyMomentId] else {
+                    print("Key moment not found for transcript \(transcript.transcriptId)")
+                    continue
+                }
+
+                let recordingsLength = allRecordings.count
+                let keyMomentsLength = allKeyMoments.count
+
+                var feedbackPlayers: [PlayerTranscriptInfo]? = []
+                if let feedbackFor = keyMoment.feedbackFor {
+                    if user.userType == "Player", let userId = user.userId {
+                        // Player only sees their own feedback
+                        if feedbackFor.contains(userId), let p = playersDict[userId] {
+                            feedbackPlayers = [p]
+                        }
+                    } else {
+                        // Coach sees all feedback players
+                        feedbackPlayers = feedbackFor.compactMap { playersDict[$0] }
+                    }
+                }
+
+                // Add transcript
+                let newTranscript = keyMomentTranscript(
+                    id: recordingsLength,
+                    keyMomentId: transcript.keyMomentId,
+                    transcriptId: transcript.transcriptId,
+                    transcript: transcript.transcript,
+                    frameStart: keyMoment.frameStart,
+                    frameEnd: keyMoment.frameEnd,
+                    feedbackFor: feedbackPlayers
+                )
+                allRecordings.append(newTranscript)
+
+                // Add to key moments list only if it's tied to a full game
+                if keyMoment.fullGameId != nil {
+                    let newKeyMom = keyMomentTranscript(
+                        id: keyMomentsLength,
+                        keyMomentId: transcript.keyMomentId,
+                        transcriptId: transcript.transcriptId,
+                        transcript: transcript.transcript,
+                        frameStart: keyMoment.frameStart,
+                        frameEnd: keyMoment.frameEnd,
+                        feedbackFor: feedbackPlayers
+                    )
+                    allKeyMoments.append(newKeyMom)
+                }
+            }
+
+            // 7. Sort chronologically
+            let sortedTranscripts = allRecordings.sorted { $0.frameStart < $1.frameStart }
+            let sortedKeyMoments = allKeyMoments.sorted { $0.frameStart < $1.frameStart }
+
             return (sortedTranscripts, sortedKeyMoments)
         } catch {
             print("Error when loading the recordings from the database. Error: \(error)")

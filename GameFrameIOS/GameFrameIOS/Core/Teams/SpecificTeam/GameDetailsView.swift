@@ -53,7 +53,7 @@ struct GameDetailsView: View {
                     Text(selectedGame.title).font(.largeTitle).bold().multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 5).padding(.bottom, 5).padding(.horizontal)
                 }
                     
-                    // View the game details
+                // View the game details
                 VStack {
                     Text("Game Details").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline)
                     if !isEditing {

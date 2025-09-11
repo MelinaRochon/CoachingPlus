@@ -27,8 +27,10 @@ struct CoachAllTranscriptsView: View {
     
     /// An optional list of transcripts related to the game and team.
     /// This holds the data that will be displayed in the view.
-    @State var transcripts: [keyMomentTranscript]?
+    @State private var transcripts: [keyMomentTranscript]?
     
+    @StateObject private var transcriptModel = TranscriptModel()
+
     /// Indicates whether the transcripts should be sorted by time (duration).
     /// - If `true`, transcripts are sorted by their `frameStart` time (chronological order).
     /// - If `false`, transcripts are sorted alphabetically by the transcript content.
@@ -59,26 +61,32 @@ struct CoachAllTranscriptsView: View {
     
     var body: some View {
         NavigationStack {
-            List {
-                // Checks if there are any transcripts available.
+            VStack {
                 if let recordings = transcripts {
-                    if !recordings.isEmpty {
-                        SearchTranscriptView(
-                            transcripts: filteredTranscripts,
-                            prefix: nil,
-                            transcriptType: .transcript,
-                            game: game,
-                            team: team,
-                            destinationBuilder: { recording in
-                                AnyView(CoachSpecificTranscriptView(game: game, team: team, transcript: recording))
-                            }
-                        )
-                    } else {
-                        Text("No transcripts found.").font(.caption).foregroundStyle(.secondary)
+                    List {
+                        // Checks if there are any transcripts available.
+                        
+                        if !recordings.isEmpty {
+                            SearchTranscriptView(
+                                transcripts: filteredTranscripts,
+                                prefix: nil,
+                                transcriptType: .transcript,
+                                game: game,
+                                team: team,
+                                destinationBuilder: { recording in
+                                    AnyView(CoachSpecificTranscriptView(game: game, team: team, transcript: recording))
+                                }
+                            )
+                        } else {
+                            Text("No transcripts found.").font(.caption).foregroundStyle(.secondary)
+                        }
+                        
                     }
+                    .listStyle(PlainListStyle())
+                } else {
+                    CustomUIFields.loadingSpinner("Loading transcripts...")
                 }
             }
-            .listStyle(PlainListStyle())
             // Show filters
             .sheet(isPresented: $showFilterSelector, content: {
                 /// The filter options sheet is presented when the user taps the filter button.
@@ -121,7 +129,6 @@ struct CoachAllTranscriptsView: View {
                     }
                 }
             }
-//            .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search transcripts")
             .scrollContentBackground(.hidden)
@@ -154,7 +161,6 @@ struct CoachAllTranscriptsView: View {
             }
             .onChange(of: playerSelectedIndex) {
                 sortTranscriptByPlayer()
-
             }
             .onChange(of: sortByTime) {
                 if sortByTime {
@@ -164,22 +170,52 @@ struct CoachAllTranscriptsView: View {
                     filteredTranscripts = filteredTranscripts.sorted(by: { $0.transcript < $1.transcript })
                 }
             }
-            .onAppear {
-                if let recordings = transcripts {
-                    self.filteredTranscripts = recordings
-                    print(filteredTranscripts)
-                }
+            //            .onAppear {
+            
+            //                Task {
+            //                    do {
+            //                        // Get all player's name
+            //                        if let players = team.players {
+            //                            playersNames = try await playerModel.getAllPlayersNames(players: players) ?? []
+            //                        }
+            //
+            //                        transcripts = try await transcriptModel.getAllTranscripts(gameId: game.gameId, teamDocId: team.id)
+            //                        self.filteredTranscripts = transcripts ?? []
+            //                        print("-------")
+            //                        print("testing the filtered transcripts now::")
+            //                        print(filteredTranscripts)
+            //                    } catch {
+            //                        print("Error. Aborting...")
+            //                    }
+            //                }
+            
+            //                if let recordings = transcripts {
+            //                    self.filteredTranscripts = recordings
+            //                    print("-------")
+            //                    print("testing the filtered transcripts now::")
+            //                    print(filteredTranscripts)
+            //                }
+            
+            //            }
+        }.task {
+            do {
                 
-                Task {
-                    do {
-                        // Get all player's name
-                        if let players = team.players {
-                            playersNames = try await playerModel.getAllPlayersNames(players: players) ?? []
-                        }
-                    } catch {
-                        print("Error. Aborting...")
-                    }
+                //                    let (tmpTranscripts, tmpKeyM) = try await transcriptModel.getAllTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
+                
+                let tmpTranscripts = try await transcriptModel.getAllTranscripts(gameId: game.gameId, teamDocId: team.id)
+                self.transcripts = tmpTranscripts
+                self.filteredTranscripts = transcripts ?? []
+                
+                print("-------")
+                print("testing the filtered transcripts now::")
+                print(filteredTranscripts)
+                
+                // Get all player's name
+                if let players = team.players {
+                    playersNames = try await playerModel.getAllPlayersNames(players: players) ?? []
                 }
+            } catch {
+                print("Error. Aborting...")
             }
         }
     }
@@ -226,6 +262,6 @@ struct CoachAllTranscriptsView: View {
     
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
     NavigationStack {
-        CoachAllTranscriptsView(game: game, team: team, transcripts: [])
+        CoachAllTranscriptsView(game: game, team: team)
     }
 }

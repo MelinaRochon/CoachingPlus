@@ -66,6 +66,8 @@ struct CoachSpecificFootageView: View {
     @State private var transcripts: [keyMomentTranscript]?
     @State private var keyMoments: [keyMomentTranscript]?
     
+    @StateObject private var gameModel = GameModel()
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -152,7 +154,7 @@ struct CoachSpecificFootageView: View {
                     // Transcript section
                     VStack(alignment: .leading, spacing: 10) {
                         
-                        NavigationLink(destination: CoachAllTranscriptsView(game: game, team: team, transcripts: transcripts)) {
+                        NavigationLink(destination: CoachAllTranscriptsView(game: game, team: team)) {
                             Text("Transcript")
                                 .font(.headline)
                                 .foregroundStyle(transcriptsFound ? .black : .secondary)
@@ -197,12 +199,14 @@ struct CoachSpecificFootageView: View {
             }
             .frame(maxHeight: .infinity, alignment: .top)
             .task {
+                print("hello my dudesssss")
                 do {
                     if let startTime = game.startTime {
                         gameStartTime = startTime
                     }
                     
-                    let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getAllTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
+                    let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getPreviewTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
+//                    let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getAllTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
                     
                     self.transcripts = tmpTranscripts
                     self.keyMoments = tmpKeyMom
@@ -222,8 +226,41 @@ struct CoachSpecificFootageView: View {
                     print("Error when fetching specific footage info: \(error)")
                 }
             }
-            .sheet(isPresented: $isGameDetailsEnabled) {
+            .sheet(isPresented: $isGameDetailsEnabled, onDismiss: refreshData) {
                 GameDetailsView(selectedGame: game, team: team, userType: "Coach")
+            }
+        }
+    }
+    
+    private func refreshData() {
+        Task {
+            do {
+                
+                let tmpGame = game
+                game = try await gameModel.getGame(teamId: team.teamId, gameId: game.gameId) ?? tmpGame
+                
+                if let startTime = game.startTime {
+                    gameStartTime = startTime
+                }
+                
+                let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getPreviewTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
+                
+                self.transcripts = tmpTranscripts
+                self.keyMoments = tmpKeyMom
+                
+                if let allTranscripts = transcripts {
+                    if !allTranscripts.isEmpty {
+                        transcriptsFound = true
+                    }
+                }
+                
+                if let allKeyMoments = keyMoments {
+                    if !allKeyMoments.isEmpty {
+                        keyMomentsFound = true
+                    }
+                }
+            } catch {
+                print("Error when fetching specific footage info: \(error)")
             }
         }
     }
