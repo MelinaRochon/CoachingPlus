@@ -202,6 +202,24 @@ final class KeyMomentManager {
     
     
     /**
+     Fetches all the key moments for a specific game and team.
+     - Parameters:
+        - teamDocId: The tea's document ID in Firestore.
+        - gameId: The ID of the game to locate the game document in Firestore.
+     - Returns: An optional array of `DBKeyMoment` objects representing all key moments in the game, or `nil` if no key moments are found.
+     - Throws: Errors may be thrown if Firestore operations fail (e.g., missing team or game document).
+     */
+    func getAllKeyMomentsWithTeamDocId(teamDocId: String, gameId: String) async throws -> [DBKeyMoment]? {
+        
+        // Get all documents in the key moment collection
+        let snapshot = try await keyMomentCollection(teamDocId: teamDocId, gameDocId: gameId).getDocuments()
+        return snapshot.documents.compactMap { document in
+            try? document.data(as: DBKeyMoment.self)
+        }
+    }
+    
+    
+    /**
      Adds a new key moment to the Firestore database under a specific team and game.
      - Parameters:
         - teamId: The team’s ID to locate the team document in Firestore.

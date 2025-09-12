@@ -26,7 +26,7 @@ struct SearchTranscriptView: View {
                 NavigationLink(destination: destinationBuilder(recording)) {
                     transcriptRow(for: recording)
                 }
-            }.padding(.vertical, 2)
+            }
         }
     }
     
@@ -48,8 +48,8 @@ struct SearchTranscriptView: View {
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 2)
-                        .lineLimit(3)
-                        .padding(.top, 4)
+                        .lineLimit(2)
+                        .padding(.top, 0)
                     
                     if let feedback = recording.feedbackFor {
                         if let players = team.players {
@@ -59,7 +59,7 @@ struct SearchTranscriptView: View {
                             } else {
                                 let names = feedback.map { $0.firstName + " " + $0.lastName }.joined(separator: ", ")
                                 Text(names)
-                                    .font(.caption)
+                                    .font(.caption2)
                                     .foregroundStyle(.red)
                             }
                         }
