@@ -40,49 +40,52 @@ struct AllRecentFootageView: View {
     // MARK: - View
     
     var body: some View {
-        NavigationStack {
-            List  {
-                Section {
-                    if !pastGames.isEmpty {
-                        // Show all the Recent Games
-                        GameList(
-                            games: filteredGames,
-                            prefix: nil,
-                            gameType: .recent,
-                            destinationBuilder: { game in
-                                AnyView(SelectedRecentGameView(selectedGame: game, userType: userType))
-                            }
-                        )
-                    } else {
-                        Text("No games found.").font(.caption).foregroundStyle(.secondary)
-                    }
+//        NavigationStack {
+        List  {
+            Section {
+                if !pastGames.isEmpty {
+                    // Show all the Recent Games
+                    GameList(
+                        games: filteredGames,
+                        prefix: nil,
+                        gameType: .recent,
+                        destinationBuilder: { game in
+                            AnyView(SelectedRecentGameView(selectedGame: game, userType: userType))
+                        }
+                    )
+                } else {
+                    Text("No games found.").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-            .background(Color.white) // Set background color to white for the List
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Search Recent Games"))
-            .navigationTitle(Text("All Recent Games"))
-            .navigationBarTitleDisplayMode(.inline)
-            .overlay {
-                if !pastGames.isEmpty && filteredGames.isEmpty && searchText != "" {
-                    ContentUnavailableView {
-                        Label("No Results", systemImage: "magnifyingglass")
-                    } description: {
-                        Text("Try to search for another recent game.")
-                    }
+        }
+        .listStyle(PlainListStyle()) // Optional: Make the list style more simple
+        .background(Color.white) // Set background color to white for the List
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Search Recent Games"))
+        .navigationTitle(Text("All Recent Games"))
+        .navigationBarTitleDisplayMode(.inline)
+        .overlay {
+            if !pastGames.isEmpty && filteredGames.isEmpty && searchText != "" {
+                ContentUnavailableView {
+                    Label("No Results", systemImage: "magnifyingglass")
+                } description: {
+                    Text("Try to search for another recent game.")
                 }
             }
-            .onChange(of: searchText) {
-                if !pastGames.isEmpty && searchText != "" {
-                    self.filteredGames = filterGames(pastGames, with: searchText)
-                }
-                else {
-                    self.filteredGames = pastGames
-                }
+        }
+        .onChange(of: searchText) {
+            if !pastGames.isEmpty && searchText != "" {
+                self.filteredGames = filterGames(pastGames, with: searchText)
             }
-            .onAppear {
+            else {
                 self.filteredGames = pastGames
             }
+        }
+        .onAppear {
+            self.filteredGames = pastGames
+        }
+//        }
+        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+            Color.clear.frame(height: 75)
         }
     }
 }

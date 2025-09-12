@@ -69,7 +69,7 @@ struct CoachMyTeamView: View {
     // MARK: - View
     
     var body: some View {
-        NavigationStack {
+//        NavigationStack {
             VStack {
                 Divider()
                 
@@ -134,6 +134,9 @@ struct CoachMyTeamView: View {
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 refreshData() // Refresh data when the view appears
+            }
+            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                Color.clear.frame(height: 75)
             }
             .toolbar {
                 // Toolbar item for accessing team settings
@@ -205,7 +208,7 @@ struct CoachMyTeamView: View {
                 }
             }
         }
-    }
+//    }
     
     
     // MARK: - Function

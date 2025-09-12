@@ -92,9 +92,9 @@ struct CoachAllTeamsView: View {
             }
             
         }
-        .sheet(isPresented: $showCreateTeam, onDismiss: refreshTeams) {
-            CoachCreateTeamView()
-        }
+            .sheet(isPresented: $showCreateTeam, onDismiss: refreshTeams) {
+                CoachCreateTeamView()
+            }
         
     }
     

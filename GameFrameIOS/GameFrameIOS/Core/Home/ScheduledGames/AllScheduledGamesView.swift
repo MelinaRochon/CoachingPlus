@@ -86,6 +86,9 @@ struct AllScheduledGamesView: View {
                 self.filteredGames = futureGames
             }
         }
+        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+            Color.clear.frame(height: 75)
+        }
     }
 }
 
