@@ -78,6 +78,11 @@ import SwiftUI
      /// Time zone-related variable
      let timeZones: [String] = TimeZone.knownTimeZoneIdentifiers.sorted()
      
+     @State private var dob: Date = Date()
+     @State private var firstName: String = ""
+     @State private var lastName: String = ""
+
+     
      /// State for selecting a country
      @State private var selectedCountry = "Canada"
      
@@ -129,11 +134,13 @@ import SwiftUI
                                  
                                  if isEditing {
                                      HStack {
-                                         Text("Name").foregroundStyle(.secondary)
+                                         Text("First Name")
+                                         TextField("First Name", text: $firstName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                                     }
+                                     HStack {
+                                         Text("Last Name").foregroundStyle(.primary)
                                          Spacer()
-                                         Text("\(user.firstName) \(user.lastName)")
-                                             .foregroundStyle(.secondary)
-                                             .multilineTextAlignment(.trailing)
+                                         TextField("Last Name", text: $lastName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
                                      }
                                      
                                      HStack {
@@ -144,20 +151,33 @@ import SwiftUI
                                      }
                                  }
                                  
-                                 if let dateOfBirth = user.dateOfBirth {
-                                     HStack {
-                                         Text("Date of birth").foregroundStyle(.secondary)
-                                         Spacer()
-                                         Text("\(dateOfBirth.formatted(.dateTime.year().month(.twoDigits).day()))")
-                                             .foregroundStyle(.secondary)
-                                             .multilineTextAlignment(.trailing)
+                                 HStack {
+                                     Text("Date of birth").foregroundStyle(isEditing ? .primary : .secondary)
+                                     Spacer()
+                                     if !isEditing {
+                                         if let dateOfBirth = user.dateOfBirth {
+                                             Text("\(dateOfBirth.formatted(.dateTime.year().month(.twoDigits).day()))")
+                                                 .foregroundStyle(.secondary)
+                                                 .multilineTextAlignment(.trailing)
+                                         } else {
+                                             Text("N/A").foregroundStyle(.secondary)
+                                                 .multilineTextAlignment(.trailing)
+                                         }
+                                     } else {
+                                         DatePicker(
+                                             "",
+                                             selection: $dob,
+                                             in: ...Date(),
+                                             displayedComponents: .date
+                                         )
+                                         .labelsHidden().frame(height: 20)
                                      }
                                  }
                                  
                                  HStack {
                                      Text("Phone").foregroundStyle(isEditing ? .primary : .secondary)
                                      Spacer()
-                                     TextField("Phone", text: $phone).disabled(!isEditing)
+                                     TextField("(XXX)-XXX-XXXX", text: $phone).disabled(!isEditing)
                                          .foregroundStyle(isEditing ? .primary : .secondary)
                                          .multilineTextAlignment(.trailing)
                                          .autocapitalization(.none)
@@ -229,6 +249,9 @@ import SwiftUI
                          if let userPhone = user.phone {
                              phone = userPhone
                          }
+                         firstName = user.firstName
+                         lastName = user.lastName
+                         dob = user.dateOfBirth ?? Date()
                      }
                  }
                  
@@ -283,14 +306,46 @@ import SwiftUI
              if let userPhone = user.phone {
                  phone = userPhone
              }
+             dob = user.dateOfBirth ?? Date()
+             firstName = user.firstName
+             lastName = user.lastName
          }
      }
      
      /// Saves the updated profile information when in editing mode
      private func saveInfo() {
+         savingPlayerInformation()
          withAnimation {
              isEditing.toggle()
-             viewModel.updateCoachInformation(phone: phone, membershipDetails: "Free")
+         }
+     }
+     
+     private func savingPlayerInformation() {
+         Task {
+             if let user = viewModel.user {
+                 var userFirstName: String? = firstName
+                 var userLastName: String? = lastName
+                 var userDateOfBirth: Date? = dob
+                 var userphone: String? = phone
+                 
+                 if firstName == user.firstName {
+                     userFirstName = nil
+                 }
+                 
+                 if lastName == user.lastName {
+                     userLastName = nil
+                 }
+                 
+                 if dob == user.dateOfBirth {
+                     userDateOfBirth = nil
+                 }
+                 
+                 if phone == user.phone {
+                     userphone = nil
+                 }
+                 
+                 viewModel.updateCoachSettings(phone: userphone, dateOfBirth: userDateOfBirth, firstName: userFirstName, lastName: userLastName, membershipDetails: "Free")
+             }
          }
      }
  }

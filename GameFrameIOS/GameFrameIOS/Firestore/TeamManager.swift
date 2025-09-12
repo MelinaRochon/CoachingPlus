@@ -147,12 +147,22 @@ final class TeamManager {
     /// - Parameter teamId: The system-assigned team ID.
     /// - Returns: A `DBTeam` instance if found, otherwise `nil`.
     func getTeam(teamId: String) async throws -> DBTeam? {
-        print("in TeamManager, teamId: \(teamId)")
         let snapshot = try await teamCollection.whereField("team_id", isEqualTo: teamId).getDocuments()
 
         //try await teamDocument(teamId: teamId).getDocument(as: DBTeam.self)
         guard let doc = snapshot.documents.first else { return nil }
         return try doc.data(as: DBTeam.self)
+
+    }
+    
+    /// Retrieves all teams by its team ID.
+    /// - Parameter teamId: The system-assigned team ID.
+    /// - Returns: A `DBTeam` instance if found, otherwise `nil`.
+    func getAllTeams(teamIds: [String]) async throws -> [DBTeam] {
+        guard !teamIds.isEmpty else { return [] }
+        let snapshot = try await teamCollection.whereField("team_id", isEqualTo: teamIds).getDocuments()
+
+        return snapshot.documents.compactMap { try? $0.data(as: DBTeam.self) }
 
     }
     

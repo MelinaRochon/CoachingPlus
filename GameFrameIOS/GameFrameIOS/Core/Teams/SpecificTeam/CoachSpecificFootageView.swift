@@ -178,10 +178,8 @@ struct CoachSpecificFootageView: View {
                                                     let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
                                                     Text(formatDuration(durationInSeconds)).bold().font(.headline).foregroundColor(Color.black)
                                                     Spacer()
-                                                    Text("Transcript: \(recording.transcript)")
-                                                        .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3).padding(.top, 4).foregroundColor(Color.black)
-                                                    
-                                                    Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                                    Text("\(recording.transcript)")
+                                                        .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(2).padding(.top, 4).foregroundColor(Color.black)
                                                 }
                                             }.tag(recording.id as Int)
                                         }
@@ -199,15 +197,13 @@ struct CoachSpecificFootageView: View {
             }
             .frame(maxHeight: .infinity, alignment: .top)
             .task {
-                print("hello my dudesssss")
                 do {
                     if let startTime = game.startTime {
                         gameStartTime = startTime
                     }
                     
                     let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getPreviewTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
-//                    let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getAllTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
-                    
+
                     self.transcripts = tmpTranscripts
                     self.keyMoments = tmpKeyMom
                     

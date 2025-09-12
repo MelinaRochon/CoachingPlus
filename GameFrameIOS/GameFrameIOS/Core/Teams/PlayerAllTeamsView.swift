@@ -51,14 +51,13 @@ struct PlayerAllTeamsView: View {
     @State private var showError: Bool = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
-                
                 Divider() // This adds a divider after the title
+                
                 List {
                     Section(header: HStack {
                         Text("My Teams") // Section header text
-                        Spacer() // Push the button to the right
                     }) {
                         if let teams = teams {
                             if !teams.isEmpty {
@@ -66,7 +65,7 @@ struct PlayerAllTeamsView: View {
                                     NavigationLink(destination: PlayerMyTeamView(selectedTeam: team)
                                     ) {
                                         HStack {
-                                            Image(systemName: "tshirt").foregroundStyle(.red) // TO DO - Will need to change the team's logo in the future
+                                            Image(systemName: "tshirt").foregroundStyle(.red) // TODO: Will need to change the team's logo in the future
                                             Text(team.name)
                                         }
                                     }
@@ -98,7 +97,8 @@ struct PlayerAllTeamsView: View {
                                     Image(systemName: "arrow.right")
                                 }
                                 .foregroundColor(.white)
-                                .padding()
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
                                 .background(Color.black)
                                 .cornerRadius(30)
                             }
@@ -113,11 +113,10 @@ struct PlayerAllTeamsView: View {
                             TextField("Your Code", text: $groupCode)
                                 .padding(.horizontal, 8)
                                 .cornerRadius(40).frame(width: 190)
-                                .frame(height: 40)
+                                .frame(height: 35)
                                 .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
                                 .foregroundColor(.black).autocapitalization(.none)
-                            
-                            
+                                .font(.subheadline)
                             
                             Button(action: {
                                 withAnimation {
@@ -151,7 +150,8 @@ struct PlayerAllTeamsView: View {
                                     Image(systemName: "arrow.right")
                                 }
                                 .foregroundColor(.white)
-                                .padding()
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
                                 .background(Color.black)
                                 .cornerRadius(30)
                                 
@@ -163,10 +163,10 @@ struct PlayerAllTeamsView: View {
                     }
                 }
                 .padding(.bottom, 85)
-            }.transaction { $0.animation = nil }
+            }
+            .transaction { $0.animation = nil }
+            .navigationTitle(Text("Teams"))
         }
-        .navigationTitle(Text("Teams"))
-        .transaction { $0.animation = nil } // Prevents title animation
         .task {
             do {
                 self.teams = try await teamModel.loadAllTeams()

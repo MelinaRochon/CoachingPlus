@@ -90,10 +90,12 @@ final class GameModel: ObservableObject {
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
         // Retrieve the user type (Coach or Player).
-        let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
+        guard let user = try await UserManager.shared.getUser(userId: authUser.uid) else {
+            throw NSError(domain: "UserNotFound", code: 404)
+        }
         
         var teamsId: [String] = []
-        if (userType == "Coach") {
+        if (user.userType == "Coach") {
             // Get the list of teams the coach is managing.
             teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
         } else {
@@ -143,6 +145,30 @@ final class GameModel: ObservableObject {
         return games
     }
     
+//    func loadAllAssociatedGames() async throws -> [HomeGameDTO] {
+//        // Retrieve the list of team IDs associated with the user.
+//        let teamIds = try await getTeamsAssociatedToUser()
+//        let teams = try await TeamManager.shared.getAllTeams(teamIds: teamIds)
+//            
+//        // Fetch games concurrently for all teams
+//        var games: [HomeGameDTO] = []
+//
+//        for team in teams {
+//            
+//            // Fetch game documents for the team.
+//            let gameSnapshot = try await GameManager.shared.gameCollection(teamDocId: team.id).getDocuments()
+//            
+//            // Convert each document into a `DBGame` object and append it to the games list.
+//            for document in gameSnapshot.documents {
+//                if let game = try? document.data(as: DBGame.self) {
+//                    // Create a `HomeGameDTO` containing both game and team details.
+//                    let gameWithTeam = HomeGameDTO(game: game, team: team)
+//                    games.append(gameWithTeam)
+//                }
+//            }
+//        }
+//        return games
+//    }
     
     /// Wrapper function that updates the title of a game by delegating to `GameManager`.
     ///

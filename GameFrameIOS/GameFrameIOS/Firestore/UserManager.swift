@@ -229,12 +229,52 @@ final class UserManager {
      */
     func updateCoachProfile(user: DBUser) async throws {
         let data: [String: Any] = [
-            DBUser.CodingKeys.phone.rawValue: user.phone
+            DBUser.CodingKeys.phone.rawValue: user.phone,
+            DBUser.CodingKeys.dateOfBirth.rawValue: user.dateOfBirth
         ]
         
         try await userDocument(id: user.id).updateData(data as [AnyHashable : Any])
     }
     
+    
+    /// Updates a coach's settings in the database with any provided non-nil values.
+    /// - Parameters:
+    ///   - id: The unique identifier of the coach's user document.
+    ///   - phone: Optional updated phone number.
+    ///   - dateOfBirth: Optional updated date of birth.
+    ///   - firstName: Optional updated first name.
+    ///   - lastName: Optional updated last name.
+    ///   - membershipDetails: Optional updated membership details (currently unused).
+    /// - Throws: Rethrows any errors that occur during the Firestore update operation.
+    func updateCoachSettings(id: String, phone: String?, dateOfBirth: Date?, firstName: String?, lastName: String?, membershipDetails: String?) async throws {
+        var data: [String: Any] = [:]
+        if let phone = phone {
+            data[DBUser.CodingKeys.phone.rawValue] = phone
+        }
+        
+        if let dateOfBirth = dateOfBirth {
+            data[DBUser.CodingKeys.dateOfBirth.rawValue] = dateOfBirth
+        }
+        
+        if let firstName = firstName {
+            data[DBUser.CodingKeys.firstName.rawValue] = firstName
+        }
+        
+        if let lastName = lastName {
+            data[DBUser.CodingKeys.lastName.rawValue] = lastName
+        }
+        
+        print("data is \(data)")
+        
+        // Only update if data is not empty
+        guard !data.isEmpty else {
+            print("No changes to update in updatePlayerInfo")
+            return
+        }
+        
+        try await userDocument(id: id).updateData(data as [AnyHashable : Any])
+    }
+
     
     /**
      GET - Finds a user by document ID.
@@ -273,6 +313,43 @@ final class UserManager {
             DBUser.CodingKeys.phone.rawValue: phone ?? "",
             DBUser.CodingKeys.country.rawValue: country ?? ""
         ]
+        try await userDocument(id: id).updateData(data as [AnyHashable : Any])
+    }
+    
+    func updateUserDOB(id: String, dob: Date) async throws {
+        let data: [String: Any] = [
+            DBUser.CodingKeys.dateOfBirth.rawValue: dob,
+        ]
+        
+        try await userDocument(id: id).updateData(data as [AnyHashable : Any])
+    }
+    
+    
+    func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
+        var data: [String: Any] = [:]
+        if let dateOfBirth = dateOfBirth {
+            data[DBUser.CodingKeys.dateOfBirth.rawValue] = dateOfBirth
+        }
+        
+        if let firstName = firstName {
+            data[DBUser.CodingKeys.firstName.rawValue] = firstName
+        }
+        
+        if let lastName = lastName {
+            data[DBUser.CodingKeys.lastName.rawValue] = lastName
+        }
+        
+        if let phone = phone {
+            data[DBUser.CodingKeys.phone.rawValue] = phone
+        }
+        
+        print("data is \(data) in updateUserSettings")
+        // Only update if data is not empty
+        guard !data.isEmpty else {
+            print("No changes to update")
+            return
+        }
+        
         try await userDocument(id: id).updateData(data as [AnyHashable : Any])
     }
 }

@@ -86,6 +86,7 @@ final class PlayerProfileModel: ObservableObject {
     func updatePlayerInformation(jersey: Int, nickname: String, guardianName: String, guardianEmail: String, guardianPhone: String) {
         guard let player else { return }
         
+        
         // Create a new DBPlayer object with updated information
         let playerInfo = DBPlayer(id: player.id, playerId: player.playerId, jerseyNum: jersey, nickName: nickname, gender: player.gender, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, teamsEnrolled: player.teamsEnrolled)
         
@@ -93,6 +94,34 @@ final class PlayerProfileModel: ObservableObject {
             // Update the player's information in the database
             try await PlayerManager.shared.updatePlayerInfo(player: playerInfo)
             // Refresh player data after the update
+            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+        }
+    }
+    
+    
+    /// Updates the settings for the currently loaded player.
+    /// - Parameters:
+    ///   - id: The unique identifier of the player to update.
+    ///   - jersey: Optional updated jersey number.
+    ///   - nickname: Optional updated nickname.
+    ///   - guardianName: Optional updated guardian's name.
+    ///   - guardianEmail: Optional updated guardian's email address.
+    ///   - guardianPhone: Optional updated guardian's phone number.
+    ///   - gender: Optional updated gender of the player.
+    func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) {
+        guard var player else { return }
+        
+        player.jerseyNum = jersey ?? player.jerseyNum
+        player.nickName = nickname ?? player.nickName
+        player.guardianName = guardianName ?? player.guardianName
+        player.guardianEmail = guardianEmail ?? player.guardianEmail
+        player.guardianPhone = guardianPhone ?? player.guardianPhone
+        player.gender = gender ?? player.gender
+        
+        Task {
+            // Update the player's information in the database
+            try await PlayerManager.shared.updatePlayerSettings(id: id, jersey: jersey, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, gender: gender)
+            
             self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
         }
     }

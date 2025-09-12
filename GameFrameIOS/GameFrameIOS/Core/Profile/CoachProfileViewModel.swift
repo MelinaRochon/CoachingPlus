@@ -119,21 +119,52 @@ final class CoachProfileViewModel: ObservableObject {
      the `UserManager.shared.updateCoachProfile()` method to save the updated information to the database.
      The `user` property is refreshed with the updated data.
      */
-    func updateCoachInformation(phone: String, membershipDetails: String) {
+    func updateCoachInformation(phone: String, dateOfBirth: Date, membershipDetails: String) {
         guard var user else { return }
         guard let userId = user.userId else { return }
         
         // Update the user's phone number and membership details
         user.phone = phone
+        user.dateOfBirth = dateOfBirth
         Task {
             // Call UserManager to update the coach's profile
-            print("phone number is \(phone) & user.phone is: \(user.phone)")
             try await UserManager.shared.updateCoachProfile(user: user)
             // Refresh the user object after updating
             self.user = try await UserManager.shared.getUser(userId: userId)
         }
     }
     
+    
+    /// Updates the settings for the currently loaded coach user.
+    /// - Parameters:
+    ///   - phone: Optional updated phone number for the coach.
+    ///   - dateOfBirth: Optional updated date of birth for the coach.
+    ///   - firstName: Optional updated first name for the coach.
+    ///   - lastName: Optional updated last name for the coach.
+    ///   - membershipDetails: Optional updated membership information for the coach.
+    func updateCoachSettings(phone: String?, dateOfBirth: Date?, firstName: String?, lastName: String?, membershipDetails: String?) {
+        guard var user else { return }
+        guard let userId = user.userId else { return }
+        
+        // Update the user's phone number and membership details
+        user.phone = phone
+        user.dateOfBirth = dateOfBirth
+        if firstName != nil {
+            user.firstName = firstName ?? ""
+        }
+        
+        if lastName != nil {
+            user.lastName = lastName ?? ""
+
+        }
+        Task {
+            // Call UserManager to update the coach's profile
+            try await UserManager.shared.updateCoachSettings(id: user.id, phone: phone, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, membershipDetails: membershipDetails)
+            // Refresh the user object after updating
+            self.user = try await UserManager.shared.getUser(userId: userId)
+        }
+    }
+
     
     /// Remove a player from the database
     func removePlayer() {

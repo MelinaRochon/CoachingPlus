@@ -186,7 +186,7 @@ struct CoachTeamSettingsView: View {
                             options: AppData.ageGroupOptions,
                             displayText: { $0 },
                             selectedOption: $ageGroup
-                        )
+                        ).frame(height: 20)
                     } else {
                         Text(team.ageGrp)
                             .foregroundColor(.secondary)
@@ -211,7 +211,7 @@ struct CoachTeamSettingsView: View {
                             options: AppData.genderOptions,
                             displayText: { $0 },
                             selectedOption: $gender
-                        )
+                        ).frame(height: 20)
                     } else {
                         Text(team.gender.capitalized)
                             .foregroundColor(.secondary)

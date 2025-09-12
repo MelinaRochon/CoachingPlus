@@ -47,4 +47,9 @@ final class UserModel: ObservableObject {
         return try await getUser()!.userType
     }
     
+    func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
+        
+        try await UserManager.shared.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
+    }
+    
 }

@@ -17,7 +17,7 @@ struct DBPlayer: Codable {
     let playerId: String?
     var jerseyNum: Int
     var nickName: String?
-    let gender: String?
+    var gender: String?
     let profilePicture: String?
     let teamsEnrolled: [String] // TODO: Think about leaving it as it is or putting it as optional
     
@@ -312,8 +312,56 @@ final class PlayerManager {
             DBPlayer.CodingKeys.guardianName.rawValue: player.guardianName ?? "",
             DBPlayer.CodingKeys.guardianEmail.rawValue: player.guardianEmail ?? "",
             DBPlayer.CodingKeys.guardianPhone.rawValue: player.guardianPhone ?? "",
+            DBPlayer.CodingKeys.gender.rawValue: player.gender ?? ""
         ]
         try await playerDocument(id: player.id).updateData(data as [AnyHashable: Any])
+    }
+    
+    
+    /// Updates a player's settings in the database with any provided non-nil values.
+    /// - Parameters:
+    ///   - id: The unique identifier of the player document to update.
+    ///   - jersey: Optional updated jersey number.
+    ///   - nickname: Optional updated nickname.
+    ///   - guardianName: Optional updated guardian's name.
+    ///   - guardianEmail: Optional updated guardian's email address.
+    ///   - guardianPhone: Optional updated guardian's phone number.
+    ///   - gender: Optional updated gender.
+    /// - Throws: Rethrows any errors that occur during the Firestore update operation.
+    func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
+        var data: [String: Any] = [:]
+        if let jersey = jersey {
+            data[DBPlayer.CodingKeys.jerseyNum.rawValue] = jersey
+        }
+        
+        if let nickname = nickname {
+            data[DBPlayer.CodingKeys.nickName.rawValue] = nickname
+        }
+        
+        if let guardianName = guardianName {
+            data[DBPlayer.CodingKeys.guardianName.rawValue] = guardianName
+        }
+        
+        if let guardianEmail = guardianEmail {
+            data[DBPlayer.CodingKeys.guardianEmail.rawValue] = guardianEmail
+        }
+        
+        if let guardianPhone = guardianPhone {
+            data[DBPlayer.CodingKeys.guardianPhone.rawValue] = guardianPhone
+        }
+        
+        if let gender = gender {
+            data[DBPlayer.CodingKeys.gender.rawValue] = gender
+        }
+        
+        // Only update if data is not empty
+        guard !data.isEmpty else {
+            print("No changes to update in updatePlayerInfo")
+            return
+        }
+        
+        
+        try await playerDocument(id: id).updateData(data as [AnyHashable: Any])
     }
     
     
