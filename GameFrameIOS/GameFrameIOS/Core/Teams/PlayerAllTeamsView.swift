@@ -53,7 +53,6 @@ struct PlayerAllTeamsView: View {
     var body: some View {
         NavigationView {
             VStack {
-                
                 Divider() // This adds a divider after the title
                 List {
                     Section(header: HStack {
@@ -164,25 +163,26 @@ struct PlayerAllTeamsView: View {
                 }
                 .padding(.bottom, 85)
             }.transaction { $0.animation = nil }
-        }
-        .navigationTitle(Text("Teams"))
-        .transaction { $0.animation = nil } // Prevents title animation
-        .task {
-            do {
-                self.teams = try await teamModel.loadAllTeams()
-            } catch {
-                print("Error. Aborting... \(error)")
-            }
-        }
-        .alert("Invalid access code entered", isPresented: $showErrorAccessCode) {
-            Button("OK", role: .cancel) {
-                groupCode = "" // Reset input field
-            }
-        }
-        .alert("Error when trying to add team. Please try again later", isPresented: $showError) {
-            Button("OK", role: .cancel) {
-                groupCode = "" // Reset input field
-            }
+            
+                .navigationTitle(Text("Teams"))
+                .transaction { $0.animation = nil } // Prevents title animation
+                .task {
+                    do {
+                        self.teams = try await teamModel.loadAllTeams()
+                    } catch {
+                        print("Error. Aborting... \(error)")
+                    }
+                }
+                .alert("Invalid access code entered", isPresented: $showErrorAccessCode) {
+                    Button("OK", role: .cancel) {
+                        groupCode = "" // Reset input field
+                    }
+                }
+                .alert("Error when trying to add team. Please try again later", isPresented: $showError) {
+                    Button("OK", role: .cancel) {
+                        groupCode = "" // Reset input field
+                    }
+                }
         }
     }
 }

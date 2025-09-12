@@ -65,7 +65,7 @@ struct PlayerMyTeamView: View {
 
 
     var body: some View {
-        NavigationStack {
+//        NavigationStack {
             VStack {
                 Divider()
                 List {
@@ -91,6 +91,9 @@ struct PlayerMyTeamView: View {
             }
             .navigationTitle(Text(selectedTeam.teamNickname))
             .navigationBarTitleDisplayMode(.large)
+            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                Color.clear.frame(height: 75)
+            }
             .onAppear {
                 refreshData() // Refresh data when the view appears
             }
@@ -134,7 +137,7 @@ struct PlayerMyTeamView: View {
                         .navigationBarTitleDisplayMode(.inline)
                 }
             }
-        }
+        
     }
     
     
