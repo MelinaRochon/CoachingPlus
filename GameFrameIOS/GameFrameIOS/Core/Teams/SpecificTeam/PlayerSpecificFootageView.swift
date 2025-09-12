@@ -58,7 +58,7 @@ struct PlayerSpecificFootageView: View {
     @State private var keyMoments: [keyMomentTranscript]?
 
     var body: some View {
-        NavigationView {
+//        NavigationView {
             ScrollView {
                 VStack {
                     HStack(alignment: .top) {
@@ -215,7 +215,6 @@ struct PlayerSpecificFootageView: View {
             .sheet(isPresented: $isGameDetailsEnabled) {
                 GameDetailsView(selectedGame: game, team: team, userType: "Player")
             }
-        }
     }
 }
 

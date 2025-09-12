@@ -47,6 +47,15 @@ final class UserModel: ObservableObject {
         return try await getUser()!.userType
     }
     
+    
+    /// Updates the settings of a specific user by delegating the task to the `UserManager`.
+    /// - Parameters:
+    ///   - id: The unique identifier of the user whose settings need to be updated.
+    ///   - dateOfBirth: Optional updated date of birth for the user.
+    ///   - firstName: Optional updated first name for the user.
+    ///   - lastName: Optional updated last name for the user.
+    ///   - phone: Optional updated phone number for the user.
+    /// - Throws: An error if the update operation fails.
     func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
         
         try await UserManager.shared.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)

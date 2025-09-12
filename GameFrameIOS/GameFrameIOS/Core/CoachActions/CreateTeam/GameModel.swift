@@ -145,30 +145,6 @@ final class GameModel: ObservableObject {
         return games
     }
     
-//    func loadAllAssociatedGames() async throws -> [HomeGameDTO] {
-//        // Retrieve the list of team IDs associated with the user.
-//        let teamIds = try await getTeamsAssociatedToUser()
-//        let teams = try await TeamManager.shared.getAllTeams(teamIds: teamIds)
-//            
-//        // Fetch games concurrently for all teams
-//        var games: [HomeGameDTO] = []
-//
-//        for team in teams {
-//            
-//            // Fetch game documents for the team.
-//            let gameSnapshot = try await GameManager.shared.gameCollection(teamDocId: team.id).getDocuments()
-//            
-//            // Convert each document into a `DBGame` object and append it to the games list.
-//            for document in gameSnapshot.documents {
-//                if let game = try? document.data(as: DBGame.self) {
-//                    // Create a `HomeGameDTO` containing both game and team details.
-//                    let gameWithTeam = HomeGameDTO(game: game, team: team)
-//                    games.append(gameWithTeam)
-//                }
-//            }
-//        }
-//        return games
-//    }
     
     /// Wrapper function that updates the title of a game by delegating to `GameManager`.
     ///

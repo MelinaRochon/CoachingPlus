@@ -46,7 +46,7 @@ struct PlayerHomePageView: View {
     
     /// ViewModel responsible for loading game data.
     @StateObject private var gameModel = GameModel()
-        
+    
     /// Indicates whether recent games are available.
     @State private var recentGamesFound: Bool = false
     
@@ -127,7 +127,7 @@ struct PlayerHomePageView: View {
                                     games: pastGames,
                                     prefix: 3,
                                     gameType: .recent,
-                                    destinationBuilder: { game in 
+                                    destinationBuilder: { game in
                                         AnyView(SelectedRecentGameView(selectedGame: game, userType: "Player"))
                                     }
                                 )
@@ -176,9 +176,12 @@ struct PlayerHomePageView: View {
             .background(Color(UIColor.white))
             .navigationTitle(Text("Home"))
             .navigationBarTitleDisplayMode(.large)
-        }        
+        }
+        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+            Color.clear.frame(height: 75)
+        }
     }
-    
+        
     
     // MARK: - Functions
     
