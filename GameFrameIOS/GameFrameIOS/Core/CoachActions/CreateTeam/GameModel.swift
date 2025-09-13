@@ -162,7 +162,35 @@ final class GameModel: ObservableObject {
         try await GameManager.shared.updateGameTitle(gameId: gameId, teamDocId: teamDocId, title: title)
     }
     
-    func updateScheduledGameSettings(gameId: String, teamDocId: String, title: String?, startTime: Date?, duration: Int?, timeBeforeFeedback: Int?, timeAfterFeedback: Int?, recordingReminder: Bool?, location: String?, scheduledTimeReminder: Int?) async throws {
+    
+    /// Updates the scheduled game settings for a given game.
+    ///
+    /// - Parameters:
+    ///   - gameId: The unique identifier of the game to update.
+    ///   - teamDocId: The document ID of the team the game belongs to.
+    ///   - title: The updated title of the game, or `nil` to leave unchanged.
+    ///   - startTime: The updated start time of the game, or `nil` to leave unchanged.
+    ///   - duration: The updated duration of the game in seconds, or `nil` to leave unchanged.
+    ///   - timeBeforeFeedback: The updated reminder time before feedback, in seconds, or `nil`.
+    ///   - timeAfterFeedback: The updated reminder time after feedback, in seconds, or `nil`.
+    ///   - recordingReminder: Whether to enable/disable recording reminders, or `nil`.
+    ///   - location: The updated location string, or `nil` to leave unchanged.
+    ///   - scheduledTimeReminder: The updated reminder time before the event, in minutes, or `nil`.
+    ///
+    /// - Throws: An error if the update operation fails.
+    /// - Returns: Nothing. This function completes after updating the database.
+    func updateScheduledGameSettings(
+        gameId: String,
+        teamDocId: String,
+        title: String?,
+        startTime: Date?,
+        duration: Int?,
+        timeBeforeFeedback: Int?,
+        timeAfterFeedback: Int?,
+        recordingReminder: Bool?,
+        location: String?,
+        scheduledTimeReminder: Int?
+    ) async throws {
         
         try await GameManager.shared.updateScheduledGameSettings(
             id: gameId,
@@ -176,6 +204,5 @@ final class GameModel: ObservableObject {
             location: location,
             scheduledTimeReminder: scheduledTimeReminder
         )
-                
     }
 }

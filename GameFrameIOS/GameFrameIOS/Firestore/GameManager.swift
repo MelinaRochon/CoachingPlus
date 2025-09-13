@@ -323,7 +323,35 @@ final class GameManager {
     }
     
     
-    func updateScheduledGameSettings(id: String, teamDocId: String, title: String?, startTime: Date?, duration: Int?, timeBeforeFeedback: Int?, timeAfterFeedback: Int?, recordingReminder: Bool?, location: String?, scheduledTimeReminder: Int?) async throws {
+    /// Updates an existing scheduled game with new settings in the database.
+    ///
+    /// - Parameters:
+    ///   - id: The unique identifier of the game to update.
+    ///   - teamDocId: The document ID of the team the game belongs to.
+    ///   - title: The updated game title, or `nil` to leave unchanged.
+    ///   - startTime: The updated game start time, or `nil` to leave unchanged.
+    ///   - duration: The updated game duration in seconds, or `nil`.
+    ///   - timeBeforeFeedback: The updated feedback reminder time before the event, in seconds, or `nil`.
+    ///   - timeAfterFeedback: The updated feedback reminder time after the event, in seconds, or `nil`.
+    ///   - recordingReminder: Whether recording reminders are enabled, or `nil`.
+    ///   - location: The updated location string, or `nil`.
+    ///   - scheduledTimeReminder: The updated pre-event reminder time in minutes, or `nil`.
+    ///
+    /// - Throws: An error if the game cannot be found or if the update fails.
+    /// - Returns: Nothing. The function completes once the update is applied.
+    func updateScheduledGameSettings(
+        id: String,
+        teamDocId: String,
+        title: String?,
+        startTime: Date?,
+        duration: Int?,
+        timeBeforeFeedback: Int?,
+        timeAfterFeedback: Int?,
+        recordingReminder: Bool?,
+        location: String?,
+        scheduledTimeReminder: Int?
+    ) async throws {
+        
         // Find game
         guard let game = try await getGameWithDocId(gameDocId: id, teamDocId: teamDocId) else {
             print("Unable to get the game details")
@@ -355,9 +383,7 @@ final class GameManager {
         if let scheduledTimeReminder = scheduledTimeReminder {
             data[DBGame.CodingKeys.scheduledTimeReminder.rawValue] = scheduledTimeReminder
         }
-        
-        print("data is \(data)")
-        
+                
         // Only update if data is not empty
         guard !data.isEmpty else {
             print("No changes to update")
@@ -366,6 +392,5 @@ final class GameManager {
         
         // Update the scheduled game document
         try await gameDocument(teamDocId: teamDocId, gameId: id).updateData(data as [AnyHashable : Any])
-        
     }
 }

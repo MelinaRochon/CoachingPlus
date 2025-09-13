@@ -151,20 +151,17 @@ struct SelectedScheduledGameView: View {
                             label(text: "\(hours) h \(minutes) m", systemImage: "clock") // TODO: If is not a scheduled game and there was a video recording, show the actual game duration!
                             
                         }.padding(.horizontal)
-                        
+                        Divider()
                         
                         if let userType = userType {
-                            
                             if (userType == "Coach") {
-                                Divider()
-                                
                                 // View the game Settings
                                 List {
                                     Text("Game Settings").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline)
                                     HStack {
                                         Text("Duration")
                                         Spacer()
-                                        Text("\(hours)h\(minutes)m").foregroundStyle(.secondary)
+                                        Text("\(hours) h \(minutes) m").foregroundStyle(.secondary)
                                     }.font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                                     HStack {
                                         Text("Time Before Feedback")
@@ -359,30 +356,21 @@ struct SelectedScheduledGameView: View {
         }
         .task {
             do {
-                if userType == "Coach" {
-                    if let selectedGame = selectedGame {
-                        // Get the duration to be shown
-                        let (dhours, dminutes) = convertSecondsToHoursMinutes(seconds: selectedGame.game.duration)
-                        self.hours = dhours
-                        self.minutes = dminutes
-                        self.recordingReminder = selectedGame.game.recordingReminder
-                        
-                        // Check if game starts within the next 10 minutes or is ongoing
-                        if let startTime = selectedGame.game.startTime {
-                            let currentTime = Date()
-                            let timeDifference = startTime.timeIntervalSince(currentTime)
-                            let gameEndTime = startTime.addingTimeInterval(TimeInterval(selectedGame.game.duration))
-                            self.canStartRecording = (Int(timeDifference) <= minsToStartGame*60 && timeDifference >= 0) || (currentTime <= gameEndTime && currentTime >= startTime)
-                            print(canStartRecording)
-                        }
-                        if location == nil {
-                            location = convertToLocation(locationString: selectedGame.game.location)
-                        }
-                        gameLocation = getFinalLocation()
+                if let selectedGame = selectedGame {
+                    // Check if game starts within the next 10 minutes or is ongoing
+                    if let startTime = selectedGame.game.startTime {
+                        let currentTime = Date()
+                        let timeDifference = startTime.timeIntervalSince(currentTime)
+                        let gameEndTime = startTime.addingTimeInterval(TimeInterval(selectedGame.game.duration))
+                        self.canStartRecording = (Int(timeDifference) <= minsToStartGame*60 && timeDifference >= 0) || (currentTime <= gameEndTime && currentTime >= startTime)
+                        print(canStartRecording)
                     }
-                    
-                    resetValues()
+                    if location == nil {
+                        location = convertToLocation(locationString: selectedGame.game.location)
+                    }
+                    gameLocation = getFinalLocation()
                 }
+                resetValues()
             } catch {
                 print("ERROR. \(error)")
             }
@@ -402,39 +390,42 @@ struct SelectedScheduledGameView: View {
             startTime = selectedGame.game.startTime ?? Date()
             duration = selectedGame.game.duration
             
+            // Get the duration of the game
             let (dhours, dminutes) = convertSecondsToHoursMinutes(seconds: selectedGame.game.duration)
             self.hours = dhours
             self.minutes = dminutes
             self.recordingReminder = selectedGame.game.recordingReminder
             
-            // Retrieve the feedback time settings
-            timeBeforeFeedback = selectedGame.game.timeBeforeFeedback
-            timeAfterFeedback = selectedGame.game.timeAfterFeedback
-            scheduledTimeReminder = selectedGame.game.scheduledTimeReminder
-            
-            feedbackBeforeTimeLabel = "\(timeBeforeFeedback) seconds"
-            if let selectedFeedbackBeforeOption = AppData.feedbackBeforeTimeOptions.first(where: { $0.0 == feedbackBeforeTimeLabel }) {
-                timeBeforeFeedback = selectedFeedbackBeforeOption.1  // Store the database-friendly value
-            }
-            
-            feedbackAfterTimeLabel = "\(timeAfterFeedback) seconds"
-            if let selectedFeedbackAfterOption = AppData.feedbackAfterTimeOptions.first(where: { $0.0 == feedbackAfterTimeLabel }) {
-                timeAfterFeedback = selectedFeedbackAfterOption.1  // Store the database-friendly value
-            }
-            
-            if scheduledTimeReminder == 0 {
-                selectedTimeLabel = "At time of event"
-            } else {
-                selectedTimeLabel = "\(scheduledTimeReminder) minutes before"
-            }
-            
-            if (recordingReminder == true) {
-                // Retrieve the get recording reminder alert value, if there is one
-                if let selectedOption = AppData.timeOptions.first(where: { $0.0 == selectedTimeLabel }) {
-                    scheduledTimeReminder = selectedOption.1  // Store the database-friendly value
+            if userType == "Coach" {
+                // Retrieve the feedback time settings
+                timeBeforeFeedback = selectedGame.game.timeBeforeFeedback
+                timeAfterFeedback = selectedGame.game.timeAfterFeedback
+                scheduledTimeReminder = selectedGame.game.scheduledTimeReminder
+                
+                feedbackBeforeTimeLabel = "\(timeBeforeFeedback) seconds"
+                if let selectedFeedbackBeforeOption = AppData.feedbackBeforeTimeOptions.first(where: { $0.0 == feedbackBeforeTimeLabel }) {
+                    timeBeforeFeedback = selectedFeedbackBeforeOption.1  // Store the database-friendly value
                 }
-            } else {
-                scheduledTimeReminder = 0
+                
+                feedbackAfterTimeLabel = "\(timeAfterFeedback) seconds"
+                if let selectedFeedbackAfterOption = AppData.feedbackAfterTimeOptions.first(where: { $0.0 == feedbackAfterTimeLabel }) {
+                    timeAfterFeedback = selectedFeedbackAfterOption.1  // Store the database-friendly value
+                }
+                
+                if scheduledTimeReminder == 0 {
+                    selectedTimeLabel = "At time of event"
+                } else {
+                    selectedTimeLabel = "\(scheduledTimeReminder) minutes before"
+                }
+                
+                if (recordingReminder == true) {
+                    // Retrieve the get recording reminder alert value, if there is one
+                    if let selectedOption = AppData.timeOptions.first(where: { $0.0 == selectedTimeLabel }) {
+                        scheduledTimeReminder = selectedOption.1  // Store the database-friendly value
+                    }
+                } else {
+                    scheduledTimeReminder = 0
+                }
             }
         }
     }
