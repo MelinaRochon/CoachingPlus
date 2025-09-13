@@ -68,16 +68,7 @@ struct CoachAddingGameView: View {
     
     /// Stores the team information
     @State var team: DBTeam
-    
-    /// Options for reminder time before the event
-    let timeOptions = [("At time of event", 0), ("5 minutes before", 5), ("10 minutes before", 10), ("15 minutes before", 15), ("30 minutes before", 30), ("1 hour before", 60)]
-    
-    /// Options for feedback time before the event
-    let feedbackBeforeTimeOptions = [("None", 0), ("5 seconds", 5), ("10 seconds", 10), ("15 seconds", 15), ("20 seconds", 20), ("30 seconds", 30)]
-    
-    /// Options for feedback time after the event
-    let feedbackAfterTimeOptions = [("None", 0), ("5 seconds", 5), ("10 seconds", 10), ("15 seconds", 15), ("20 seconds", 20), ("30 seconds", 30)]
-        
+            
     /// Variables for storing the selected time options for reminders and feedback
     @State private var selectedTimeLabel = "5 minutes before"  // User-friendly label
     @State private var feedbackBeforeTimeLabel = "10 seconds"
@@ -149,7 +140,7 @@ struct CoachAddingGameView: View {
                         // CustomPicker for selecting feedback before the event
                         CustomPicker(
                             title: "Before Feedback",
-                            options: feedbackBeforeTimeOptions.map { $0.0 },
+                            options: AppData.feedbackBeforeTimeOptions.map { $0.0 },
                             displayText: { $0 },
                             selectedOption: $feedbackBeforeTimeLabel
                         )
@@ -157,7 +148,7 @@ struct CoachAddingGameView: View {
                         // CustomPicker for selecting feedback after the event
                         CustomPicker(
                             title: "After Feedback",
-                            options: feedbackAfterTimeOptions.map { $0.0 },
+                            options: AppData.feedbackAfterTimeOptions.map { $0.0 },
                             displayText: { $0 },
                             selectedOption: $feedbackAfterTimeLabel
                         )
@@ -172,7 +163,7 @@ struct CoachAddingGameView: View {
                             // CustomPicker for selecting reminder time before the event
                             CustomPicker(
                                 title: "Reminder",
-                                options: timeOptions.map { $0.0 },
+                                options: AppData.timeOptions.map { $0.0 },
                                 displayText: { $0 },
                                 selectedOption: $selectedTimeLabel
                             )
@@ -195,20 +186,19 @@ struct CoachAddingGameView: View {
                         // Save the selected settings for the game
                         if (recordingReminder == true) {
                             // Retrieve the get recording reminder alert value, if there is one
-                            if let selectedOption = timeOptions.first(where: { $0.0 == selectedTimeLabel }) {
+                            if let selectedOption = AppData.timeOptions.first(where: { $0.0 == selectedTimeLabel }) {
                                 scheduledTimeReminder = selectedOption.1  // Store the database-friendly value
-                                
                             }
                         } else {
                             scheduledTimeReminder = 0
                         }
                         
                         // Retrieve the feedback time settings
-                        if let selectedFeedbackBeforeOption = feedbackBeforeTimeOptions.first(where: { $0.0 == feedbackBeforeTimeLabel }) {
+                        if let selectedFeedbackBeforeOption = AppData.feedbackBeforeTimeOptions.first(where: { $0.0 == feedbackBeforeTimeLabel }) {
                             timeBeforeFeedback = selectedFeedbackBeforeOption.1  // Store the database-friendly value
                         }
                         
-                        if let selectedFeedbackAfterOption = feedbackAfterTimeOptions.first(where: { $0.0 == feedbackAfterTimeLabel }) {
+                        if let selectedFeedbackAfterOption = AppData.feedbackAfterTimeOptions.first(where: { $0.0 == feedbackAfterTimeLabel }) {
                             timeAfterFeedback = selectedFeedbackAfterOption.1  // Store the database-friendly value
                         }
                         

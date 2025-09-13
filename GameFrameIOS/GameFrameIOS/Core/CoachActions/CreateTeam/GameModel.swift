@@ -161,4 +161,21 @@ final class GameModel: ObservableObject {
     func updateGameTitle(gameId: String, teamDocId: String, title: String) async throws {
         try await GameManager.shared.updateGameTitle(gameId: gameId, teamDocId: teamDocId, title: title)
     }
+    
+    func updateScheduledGameSettings(gameId: String, teamDocId: String, title: String?, startTime: Date?, duration: Int?, timeBeforeFeedback: Int?, timeAfterFeedback: Int?, recordingReminder: Bool?, location: String?, scheduledTimeReminder: Int?) async throws {
+        
+        try await GameManager.shared.updateScheduledGameSettings(
+            id: gameId,
+            teamDocId: teamDocId,
+            title: title,
+            startTime: startTime,
+            duration: duration,
+            timeBeforeFeedback: timeBeforeFeedback,
+            timeAfterFeedback: timeAfterFeedback,
+            recordingReminder: recordingReminder,
+            location: location,
+            scheduledTimeReminder: scheduledTimeReminder
+        )
+                
+    }
 }

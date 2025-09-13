@@ -42,13 +42,13 @@ import FirebaseFirestore
 struct DBGame: Codable {
     let gameId: String
     var title: String
-    let duration: Int
-    let location: String?
-    let scheduledTimeReminder: Int // in minutes
-    let startTime: Date?
-    let timeBeforeFeedback: Int // in seconds
-    let timeAfterFeedback: Int // in seconds
-    let recordingReminder: Bool
+    var duration: Int
+    var location: String?
+    var scheduledTimeReminder: Int // in minutes
+    var startTime: Date?
+    var timeBeforeFeedback: Int // in seconds
+    var timeAfterFeedback: Int // in seconds
+    var recordingReminder: Bool
     let teamId: String
     
     init(gameId: String, title: String, duration: Int, location: String? = nil, scheduledTimeReminder: Int, startTime: Date? = nil, timeBeforeFeedback: Int, timeAfterFeedback: Int, recordingReminder: Bool, teamId: String) {
@@ -320,5 +320,52 @@ final class GameManager {
             DBGame.CodingKeys.title.rawValue: title
         ]
         try await gameDocument(teamDocId: teamDocId, gameId: gameId).updateData(data as [AnyHashable: Any])
+    }
+    
+    
+    func updateScheduledGameSettings(id: String, teamDocId: String, title: String?, startTime: Date?, duration: Int?, timeBeforeFeedback: Int?, timeAfterFeedback: Int?, recordingReminder: Bool?, location: String?, scheduledTimeReminder: Int?) async throws {
+        // Find game
+        guard let game = try await getGameWithDocId(gameDocId: id, teamDocId: teamDocId) else {
+            print("Unable to get the game details")
+            return
+        }
+        
+        var data: [String: Any] = [:]
+        if let title = title {
+            data[DBGame.CodingKeys.title.rawValue] = title
+        }
+        if let startTime = startTime {
+            data[DBGame.CodingKeys.startTime.rawValue] = startTime
+        }
+        if let duration = duration {
+            data[DBGame.CodingKeys.duration.rawValue] = duration
+        }
+        if let timeBeforeFeedback = timeBeforeFeedback {
+            data[DBGame.CodingKeys.timeBeforeFeedback.rawValue] = timeBeforeFeedback
+        }
+        if let timeAfterFeedback = timeAfterFeedback {
+            data[DBGame.CodingKeys.timeAfterFeedback.rawValue] = timeAfterFeedback
+        }
+        if let recordingReminder = recordingReminder {
+            data[DBGame.CodingKeys.recordingReminder.rawValue] = recordingReminder
+        }
+        if let location = location {
+            data[DBGame.CodingKeys.location.rawValue] = location
+        }
+        if let scheduledTimeReminder = scheduledTimeReminder {
+            data[DBGame.CodingKeys.scheduledTimeReminder.rawValue] = scheduledTimeReminder
+        }
+        
+        print("data is \(data)")
+        
+        // Only update if data is not empty
+        guard !data.isEmpty else {
+            print("No changes to update")
+            return
+        }
+        
+        // Update the scheduled game document
+        try await gameDocument(teamDocId: teamDocId, gameId: id).updateData(data as [AnyHashable : Any])
+        
     }
 }
