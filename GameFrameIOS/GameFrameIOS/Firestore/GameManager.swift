@@ -393,4 +393,16 @@ final class GameManager {
         // Update the scheduled game document
         try await gameDocument(teamDocId: teamDocId, gameId: id).updateData(data as [AnyHashable : Any])
     }
+    
+    
+    /// Deletes a game document from the database.
+    ///
+    /// - Parameters:
+    ///   - gameId: The unique identifier of the game to delete.
+    ///   - teamDocId: The unique identifier of the team document containing the game.
+    /// - Throws: An error if the deletion fails.
+    /// - Note: This only deletes the game document itself. Any subcollections (e.g., feedback, recordings) are **not** automatically deleted.
+    func deleteGame(gameId: String, teamDocId: String) async throws {
+        try await gameDocument(teamDocId: teamDocId, gameId: gameId).delete()
+    }
 }

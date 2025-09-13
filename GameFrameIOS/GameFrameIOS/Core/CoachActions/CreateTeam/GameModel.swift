@@ -205,4 +205,17 @@ final class GameModel: ObservableObject {
             scheduledTimeReminder: scheduledTimeReminder
         )
     }
+    
+    
+    /// Removes a game from the database for the given team.
+    ///
+    /// - Parameters:
+    ///   - gameId: The unique identifier of the game to remove.
+    ///   - teamDocId: The unique identifier of the team document containing the game.
+    /// - Throws: An error if the deletion request fails.
+    /// - Note: This only removes the game document itself.
+    ///         Any subcollections (e.g., feedback, transcripts) must be deleted separately if needed.
+    func removeGame(gameId: String, teamDocId: String) async throws {
+        try await GameManager.shared.deleteGame(gameId: gameId, teamDocId: teamDocId)
+    }
 }

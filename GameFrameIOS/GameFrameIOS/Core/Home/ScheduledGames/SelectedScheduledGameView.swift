@@ -102,7 +102,8 @@ struct SelectedScheduledGameView: View {
     @State private var selectedTimeLabel = "5 minutes before"  // User-friendly label
     @State private var feedbackBeforeTimeLabel = "10 seconds"
     @State private var feedbackAfterTimeLabel = "10 seconds"
-
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
     // MARK: - View
 
     var body: some View {
@@ -290,6 +291,22 @@ struct SelectedScheduledGameView: View {
                                     }
                                 } label: {
                                     Text("Cancel")
+                                }
+                                NavigationLink(destination: CoachHomePageView()) {
+                                    Text("Remove the scheduled game")
+                                }
+                                
+                                Button {
+                                    Task {
+                                        do {
+                                            try await gameModel.removeGame(gameId: selectedGame.game.gameId, teamDocId: selectedGame.team.id)
+                                            dismiss()
+                                        } catch {
+                                            print(error.localizedDescription)
+                                        }
+                                    }
+                                } label: {
+                                    Text("Remove game")
                                 }
                             }
                         }
@@ -645,4 +662,9 @@ struct SelectedScheduledGameView: View {
     let game = HomeGameDTO(game: DBGame(gameId: "2oKD1iyUYXTFeWjelDz8", teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7"),
                            team: DBTeam(id: "6mpZlv7mGho5XaBN8Xcs", teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7", name: "Hornets", teamNickname: "HORNET", sport: "Soccer", gender: "Female", ageGrp: "U15", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"]))
     SelectedScheduledGameView(selectedGame: game)
+}
+
+
+class NavigationState: ObservableObject {
+    @Published var path = NavigationPath()
 }
