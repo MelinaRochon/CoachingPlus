@@ -64,6 +64,11 @@ struct CoachMyTeamView: View {
 
     /// Tracks the currently selected index in the `showPlayers` filter array.
     @State private var showPlayersIndex = 0
+    
+    @State private var dismissOnRemove: Bool = false
+
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
 
     
     // MARK: - View
@@ -137,6 +142,17 @@ struct CoachMyTeamView: View {
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)
         }
+        .onChange(of: dismissOnRemove) {
+            Task {
+                do {
+                    // Remove team from database and from all players
+                    try await teamModel.deleteTeam(teamDocId: selectedTeam.id)
+                    dismiss()
+                } catch {
+                    print(error.localizedDescription)
+                }
+            }
+        }
         .toolbar {
             // Toolbar item for accessing team settings
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -184,7 +200,7 @@ struct CoachMyTeamView: View {
         }
         .sheet(isPresented: $isTeamSettingsEnabled) {
             // Sheet to modify team settings
-            TeamSettingsView(userType: .coach, team: selectedTeam)
+            TeamSettingsView(userType: .coach, team: selectedTeam, dismissOnRemove: $dismissOnRemove)
         }
         .sheet(isPresented: $isGamesSettingsEnabled) {
             NavigationStack {

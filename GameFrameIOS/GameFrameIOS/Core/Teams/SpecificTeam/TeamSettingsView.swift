@@ -46,12 +46,30 @@ struct TeamSettingsView: View {
     /// Observable object that manages team data operations.
     @StateObject private var teamModel = TeamModel()
     
+    @State private var removeTeam: Bool = false
+    @Binding var dismissOnRemove: Bool
+    
     var body: some View {
         // Navigation view that allows for navigation between views and displaying a toolbar.
         NavigationView {
             VStack {
                 // Check if the team data is available and unwrap it.
                 // Team Name Title
+                if !isEditing {
+//                    Text(team.name)
+//                        .font(.largeTitle)
+//                        .bold()
+//                        .multilineTextAlignment(.leading)
+//                        .frame(maxWidth: .infinity, alignment: .leading)
+//                        .padding(.top, 5)
+//                        .padding(.bottom, 5)
+//                        .padding(.horizontal)
+//                        .foregroundColor(.primary)
+                }
+                
+//                Divider()
+                
+                // List displaying the various team settings (nickname, age group, sport, gender, access code).
                 if !isEditing {
                     Text(team.name)
                         .font(.largeTitle)
@@ -62,12 +80,12 @@ struct TeamSettingsView: View {
                         .padding(.bottom, 5)
                         .padding(.horizontal)
                         .foregroundColor(.primary)
+                    
+                    Divider()
+                    teamList.listStyle(.plain)
+                } else {
+                    teamList.listStyle(.insetGrouped)
                 }
-                
-                Divider()
-                
-                // List displaying the various team settings (nickname, age group, sport, gender, access code).
-                teamList.listStyle(.plain)
                 
                 // Show "Copied!" message
                 if showCopiedMessage {
@@ -77,8 +95,6 @@ struct TeamSettingsView: View {
                         .transition(.opacity)
                         .padding(.top, 5)
                 }
-                
-                Spacer()
             }
             .task {
                 do {
@@ -159,7 +175,8 @@ struct TeamSettingsView: View {
                 // Team Name
                 if isEditing {
                     HStack {
-                        CustomUIFields.imageLabel(text: "Team Name", systemImage: "figure.indoor.soccer")
+//                        CustomUIFields.imageLabel(text: "Team Name", systemImage: "figure.indoor.soccer")
+                        Text("Team Name")
                         Spacer()
                         TextField("Name", text: $name).foregroundColor(.primary).multilineTextAlignment(.trailing)
                     }
@@ -167,11 +184,14 @@ struct TeamSettingsView: View {
                 
                 // Team Nickname
                 HStack {
-                    CustomUIFields.imageLabel(text: "Nickname", systemImage: "person.2.fill")
-                    Spacer()
                     if isEditing {
+                        Text("Nickname")
+                        Spacer()
                         TextField("Nickname", text: $nickname).foregroundColor(.primary).multilineTextAlignment(.trailing)
                     } else {
+                        CustomUIFields.imageLabel(text: "Nickname", systemImage: "person.2.fill")
+                        Spacer()
+
                         Text(team.teamNickname)
                             .foregroundColor(.secondary)
                     }
@@ -179,9 +199,9 @@ struct TeamSettingsView: View {
                 
                 // Age Group
                 HStack {
-                    CustomUIFields.imageLabel(text: "Age Group", systemImage: "calendar.and.person")
-                    Spacer()
                     if isEditing {
+                        Text("Age Group")
+                        Spacer()
                         CustomPicker(
                             title: "",
                             options: AppData.ageGroupOptions,
@@ -189,6 +209,8 @@ struct TeamSettingsView: View {
                             selectedOption: $ageGroup
                         ).frame(height: 20)
                     } else {
+                        CustomUIFields.imageLabel(text: "Age Group", systemImage: "calendar.and.person")
+                        Spacer()
                         Text(team.ageGrp)
                             .foregroundColor(.secondary)
                     }
@@ -196,7 +218,11 @@ struct TeamSettingsView: View {
                 
                 // Sport
                 HStack {
-                    CustomUIFields.imageLabel(text: "Sport", systemImage: "soccerball")
+                    if isEditing {
+                        Text("Sport").foregroundStyle(.secondary)
+                    } else {
+                        CustomUIFields.imageLabel(text: "Sport", systemImage: "soccerball")
+                    }
                     Spacer()
                     Text(team.sport)
                         .foregroundColor(.secondary)
@@ -204,9 +230,9 @@ struct TeamSettingsView: View {
                 
                 // Gender
                 HStack {
-                    CustomUIFields.imageLabel(text: "Gender", systemImage: "figure")
-                    Spacer()
                     if isEditing {
+                        Text("Gender")
+                        Spacer()
                         CustomPicker(
                             title: "",
                             options: AppData.genderOptions,
@@ -214,6 +240,8 @@ struct TeamSettingsView: View {
                             selectedOption: $gender
                         ).frame(height: 20)
                     } else {
+                        CustomUIFields.imageLabel(text: "Gender", systemImage: "figure")
+                        Spacer()
                         Text(team.gender.capitalized)
                             .foregroundColor(.secondary)
                     }
@@ -222,7 +250,11 @@ struct TeamSettingsView: View {
                 // Access Code with Copy Button & Tooltip
                 if userType == .coach {
                     HStack {
-                        CustomUIFields.imageLabel(text: "Access Code", systemImage: "qrcode")
+                        if isEditing {
+                            Text("Access Code").foregroundStyle(.secondary)
+                        } else {
+                            CustomUIFields.imageLabel(text: "Access Code", systemImage: "qrcode")
+                        }
                         Spacer()
                         Text(team.accessCode ?? "N/A")
                             .foregroundColor(.secondary).padding(.trailing, 5)
@@ -237,6 +269,31 @@ struct TeamSettingsView: View {
                         }) {
                             Image(systemName: "doc.on.doc.fill")
                                 .foregroundColor(.gray)
+                        }
+                    }
+                }
+            }
+            
+            if isEditing {
+                Section {
+                    Button("Delete team") {
+                        Task {
+                            removeTeam.toggle()
+                        }
+                    }
+                    .confirmationDialog(
+                        "Are you sure you want to delete this team? All games and recordings will be permanently deleted.",
+                        isPresented: $removeTeam,
+                        titleVisibility: .visible
+                    ) {
+                        Button(role: .destructive, action: {
+                            withAnimation {
+                                isEditing.toggle()
+                            }
+                            dismiss()
+                            dismissOnRemove = true
+                        }) {
+                            Text("Delete")
                         }
                     }
                 }
@@ -292,5 +349,5 @@ struct TeamSettingsView: View {
 #Preview {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
 
-    TeamSettingsView(userType: .coach, team: team)
+    TeamSettingsView(userType: .coach, team: team, dismissOnRemove: .constant(false))
 }

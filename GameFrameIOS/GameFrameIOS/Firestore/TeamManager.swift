@@ -411,4 +411,9 @@ final class TeamManager {
         // Update the document asynchronously
         try await teamDocument(id: id).updateData(data as [AnyHashable : Any])
     }
+    
+    
+    func deleteTeam(id: String) async throws {
+        try await teamDocument(id: id).delete()
+    }
 }

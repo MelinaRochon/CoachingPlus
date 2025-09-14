@@ -125,7 +125,7 @@ struct PlayerMyTeamView: View {
             }
             .sheet(isPresented: $isTeamSettingsEnabled) {
                 // Sheet to modify team settings
-                TeamSettingsView(userType: .player, team: selectedTeam)
+                TeamSettingsView(userType: .player, team: selectedTeam, dismissOnRemove: .constant(false))
             }
             .sheet(isPresented: $isGamesSettingsEnabled) {
                 NavigationStack {
@@ -183,6 +183,7 @@ struct PlayerMyTeamView: View {
                 // Load games and players associated with the team
                 try await gameModel.getAllGames(teamId: selectedTeam.teamId)
                 self.groupedGames = groupGamesByWeek(gameModel.games)
+                self.selectedTeam = try await TeamManager.shared.getTeam(teamId: selectedTeam.teamId)!
                 guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TODO: - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team

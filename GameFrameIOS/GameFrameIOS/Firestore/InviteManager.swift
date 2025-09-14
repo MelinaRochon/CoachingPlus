@@ -201,4 +201,14 @@ final class InviteManager {
         try await inviteDocument(id: id).updateData(data as [AnyHashable : Any])
         
     }
+    
+    
+    /// Deletes an invite in Firestore
+    ///
+    /// - Parameters:
+    ///    - id: The ID of the invite to delete
+    ///  - Throws: An error if the delete process fails
+    func deleteInvite(id: String) async throws {
+        try await inviteDocument(id: id).delete()
+    }
 }
