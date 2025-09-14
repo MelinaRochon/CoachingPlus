@@ -53,22 +53,6 @@ struct TeamSettingsView: View {
         // Navigation view that allows for navigation between views and displaying a toolbar.
         NavigationView {
             VStack {
-                // Check if the team data is available and unwrap it.
-                // Team Name Title
-                if !isEditing {
-//                    Text(team.name)
-//                        .font(.largeTitle)
-//                        .bold()
-//                        .multilineTextAlignment(.leading)
-//                        .frame(maxWidth: .infinity, alignment: .leading)
-//                        .padding(.top, 5)
-//                        .padding(.bottom, 5)
-//                        .padding(.horizontal)
-//                        .foregroundColor(.primary)
-                }
-                
-//                Divider()
-                
                 // List displaying the various team settings (nickname, age group, sport, gender, access code).
                 if !isEditing {
                     Text(team.name)
@@ -175,7 +159,6 @@ struct TeamSettingsView: View {
                 // Team Name
                 if isEditing {
                     HStack {
-//                        CustomUIFields.imageLabel(text: "Team Name", systemImage: "figure.indoor.soccer")
                         Text("Team Name")
                         Spacer()
                         TextField("Name", text: $name).foregroundColor(.primary).multilineTextAlignment(.trailing)

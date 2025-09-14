@@ -413,6 +413,11 @@ final class TeamManager {
     }
     
     
+    /// Deletes a team in Firestore
+    ///
+    /// - Parameters:
+    ///    - id: The ID of the team to delete
+    ///  - Throws: An error if the delete process fails
     func deleteTeam(id: String) async throws {
         try await teamDocument(id: id).delete()
     }

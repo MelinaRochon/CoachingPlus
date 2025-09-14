@@ -45,29 +45,37 @@ struct GameDetailsView: View {
     @State private var gameModel = GameModel()
 
     var body: some View {
-        
         NavigationView {
             VStack {
                 // Displays the game title in a large, bold font.
                 if !isEditing {
-                    Text(selectedGame.title).font(.largeTitle).bold().multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 5).padding(.bottom, 5).padding(.horizontal)
-                }
+                    Text(selectedGame.title)
+                        .font(.largeTitle)
+                        .bold()
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 5)
+                        .padding(.bottom, 5)
+                        .padding(.horizontal)
                     
-                // View the game details
-                VStack {
-                    Text("Game Details").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline)
-                    if !isEditing {
-                        HStack {
-                            Image(systemName: "person.2.fill").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
-                            Text(team.name).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                            
-                        }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
+                    // View the game details
+                    VStack {
+                        
+                        Text("Game Details")
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.headline)
+                        
+                        label(text: team.name, systemImage: "person.2.fill", textStyle: .secondary)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 4)
                         
                         // Displays the scheduled game time.
-                        HStack {
-                            Image(systemName: "calendar.badge.clock").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
-                            Text(formatStartTime(selectedGame.startTime)).font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                        }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
+                        label(text: formatStartTime(selectedGame.startTime), systemImage: "calendar.badge.clock")
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 4)
                         
                         // Displays the game location with a button to open Apple Maps.
                         HStack (alignment: .center) {
@@ -76,7 +84,6 @@ struct GameDetailsView: View {
                                 Button {
                                     if location.contains("Search Nearby") {
                                         let newLocation = location.components(separatedBy: "Search Nearby")
-                                        
                                         if let url = URL(string: "maps://?q=\(newLocation.first)") {
                                             if UIApplication.shared.canOpenURL(url) {
                                                 UIApplication.shared.open(url)
@@ -94,63 +101,33 @@ struct GameDetailsView: View {
                                         }
                                     }
                                 } label: {
-                                    Image(systemName: "mappin.and.ellipse").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
-                                    Text(selectedGame.location ?? "None").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundColor(.black)
+                                    label(text: location, systemImage: "mappin.and.ellipse")
                                 }
                             }
-                        }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 4)
+                        }
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 4)
                         
                         // Displays the duration of the game.
-                        HStack {
-                            Image(systemName: "clock").resizable().foregroundStyle(.red).aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
-                            Text("\(hours) h \(minutes) m").font(.subheadline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            // TODO: - If is not a scheduled game and there was a video recording, show the actual game duration!
-                        }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
-                    } else {
-                        HStack {
-                            Text("Game Title")
-                            Spacer()
-                            TextField("Game Title", text: $gameName).foregroundStyle(.primary).multilineTextAlignment(.trailing)
-                        }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                        label(text: "\(hours) h \(minutes) m", systemImage: "clock")
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 4)
+                        // TODO: - If is not a scheduled game and there was a video recording, show the actual game duration!
+                    }.padding(.horizontal)
                     
-                }.padding(.horizontal)
-                
-                
-                if (userType == "Coach" && !isEditing) {
-                    Divider()
-                    // View the game Settings
-                    List {
-                        Text("Game Settings").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline)
-                        HStack {
-                            Text("Duration")
-                            Spacer()
-                            Text("\(hours) h \(minutes) m").foregroundStyle(.secondary)
-                        }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                        HStack {
-                            Text("Time Before Feedback")
-                            Spacer()
-                            Text("\(selectedGame.timeBeforeFeedback) seconds").foregroundStyle(.secondary)
-                        }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                        HStack {
-                            Text("Time After Feedback")
-                            Spacer()
-                            Text("\(selectedGame.timeAfterFeedback) seconds").foregroundStyle(.secondary)
-                        }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                        Toggle("Recording Reminder:", isOn: $recordReminder).disabled(true)
-                        if recordReminder == true {
-                            // show alert
-                            HStack {
-                                Text("Alert")
-                                Spacer()
-                                Text("\(selectedGame.scheduledTimeReminder) seconds").foregroundStyle(.secondary)
-                            }.multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        
-                    }.listStyle(.plain)
+                    if userType == "Coach" {
+                        Divider()
+                        // View the game Settings
+                        List {
+                            gameSettingsSection
+                        }.listStyle(.plain)
+                    }
+                    Spacer()
+                } else {
+                    listOfGameDetail
                 }
-                Spacer()
             }
             .toolbar {
                 if userType == "Coach" {
@@ -211,6 +188,88 @@ struct GameDetailsView: View {
     }
     
     
+    var gameSettingsSection: some View {
+        Section( header: Text("Game Settings")) {
+
+            HStack {
+                Text("Time Before Feedback")
+                Spacer()
+                Text("\(selectedGame.timeBeforeFeedback) seconds")
+            }
+            .foregroundStyle(!isEditing ? .primary : .secondary)
+
+            HStack {
+                Text("Time After Feedback")
+                Spacer()
+                Text("\(selectedGame.timeAfterFeedback) seconds")
+            }
+            .foregroundStyle(!isEditing ? .primary : .secondary)
+
+            Toggle("Recording Reminder:", isOn: $recordReminder)
+                .foregroundStyle(!isEditing ? .primary : .secondary)
+                .disabled(true)
+            
+            if recordReminder == true {
+                // show alert
+                HStack {
+                    Text("Alert")
+                    Spacer()
+                    Text("\(selectedGame.scheduledTimeReminder) seconds")
+                }
+                .foregroundStyle(!isEditing ? .primary : .secondary)
+            }
+        }
+    }
+    
+    
+    var listOfGameDetail: some View {
+        List {
+            Section (header: Text("Game Details")) {
+                HStack {
+                    Text("Game Title")
+                    Spacer()
+                    TextField("Game Title", text: $gameName)
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.trailing)
+                }
+                
+                HStack {
+                    Text("Team Name")
+                    Spacer()
+                    Text(team.name)
+                }.foregroundStyle(.secondary)
+                
+                // Displays the scheduled game time.
+                HStack {
+                    Text("Start Time")
+                    Spacer()
+                    Text(formatStartTime(selectedGame.startTime))
+                        .multilineTextAlignment(.trailing)
+                }.foregroundStyle(.secondary)
+                
+                if let location = selectedGame.location {
+                    // Displays the game location with a button to open Apple Maps.
+                    HStack {
+                        Text("Location")
+                        Spacer()
+                        Text(location).multilineTextAlignment(.trailing)
+                    }.foregroundStyle(.secondary)
+                }
+                
+                // Displays the duration of the game.
+                HStack {
+                    Text("Duration")
+                    Spacer()
+                    Text("\(hours) h \(minutes) m")
+                    // TODO: - If is not a scheduled game and there was a video recording, show the actual game duration!
+                }.foregroundStyle(.secondary)
+            }
+            
+            // Game settings section
+            gameSettingsSection
+        }
+    }
+    
     
     private func saveGameName() {
         Task {
@@ -219,6 +278,30 @@ struct GameDetailsView: View {
             } catch {
                 print(error.localizedDescription)
             }
+        }
+    }
+    
+    
+    /// A reusable SwiftUI view that displays a horizontal label with a red SF Symbol icon and text.
+    ///
+    /// - Parameters:
+    ///   - text: The text to display next to the icon.
+    ///   - systemImage: The name of the SF Symbol to use as the icon.
+    ///
+    /// - Returns: A `View` containing an `HStack` with a red icon and a label.
+    @ViewBuilder
+    private func label(text: String, systemImage: String, textStyle: Color = .black) -> some View {
+        HStack {
+            Image(systemName: systemImage)
+                .resizable()
+                .foregroundStyle(.red)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 18, height: 18)
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(textStyle)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

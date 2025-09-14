@@ -164,4 +164,52 @@ final class TeamModel: ObservableObject {
         try await TeamManager.shared.updateTeamSettings(id: id, name: name, nickname: nickname, ageGrp: ageGrp, gender: gender)
     }
     
+    
+    /**
+     Deletes a team and removes all of its associations in the database.
+
+     This function performs a cascading deletion:
+     - Fetches the team document using its document ID.
+     - Removes the team's reference from all associated coaches.
+     - Removes the team's reference from all associated players.
+     - Deletes all invites tied to the team.
+     - Finally, deletes the team document itself.
+
+     - Parameter teamDocId: The Firestore document ID of the team to delete.
+     - Throws: An error if fetching the team, updating related documents, or deleting the team fails.
+     - Note: Player subcollections (created by Cate) are not yet handled — see TODO in the function.
+     */
+    func deleteTeam(teamDocId: String) async throws {
+                
+        let team = try await TeamManager.shared.getTeamWithDocId(docId: teamDocId)
+                
+        // Remove the coaches affiliation to the team
+        for coachId in team.coaches {
+            try await CoachManager.shared.removeTeamToCoach(coachId: coachId, teamId: team.teamId)
+        }
+        
+        
+        // Remove all players affiliation to the team
+        if let players = team.players {
+            for playerId in players {
+                let playerInfo = try await PlayerManager.shared.getPlayer(playerId: playerId)
+                if let player = playerInfo {
+                    try await PlayerManager.shared.removeTeamFromPlayer(id: player.id, teamId: team.teamId)
+                }
+            }
+        }
+        
+        // Remove all invites affiliation to the team
+        if let invites = team.invites {
+            for inviteId in invites {
+                try await InviteManager.shared.deleteInvite(id: inviteId)
+            }
+        }
+        
+        // TODO: Get the collection under players that Cate created to delete
+        
+        // Remove team
+        try await TeamManager.shared.deleteTeam(id: teamDocId)
+    }
+    
 }
