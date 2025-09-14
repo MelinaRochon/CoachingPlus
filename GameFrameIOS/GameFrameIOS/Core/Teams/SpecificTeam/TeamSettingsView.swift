@@ -15,11 +15,10 @@ import SwiftUI
 /// - Allows the coach to copy the team’s access code for sharing.
 /// - Shows a list of players associated with the team.
 /// - Provides a navigation toolbar with a "Done" button to dismiss the view.
-struct CoachTeamSettingsView: View {
-    
-    /// Temporary storage for the list of players associated with the team.
-    @State var players: [User_Status] = []
-    
+struct TeamSettingsView: View {
+        
+    @State var userType: UserType
+        
     /// Environment value to dismiss the current view and return to the previous screen.
     @Environment(\.dismiss) var dismiss
 
@@ -92,27 +91,29 @@ struct CoachTeamSettingsView: View {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    if !isEditing {
-                        Button {
-                            withAnimation {
-                                isEditing = true
+                if userType == .coach {
+                    ToolbarItem(placement: .topBarLeading) {
+                        if !isEditing {
+                            Button {
+                                withAnimation {
+                                    isEditing = true
+                                }
+                            } label : {
+                                Text("Edit")
                             }
-                        } label : {
-                            Text("Edit")
-                        }
-                    } else {
-                        Button {
-                            withAnimation {
-                                isEditing = false
+                        } else {
+                            Button {
+                                withAnimation {
+                                    isEditing = false
+                                }
+                                
+                                nickname = team.teamNickname
+                                ageGroup = team.ageGrp
+                                gender = team.gender
+                                name = team.name
+                            } label : {
+                                Text("Cancel")
                             }
-                            
-                            nickname = team.teamNickname
-                            ageGroup = team.ageGrp
-                            gender = team.gender
-                            name = team.name
-                        } label : {
-                            Text("Cancel")
                         }
                     }
                 }
@@ -158,7 +159,7 @@ struct CoachTeamSettingsView: View {
                 // Team Name
                 if isEditing {
                     HStack {
-                        label(text: "Team Name", systemImage: "figure.indoor.soccer")
+                        CustomUIFields.imageLabel(text: "Team Name", systemImage: "figure.indoor.soccer")
                         Spacer()
                         TextField("Name", text: $name).foregroundColor(.primary).multilineTextAlignment(.trailing)
                     }
@@ -166,7 +167,7 @@ struct CoachTeamSettingsView: View {
                 
                 // Team Nickname
                 HStack {
-                    label(text: "Nickname", systemImage: "person.2.fill")
+                    CustomUIFields.imageLabel(text: "Nickname", systemImage: "person.2.fill")
                     Spacer()
                     if isEditing {
                         TextField("Nickname", text: $nickname).foregroundColor(.primary).multilineTextAlignment(.trailing)
@@ -178,7 +179,7 @@ struct CoachTeamSettingsView: View {
                 
                 // Age Group
                 HStack {
-                    label(text: "Age Group", systemImage: "calendar.and.person")
+                    CustomUIFields.imageLabel(text: "Age Group", systemImage: "calendar.and.person")
                     Spacer()
                     if isEditing {
                         CustomPicker(
@@ -195,7 +196,7 @@ struct CoachTeamSettingsView: View {
                 
                 // Sport
                 HStack {
-                    label(text: "Sport", systemImage: "soccerball")
+                    CustomUIFields.imageLabel(text: "Sport", systemImage: "soccerball")
                     Spacer()
                     Text(team.sport)
                         .foregroundColor(.secondary)
@@ -203,7 +204,7 @@ struct CoachTeamSettingsView: View {
                 
                 // Gender
                 HStack {
-                    label(text: "Gender", systemImage: "figure")
+                    CustomUIFields.imageLabel(text: "Gender", systemImage: "figure")
                     Spacer()
                     if isEditing {
                         CustomPicker(
@@ -217,36 +218,26 @@ struct CoachTeamSettingsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                                            
+                
                 // Access Code with Copy Button & Tooltip
-                HStack {
-                    label(text: "Access Code", systemImage: "qrcode")
-                    Spacer()
-                    Text(team.accessCode ?? "N/A")
-                        .foregroundColor(.secondary).padding(.trailing, 5)
-                    
-                    // Copy Button
-                    Button(action: {
-                        UIPasteboard.general.string = team.accessCode ?? ""
-                        showCopiedMessage = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            showCopiedMessage = false
+                if userType == .coach {
+                    HStack {
+                        CustomUIFields.imageLabel(text: "Access Code", systemImage: "qrcode")
+                        Spacer()
+                        Text(team.accessCode ?? "N/A")
+                            .foregroundColor(.secondary).padding(.trailing, 5)
+                        
+                        // Copy Button
+                        Button(action: {
+                            UIPasteboard.general.string = team.accessCode ?? ""
+                            showCopiedMessage = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                showCopiedMessage = false
+                            }
+                        }) {
+                            Image(systemName: "doc.on.doc.fill")
+                                .foregroundColor(.gray)
                         }
-                    }) {
-                        Image(systemName: "doc.on.doc.fill")
-                            .foregroundColor(.gray)
-                    }
-                }
-            }
-            
-            if !isEditing {
-                Section(header: Text("Players")) {
-                    if !players.isEmpty {
-                        ForEach(players, id: \.playerDocId) { player in
-                            label(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
-                        }
-                    } else {
-                        Text("No players found.").font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -296,29 +287,10 @@ struct CoachTeamSettingsView: View {
             }
         }
     }
-    
-    
-    /// A reusable SwiftUI view that displays a horizontal label with a red SF Symbol icon and text.
-    ///
-    /// - Parameters:
-    ///   - text: The text to display next to the icon.
-    ///   - systemImage: The name of the SF Symbol to use as the icon.
-    ///
-    /// - Returns: A `View` containing an `HStack` with a red icon and a label.
-    @ViewBuilder
-    private func label(text: String, systemImage: String) -> some View {
-        HStack {
-            Image(systemName: systemImage)
-                .frame(width: 25)
-                .foregroundStyle(.red) // Red icon
-            Text(text)
-                .foregroundStyle(.primary) // Default text color
-        }
-    }
 }
 
 #Preview {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
 
-    CoachTeamSettingsView(players: [], team: team)
+    TeamSettingsView(userType: .coach, team: team)
 }

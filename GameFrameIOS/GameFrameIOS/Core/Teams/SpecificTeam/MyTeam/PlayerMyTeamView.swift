@@ -50,6 +50,8 @@ struct PlayerMyTeamView: View {
     
     /// Toggles the visibility of the games settings view (e.g., filters or display preferences).
     @State private var isGamesSettingsEnabled: Bool = false
+    
+    @State private var showPlayersSheet: Bool = false
 
     /// Controls whether upcoming games should be shown in the list.
     @State private var showUpcomingGames = false
@@ -98,27 +100,32 @@ struct PlayerMyTeamView: View {
                 refreshData() // Refresh data when the view appears
             }
             .toolbar {
-                // Toolbar item for accessing team settings
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isTeamSettingsEnabled.toggle() // Toggle team settings visibility
-                    }) {
-                        Label("Settings", systemImage: "gear")
-                    }.tint(.red) // Settings icon with label
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isGamesSettingsEnabled.toggle()
-                    }) {
-                        Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
+                    HStack {
+                        Button(action: {
+                            isTeamSettingsEnabled.toggle() // Toggle team settings visibility
+                        }) {
+                            Label("Settings", systemImage: "gear")
+                        }.tint(.red)
+                        
+                        Button(action: {
+                            showPlayersSheet.toggle()
+                        }) {
+                            Label("Players", systemImage: "person.2.circle")
+                        }.tint(.red)
+                        
+                        Button(action: {
+                            isGamesSettingsEnabled.toggle()
+                        }) {
+                            Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
+                        }
+                        .tint(.red)
                     }
-                    .tint(.red)
                 }
             }
             .sheet(isPresented: $isTeamSettingsEnabled) {
                 // Sheet to modify team settings
-                CoachTeamSettingsView(players: playerModel.players, team: selectedTeam)
+                TeamSettingsView(userType: .player, team: selectedTeam)
             }
             .sheet(isPresented: $isGamesSettingsEnabled) {
                 NavigationStack {
@@ -137,7 +144,33 @@ struct PlayerMyTeamView: View {
                         .navigationBarTitleDisplayMode(.inline)
                 }
             }
-        
+            .sheet(isPresented: $showPlayersSheet) {
+                NavigationStack {
+                    List {
+                        Section() {
+                            if !playerModel.players.isEmpty {
+                                ForEach(playerModel.players, id: \.playerDocId) { player in
+                                    CustomUIFields.imageLabel(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
+                                }
+                            } else {
+                                Text("No players found.").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .navigationTitle("Roster")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .listStyle(.plain)
+                    .toolbar {
+                        ToolbarItem {
+                            Button (action: {
+                                showPlayersSheet = false // Close the filter options
+                            }) {
+                                Text("Done")
+                            }
+                        }
+                    }
+                }
+            }
     }
     
     

@@ -137,6 +137,24 @@ struct CustomUIFields {
                 .tint(.gray)
         }
     }
+    
+    /// A reusable SwiftUI view that displays a horizontal label with a red SF Symbol icon and text.
+    ///
+    /// - Parameters:
+    ///   - text: The text to display next to the icon.
+    ///   - systemImage: The name of the SF Symbol to use as the icon.
+    ///
+    /// - Returns: A `View` containing an `HStack` with a red icon and a label.
+    @ViewBuilder
+    static func imageLabel(text: String, systemImage: String) -> some View {
+        HStack {
+            Image(systemName: systemImage)
+                .frame(width: 25)
+                .foregroundStyle(.red) // Red icon
+            Text(text)
+                .foregroundStyle(.primary) // Default text color
+        }
+    }
 }
 
 

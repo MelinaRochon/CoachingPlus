@@ -69,97 +69,92 @@ struct CoachMyTeamView: View {
     // MARK: - View
     
     var body: some View {
-//        NavigationStack {
-            VStack {
-                Divider()
+        VStack {
+            Divider()
+            
+            // Segmented Picker to toggle between "Footage" and "Players" views
+            Picker("Type of selection - Segmented", selection: $selectedSegmentIndex) {
+                ForEach(segmentTypes.indices, id: \.self) { i in
+                    Text(self.segmentTypes[i])
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.leading)
+            .padding(.trailing)
+            
+            // Main list that dynamically changes based on the selected segment
+            if (selectedSegmentIndex == 0) {
                 
-                // Segmented Picker to toggle between "Footage" and "Players" views
-                Picker("Type of selection - Segmented", selection: $selectedSegmentIndex) {
-                    ForEach(segmentTypes.indices, id: \.self) { i in
-                        Text(self.segmentTypes[i])
+                List {
+                    // "Footage" section: Displays games related to the team
+                    // Looping through games related to the team
+                    if let groupedGames = groupedGames {
+                        GroupedGamesList(
+                            groupedGames: groupedGames,
+                            selectedTeam: selectedTeam,
+                            destinationBuilder: { game in
+                                AnyView(CoachSpecificFootageView(game: game, team: selectedTeam))
+                            },
+                            upcomingGamedestinationBuilder: { game in
+                                AnyView(SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: "Coach"))
+                            },
+                            showUpcomingGames: showUpcomingGames,
+                            showRecentGames: showRecentGames
+                        )
+                    } else {
+                        Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
                     }
-                }
-                .pickerStyle(.segmented)
-                .padding(.leading)
-                .padding(.trailing)
+                }.listStyle(PlainListStyle()) // Optional: Make the list style more simple
                 
-                // Main list that dynamically changes based on the selected segment
-                if (selectedSegmentIndex == 0) {
-                    
-                    List {
-                        // "Footage" section: Displays games related to the team
-                        // Looping through games related to the team
-                        if let groupedGames = groupedGames {
-                            GroupedGamesList(
-                                groupedGames: groupedGames,
-                                selectedTeam: selectedTeam,
-                                destinationBuilder: { game in
-                                    AnyView(CoachSpecificFootageView(game: game, team: selectedTeam))
-                                },
-                                upcomingGamedestinationBuilder: { game in
-                                    AnyView(SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: "Coach"))
-                                },
-                                showUpcomingGames: showUpcomingGames,
-                                showRecentGames: showRecentGames
-                            )
+            } else {
+                List {
+                    // "Players" section: Displays players related to the team
+                    // Looping through players related to the team
+                    if !playerModel.players.isEmpty {
+                        if showPlayersIndex == 0 { // All Players
+                            PlayersList(players: playerModel.players, teamDocId: selectedTeam.id)
+                            
+                        } else if showPlayersIndex == 1 {
+                            // Show all accepted players
+                            let filteredPlayers = playerModel.players.filter { $0.status == "Accepted" }
+                            PlayersList(players: filteredPlayers, teamDocId: selectedTeam.id)
                         } else {
-                            Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
+                            // Show all players invited
+                            let filteredPlayers = playerModel.players.filter { $0.status == "Pending Invite" }
+                            PlayersList(players: filteredPlayers, teamDocId: selectedTeam.id)
                         }
-                    }.listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                    
-                } else {
-                    List {
-                        // "Players" section: Displays players related to the team
-                        // Looping through players related to the team
-                        if !playerModel.players.isEmpty {
-                            if showPlayersIndex == 0 { // All Players
-                                PlayersList(players: playerModel.players, teamDocId: selectedTeam.id)
-                                
-                            } else if showPlayersIndex == 1 {
-                                // Show all accepted players
-                                let filteredPlayers = playerModel.players.filter { $0.status == "Accepted" }
-                                PlayersList(players: filteredPlayers, teamDocId: selectedTeam.id)
-                            } else {
-                                // Show all players invited
-                                let filteredPlayers = playerModel.players.filter { $0.status == "Pending Invite" }
-                                PlayersList(players: filteredPlayers, teamDocId: selectedTeam.id)
-                            }
-                        } else {
-                            Text("No players found.").font(.caption).foregroundStyle(.secondary)
-                        }
-                    }.listStyle(PlainListStyle()).padding(.top, 10) // Optional: Make the list style more simple
-                }
+                    } else {
+                        Text("No players found.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }.listStyle(PlainListStyle()).padding(.top, 10) // Optional: Make the list style more simple
             }
-            .navigationTitle(Text(selectedTeam.teamNickname))
-            .navigationBarTitleDisplayMode(.large)
-            .onAppear {
-                refreshData() // Refresh data when the view appears
-            }
-            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
-                Color.clear.frame(height: 75)
-            }
-            .toolbar {
-                // Toolbar item for accessing team settings
-                ToolbarItem(placement: .navigationBarTrailing) {
+        }
+        .navigationTitle(Text(selectedTeam.teamNickname))
+        .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            refreshData() // Refresh data when the view appears
+        }
+        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+            Color.clear.frame(height: 75)
+        }
+        .toolbar {
+            // Toolbar item for accessing team settings
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack {
                     Button(action: {
                         isTeamSettingsEnabled.toggle() // Toggle team settings visibility
                     }) {
                         Label("Settings", systemImage: "gear")
                     }
                     .tint(.red)
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
+                    
                     Button(action: {
                         isGamesSettingsEnabled.toggle()
                     }) {
                         Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
                     }
                     .tint(.red)
-                }
-                
-                // Toolbar item for accessing team settings
-                ToolbarItem(placement: .navigationBarTrailing) {
+                    
                     Menu {
                         Button{
                             addGameEnabled.toggle()
@@ -175,40 +170,40 @@ struct CoachMyTeamView: View {
                     } label: {
                         Label("Plus", systemImage: "plus")
                     }
-                    .tint(.red) // Apply red tint to icon and label
-                }
-            }
-            .sheet(isPresented: $addPlayerEnabled, onDismiss: refreshData) {
-                // Sheet to add a new player
-                CoachAddPlayersView(team: selectedTeam) // passing the teamId as an argument
-            }
-            .sheet(isPresented: $addGameEnabled, onDismiss: refreshData) {
-                // Sheet to add a new game
-                CoachAddingGameView(team: selectedTeam) // Adding a new game
-            }
-            .sheet(isPresented: $isTeamSettingsEnabled) {
-                // Sheet to modify team settings
-                CoachTeamSettingsView(players: playerModel.players, team: selectedTeam)
-            }
-            .sheet(isPresented: $isGamesSettingsEnabled) {
-                NavigationStack {
-                    TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: "Coach")
-                        .presentationDetents([.medium])
-                        .toolbar {
-                            ToolbarItem {
-                                Button (action: {
-                                    isGamesSettingsEnabled = false // Close the filter options
-                                }) {
-                                    Text("Done")
-                                }
-                            }
-                        }
-                        .navigationTitle("Filtering Options")
-                        .navigationBarTitleDisplayMode(.inline)
+                    .tint(.red)
                 }
             }
         }
-//    }
+        .sheet(isPresented: $addPlayerEnabled, onDismiss: refreshData) {
+            // Sheet to add a new player
+            CoachAddPlayersView(team: selectedTeam) // passing the teamId as an argument
+        }
+        .sheet(isPresented: $addGameEnabled, onDismiss: refreshData) {
+            // Sheet to add a new game
+            CoachAddingGameView(team: selectedTeam) // Adding a new game
+        }
+        .sheet(isPresented: $isTeamSettingsEnabled) {
+            // Sheet to modify team settings
+            TeamSettingsView(userType: .coach, team: selectedTeam)
+        }
+        .sheet(isPresented: $isGamesSettingsEnabled) {
+            NavigationStack {
+                TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: "Coach")
+                    .presentationDetents([.medium])
+                    .toolbar {
+                        ToolbarItem {
+                            Button (action: {
+                                isGamesSettingsEnabled = false // Close the filter options
+                            }) {
+                                Text("Done")
+                            }
+                        }
+                    }
+                    .navigationTitle("Filtering Options")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+    }
     
     
     // MARK: - Function
