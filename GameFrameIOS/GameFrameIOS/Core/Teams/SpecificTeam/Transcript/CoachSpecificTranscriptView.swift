@@ -358,14 +358,17 @@ struct FeedbackForView: View {
                         .lineLimit(5)
                 }
                 
-                Section (header: Text("Choose Players for Feedback")) {
-                    List {
-                        ForEach($playersFeedback) { $player in
-                            CheckboxRow(
-                                title: player.name,
-                                isChecked: $player.isSelected
-                            )
-                        }
+                Section(header: Text("Selected Players")) {
+                    ForEach(playersFeedback.indices.filter { playersFeedback[$0].isSelected }, id: \.self) { index in
+                        CheckboxRow(title: playersFeedback[index].name,
+                                    isChecked: $playersFeedback[index].isSelected)
+                    }
+                }
+                
+                Section(header: Text("Other Players")) {
+                    ForEach(playersFeedback.indices.filter { !playersFeedback[$0].isSelected }, id: \.self) { index in
+                        CheckboxRow(title: playersFeedback[index].name,
+                                    isChecked: $playersFeedback[index].isSelected)
                     }
                 }
                 
@@ -406,11 +409,13 @@ struct CheckboxRow: View {
     
     var body: some View {
         Button {
-            isChecked.toggle()
+            withAnimation {
+                isChecked.toggle()
+            }
         } label: {
             HStack {
-                Image(systemName: isChecked ? "checkmark.circle.fill" : "minus.circle.fill")
-                    .foregroundColor(isChecked ? .blue : .red)
+                Image(systemName: isChecked ? "minus.circle.fill" : "plus.circle.fill")
+                    .foregroundColor(isChecked ? .red : .green)
                 Text(title)
                     .foregroundColor(.primary)
                 Spacer()
