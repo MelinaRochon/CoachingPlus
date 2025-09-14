@@ -65,6 +65,8 @@ struct PlayerHomePageView: View {
     /// Tracks whether the ScrollView should reset to the top.
     @State private var scrollToTop: Bool = false
     
+    @State private var isEnrolledToATeam: Bool = true
+    
     
     // MARK: - View
     
@@ -139,7 +141,7 @@ struct PlayerHomePageView: View {
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 2))
                         .padding(.horizontal).padding(.top)
                         
-                        if pastGames.isEmpty && futureGames.isEmpty {
+                        if pastGames.isEmpty && futureGames.isEmpty && isEnrolledToATeam {
                             CustomUIFields.loadingSpinner("Loading games...")
                         }
                     }
@@ -154,13 +156,17 @@ struct PlayerHomePageView: View {
                 // Fetch games when view loads
                 do {
                     let allGames = try await gameModel.loadAllAssociatedGames()
-                    
-                    // Filter games into future and past categories
-                    await filterGames(allGames: allGames)
-                    
-                    // Update flags based on availability of games
-                    futureGamesFound = !futureGames.isEmpty
-                    recentGamesFound = !pastGames.isEmpty
+                    print("back from allGames is setr to: \(allGames)")
+                    if !allGames.isEmpty {
+                        // Filter games into future and past categories
+                        await filterGames(allGames: allGames)
+                        
+                        // Update flags based on availability of games
+                        futureGamesFound = !futureGames.isEmpty
+                        recentGamesFound = !pastGames.isEmpty
+                    } else {
+                        isEnrolledToATeam = false
+                    }
                 } catch {
                     print("Error needs to be handled. \(error)")
                     showErrorMessage = true

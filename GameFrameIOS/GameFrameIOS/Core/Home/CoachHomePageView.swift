@@ -155,13 +155,14 @@ struct CoachHomePageView: View {
                 // Fetch games when view loads
                 do {
                     let allGames = try await gameModel.loadAllAssociatedGames()
-                    
-                    // Filter games into future and past categories
-                    await filterGames(allGames: allGames)
-                    
-                    // Update flags based on availability of games
-                    futureGamesFound = !futureGames.isEmpty
-                    recentGamesFound = !pastGames.isEmpty
+                    if !allGames.isEmpty {
+                        // Filter games into future and past categories
+                        await filterGames(allGames: allGames)
+                        
+                        // Update flags based on availability of games
+                        futureGamesFound = !futureGames.isEmpty
+                        recentGamesFound = !pastGames.isEmpty
+                    }
                 } catch {
                     print("Error needs to be handled. \(error)")
                     showErrorMessage = true

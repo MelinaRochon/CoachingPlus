@@ -58,7 +58,7 @@ struct CoachAllTranscriptsView: View {
     /// - Declared as `@StateObject` to ensure it's created once and retained during the view’s lifecycle.
     /// - Used to fetch, store, and interact with players' data (e.g., names, selection, filtering).
     @StateObject private var playerModel = PlayerModel()
-    
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -170,46 +170,12 @@ struct CoachAllTranscriptsView: View {
                     filteredTranscripts = filteredTranscripts.sorted(by: { $0.transcript < $1.transcript })
                 }
             }
-            //            .onAppear {
-            
-            //                Task {
-            //                    do {
-            //                        // Get all player's name
-            //                        if let players = team.players {
-            //                            playersNames = try await playerModel.getAllPlayersNames(players: players) ?? []
-            //                        }
-            //
-            //                        transcripts = try await transcriptModel.getAllTranscripts(gameId: game.gameId, teamDocId: team.id)
-            //                        self.filteredTranscripts = transcripts ?? []
-            //                        print("-------")
-            //                        print("testing the filtered transcripts now::")
-            //                        print(filteredTranscripts)
-            //                    } catch {
-            //                        print("Error. Aborting...")
-            //                    }
-            //                }
-            
-            //                if let recordings = transcripts {
-            //                    self.filteredTranscripts = recordings
-            //                    print("-------")
-            //                    print("testing the filtered transcripts now::")
-            //                    print(filteredTranscripts)
-            //                }
-            
-            //            }
         }.task {
             do {
-                
-                //                    let (tmpTranscripts, tmpKeyM) = try await transcriptModel.getAllTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
-                
                 let tmpTranscripts = try await transcriptModel.getAllTranscripts(gameId: game.gameId, teamDocId: team.id)
                 self.transcripts = tmpTranscripts
                 self.filteredTranscripts = transcripts ?? []
-                
-                print("-------")
-                print("testing the filtered transcripts now::")
-                print(filteredTranscripts)
-                
+                                
                 // Get all player's name
                 if let players = team.players {
                     playersNames = try await playerModel.getAllPlayersNames(players: players) ?? []

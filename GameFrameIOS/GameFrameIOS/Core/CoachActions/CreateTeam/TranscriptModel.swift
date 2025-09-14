@@ -426,4 +426,22 @@ final class TranscriptModel: ObservableObject {
             try await TranscriptManager.shared.updateTranscript(teamDocId: teamDocId, gameId: gameId, transcriptId: transcriptId, transcript: transcript)
         }
     }
+    
+    
+    /// Removes a transcript and its associated key moment from the database.
+    ///
+    /// - Parameters:
+    ///   - gameId: The unique identifier of the game the transcript belongs to.
+    ///   - teamId: The unique identifier of the team associated with the game.
+    ///   - transcriptId: The unique identifier of the transcript to remove.
+    ///   - keyMomentId: The unique identifier of the key moment associated with the transcript.
+    /// - Throws: Propagates any errors thrown by `TranscriptManager` or `KeyMomentManager` during deletion.
+    func removeTranscript(gameId: String, teamId: String, transcriptId: String, keyMomentId: String) async throws {
+        
+        // Remove transcript first
+        try await TranscriptManager.shared.removeTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
+        
+        // Remove key moment
+        try await KeyMomentManager.shared.removeKeyMoment(teamId: teamId, gameId: gameId, keyMomentId: keyMomentId)
+    }
 }

@@ -19,7 +19,7 @@ struct DBPlayer: Codable {
     var nickName: String?
     var gender: String?
     let profilePicture: String?
-    let teamsEnrolled: [String] // TODO: Think about leaving it as it is or putting it as optional
+    let teamsEnrolled: [String]? // TODO: Think about leaving it as it is or putting it as optional
     
     // Guardian information - optional
     var guardianName: String?
@@ -36,7 +36,7 @@ struct DBPlayer: Codable {
         guardianEmail: String? = nil,
         guardianPhone: String? = nil,
         profilePicture: String? = nil,
-        teamsEnrolled: [String]
+        teamsEnrolled: [String]? = nil
     ) {
         self.id = id
         self.playerId = playerId
@@ -256,6 +256,25 @@ final class PlayerManager {
     
     
     /**
+    DELETE - Removes a team ID from the 'teamsEnrolled' array in Firestore.
+    - Parameter id: The unique player document ID.
+    - Parameter teamId: The team ID to remove from the player's list of enrolled teams.
+    - Throws: An error if updating the document fails.
+    */
+    func removeTeamFromPlayerWithTeamDocId(id: String, teamDocId: String) async throws {
+        let team = try await TeamManager.shared.getTeamWithDocId(docId: teamDocId)
+                
+        // find the team to remove
+        let data: [String: Any] = [
+            DBPlayer.CodingKeys.teamsEnrolled.rawValue: FieldValue.arrayRemove([team.teamId])
+        ]
+        
+        // Update the document asynchronously
+        try await playerDocument(id: id).updateData(data as [AnyHashable : Any])
+    }
+    
+    
+    /**
      DELETE - Removes the guardian's name from the player's document in Firestore.
      - Parameter id: The unique player document ID.
      - Throws: An error if updating the document fails.
@@ -408,10 +427,19 @@ final class PlayerManager {
      */
     func getTeamsEnrolled(playerId: String) async throws -> [GetTeam] {
         
-        let player = try await getPlayer(playerId: playerId)!
+//        let player = try await getPlayer(playerId: playerId)!
+//        
+//        // Fetch the team documents with the IDs from the user's itemsArray
+//        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled).getDocuments()
+        guard let player = try await getPlayer(playerId: playerId),
+                  let teamIds = player.teamsEnrolled,
+              !teamIds.isEmpty else {
+            return [] // no teams enrolled
+        }
         
-        // Fetch the team documents with the IDs from the user's itemsArray
-        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled).getDocuments()
+        let snapshot = try await TeamManager.shared.teamCollection
+               .whereField("team_id", in: teamIds)
+               .getDocuments()
 
         // Map the documents to Team objects and get their names
         var teams: [GetTeam] = []
@@ -436,10 +464,18 @@ final class PlayerManager {
      */
     func getAllTeamsEnrolled(playerId: String) async throws -> [DBTeam]? {
         
-        let player = try await getPlayer(playerId: playerId)!
+//        let player = try await getPlayer(playerId: playerId)!
+//        // Fetch the team documents with the IDs from the user's itemsArray
+//        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled).getDocuments()
+        guard let player = try await getPlayer(playerId: playerId),
+                  let teamIds = player.teamsEnrolled,
+              !teamIds.isEmpty else {
+            return [] // no teams enrolled
+        }
         
-        // Fetch the team documents with the IDs from the user's itemsArray
-        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled).getDocuments()
+        let snapshot = try await TeamManager.shared.teamCollection
+               .whereField("team_id", in: teamIds)
+               .getDocuments()
 
         // Map the documents to Team objects and get their names
         var teams: [DBTeam] = []
@@ -465,10 +501,13 @@ final class PlayerManager {
     func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
         let player = try await getPlayer(playerId: playerId)!
         print("player info: \(player)")
+        if let teamsEnrolled = player.teamsEnrolled {
+            // Check if the player is enrolled in the specific team by matching teamId in teamsEnrolled
+            return teamsEnrolled.contains(teamId)
 
-        // Check if the player is enrolled in the specific team by matching teamId in teamsEnrolled
-        return player.teamsEnrolled.contains(teamId)
-
+        }
+        
+        return false
     }
 }
 

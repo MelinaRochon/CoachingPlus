@@ -49,6 +49,10 @@ struct CoachSpecificTranscriptView: View {
     /// View model responsible for fetching player information.
     @StateObject private var playerModel = PlayerModel()
     
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
+    
+    @State private var dismissOnRemove: Bool = false
     
     var body: some View {
         NavigationView {
@@ -149,7 +153,7 @@ struct CoachSpecificTranscriptView: View {
                         .frame(maxHeight: .infinity, alignment: .bottom)
                     }
                 }
-//                )
+                //                )
             }
             .task {
                 do {
@@ -170,56 +174,63 @@ struct CoachSpecificTranscriptView: View {
                     print("Error when fetching specific footage info: \(error)")
                 }
             }
-            .sheet(isPresented: $isEditing) {
-                NavigationView {
-                    FeedbackForView(allPlayers: team.players, feedbackTranscript: $feedbackTranscript, playersFeedback: $playersFeedback)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button(action: {
-                                    resetData()
-                                    isEditing = false // Dismiss the full-screen cover
-                                }) {
-                                    Text("Cancel")
-                                }
-                            }
-                            
-                            ToolbarItem(placement: .topBarTrailing) {
-                                Button(action: {
-                                    saveData()
-                                    isEditing = false // Dismiss the full-screen cover
-                                }) {
-                                    Text("Save")
-                                }
-                            }
+            .onChange(of: dismissOnRemove) { newValue in
+                // Remove transcript from database
+                Task {
+                    do {
+                        if let transcript = transcript {
+                            try await transcriptModel.removeTranscript(gameId: game.gameId, teamId: team.teamId, transcriptId: transcript.transcriptId, keyMomentId: transcript.keyMomentId)
+                            dismiss()
                         }
-                        .task {
-                            do {
-                                if let allPlayers = team.players {
-                                    let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
-                                    // Map to include selection state
-                                    playersFeedback = players.map { (id, name, photoUrl) in
-                                        let isSelected = feedbackFor.contains { $0.playerId == id }
-                                        return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                }
+            }
+            .sheet(isPresented: $isEditing) {
+                if let transcript = transcript {
+                    NavigationView {
+                        FeedbackForView(dismissOnRemove: $dismissOnRemove, allPlayers: team.players, feedbackTranscript: $feedbackTranscript, playersFeedback: $playersFeedback)
+                            .toolbar {
+                                ToolbarItem(placement: .topBarLeading) {
+                                    Button(action: {
+                                        resetData()
+                                        isEditing = false // Dismiss the full-screen cover
+                                    }) {
+                                        Text("Cancel")
                                     }
                                 }
                                 
-                            } catch {
-                                print("Error when fetching specific footage info: \(error)")
+                                ToolbarItem(placement: .topBarTrailing) {
+                                    Button(action: {
+                                        saveData()
+                                        isEditing = false // Dismiss the full-screen cover
+                                    }) {
+                                        Text("Save")
+                                    }
+                                }
                             }
-                        }
+                            .task {
+                                do {
+                                    if let allPlayers = team.players {
+                                        let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
+                                        // Map to include selection state
+                                        playersFeedback = players.map { (id, name, photoUrl) in
+                                            let isSelected = feedbackFor.contains { $0.playerId == id }
+                                            return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
+                                        }
+                                    }
+                                    
+                                } catch {
+                                    print("Error when fetching specific footage info: \(error)")
+                                }
+                            }
+                    }
                 }
             }
         }
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-//                Button {
-//
-//                } label: {
-//                    Image(systemName: "square.and.arrow.up")
-//                        .padding(.bottom, 6)
-//                }
-//                .foregroundColor(.red)
-                
                 if !isEditing {
                     Button {
                         withAnimation {
@@ -231,20 +242,6 @@ struct CoachSpecificTranscriptView: View {
                     .frame(width: 40)
                     .foregroundColor(.red)
                 }
-//                                    // If you want transcript itself updated too, mutate it:
-//                                    // var updatedTranscript = transcript
-//                                    var updatedTranscript = transcript
-//                                    updatedTranscript.feedbackFor = feedbackFor.map { player in
-//                                        PlayerTranscriptInfo(
-//                                            playerId: player.playerId,
-//                                            firstName: player.name.components(separatedBy: " ").first ?? "",
-//                                            lastName: player.name.components(separatedBy: " ").dropFirst().joined(separator: " "),
-//                                            nickname: nil,
-//                                            jersey: 0 // or some default
-//                                        )
-//                                    }
-//                                    self.transcript = updatedTranscript
-//                                }
             }
         }
         .task {
@@ -334,6 +331,8 @@ struct PlayerFeedback: Identifiable, Equatable {
 /// A view for editing feedback players and transcript text.
 struct FeedbackForView: View {
     
+    @Binding var dismissOnRemove: Bool
+    
     /// All player IDs available in the team.
     @State var allPlayers: [String]?
     
@@ -345,7 +344,12 @@ struct FeedbackForView: View {
     
     /// Transcript model used for fetching and updating transcript data.
     @StateObject private var transcriptModel = TranscriptModel()
-        
+    
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
+    
+    @State private var confirmationShow: Bool = false
+    
     var body: some View {
         VStack {
             Form {
@@ -364,6 +368,27 @@ struct FeedbackForView: View {
                         }
                     }
                 }
+                
+                Section {
+                    Button(role: .destructive, action: {
+                        confirmationShow = true
+                        
+                    }) {
+                        Text("Delete Transcript")
+                    }
+                }
+            }
+        }
+        .confirmationDialog(
+            "Are you sure you want to delete this transcript?",
+            isPresented: $confirmationShow,
+            titleVisibility: .visible
+        ) {
+            Button(role: .destructive, action: {
+                dismiss()
+                dismissOnRemove = true
+            }) {
+                Text("Delete")
             }
         }
     }

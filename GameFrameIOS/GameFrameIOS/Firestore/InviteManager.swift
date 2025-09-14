@@ -154,6 +154,26 @@ final class InviteManager {
     
     
     /**
+     Retrieves an invite from Firestore by email and team ID.
+     - Parameters:
+        - email: The email of the invited player.
+        - teamId: The ID of the team the invite is for.
+     - Returns:
+        An optional `DBInvite` object if found, otherwise `nil`.
+     - Throws: An error if the retrieval process fails.
+     */
+    func getInviteByPlayerDocIdAndTeamId(playerDocId: String, teamDocId: String) async throws -> DBInvite? {
+        let query = try await inviteCollection
+            .whereField("player_doc_id", isEqualTo: playerDocId)
+            .whereField("team_id", isEqualTo: teamDocId)
+            .getDocuments()
+       
+        guard let doc = query.documents.first else { return nil }
+        return try doc.data(as: DBInvite.self)
+    }
+    
+    
+    /**
      Retrieves an invite document from Firestore by invite ID.
      - Parameters:
         - id: The ID of the invite to retrieve.

@@ -85,7 +85,7 @@ final class GameModel: ObservableObject {
     ///
     /// - Returns: An array of team IDs the user is coaching or playing for.
     /// - Throws: An error if fetching user or team data fails.
-    func getTeamsAssociatedToUser() async throws -> [String] {
+    func getTeamsAssociatedToUser() async throws -> [String]? {
         // Fetch the authenticated user's information.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
@@ -94,7 +94,7 @@ final class GameModel: ObservableObject {
             throw NSError(domain: "UserNotFound", code: 404)
         }
         
-        var teamsId: [String] = []
+        var teamsId: [String]? = []
         if (user.userType == "Coach") {
             // Get the list of teams the coach is managing.
             teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
@@ -117,8 +117,12 @@ final class GameModel: ObservableObject {
     /// - Throws: An error if any data retrieval operation fails.
     func loadAllAssociatedGames() async throws -> [HomeGameDTO] {
         // Retrieve the list of team IDs associated with the user.
-        let teamsId = try await getTeamsAssociatedToUser()
+        guard let teamsId = try await getTeamsAssociatedToUser() else {
+            print("No games associated to user")
+            return []
+        }
         
+        print("has teams id: \(teamsId)")
         var games: [HomeGameDTO] = []
         
         // Iterate through each team ID to fetch associated games.

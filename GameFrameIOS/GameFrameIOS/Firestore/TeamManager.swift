@@ -180,9 +180,13 @@ final class TeamManager {
     ///   - accessCpde: Team access code.
     ///   - Returns: A `DBTeam` instance, if found, otherwise `nil`
     func getTeamWithAccessCode(accessCode: String) async throws -> DBTeam? {
+        print("acees_code givenn is: [\(accessCode)]")
+        
         let snapshot = try await teamCollection.whereField("access_code", isEqualTo: accessCode).getDocuments()
         print("passe bien ici")
+        print("snapshot of access code is: \(snapshot)")
         guard let doc = snapshot.documents.first else { return nil }
+        print("doc of access code is: \(doc)")
         return try doc.data(as: DBTeam.self)
     }
     
@@ -207,6 +211,24 @@ final class TeamManager {
         // Update the document asynchronously
         try await teamDocument(id: id).updateData(data as [AnyHashable : Any])
     }
+    
+    
+    /// Checks whether a player belongs to a specific team.
+    ///
+    /// - Parameters:
+    ///   - id: The document ID of the team in the database.
+    ///   - playerId: The unique identifier of the player to check.
+    /// - Returns: `true` if the player is on the team, otherwise `false`.
+    /// - Throws: An error if the team could not be fetched from the database.
+    func isPlayerOnTeam(id: String, playerId: String) async throws -> Bool {
+        let team = try await getTeamWithDocId(docId: id)
+        if let players = team.players {
+            return players.contains(playerId)
+        }
+        
+        return false
+    }
+ 
     
     /// Removes a player from the team.
     /// - Parameters:
@@ -249,6 +271,15 @@ final class TeamManager {
         try await teamDocument(id: id).updateData(data as [AnyHashable : Any])
         
         print("Updated the team doc: \(id) by adding a new invite: \(inviteDocId)")
+    }
+    
+    func getInviteDocIdOfPlayerAndTeam(teamDocId: String, playerDocId: String) async throws -> String? {
+        guard let invite = try await InviteManager.shared.getInviteByPlayerDocIdAndTeamId(playerDocId: playerDocId, teamDocId: teamDocId) else {
+            print("Invite does not exists")
+            return nil
+        }
+        
+        return invite.id
     }
     
     

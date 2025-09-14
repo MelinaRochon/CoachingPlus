@@ -31,7 +31,8 @@ import SwiftUI
  ## Usage:
  - The `CoachPlayerProfileView` is typically used in a coach's section of the app, allowing them to view and modify player details.
  - It is designed to be navigated within a `NavigationStack` and can be integrated into the app's navigation hierarchy.
- */struct CoachPlayerProfileView: View {
+ */
+struct CoachPlayerProfileView: View {
     // MARK: - State Properties
         
     /// Player document ID - used to fetch data for a specific player.
@@ -39,6 +40,8 @@ import SwiftUI
     
     /// User document ID - used to fetch data for the associated user (coach).
     @State var userDocId: String = ""
+    
+    @State var teamDocId: String
     
     /// Guardian details are bound to the respective TextFields, so the user can view/edit them.
     @State private var guardianName: String = "" // Guardian's name
@@ -67,7 +70,11 @@ import SwiftUI
     @State private var lastName: String = ""
     @State private var phone: String = ""
 
-    
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
+     
+    @State private var dismissOnRemove: Bool = false
+     
     // MARK: - View
     
     var body: some View {
@@ -75,7 +82,6 @@ import SwiftUI
             VStack{
                 if let user = profileModel.user {
                     VStack {
-                        if !isEditing {
                         Image(systemName: "person.crop.circle").resizable().frame(width: 80, height: 80).foregroundStyle(.gray)
                             .clipShape(Circle())
                             .clipped()
@@ -86,58 +92,27 @@ import SwiftUI
                                 }
                             }
                         
-                            Text("\(firstName) \(lastName)").font(.title)
-                            if let player = profileModel.player {
-                                Text("# \(player.jerseyNum)").font(.subheadline)
-                            }
-                            Text(user.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
+                        Text("\(firstName) \(lastName)").font(.title)
+                        if let player = profileModel.player {
+                            Text("# \(player.jerseyNum)").font(.subheadline)
                         }
+                        Text(user.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
                     }
                     
                     // Player information
                     List {
                         Section {
                             if let player = profileModel.player {
-                                if isEditing {
-                                    HStack {
-                                        Text("First Name").foregroundStyle(.primary)
-                                        Spacer()
-                                        TextField("First Name", text: $firstName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
-                                    }
-                                    HStack {
-                                        Text("Last Name").foregroundStyle(.primary)
-                                        Spacer()
-                                        TextField("Last Name", text: $lastName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
-                                    }
-                                    HStack {
-                                        Text("Email").foregroundStyle(.secondary)
-                                        Spacer()
-                                        Text(user.email).foregroundStyle(.secondary).disabled(true).multilineTextAlignment(.trailing)
-                                    }
-                                    
-                                    
-                                }
                                 HStack {
                                     Text("Date of birth")
                                     Spacer()
-                                    if !isEditing {
-                                        if user.dateOfBirth != nil {
-                                            Text("\(dob.formatted(.dateTime.year().month(.twoDigits).day()))")
-                                                .foregroundStyle(.secondary)
-                                                .multilineTextAlignment(.trailing)
-                                        } else {
-                                            Text("N/A").foregroundStyle(.secondary)
-                                                .multilineTextAlignment(.trailing)
-                                        }
+                                    if user.dateOfBirth != nil {
+                                        Text("\(dob.formatted(.dateTime.year().month(.twoDigits).day()))")
+                                            .foregroundStyle(.secondary)
+                                            .multilineTextAlignment(.trailing)
                                     } else {
-                                        DatePicker(
-                                            "",
-                                            selection: $dob,
-                                            in: ...Date(),
-                                            displayedComponents: .date
-                                        )
-                                        .labelsHidden()
-                                        .frame(height: 20)
+                                        Text("N/A").foregroundStyle(.secondary)
+                                            .multilineTextAlignment(.trailing)
                                     }
                                 }
                                 
@@ -154,7 +129,6 @@ import SwiftUI
                                             phone = formatPhoneNumber(newVal)
                                         }
                                 }
-                                
                             }
                         }
                         
@@ -169,58 +143,13 @@ import SwiftUI
                                 HStack {
                                     Text("Gender").foregroundStyle(!isEditing ? .primary : .secondary)
                                     Spacer()
-//                                    if !isEditing {
-                                        Text(gender).foregroundStyle(.secondary)
-//                                    } else {
-//                                        CustomPicker(
-//                                            title: "",
-//                                            options: AppData.genderOptions,
-//                                            displayText: { $0 },
-//                                            selectedOption: $gender
-//                                        ).frame(height: 20)
-//                                    }
-                                }
-                                
-                                if isEditing {
-                                    HStack {
-                                        Text("Jersey #").foregroundStyle(.primary)
-                                        Spacer()
-                                        TextField("Jersey #", text: Binding(get: { String(jerseyNum)}, set: { val in
-                                            // Convert String back to Int and update the player model
-                                            if let newInt = Int(val) {
-                                                jerseyNum = newInt
-                                            }
-                                        }))
-                                        .multilineTextAlignment(.trailing)
-                                        .disabled(!isEditing)
-                                        .foregroundStyle(isEditing ? .primary : .secondary)
-                                    }
+                                    Text(gender).foregroundStyle(.secondary)
                                 }
                             }
                         }
-                            
-                                                    
-                        if isEditing {
-                            Section (header: Text("Guardian Information")) {
-                                HStack {
-                                    Text("Name")
-                                    Spacer()
-                                    TextField("Name", text: $guardianName).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
-                                }
-
-                                HStack {
-                                    Text("Email")
-                                    Spacer()
-                                    TextField("Email", text: $guardianEmail).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
-                                }
-
-                                HStack {
-                                    Text("Phone")
-                                    Spacer()
-                                    TextField("Phone", text: $guardianPhone).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
-                                }
-                            }
-                        } else if !isEditing && ((guardianName != "") || (guardianEmail != "") || (guardianPhone != "")) {
+                        
+                        
+                        if ((guardianName != "") || (guardianEmail != "") || (guardianPhone != "")) {
                             Section (header: Text("Guardian Information")) {
                                 if guardianName != "" {
                                     HStack {
@@ -248,46 +177,8 @@ import SwiftUI
                                 }
                             }
                         }
-                        
-                        if isEditing {
-                            Button("Cancel") {
-                                Task {
-                                    do {
-                                        try await profileModel.loadPlayer(userDocId: userDocId, playerDocId: playerDocId) // get the player's information
-                                        if let player = profileModel.player {
-                                            guardianName = player.guardianName ?? ""
-                                            guardianEmail = player.guardianEmail ?? ""
-                                            guardianPhone = player.guardianPhone ?? ""
-                                            nickname = player.nickName ?? ""
-                                            jerseyNum = player.jerseyNum
-                                            gender = player.gender ?? ""
-                                        }
-                                        if let user = profileModel.user {
-                                            firstName = user.firstName
-                                            lastName = user.lastName
-                                            dob = user.dateOfBirth ?? Date()
-                                            phone = user.phone ?? ""
-                                        }
-                                        
-                                    } catch {
-                                        print("Error when loading player. \(error)")
-                                    }
-                                }
-                                withAnimation {
-                                    isEditing.toggle()
-                                } // edit the player's profile
-                            }
-                        }
-                        
                         // TODO: - Add the feedback section associated to the player
                         
-//                        Section {
-//                            Button(role: .destructive) {
-//                                removePlayer.toggle()
-//                            } label: {
-//                                Text("Remove player")
-//                            }
-//                        }
                     }
                 }
             }
@@ -303,6 +194,20 @@ import SwiftUI
                 }
             } message: {
                 Text("Are you sure you want to remove this player from the team? This action cannot be undone.")
+            }
+            
+            .fullScreenCover(isPresented: $isEditing) {
+                CoachEditPlayerProfileView(profileModel: profileModel, playerDocId: playerDocId, userDocId: userDocId, dob: $dob, gender: $gender, firstName: $firstName, lastName: $lastName, phone: $phone, guardianName: $guardianName, guardianEmail: $guardianEmail, guardianPhone: $guardianPhone, isEditing: $isEditing, teamDocId: teamDocId, dismissOnRemove: $dismissOnRemove)
+            }
+            .onChange(of: dismissOnRemove) { newValue in
+                Task {
+                    do {
+                        try await profileModel.removePlayer(teamDocId: teamDocId)
+                        dismiss()
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                }
             }
             .task {
                 do {
@@ -337,106 +242,316 @@ import SwiftUI
                         } label : {
                             Text("Edit")
                         }
-                    } else {
-                        Button {
-                             // send the info to the database
-                            Task {
-                                savingUserSettings()
-                                savingPlayerInformation()
-                            }
-                            withAnimation {
-                                isEditing.toggle()
-                            } // edit the player's profile
-                        } label : {
-                            Text("Save")
-                        }
                     }
                 }
             }
         }
     }
      
-     private func savingPlayerInformation() {
-         Task {
-             if let player = profileModel.player {
-                 var playerJersey: Int? = jerseyNum
-                 var playerNickname: String? = nickname
-                 var playerGuardianName: String? = guardianName
-                 var playerGuardianEmail: String? = guardianEmail
-                 var playerGuardianPhone: String? = guardianPhone
-                 var playerGender: String? = gender
-                 
-                 if jerseyNum == player.jerseyNum {
-                     playerJersey = nil
-                 }
-                 
-                 if nickname == player.nickName {
-                     playerNickname = nil
-                 }
-                 
-                 if guardianName == player.guardianName {
-                     playerGuardianName = nil
-                 }
-                 
-                 if guardianEmail == player.guardianEmail {
-                     playerGuardianEmail = nil
-                 }
-                 
-                 if guardianPhone == player.guardianPhone {
-                     playerGuardianPhone = nil
-                 }
-                 
-                 if gender == player.gender {
-                     playerGender = nil
-                 }
-                 
-                 playerModel.updatePlayerSettings(id: player.id, jersey: playerJersey, nickname: playerNickname, guardianName: playerGuardianName, guardianEmail: playerGuardianEmail, guardianPhone: playerGuardianPhone, gender: playerGender)
-             }
-         }
-     }
      
-     private func savingUserSettings() {
-         Task {
-             do {
-                 if var user = profileModel.user {
-                     var userFirstName: String? = firstName
-                     var userLastName: String? = lastName
-                     var userDateOfBirth: Date? = dob
-                     var userPhone: String? = phone
-                     
-                     if firstName == user.firstName {
-                         userFirstName = nil
-                     } else {
-                         user.firstName = firstName
-                     }
-                     
-                     if lastName == user.lastName {
-                        userLastName = nil
-                     } else {
-                         user.lastName = lastName
-                     }
-                     
-                     if dob == user.dateOfBirth {
-                         userDateOfBirth = nil
-                     } else {
-                         user.dateOfBirth = dob
-                     }
-                     
-                     if phone == user.phone {
-                         userPhone = nil
-                     } else {
-                         user.phone = phone
-                     }
-                     
-                     try await userModel.updateUserSettings(id: user.id, dateOfBirth: userDateOfBirth, firstName: userFirstName, lastName: userLastName, phone: userPhone)
-                 }
-             } catch {
-                 print(error.localizedDescription)
-             }
-         }
-     }
+}
+
+
+struct CoachEditPlayerProfileView: View {
+    
+    @ObservedObject var profileModel: CoachProfileViewModel
+    
+    /// Player document ID - used to fetch data for a specific player.
+    @State var playerDocId: String
+    
+    /// User document ID - used to fetch data for the associated user (coach).
+    @State var userDocId: String
+    
+    @Binding var dob: Date
+    @Binding var gender: String
+     
+    @Binding var firstName: String
+    @Binding var lastName: String
+    @Binding var phone: String
+
+    @Binding var guardianName: String // Guardian's name
+    @Binding var guardianEmail: String // Guardian's email
+    @Binding var guardianPhone: String // Guardian's phone number
+    
+    /// Player profile details such as nickname and jersey number.
+    @State var nickname: String = "" // Nickname of the player
+    @State var jerseyNum: Int = 0 // Jersey number of the player
+    
+    /// State variable to track whether the profile is being edited.
+    @Binding var isEditing: Bool
+    
+    @State var teamDocId: String
+    
+    @State private var removePlayerFromTeam: Bool = false
+    
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
+    
+    @Binding var dismissOnRemove: Bool
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                if let user = profileModel.user {
+                    List {
+                        Section {
+                            if let player = profileModel.player {
+                                HStack {
+                                    Text("First Name").foregroundStyle(.primary)
+                                    Spacer()
+                                    TextField("First Name", text: $firstName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                                }
+                                HStack {
+                                    Text("Last Name").foregroundStyle(.primary)
+                                    Spacer()
+                                    TextField("Last Name", text: $lastName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                                }
+                                HStack {
+                                    Text("Email").foregroundStyle(.secondary)
+                                    Spacer()
+                                    Text(user.email).foregroundStyle(.secondary).disabled(true).multilineTextAlignment(.trailing)
+                                }
+                                
+                                HStack {
+                                    Text("Date of birth")
+                                    Spacer()
+                                    DatePicker(
+                                        "",
+                                        selection: $dob,
+                                        in: ...Date(),
+                                        displayedComponents: .date
+                                    )
+                                    .labelsHidden()
+                                    .frame(height: 20)
+                                }
+                                
+                                HStack {
+                                    Text("Phone").foregroundStyle(.primary)
+                                    Spacer()
+                                    TextField("(XXX)-XXX-XXXX", text: $phone)
+                                        .foregroundStyle(.primary)
+                                        .multilineTextAlignment(.trailing)
+                                        .autocapitalization(.none)
+                                        .autocorrectionDisabled(true)
+                                        .keyboardType(.phonePad)
+                                        .onChange(of: phone) { newVal in
+                                            phone = formatPhoneNumber(newVal)
+                                        }
+                                }
+                            }
+                        }
+                        
+                        Section {
+                            if let player = profileModel.player {
+                                HStack {
+                                    Text("Nickname")
+                                    Spacer()
+                                    TextField("Nickname", text: $nickname).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                                }
+                                
+                                HStack {
+                                    Text("Gender").foregroundStyle(.secondary)
+                                    Spacer()
+                                    Text(gender).foregroundStyle(.secondary)
+                                    //                                        CustomPicker(
+                                    //                                            title: "",
+                                    //                                            options: AppData.genderOptions,
+                                    //                                            displayText: { $0 },
+                                    //                                            selectedOption: $gender
+                                    //                                        ).frame(height: 20)
+                                }
+                                
+                                HStack {
+                                    Text("Jersey #").foregroundStyle(.primary)
+                                    Spacer()
+                                    TextField("Jersey #", text: Binding(get: { String(jerseyNum)}, set: { val in
+                                        // Convert String back to Int and update the player model
+                                        if let newInt = Int(val) {
+                                            jerseyNum = newInt
+                                        }
+                                    }))
+                                    .multilineTextAlignment(.trailing)
+                                    .foregroundStyle(.primary)
+                                }
+                            }
+                        }
+                        
+                        Section (header: Text("Guardian Information")) {
+                            HStack {
+                                Text("Name")
+                                Spacer()
+                                TextField("Name", text: $guardianName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                            }
+                            
+                            HStack {
+                                Text("Email")
+                                Spacer()
+                                TextField("Email", text: $guardianEmail).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                            }
+                            
+                            HStack {
+                                Text("Phone")
+                                Spacer()
+                                TextField("Phone", text: $guardianPhone).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                            }
+                        }
+                        
+                        Section {
+                            Button("Remove player") {
+                                Task {
+                                    removePlayerFromTeam.toggle()
+                                }
+                            }
+                            .confirmationDialog(
+                                "Are you sure you want to remove this player from the team?",
+                                isPresented: $removePlayerFromTeam,
+                                titleVisibility: .visible
+                            ) {
+                                Button(role: .destructive, action: {
+                                    withAnimation {
+                                        isEditing.toggle()
+                                    }
+                                    dismiss()
+                                    dismissOnRemove = true
+                                }) {
+                                    Text("Delete")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .toolbar {
+                // Edit button
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        Task {
+                            do {
+                                try await profileModel.loadPlayer(userDocId: userDocId, playerDocId: playerDocId) // get the player's information
+                                if let player = profileModel.player {
+                                    guardianName = player.guardianName ?? ""
+                                    guardianEmail = player.guardianEmail ?? ""
+                                    guardianPhone = player.guardianPhone ?? ""
+                                    nickname = player.nickName ?? ""
+                                    jerseyNum = player.jerseyNum
+                                    gender = player.gender ?? ""
+                                }
+                                if let user = profileModel.user {
+                                    firstName = user.firstName
+                                    lastName = user.lastName
+                                    dob = user.dateOfBirth ?? Date()
+                                    phone = user.phone ?? ""
+                                }
+                                
+                            } catch {
+                                print("Error when loading player. \(error)")
+                            }
+                        }
+                        withAnimation {
+                            isEditing.toggle()
+                        } // edit the player's profile
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        // send the info to the database
+                        Task {
+                            savingUserSettings()
+                            savingPlayerInformation()
+                        }
+                        withAnimation {
+                            isEditing.toggle()
+                        } // edit the player's profile
+                    } label : {
+                        Text("Save")
+                    }
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+    
+    private func savingPlayerInformation() {
+        Task {
+            if let player = profileModel.player {
+                var playerJersey: Int? = jerseyNum
+                var playerNickname: String? = nickname
+                var playerGuardianName: String? = guardianName
+                var playerGuardianEmail: String? = guardianEmail
+                var playerGuardianPhone: String? = guardianPhone
+                var playerGender: String? = gender
+                
+                if jerseyNum == player.jerseyNum {
+                    playerJersey = nil
+                }
+                
+                if nickname == player.nickName {
+                    playerNickname = nil
+                }
+                
+                if guardianName == player.guardianName {
+                    playerGuardianName = nil
+                }
+                
+                if guardianEmail == player.guardianEmail {
+                    playerGuardianEmail = nil
+                }
+                
+                if guardianPhone == player.guardianPhone {
+                    playerGuardianPhone = nil
+                }
+                
+                if gender == player.gender {
+                    playerGender = nil
+                }
+  
+                profileModel.updatePlayerSettings(id: player.id, jersey: playerJersey, nickname: playerNickname, guardianName: playerGuardianName, guardianEmail: playerGuardianEmail, guardianPhone: playerGuardianPhone, gender: playerGender)
+            }
+        }
+    }
+    
+    private func savingUserSettings() {
+        Task {
+            do {
+                if var user = profileModel.user {
+                    var userFirstName: String? = firstName
+                    var userLastName: String? = lastName
+                    var userDateOfBirth: Date? = dob
+                    var userPhone: String? = phone
+                    
+                    if firstName == user.firstName {
+                        userFirstName = nil
+                    } else {
+                        user.firstName = firstName
+                    }
+                    
+                    if lastName == user.lastName {
+                       userLastName = nil
+                    } else {
+                        user.lastName = lastName
+                    }
+                    
+                    if dob == user.dateOfBirth {
+                        userDateOfBirth = nil
+                    } else {
+                        user.dateOfBirth = dob
+                    }
+                    
+                    if phone == user.phone {
+                        userPhone = nil
+                    } else {
+                        user.phone = phone
+                    }
+                    
+                    try await profileModel.updateUserSettings(id: user.id, dateOfBirth: userDateOfBirth, firstName: userFirstName, lastName: userLastName, phone: userPhone)
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
 }
 
 #Preview {
-    CoachPlayerProfileView(playerDocId: "", userDocId: "")
+    CoachPlayerProfileView(playerDocId: "", userDocId: "", teamDocId: "")
 }

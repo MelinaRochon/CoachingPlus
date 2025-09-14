@@ -113,16 +113,16 @@ struct CoachMyTeamView: View {
                         // Looping through players related to the team
                         if !playerModel.players.isEmpty {
                             if showPlayersIndex == 0 { // All Players
-                                PlayersList(players: playerModel.players)
+                                PlayersList(players: playerModel.players, teamDocId: selectedTeam.id)
                                 
                             } else if showPlayersIndex == 1 {
                                 // Show all accepted players
                                 let filteredPlayers = playerModel.players.filter { $0.status == "Accepted" }
-                                PlayersList(players: filteredPlayers)
+                                PlayersList(players: filteredPlayers, teamDocId: selectedTeam.id)
                             } else {
                                 // Show all players invited
                                 let filteredPlayers = playerModel.players.filter { $0.status == "Pending Invite" }
-                                PlayersList(players: filteredPlayers)
+                                PlayersList(players: filteredPlayers, teamDocId: selectedTeam.id)
                             }
                         } else {
                             Text("No players found.").font(.caption).foregroundStyle(.secondary)

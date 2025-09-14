@@ -167,9 +167,71 @@ final class CoachProfileViewModel: ObservableObject {
 
     
     /// Remove a player from the database
-    func removePlayer() {
+    func removePlayer(teamDocId: String) async throws {
         
         // TODO: Remove a player from db cannot be done.
         guard let player else { return }
+        
+        // Remove the player from the team
+        
+        // Remove from invites, if player id is found in array
+        var inviteDocId = try await TeamManager.shared.getInviteDocIdOfPlayerAndTeam(teamDocId: teamDocId, playerDocId: player.id)
+        print("the invite doc id is \(inviteDocId ?? "DOES NOT exexist. player was not added by the coach")")
+        if inviteDocId != nil {
+            // Remove the invite id from the invites array
+            print("removing player's invite from the teamP: \(teamDocId)")
+            try await TeamManager.shared.removeInviteFromTeam(id: teamDocId, inviteDocId: inviteDocId!)
+        } else {
+            print("player not in invite array... no need to remove")
+        }
+        
+        // Remove from accepted, if player is found in array
+        if let playerId = player.playerId {
+            print("player id exists. chek if player is assigned to a team ({playersz})")
+            let playerIsOnTeam = try await TeamManager.shared.isPlayerOnTeam(id: teamDocId, playerId: playerId)
+            print("is player set on a team: (\(playerIsOnTeam))")
+            if playerIsOnTeam {
+                print("removing p0layer from the team")
+                try await TeamManager.shared.removePlayerFromTeam(id: teamDocId, playerId: playerId)
+            } else {
+                print("player nhot on the team/. . . no need to remove from the player array (in teams)")
+            }
+        }
+        
+        // Remove team id player was enrolled in players team_enrolled array
+        try await PlayerManager.shared.removeTeamFromPlayerWithTeamDocId(id: player.id, teamDocId: teamDocId)
+    }
+    
+    
+    func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
+        
+        try await UserManager.shared.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
+    }
+    
+    /// Updates the settings for the currently loaded player.
+    /// - Parameters:
+    ///   - id: The unique identifier of the player to update.
+    ///   - jersey: Optional updated jersey number.
+    ///   - nickname: Optional updated nickname.
+    ///   - guardianName: Optional updated guardian's name.
+    ///   - guardianEmail: Optional updated guardian's email address.
+    ///   - guardianPhone: Optional updated guardian's phone number.
+    ///   - gender: Optional updated gender of the player.
+    func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) {
+        guard var player else { return }
+        
+        player.jerseyNum = jersey ?? player.jerseyNum
+        player.nickName = nickname ?? player.nickName
+        player.guardianName = guardianName ?? player.guardianName
+        player.guardianEmail = guardianEmail ?? player.guardianEmail
+        player.guardianPhone = guardianPhone ?? player.guardianPhone
+        player.gender = gender ?? player.gender
+        
+        Task {
+            // Update the player's information in the database
+            try await PlayerManager.shared.updatePlayerSettings(id: id, jersey: jersey, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, gender: gender)
+            
+            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+        }
     }
 }
