@@ -34,6 +34,7 @@ struct GroupedGamesList: View {
 
     let showUpcomingGames: Bool
     let showRecentGames: Bool
+    let userType: UserType
         
     var body: some View {
         
@@ -49,7 +50,7 @@ struct GroupedGamesList: View {
                 }.padding(.top, 5)
                 ) {
                     ForEach(upcomingGames.games, id: \.gameId) { game in
-                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: "Coach")) {
+                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: userType)) {
                             GameRow(game: game)
                         }
                     }
@@ -68,8 +69,14 @@ struct GroupedGamesList: View {
                 }.padding(.top, 5)
                 ) {
                     ForEach(group.games, id: \.gameId) { game in
-                        NavigationLink(destination: CoachSpecificFootageView(game: game, team: selectedTeam)) {
-                            GameRow(game: game)
+                        if userType == .coach {
+                            NavigationLink(destination: CoachSpecificFootageView(game: game, team: selectedTeam)) {
+                                GameRow(game: game)
+                            }
+                        } else {
+                            NavigationLink(destination: PlayerSpecificFootageView(game: game, team: selectedTeam)) {
+                                GameRow(game: game)
+                            }
                         }
                     }
                 }

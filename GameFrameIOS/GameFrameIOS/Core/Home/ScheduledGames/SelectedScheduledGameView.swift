@@ -68,8 +68,9 @@ struct SelectedScheduledGameView: View {
     @State var selectedGame: HomeGameDTO?
     
     /// Stores the type of user (e.g., "Coach", "Player"), fetched dynamically.
-    @State var userType: String? = nil
-    
+//    @State var userType: String? = nil
+    @State var userType: UserType? = nil
+
     @State private var isEditing: Bool = false
     
     /// Stores the title or name of the game (e.g., match name or event title).
@@ -159,7 +160,7 @@ struct SelectedScheduledGameView: View {
                         Divider()
                         
                         if let userType = userType {
-                            if (userType == "Coach") {
+                            if (userType == .coach) {
                                 // View the game Settings
                                 List {
                                     Text("Game Settings").multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).font(.headline)
@@ -328,7 +329,7 @@ struct SelectedScheduledGameView: View {
 //                .navigationTitle(Text("Editing Scheduled Game"))
 //                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    if userType == "Coach" {
+                    if userType == .coach {
                         ToolbarItem(placement: .topBarTrailing) {
                             if !isEditing {
                                 Button {
@@ -425,7 +426,7 @@ struct SelectedScheduledGameView: View {
             self.minutes = dminutes
             self.recordingReminder = selectedGame.game.recordingReminder
             
-            if userType == "Coach" {
+            if userType == .coach {
                 // Retrieve the feedback time settings
                 timeBeforeFeedback = selectedGame.game.timeBeforeFeedback
                 timeAfterFeedback = selectedGame.game.timeAfterFeedback

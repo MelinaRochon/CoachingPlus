@@ -98,7 +98,8 @@ struct CoachMyTeamView: View {
                             groupedGames: groupedGames,
                             selectedTeam: selectedTeam,
                             showUpcomingGames: showUpcomingGames,
-                            showRecentGames: showRecentGames
+                            showRecentGames: showRecentGames,
+                            userType: .coach
                         )
                     } else {
                         Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
