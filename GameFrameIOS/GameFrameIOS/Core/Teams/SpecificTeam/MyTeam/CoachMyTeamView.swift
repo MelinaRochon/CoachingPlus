@@ -97,12 +97,6 @@ struct CoachMyTeamView: View {
                         GroupedGamesList(
                             groupedGames: groupedGames,
                             selectedTeam: selectedTeam,
-                            destinationBuilder: { game in
-                                AnyView(CoachSpecificFootageView(game: game, team: selectedTeam))
-                            },
-                            upcomingGamedestinationBuilder: { game in
-                                AnyView(SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: "Coach"))
-                            },
                             showUpcomingGames: showUpcomingGames,
                             showRecentGames: showRecentGames
                         )

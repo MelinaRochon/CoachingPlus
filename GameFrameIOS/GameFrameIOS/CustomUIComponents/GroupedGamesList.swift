@@ -30,18 +30,15 @@ import SwiftUI
 /// ```
 struct GroupedGamesList: View {
     let groupedGames: [(label: String, games: [DBGame])]
-    let selectedTeam: DBTeam?
-    let destinationBuilder: (DBGame) -> AnyView
-    let upcomingGamedestinationBuilder: (DBGame) -> AnyView
+    let selectedTeam: DBTeam
 
     let showUpcomingGames: Bool
     let showRecentGames: Bool
-    
-    @State private var games: [(label: String, games: [DBGame])] = []
-    
+        
     var body: some View {
         
         // Iterate through each group of games
+        // MARK: Upcoming Games Section
         if showUpcomingGames {
             let upcomingGames = groupedGames.first(where: { $0.label == "Upcoming Games" })
             if let upcomingGames = upcomingGames {
@@ -51,16 +48,16 @@ struct GroupedGamesList: View {
                     Spacer()
                 }.padding(.top, 5)
                 ) {
-                    GamesList(
-                        games: upcomingGames.games,
-                        destinationBuilder: { game in
-                            upcomingGamedestinationBuilder(game)
+                    ForEach(upcomingGames.games, id: \.gameId) { game in
+                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: "Coach")) {
+                            GameRow(game: game)
                         }
-                    )
+                    }
                 }
             }
         }
         
+        // MARK: Recent/Past Games Section
         if showRecentGames {
             let pastGroups = groupedGames.filter { $0.label != "Upcoming Games" }
             ForEach(pastGroups, id: \.label) { group in
@@ -70,183 +67,71 @@ struct GroupedGamesList: View {
                     Spacer()
                 }.padding(.top, 5)
                 ) {
-                    GamesList(
-                        games: group.games ,
-                        destinationBuilder: { game in
-                            destinationBuilder(game)
+                    ForEach(group.games, id: \.gameId) { game in
+                        NavigationLink(destination: CoachSpecificFootageView(game: game, team: selectedTeam)) {
+                            GameRow(game: game)
                         }
-                    )
+                    }
                 }
             }
         }
     }
 }
 
-#Preview {
-    let groupedGames: [(String, [DBGame])] = [
-        (
-            "This Week",
-            [
-                DBGame(
-                    gameId: "game1",
-                    title: "Practice Match",
-                    duration: 5400,
-                    location: "Field A",
-                    scheduledTimeReminder: 30,
-                    startTime: Date(), // Now
-                    timeBeforeFeedback: 60,
-                    timeAfterFeedback: 120,
-                    recordingReminder: true,
-                    teamId: "teamA"
-                ),
-                DBGame(
-                    gameId: "game2",
-                    title: "Training Session",
-                    duration: 3600,
-                    location: "Gym",
-                    scheduledTimeReminder: 15,
-                    startTime: Calendar.current.date(byAdding: .day, value: -1, to: Date()),
-                    timeBeforeFeedback: 30,
-                    timeAfterFeedback: 90,
-                    recordingReminder: false,
-                    teamId: "teamA"
-                ),
-                DBGame(
-                    gameId: "game3",
-                    title: "Friendly Game",
-                    duration: 7200,
-                    location: nil,
-                    scheduledTimeReminder: 60,
-                    startTime: Calendar.current.date(byAdding: .day, value: -2, to: Date()),
-                    timeBeforeFeedback: 45,
-                    timeAfterFeedback: 120,
-                    recordingReminder: true,
-                    teamId: "teamA"
-                )
-            ]
-        ),
-        (
-            "Last Week",
-            [
-                DBGame(
-                    gameId: "game4",
-                    title: "League Game",
-                    duration: 5400,
-                    location: "Stadium",
-                    scheduledTimeReminder: 20,
-                    startTime: Calendar.current.date(byAdding: .day, value: -7, to: Date()),
-                    timeBeforeFeedback: 60,
-                    timeAfterFeedback: 120,
-                    recordingReminder: true,
-                    teamId: "teamB"
-                ),
-                DBGame(
-                    gameId: "game5",
-                    title: "Strategy Practice",
-                    duration: 3600,
-                    location: "Indoor Arena",
-                    scheduledTimeReminder: 10,
-                    startTime: Calendar.current.date(byAdding: .day, value: -8, to: Date()),
-                    timeBeforeFeedback: 30,
-                    timeAfterFeedback: 90,
-                    recordingReminder: false,
-                    teamId: "teamB"
-                ),
-                DBGame(
-                    gameId: "game6",
-                    title: "Recovery Session",
-                    duration: 1800,
-                    location: nil,
-                    scheduledTimeReminder: 15,
-                    startTime: Calendar.current.date(byAdding: .day, value: -9, to: Date()),
-                    timeBeforeFeedback: 15,
-                    timeAfterFeedback: 45,
-                    recordingReminder: false,
-                    teamId: "teamB"
-                )
-            ]
-        )
-    ]
-    
-    let exampleTeam = DBTeam(
-        id: "team001",
-        teamId: "t001",
-        name: "Lions Soccer Club",
-        teamNickname: "Lions",
-        sport: "Soccer",
-        logoUrl: "https://example.com/logos/lions.png",
-        colour: "#FFD700", // Gold color
-        gender: "Mixed",
-        ageGrp: "U18",
-        accessCode: "JOINLIONS2025",
-        coaches: ["coach123", "coach456"],
-        players: ["player001", "player002", "player003"],
-        invites: ["invite001", "invite002"]
-    )
 
-    List {
-        Section(header:
-                    HStack {
-            Text("Games")
-            Spacer()
-            Button{
-                //                addGameEnabled.toggle() // Toggles the Add Game form visibility
-            } label: {
-                // Button to add a new game
-                HStack {
-                    Text("Add Game")
-                }
-                .foregroundColor(Color.blue)
+/// A SwiftUI view representing a single row for a game in a list.
+/// Displays a preview style element and basic information about the game.
+///
+/// - Parameters:
+///   - game: The `DBGame` object to display in the row.
+struct GameRow: View {
+    let game: DBGame
+    
+    var body: some View {
+        HStack {
+            // Custom preview for the game video or thumbnail
+           CustomUIFields.gameVideoPreviewStyle()
+                       
+            VStack(alignment: .leading) {
+                // Display the game title
+                Text(game.title).font(.headline)
+                
+                // Display formatted start time
+                Text(formatStartTime(game.startTime)).font(.subheadline)
             }
-        }) {
-            
-            GroupedGamesList(
-                groupedGames: groupedGames,
-                selectedTeam: exampleTeam,
-                destinationBuilder: { game in
-                    AnyView(CoachSpecificFootageView(game: game, team: exampleTeam))
-                },
-                upcomingGamedestinationBuilder: { game in
-                    AnyView(GameDetailsView(selectedGame: game, team: exampleTeam, userType: "Coach"))
-                },
-                showUpcomingGames: true,
-                showRecentGames: true
-            )
         }
-    }.listStyle(PlainListStyle())
+    }
 }
 
 
-struct GamesList: View {
+/// A reusable SwiftUI view that displays a list of games with navigation links to a
+/// custom destination view for each game. Can be used for upcoming or past games.
+///
+/// - Parameters:
+///   - games: The array of `DBGame` objects to display.
+///   - destinationBuilder: A closure that returns a SwiftUI `View` representing the
+///     destination when a game row is tapped.
+struct GamesList<Destination: View>: View {
     let games: [DBGame]
-    let destinationBuilder: (DBGame) -> AnyView
+    let destinationBuilder: (DBGame) -> Destination
 
     var body: some View {
-        // Iterate through each game in the group
         ForEach(games, id: \.gameId) { game in
-            
-            // Navigation link that opens the destination view for the selected game
             NavigationLink(destination: destinationBuilder(game)) {
                 HStack(alignment: .top) {
-                    // Custom UI for game preview
                     CustomUIFields.gameVideoPreviewStyle()
                     
                     VStack(alignment: .leading) {
-                        Text(game.title)
-                            .font(.headline)
+                        Text(game.title).font(.headline)
+                        Text(formatStartTime(game.startTime)).font(.subheadline)
                         
-                        Text(formatStartTime(game.startTime))
-                            .font(.subheadline)
-                        
-                        // If the game has a start time, check if it is a future game
-                        if let startTime = game.startTime {
-                            let gameEndTime = startTime.addingTimeInterval(TimeInterval(game.duration))
-                            if gameEndTime > Date() {
-                                Text("Scheduled Game")
-                                    .font(.caption)
-                                    .bold()
-                                    .foregroundColor(.green)
-                            }
+                        // Show "Scheduled Game" badge for upcoming games
+                        if let startTime = game.startTime,
+                           startTime.addingTimeInterval(TimeInterval(game.duration)) > Date() {
+                            Text("Scheduled Game")
+                                .font(.caption)
+                                .bold()
+                                .foregroundColor(.green)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -255,3 +140,141 @@ struct GamesList: View {
         }
     }
 }
+
+
+//#Preview {
+//    let groupedGames: [(String, [DBGame])] = [
+//        (
+//            "This Week",
+//            [
+//                DBGame(
+//                    gameId: "game1",
+//                    title: "Practice Match",
+//                    duration: 5400,
+//                    location: "Field A",
+//                    scheduledTimeReminder: 30,
+//                    startTime: Date(), // Now
+//                    timeBeforeFeedback: 60,
+//                    timeAfterFeedback: 120,
+//                    recordingReminder: true,
+//                    teamId: "teamA"
+//                ),
+//                DBGame(
+//                    gameId: "game2",
+//                    title: "Training Session",
+//                    duration: 3600,
+//                    location: "Gym",
+//                    scheduledTimeReminder: 15,
+//                    startTime: Calendar.current.date(byAdding: .day, value: -1, to: Date()),
+//                    timeBeforeFeedback: 30,
+//                    timeAfterFeedback: 90,
+//                    recordingReminder: false,
+//                    teamId: "teamA"
+//                ),
+//                DBGame(
+//                    gameId: "game3",
+//                    title: "Friendly Game",
+//                    duration: 7200,
+//                    location: nil,
+//                    scheduledTimeReminder: 60,
+//                    startTime: Calendar.current.date(byAdding: .day, value: -2, to: Date()),
+//                    timeBeforeFeedback: 45,
+//                    timeAfterFeedback: 120,
+//                    recordingReminder: true,
+//                    teamId: "teamA"
+//                )
+//            ]
+//        ),
+//        (
+//            "Last Week",
+//            [
+//                DBGame(
+//                    gameId: "game4",
+//                    title: "League Game",
+//                    duration: 5400,
+//                    location: "Stadium",
+//                    scheduledTimeReminder: 20,
+//                    startTime: Calendar.current.date(byAdding: .day, value: -7, to: Date()),
+//                    timeBeforeFeedback: 60,
+//                    timeAfterFeedback: 120,
+//                    recordingReminder: true,
+//                    teamId: "teamB"
+//                ),
+//                DBGame(
+//                    gameId: "game5",
+//                    title: "Strategy Practice",
+//                    duration: 3600,
+//                    location: "Indoor Arena",
+//                    scheduledTimeReminder: 10,
+//                    startTime: Calendar.current.date(byAdding: .day, value: -8, to: Date()),
+//                    timeBeforeFeedback: 30,
+//                    timeAfterFeedback: 90,
+//                    recordingReminder: false,
+//                    teamId: "teamB"
+//                ),
+//                DBGame(
+//                    gameId: "game6",
+//                    title: "Recovery Session",
+//                    duration: 1800,
+//                    location: nil,
+//                    scheduledTimeReminder: 15,
+//                    startTime: Calendar.current.date(byAdding: .day, value: -9, to: Date()),
+//                    timeBeforeFeedback: 15,
+//                    timeAfterFeedback: 45,
+//                    recordingReminder: false,
+//                    teamId: "teamB"
+//                )
+//            ]
+//        )
+//    ]
+//    
+//    let exampleTeam = DBTeam(
+//        id: "team001",
+//        teamId: "t001",
+//        name: "Lions Soccer Club",
+//        teamNickname: "Lions",
+//        sport: "Soccer",
+//        logoUrl: "https://example.com/logos/lions.png",
+//        colour: "#FFD700", // Gold color
+//        gender: "Mixed",
+//        ageGrp: "U18",
+//        accessCode: "JOINLIONS2025",
+//        coaches: ["coach123", "coach456"],
+//        players: ["player001", "player002", "player003"],
+//        invites: ["invite001", "invite002"]
+//    )
+//
+//    List {
+//        Section(header:
+//                    HStack {
+//            Text("Games")
+//            Spacer()
+//            Button{
+//                //                addGameEnabled.toggle() // Toggles the Add Game form visibility
+//            } label: {
+//                // Button to add a new game
+//                HStack {
+//                    Text("Add Game")
+//                }
+//                .foregroundColor(Color.blue)
+//            }
+//        }) {
+//            
+//            GroupedGamesList(
+//                groupedGames: groupedGames,
+//                selectedTeam: exampleTeam,
+//                destinationBuilder: { game in
+//                    CoachSpecificFootageView(game: game, team: exampleTeam)
+////                    AnyView(CoachSpecificFootageView(game: game, team: exampleTeam))
+//                },
+//                upcomingGamedestinationBuilder: { game in
+//                    GameDetailsView(selectedGame: game, team: exampleTeam, userType: "Coach")
+//
+////                    AnyView(GameDetailsView(selectedGame: game, team: exampleTeam, userType: "Coach"))
+//                },
+//                showUpcomingGames: true,
+//                showRecentGames: true
+//            )
+//        }
+//    }.listStyle(PlainListStyle())
+//}
