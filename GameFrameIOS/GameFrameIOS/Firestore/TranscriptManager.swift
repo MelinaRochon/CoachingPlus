@@ -219,6 +219,25 @@ final class TranscriptManager {
     }
     
     
+    /// Deletes all transcript documents for a specific game within a team.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: The document ID of the team containing the game.
+    ///   - gameId: The document ID of the game whose transcripts should be deleted.
+    /// - Throws: Rethrows any errors encountered while fetching or deleting the documents from Firestore.
+    /// - Note: This function fetches all documents in the transcript collection for the specified game
+    ///         and deletes them one by one. If the collection is large, consider using batch deletes
+    ///         or pagination to avoid performance issues.
+    func deleteAllTranscripts(teamDocId: String, gameId: String) async throws {
+        let collectionRef = transcriptCollection(teamDocId: teamDocId, gameDocId: gameId)
+        let snapshot = try await collectionRef.getDocuments()
+        
+        for document in snapshot.documents {
+            try await collectionRef.document(document.documentID).delete()
+        }
+    }
+    
+    
     /// Updates the transcript text in Firestore for a given game and team.
     ///
     /// - Parameters:
