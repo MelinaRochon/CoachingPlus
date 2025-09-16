@@ -313,7 +313,7 @@ struct SelectedScheduledGameView: View {
                             Button(role: .destructive, action: {
                                 Task {
                                     do {
-                                        try await gameModel.removeGame(gameId: selectedGame.game.gameId, teamDocId: selectedGame.team.id)
+                                        try await gameModel.removeGame(gameId: selectedGame.game.gameId, teamDocId: selectedGame.team.id, teamId: selectedGame.team.teamId)
                                         dismiss()
                                     } catch {
                                         print(error.localizedDescription)

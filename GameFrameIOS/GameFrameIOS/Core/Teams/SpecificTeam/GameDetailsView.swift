@@ -43,6 +43,9 @@ struct GameDetailsView: View {
     @State private var isEditing: Bool = false
     
     @State private var gameModel = GameModel()
+    
+    @State private var removeGame: Bool = false
+    @Binding var dismissOnRemove: Bool
 
     var body: some View {
         NavigationView {
@@ -267,6 +270,29 @@ struct GameDetailsView: View {
             
             // Game settings section
             gameSettingsSection
+            
+            Section {
+                Button("Delete Game") {
+                    Task {
+                        removeGame.toggle()
+                    }
+                }
+                .confirmationDialog(
+                    "Are you sure you want to delete this game? All recordings will be permanently deleted.",
+                    isPresented: $removeGame,
+                    titleVisibility: .visible
+                ) {
+                    Button(role: .destructive, action: {
+                        withAnimation {
+                            isEditing.toggle()
+                        }
+                        dismiss()
+                        dismissOnRemove = true
+                    }) {
+                        Text("Delete")
+                    }
+                }
+            }
         }
     }
     
@@ -312,5 +338,5 @@ struct GameDetailsView: View {
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
     
     
-    GameDetailsView(selectedGame: game, team: team, userType: "Player")
+    GameDetailsView(selectedGame: game, team: team, userType: "Player", dismissOnRemove: .constant(false))
 }

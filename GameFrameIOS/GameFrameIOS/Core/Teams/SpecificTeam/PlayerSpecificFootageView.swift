@@ -213,7 +213,7 @@ struct PlayerSpecificFootageView: View {
                 }
             }
             .sheet(isPresented: $isGameDetailsEnabled) {
-                GameDetailsView(selectedGame: game, team: team, userType: "Player")
+                GameDetailsView(selectedGame: game, team: team, userType: "Player", dismissOnRemove: .constant(false))
             }
     }
 }

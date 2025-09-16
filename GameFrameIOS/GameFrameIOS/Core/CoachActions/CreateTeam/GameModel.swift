@@ -219,7 +219,26 @@ final class GameModel: ObservableObject {
     /// - Throws: An error if the deletion request fails.
     /// - Note: This only removes the game document itself.
     ///         Any subcollections (e.g., feedback, transcripts) must be deleted separately if needed.
-    func removeGame(gameId: String, teamDocId: String) async throws {
+    func removeGame(gameId: String, teamDocId: String, teamId: String) async throws {
+        
+        // Delete all key moments
+        try await KeyMomentManager.shared.deleteAllKeyMoments(teamDocId: teamDocId, gameId: gameId)
+        
+        // Delete all transcripts
+        try await TranscriptManager.shared.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
+        
+        // Delete the game
         try await GameManager.shared.deleteGame(gameId: gameId, teamDocId: teamDocId)
+        
+        // Delete each audio files that are assigned to this game
+        let folderPath = "audio/\(teamId)/\(gameId)"
+//        let folderPath = "audio/E152008E-1833-4D1A-A7CF-4BB3229351B7/mRxnDZ6SfNlhH9QhHK6K"
+        StorageManager.shared.deleteAllAudioUnderPath(in: folderPath) { error in
+            if let error = error {
+                print("Failed to delete all audio files under this path: \(folderPath). Error: \(error.localizedDescription)")
+            } else {
+                print("Successfully deleted all audio files under this path: \(folderPath)")
+            }
+        }
     }
 }
