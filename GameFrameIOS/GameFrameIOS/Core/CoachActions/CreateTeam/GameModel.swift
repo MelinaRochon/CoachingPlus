@@ -232,7 +232,7 @@ final class GameModel: ObservableObject {
         
         // Delete each audio files that are assigned to this game
         let folderPath = "audio/\(teamId)/\(gameId)"
-//        let folderPath = "audio/E152008E-1833-4D1A-A7CF-4BB3229351B7/mRxnDZ6SfNlhH9QhHK6K"
+
         StorageManager.shared.deleteAllAudioUnderPath(in: folderPath) { error in
             if let error = error {
                 print("Failed to delete all audio files under this path: \(folderPath). Error: \(error.localizedDescription)")
