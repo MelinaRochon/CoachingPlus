@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+//import FirebaseFirestore
 
 /// `PlayerAllTeamsView` is a SwiftUI view that displays a list of teams a player is associated with.
 /// This view also provides functionality for the player to enter a "group code" to join a new team.
@@ -37,6 +37,7 @@ struct PlayerAllTeamsView: View {
     /// A state object that holds the team model, which handles team-related data and logic
     /// This object is used to fetch the list of teams, validate access codes, and add the player to a team.
     @StateObject private var teamModel = TeamModel()
+    @StateObject private var playerTeamInfoModel = PlayerTeamInfoModel()
 
     /// Holds the list of teams that the player is currently part of
     /// This state variable stores the teams fetched from the backend or database. It is updated when the data is loaded.
@@ -132,6 +133,22 @@ struct PlayerAllTeamsView: View {
                                             let newTeam = try await teamModel.addingPlayerToTeam(team: tmpTeam)
                                             teams!.append(newTeam!)
                                             groupCode = "" // Reset input field
+
+                                            let teamId = newTeam?.teamId ?? ""
+                                            guard !teamId.isEmpty else {
+                                                throw NSError(domain: "JoinTeam", code: 1,
+                                                              userInfo: [NSLocalizedDescriptionKey: "Missing team id"])
+                                            }
+                                            // Build the DTO
+                                                let dto = PlayerTeamInfoDTO(
+                                                    id: teamId,
+                                                    nickname: nil,
+                                                    jerseyNum: nil,
+                                                    joinedAt: nil           // nil => server timestamp
+                                                )
+
+                                                _ = try await playerTeamInfoModel.createPlayerTeamInfo(playerTeamInfoDTO: dto)
+
                                         } catch {
                                             print("Error when adding user to team. \(error)")
                                             showError = true
