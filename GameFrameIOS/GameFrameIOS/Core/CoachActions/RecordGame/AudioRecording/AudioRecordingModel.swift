@@ -55,6 +55,7 @@ final class AudioRecordingModel: ObservableObject {
     /// This array is loaded with the player's first name, last name, nickname, and jersey number.
     @Published var players: [PlayerTranscriptInfo]? = []
     
+    
     /// Adds a new audio recording and its corresponding key moment and transcript to the database.
     ///
     /// - Parameters:
@@ -74,27 +75,19 @@ final class AudioRecordingModel: ObservableObject {
                 // Add a new key moment to the database
                 fbFor = feedbackFor.map { [$0.playerId] } ?? []
             }
-            
-            print("fbFor test : \(fbFor)")
-            
+                        
             // Get authenticated coach ID
             let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
             
             let fileName = "\(UUID().uuidString).m4a"
             let path = "audio/\(teamId)/\(gameId)/\(fileName)"
-            let audioRef = StorageManager.shared.storage.child(path)
-
-            
-//            let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
-//                .appendingPathComponent("audio/\(teamId)/\(gameId)/\(numAudioFiles)")
-//                .appendingPathExtension("m4a")
-            
+                    
             let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             
             let tempURL = url.appendingPathComponent("audio/\(teamId)/\(gameId)/\(numAudioFiles)")
                 .appendingPathExtension("m4a")
             
-            uploadAudioFile(localFile: tempURL, path: path) { result in
+            StorageManager.shared.uploadAudioFile(localFile: tempURL, path: path) { result in
                 switch result {
                 case .success(let downloadURL):
                     print("Audio uploaded! URL: \(downloadURL)")
@@ -103,34 +96,6 @@ final class AudioRecordingModel: ObservableObject {
                     print("Error uploading audio: \(error.localizedDescription)")
                 }
             }
-            // 2. Upload the file
-//            do {
-//                let uploadTask = audioRef.putFile(from: tempURL, metadata: nil) //{ metadata, error in
-//                //                if let error = error {
-//                //                    completion(.failure(error))
-//                //                    return
-//                //                }
-//                //
-//                //                // 3. Once uploaded, get the download URL
-//                //                audioRef.downloadURL { url, error in
-//                //                    if let error = error {
-//                //                        completion(.failure(error))
-//                //                        return
-//                //                    }
-//                //
-//                //                    if let downloadURL = url {
-//                //                        completion(.success(downloadURL))
-//                //                    }
-//                //                }
-//                // }
-//                
-//            } catch {
-//                print("Error when uploading file to db. \(error)")
-//                return
-//            }
-            
-            
-            
             
             // Create a new key moment entry
             let keyMomentDTO = KeyMomentDTO(fullGameId: nil, gameId: gameId, uploadedBy: authUser.uid, audioUrl: path, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: fbFor)
@@ -197,39 +162,7 @@ final class AudioRecordingModel: ObservableObject {
             return
         }
     }
-    
-    func uploadAudioFile(localFile: URL, path: String, completion: @escaping (Result<URL, Error>) -> Void) {
-        // 1. Create a reference to the location in Firebase Storage
-//        let storageRef = Storage.storage().reference().child("audio/\(fileName)")
         
-        
-        let audioRef = StorageManager.shared.storage.child(path)
-
-//        let bucket = "gs://gameframe-4ea7d.firebasestorage.app"
-//        let storagePath = "\(bucket)/audio/\(fileName)"
-        
-        // 2. Upload the file
-        let uploadTask = audioRef.putFile(from: localFile, metadata: nil) { metadata, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-
-            // 3. Once uploaded, get the download URL
-            audioRef.downloadURL { url, error in
-                if let error = error {
-                    completion(.failure(error))
-                    return
-                }
-
-                if let downloadURL = url {
-                    completion(.success(downloadURL))
-                }
-            }
-        }
-    }
-
-    
 
     /// Creates an unknown game entry in the database.
     ///

@@ -65,3 +65,28 @@ func groupGamesByWeek(_ games: [DBGame]) -> [(label: String, games: [DBGame])] {
     
     return result
 }
+
+
+/// Returns a user-friendly label describing the reminder time in minutes.
+///
+/// - Parameter minutes: The reminder time in minutes (e.g., 0, 5, 10, 60).
+///
+/// - Returns: A `String` label for the given reminder time:
+///   - If the value exists in `AppData.timeOptions`, the predefined label is returned
+///     (e.g., `"At time of event"` or `"5 minutes before"`).
+///   - If no predefined label exists, the function generates a fallback:
+///       - `"X minutes before"` if the value is not a multiple of 60
+///       - `"Y hour(s) before"` if the value is divisible by 60
+func labelForReminder(_ minutes: Int) -> String {
+    // Try to find an exact match in timeOptions
+    if let option = AppData.timeOptions.first(where: { $0.1 == minutes }) {
+        return option.0
+    }
+    
+    // Fallback if the value is not in timeOptions
+    if minutes % 60 == 0 {
+        return "\(minutes / 60) hour\(minutes == 60 ? "" : "s") before"
+    } else {
+        return "\(minutes) minutes before"
+    }
+}

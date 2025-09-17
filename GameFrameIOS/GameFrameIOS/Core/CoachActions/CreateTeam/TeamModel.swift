@@ -183,6 +183,10 @@ final class TeamModel: ObservableObject {
                 
         let team = try await TeamManager.shared.getTeamWithDocId(docId: teamDocId)
                 
+        // Delete the game
+        try await GameManager.shared.deleteAllGames(teamDocId: teamDocId)
+
+                
         // Remove the coaches affiliation to the team
         for coachId in team.coaches {
             try await CoachManager.shared.removeTeamToCoach(coachId: coachId, teamId: team.teamId)
@@ -210,6 +214,17 @@ final class TeamModel: ObservableObject {
         
         // Remove team
         try await TeamManager.shared.deleteTeam(id: teamDocId)
+        
+        // Delete all audio files in the storage under the team id
+        let folderPath = "audio/\(team.teamId)"
+        StorageManager.shared.deleteAllAudioUnderPath(in: folderPath) { error in
+            if let error = error {
+                print("Failed to delete all audio files under this path: \(folderPath). Error: \(error.localizedDescription)")
+            } else {
+                print("Successfully deleted all audio files under this path: \(folderPath)")
+            }
+        }
+
     }
     
 }

@@ -75,7 +75,7 @@ struct CoachHomePageView: View {
                         // Scheduled Games Sectio
                         VStack(alignment: .leading, spacing: 10) {
                             // Navigation link to view all scheduled games
-                            NavigationLink(destination: AllScheduledGamesView(futureGames: futureGames, userType: "Coach")) {
+                            NavigationLink(destination: AllScheduledGamesView(futureGames: futureGames, userType: .coach)) {
                                 Text("Scheduled Games")
                                     .font(.headline)
                                     .foregroundColor(futureGamesFound ? .red : .secondary)
@@ -94,7 +94,7 @@ struct CoachHomePageView: View {
                                     prefix: 3,
                                     gameType: .scheduled,
                                     destinationBuilder: { game in
-                                        AnyView(SelectedScheduledGameView(selectedGame: game, userType: "Coach"))
+                                        AnyView(SelectedScheduledGameView(selectedGame: game, userType: .coach))
                                     }
                                 )
                             } else {

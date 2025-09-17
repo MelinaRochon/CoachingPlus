@@ -441,7 +441,22 @@ final class TranscriptModel: ObservableObject {
         // Remove transcript first
         try await TranscriptManager.shared.removeTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
         
+        // Get the audio url before deleting the key moment document
+        let audioUrl = try await KeyMomentManager.shared.getAudioUrl(teamDocId: teamId, gameDocId: gameId, keyMomentId: keyMomentId)
+        
         // Remove key moment
         try await KeyMomentManager.shared.removeKeyMoment(teamId: teamId, gameId: gameId, keyMomentId: keyMomentId)
+
+        guard audioUrl != nil else { return }
+        print("audioUrl: \(audioUrl! ?? "nil")")
+        
+        // Remove the audio from the storage database
+        StorageManager.shared.deleteAudio(path: audioUrl!)  { error in
+            if let error = error {
+                print("Failed to delete: \(error.localizedDescription)")
+            } else {
+                print("Deleted successfully!")
+            }
+        }
     }
 }

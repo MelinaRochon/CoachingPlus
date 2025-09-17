@@ -68,6 +68,11 @@ struct CoachSpecificFootageView: View {
     
     @StateObject private var gameModel = GameModel()
     
+    @State private var dismissOnRemove: Bool = false
+    
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -223,7 +228,18 @@ struct CoachSpecificFootageView: View {
                 }
             }
             .sheet(isPresented: $isGameDetailsEnabled, onDismiss: refreshData) {
-                GameDetailsView(selectedGame: game, team: team, userType: "Coach")
+                GameDetailsView(selectedGame: game, team: team, userType: "Coach", dismissOnRemove: $dismissOnRemove)
+            }
+            .onChange(of: dismissOnRemove) {
+                Task {
+                    do {
+                        // Remove game from database and from all players
+                        try await gameModel.removeGame(gameId: game.gameId, teamDocId: team.id, teamId: team.teamId)
+                        dismiss()
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                }
             }
         }
     }

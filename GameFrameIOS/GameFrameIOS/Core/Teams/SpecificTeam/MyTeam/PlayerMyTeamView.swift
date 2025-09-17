@@ -76,14 +76,9 @@ struct PlayerMyTeamView: View {
                         GroupedGamesList(
                             groupedGames: groupedGames,
                             selectedTeam: selectedTeam,
-                            destinationBuilder: { game in
-                                AnyView(PlayerSpecificFootageView(game: game, team: selectedTeam))
-                            },
-                            upcomingGamedestinationBuilder: { game in
-                                AnyView(SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: "Player"))
-                            },
                             showUpcomingGames: showUpcomingGames,
-                            showRecentGames: showRecentGames
+                            showRecentGames: showRecentGames,
+                            userType: .player
                         )
                     } else {
                         Text("No saved footage.").font(.caption).foregroundStyle(.secondary)

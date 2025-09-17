@@ -176,6 +176,25 @@ final class KeyMomentManager {
     func getKeyMomentWithDocId(teamDocId: String, gameDocId: String, keyMomentDocId: String) async throws -> DBKeyMoment? {
         return try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameDocId, keyMomentDocId: keyMomentDocId).getDocument(as: DBKeyMoment.self)
     }
+
+    
+    /// Fetches the audio URL associated with a specific key moment in a game.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: The document ID of the team to which the game belongs.
+    ///   - gameDocId: The document ID of the game containing the key moment.
+    ///   - keyMomentId: The document ID of the key moment for which to fetch the audio URL.
+    /// - Returns: The `audioUrl` string of the key moment if found, or `nil` if the key moment does not exist.
+    /// - Throws: Rethrows any errors encountered while fetching the key moment from the database.
+    /// - Note: This function performs an asynchronous fetch for the key moment using `getKeyMoment`.
+    ///         If no key moment is found, it prints a debug message and returns `nil`.
+    func getAudioUrl(teamDocId: String, gameDocId: String, keyMomentId: String) async throws -> String? {
+        guard let keyMoment = try await getKeyMoment(teamId: teamDocId, gameId: gameDocId, keyMomentDocId: keyMomentId) else {
+            print("No key moment found. returning")
+            return nil
+        }
+        return keyMoment.audioUrl
+    }
     
     
     /**
@@ -264,6 +283,25 @@ final class KeyMomentManager {
         }
 
         try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentId).delete()
+    }
+    
+    
+    /// Deletes all key moment documents for a specific game within a team.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: The document ID of the team containing the game.
+    ///   - gameId: The document ID of the game whose key moments should be deleted.
+    /// - Throws: Rethrows any errors encountered while fetching or deleting the documents from Firestore.
+    /// - Note: This function fetches all documents in the key moments collection for the specified game
+    ///         and deletes them one by one. If the collection is large, consider using batch deletes
+    ///         or pagination to avoid performance issues.
+    func deleteAllKeyMoments(teamDocId: String, gameId: String) async throws {
+        let collectionRef = keyMomentCollection(teamDocId: teamDocId, gameDocId: gameId)
+        let snapshot = try await collectionRef.getDocuments()
+        
+        for document in snapshot.documents {
+            try await collectionRef.document(document.documentID).delete()
+        }
     }
     
     

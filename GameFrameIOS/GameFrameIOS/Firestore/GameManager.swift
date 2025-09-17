@@ -214,6 +214,31 @@ final class GameManager {
     }
     
     
+    
+
+    /// Deletes all games documents for a specific game within a team.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: The document ID of the team containing the game.
+    /// - Throws: Rethrows any errors encountered while fetching or deleting the documents from Firestore.
+    /// - Note: This function fetches all documents in the games collection for the specified game
+    ///         and deletes them one by one. If the collection is large, consider using batch deletes
+    ///         or pagination to avoid performance issues.
+    func deleteAllGames(teamDocId: String) async throws {
+        let collectionRef = gameCollection(teamDocId: teamDocId)
+        let snapshot = try await collectionRef.getDocuments()
+        
+        for document in snapshot.documents {
+            // Delete all key moments
+            try await KeyMomentManager.shared.deleteAllKeyMoments(teamDocId: teamDocId, gameId: document.documentID)
+            
+            // Delete all transcripts
+            try await TranscriptManager.shared.deleteAllTranscripts(teamDocId: teamDocId, gameId: document.documentID)
+
+            try await collectionRef.document(document.documentID).delete()
+        }
+    }
+    
     /**
      Retrieves all games for a specific team from Firestore.
      - Parameters:
