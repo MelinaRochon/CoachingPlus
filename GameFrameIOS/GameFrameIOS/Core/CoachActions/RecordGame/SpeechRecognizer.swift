@@ -48,6 +48,8 @@ public actor SpeechRecognizer: Observable {
     private var task: SFSpeechRecognitionTask?
     private let recognizer: SFSpeechRecognizer?
     
+    private var contextualStrings: [String] = []
+    
     /**
      Initializes a new speech recognizer. If this is the first time you've used the class, it
      requests access to the speech recognizer and the microphone.
@@ -72,6 +74,10 @@ public actor SpeechRecognizer: Observable {
             }
         }
     }
+    
+    public func updateContextualStrings(_ strings: [String]) {
+            contextualStrings = strings
+        }
     
     @MainActor public func startTranscribing() {
         Task {
@@ -104,7 +110,7 @@ public actor SpeechRecognizer: Observable {
         }
         
         do {
-            let (audioEngine, request) = try Self.prepareEngine()
+            let (audioEngine, request) = try self.prepareEngine()
             self.audioEngine = audioEngine
             self.request = request
             self.task = recognizer.recognitionTask(with: request, resultHandler: { [weak self] result, error in
@@ -125,11 +131,34 @@ public actor SpeechRecognizer: Observable {
         task = nil
     }
     
-    private static func prepareEngine() throws -> (AVAudioEngine, SFSpeechAudioBufferRecognitionRequest) {
+//    private static func prepareEngine() throws -> (AVAudioEngine, SFSpeechAudioBufferRecognitionRequest) {
+//        let audioEngine = AVAudioEngine()
+//        
+//        let request = SFSpeechAudioBufferRecognitionRequest()
+//        request.shouldReportPartialResults = true
+//        
+//        let audioSession = AVAudioSession.sharedInstance()
+//        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: .duckOthers)
+//        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+//        let inputNode = audioEngine.inputNode
+//        
+//        let recordingFormat = inputNode.outputFormat(forBus: 0)
+//        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
+//            request.append(buffer)
+//        }
+//        audioEngine.prepare()
+//        try audioEngine.start()
+//        
+//        return (audioEngine, request)
+//    }
+    
+    private func prepareEngine() throws -> (AVAudioEngine, SFSpeechAudioBufferRecognitionRequest) {
         let audioEngine = AVAudioEngine()
         
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
+        print("contextual strings of players nam,e: \(contextualStrings)")
+        request.contextualStrings = contextualStrings
         
         let audioSession = AVAudioSession.sharedInstance()
         try audioSession.setCategory(.playAndRecord, mode: .measurement, options: .duckOthers)
@@ -145,8 +174,9 @@ public actor SpeechRecognizer: Observable {
         
         return (audioEngine, request)
     }
+
     
-    nonisolated private func recognitionHandler(audioEngine: AVAudioEngine, result: SFSpeechRecognitionResult?, error: Error?) {
+    private func recognitionHandler(audioEngine: AVAudioEngine, result: SFSpeechRecognitionResult?, error: Error?) {
         let receivedFinalResult = result?.isFinal ?? false
         let receivedError = error != nil
         
@@ -156,6 +186,19 @@ public actor SpeechRecognizer: Observable {
         }
         
         if let result {
+//            transcribe(result.bestTranscription.formattedString)
+            
+            // DEBUG: log alternatives to see what it considered
+            print("=== Transcription alternatives ===")
+            for alt in result.transcriptions {
+                print(" - alt: \(alt.formattedString)")
+            }
+            // optional: log word segments and timestamps
+            for seg in result.bestTranscription.segments {
+                print("segment: '\(seg.substring)'  timestamp:\(seg.timestamp)  duration:\(seg.duration)")
+            }
+
+//            transcribe(result.bestTranscription.formattedString, roster: contextualStrings)
             transcribe(result.bestTranscription.formattedString)
         }
     }
@@ -166,6 +209,20 @@ public actor SpeechRecognizer: Observable {
             transcript = message
         }
     }
+//        correctTranscript(transcript: message, roster: contextualStrings) { correctedText in
+//                Task { @MainActor in
+//                    self.transcript = correctedText
+//                }
+//            }
+//    }
+    
+//    nonisolated private func transcribe(_ message: String, roster: [String]) {
+//        correctTranscript(transcript: message, roster: roster) { correctedText in
+//            Task { @MainActor in
+//                self.transcript = correctedText
+//            }
+//        }
+//    }
     nonisolated private func transcribe(_ error: Error) {
         var errorMessage = ""
         if let error = error as? RecognizerError {
