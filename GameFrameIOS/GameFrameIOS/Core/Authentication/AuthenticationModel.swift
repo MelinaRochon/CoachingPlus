@@ -119,17 +119,29 @@ final class AuthenticationModel: ObservableObject {
                 let playerDocId = try await PlayerManager.shared.createNewPlayer(playerDTO: player)
                 print("Player doc id was created! \(playerDocId)")
                 
+                let subdocId = team.teamId // <- we store per-team info using team.teamId as the subdoc id
+
+                let dto = PlayerTeamInfoDTO(id: subdocId, playerId: playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil) // nil => server time
+                _ = try await PlayerTeamInfoManager.shared.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
+
                 // Add player to team
                 try await TeamManager.shared.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
                 return  // TODO: Might need to delete the existing user from the database otherwise, will never be able to create an account with that email
             }
             
             // update the user document
+            print("update user")
             try await UserManager.shared.updateUserDTO(id: invite.userDocId, email: email, userTpe: getUserType(for: userType), firstName: firstName, lastName: lastName, dob: dateOfBirth, phone: phone, country: country, userId: authDataResult.uid)
             
             // update the player document
+            print("update player")
             try await PlayerManager.shared.updatePlayerId(id: invite.playerDocId, playerId: authDataResult.uid)
             
+            // Create playerTeamInfo under players/{playerDocId}/playerTeamInfo/{team.teamId}
+            let subdocId = team.teamId
+            let dto = PlayerTeamInfoDTO(id: subdocId, playerId: invite.playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil)
+            _ = try await PlayerTeamInfoManager.shared.createNewPlayerTeamInfo(playerDocId: invite.playerDocId, playerTeamInfoDTO: dto)
+
             // Look for the correct team
             guard let team = try await TeamManager.shared.getTeam(teamId: invite.teamId) else {
                 print("Team looking for does not exist. Abort")

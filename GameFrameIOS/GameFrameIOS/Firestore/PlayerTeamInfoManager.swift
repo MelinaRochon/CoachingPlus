@@ -94,16 +94,19 @@ final class PlayerTeamInfoManager {
                           code: 400,
                           userInfo: [NSLocalizedDescriptionKey: "teamId (dto.teamId) is required"])
         }
-
+        print("ref")
         let ref = teamInfoDocument(playerDocId: playerDocId, teamId: dto.id)
 
         // Check if joined_at already exists (so we don't overwrite it)
+        print("snap")
         let snap = try await ref.getDocument()
         let hasJoinedAt = (snap.data()?["joined_at"] != nil)
 
+        print("setData")
         // Write base fields (without server sentinel)
         try ref.setData(from: dto, merge: true)
-
+        
+        print("joinedAt")
         // If dto.joinedAt is nil and joined_at not set yet, set server timestamp
         if !hasJoinedAt, dto.joinedAt == nil {
             try await ref.updateData(["joined_at": FieldValue.serverTimestamp()])

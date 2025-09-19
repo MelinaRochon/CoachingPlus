@@ -139,9 +139,12 @@ struct PlayerAllTeamsView: View {
                                                 throw NSError(domain: "JoinTeam", code: 1,
                                                               userInfo: [NSLocalizedDescriptionKey: "Missing team id"])
                                             }
+                                            let auth = try AuthenticationManager.shared.getAuthenticatedUser()
+
                                             // Build the DTO
                                                 let dto = PlayerTeamInfoDTO(
                                                     id: teamId,
+                                                    playerId: auth.uid,
                                                     nickname: nil,
                                                     jerseyNum: nil,
                                                     joinedAt: nil           // nil => server timestamp
