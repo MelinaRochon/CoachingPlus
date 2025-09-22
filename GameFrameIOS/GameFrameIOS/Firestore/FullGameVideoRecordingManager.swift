@@ -7,6 +7,7 @@
 
 import Foundation
 import FirebaseFirestore
+import AVFoundation
 
 /**
  This struct represents a full game video recording in the Firestore database. It contains all the necessary details
@@ -156,6 +157,10 @@ final class FullGameVideoRecordingManager {
         return TeamManager.shared.teamCollection.document(teamDocId).collection("fg_video_recording")
     }
     
+    func getFullGameVideo(teamDocId: String, fullGameId: String) async throws -> DBFullGameVideoRecording? {
+        return try await fullGameVideoRecordingDocument(teamDocId: teamDocId, fgDocId: fullGameId).getDocument(as: DBFullGameVideoRecording.self)
+    }
+    
 
     // MARK: - Public Methods
 
@@ -170,14 +175,14 @@ final class FullGameVideoRecordingManager {
      *   3. Map the provided `FullGameVideoRecordingDTO` to a `DBFullGameVideoRecording` object.
      *   4. Save the new video recording to Firestore.
      */
-    func addFullGameVideoRecording(fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws {
+    func addFullGameVideoRecording(fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws -> String? {
         //Create new full game video recording
         do {
             print("Sending new full game recording to Firestore: \(fullGameVideoRecordingDTO)")
             
             guard let teamDocId = try await TeamManager.shared.getTeam(teamId: fullGameVideoRecordingDTO.teamId)?.id else {
                 print("Could not find team id. Aborting")
-                return
+                return nil
             }
 
             let fgvRecordingDocument = fullGameVideoRecordingCollection(teamDocId: teamDocId).document()
@@ -190,9 +195,47 @@ final class FullGameVideoRecordingManager {
             try fgvRecordingDocument.setData(from: fgvRecording, merge: false)
             
             print("Full game video recording created!")
+            return documentId
         } catch let error as NSError {
             print("Error creating full game video recording: \(error.localizedDescription)")
             throw error
         }
+    }
+    
+    
+    /// Updates a full game video recording document in Firestore with a new end time and file path.
+    ///
+    /// - Parameters:
+    ///   - fullGameId: The Firestore document ID of the full game recording.
+    ///   - teamDocId: The Firestore document ID of the team.
+    ///   - endTime: The time when the recording ended.
+    ///   - path: The storage path (or URL) of the uploaded video file.
+    func updateFullGameVideoRecording(fullGameId: String, teamDocId: String, endTime: Date, path: String) async throws {
+        guard let fullGame = try await getFullGameVideo(teamDocId: teamDocId, fullGameId: fullGameId) else {
+            print("Could not find full game video recording document. Aborting")
+            return
+        }
+        
+        let data: [String:Any] = [
+            DBFullGameVideoRecording.CodingKeys.endTime.rawValue: endTime,
+            DBFullGameVideoRecording.CodingKeys.fileURL.rawValue: path
+        ]
+        try await fullGameVideoRecordingDocument(teamDocId: teamDocId, fgDocId: fullGameId).updateData(data as [AnyHashable: Any])
+    }
+    
+    
+    /// Fetches a full game video recording document for a given game from Firestore.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: The Firestore document ID of the team.
+    ///   - gameId: The unique identifier of the game.
+    ///
+    /// - Returns: A `DBFullGameVideoRecording` object if found, otherwise `nil`.
+    /// - Throws: An error if the Firestore query or decoding fails.
+    func getFullGameVideoWithGameId(teamDocId: String, gameId: String) async throws -> DBFullGameVideoRecording? {
+        let query = try await fullGameVideoRecordingCollection(teamDocId: teamDocId).whereField("game_id", isEqualTo: gameId).getDocuments()
+        
+        guard let doc = query.documents.first else { return nil }
+        return try doc.data(as: DBFullGameVideoRecording.self)
     }
 }

@@ -64,6 +64,39 @@ final class StorageManager {
     }
     
     
+    /// Uploads a local video file to Firebase Storage at the specified path,
+    /// then returns the download URL via a completion handler.
+    ///
+    /// - Parameters:
+    ///   - localFile: The local file URL of the video to upload.
+    ///   - path: The destination path in Firebase Storage.
+    ///   - completion: A closure returning either the download URL on success or an error on failure.
+    func uploadVideoFile(localFile: URL, path: String, completion: @escaping (Result<URL, Error>) -> Void) {
+        // Create a reference to the location in Firebase Storage
+        let audioRef = StorageManager.shared.storage.child(path)
+
+        // Upload the file to the storage
+        let uploadTask = audioRef.putFile(from: localFile, metadata: nil) { metadata, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            // Once uploaded, get the download URL
+            audioRef.downloadURL { url, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                if let downloadURL = url {
+                    completion(.success(downloadURL))
+                }
+            }
+        }
+    }
+    
+    
     /// Returns a Firebase Storage reference to an audio file at the specified path.
     ///
     /// - Parameter path: The full storage path of the audio file (e.g., "audio/{gameId}/{playerId}.m4a").

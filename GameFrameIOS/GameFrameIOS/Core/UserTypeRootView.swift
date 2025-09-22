@@ -17,7 +17,7 @@ struct UserTypeRootView: View {
     
     /// State variable that stores the user type (e.g., "Coach" or "Player").
     @State private var userType: String = ""
-    
+
     // MARK: - View
 
     var body: some View {

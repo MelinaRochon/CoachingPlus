@@ -37,7 +37,7 @@ struct CoachRecordingConfigView: View {
     @State private var selectedTeamId: String? = nil // Holds the selected team ID
 
     /// This variable holds the label for the selected recording type. It defaults to "Video", but the user can select a different type (e.g., Audio).
-    @State private var selectedRecordingTypeLabel: String = "Video" // Default recording type is Video
+    @State private var selectedRecordingTypeLabel: String = ""
 
     /// This variable tracks whether Apple Watch recording is enabled. It is a Boolean, where `true` means recording is enabled and `false` means it's not.
     @State private var selectedAppleWatchUseLabel: Bool = false // Indicates if Apple Watch recording is enabled
@@ -93,20 +93,7 @@ struct CoachRecordingConfigView: View {
                 
                 // Button to start the recording (Video or Audio)
                 
-                // TODO : Uncomment when video recording is available!
-                
-//                if selectedRecordingTypeLabel == "Video" {
-//                    NavigationLink(destination: CoachRecordingView()) {
-//                        
-//                        // Custom Styled 'Start Video Recording' button
-//                        CustomUIFields.styledHStack(content: {
-//                            Text("Start Video Recording").font(.title2).bold()
-//                        }, background: selectedTeamId != nil ? .red : .gray)
-//                        
-//                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
-//                } else
                 if (selectedRecordingTypeLabel == "Audio Only"){
-//                    NavigationLink(destination: AudioRecordingView(showLandingPageView: $showLandingPageView, teamId: selectedTeamId!, errorWrapper: .constant(nil))) {
                     NavigationLink(destination: AudioRecordingView(showLandingPageView: $showLandingPageView, teamId: selectedTeamId!)) {
 
                         // Custom Styled 'Start Audio Recording' button
@@ -115,12 +102,13 @@ struct CoachRecordingConfigView: View {
                         }, background: selectedTeamId != nil ? .black : .gray)
                         
                     }.disabled(selectedTeamId == nil) // Disable button if no team is selected
+                } else if (selectedRecordingTypeLabel == "Video") {
+                    NavigationLink(destination: VideoRecordingView(teamId: selectedTeamId!, showLandingPageView: $showLandingPageView)) {
+                        CustomUIFields.styledHStack(content: {
+                            Text("Start Video Recording").font(.title2).bold()
+                        }, background: selectedTeamId != nil ? .black : .gray)
+                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
                 }
-//                Spacer()
-//                
-//                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView), isActive: $navigateToCreateTeam) {
-//                    EmptyView()
-//                }
             }.toolbar {
                 // Cancel Button (Top Left)
                 ToolbarItem(placement: .topBarLeading) { // Back button on the top left
