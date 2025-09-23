@@ -154,6 +154,15 @@ struct AudioRecordingView: View {
                     // Load the players of the team for the transcription
                     try await audioRecordingModel.loadPlayersForTranscription(teamId: teamId)
                     
+                    if let players = audioRecordingModel.players {
+                        let playerNames = players.compactMap { player in
+                            [player.firstName, player.nickname].compactMap { $0 }
+                        }.flatMap { $0 } // flatten
+
+                        await speechRecognizer.updateContextualStrings(playerNames)
+                        print("✅ Loaded player names into speech recognizer: \(playerNames)")
+                    }
+                    
                     // Get the game
                     let game = try await gameModel.getGame(teamId: teamId, gameId: gameId)
                     if game == nil {
@@ -213,10 +222,18 @@ struct AudioRecordingView: View {
                         try await endRecording()  // Wait for the transcription to finish
                         
                         // Get the generated transcript
-                        let transcript = speechRecognizer.transcript
+                        var transcript = speechRecognizer.transcript
                         
                         // Get the player that is associated to the transcript
                         let feedbackFor = try await getPlayerAssociatedToTranscript(transcript: transcript)
+                        
+                        if let feedbackFor = feedbackFor {
+                            var tmpFeedback: [String] = []
+                            tmpFeedback.append(feedbackFor.firstName)
+                            if let nick = feedbackFor.nickname { tmpFeedback.append(nick) }
+
+                            transcript = normalizeTranscript(transcript, roster: tmpFeedback)
+                        }
                         
                         print("feedbackFor: \(feedbackFor)")
                         
@@ -236,6 +253,31 @@ struct AudioRecordingView: View {
         }
     }
     
+    
+    func bestMatch(for word: String, in roster: [String]) -> String? {
+        // naive example using Levenshtein or similar
+        roster.min { lhs, rhs in
+            levenshtein(word.lowercased(), lhs.lowercased()) <
+            levenshtein(word.lowercased(), rhs.lowercased())
+        }
+    }
+    
+    func normalizeTranscript(_ transcript: String, roster: [String]) -> String {
+        let words = transcript.split(separator: " ").map { String($0) }
+        var correctedWords: [String] = []
+        
+        for word in words {
+            if let match = bestMatch(for: word, in: roster),
+               match.lowercased().first == word.lowercased().first {
+                // extra guard so "Sofia" doesn't replace "Good"
+                correctedWords.append(match)
+            } else {
+                correctedWords.append(word)
+            }
+        }
+        
+        return correctedWords.joined(separator: " ")
+    }
     
     // MARK: - Helper Functions
 
@@ -378,34 +420,123 @@ struct AudioRecordingView: View {
     }
     
     
-    /// Attempts to associate the transcription with a player by matching names or nicknames
+    
+    private func levenshtein(_ s: String, _ t: String) -> Int {
+        let s = Array(s)
+        let t = Array(t)
+        if s.isEmpty { return t.count }
+        if t.isEmpty { return s.count }
+        var v0 = Array(0...t.count)
+        var v1 = [Int](repeating: 0, count: t.count + 1)
+        for i in 0..<s.count {
+            v1[0] = i + 1
+            for j in 0..<t.count {
+                let cost = s[i] == t[j] ? 0 : 1
+                v1[j+1] = Swift.min(
+                    v1[j] + 1,          // insertion
+                    v0[j+1] + 1,        // deletion
+                    v0[j] + cost        // substitution
+                )
+            }
+            v0 = v1
+        }
+        return v1[t.count]
+    }
+
+    private func similarity(_ a: String, _ b: String) -> Double {
+        let a = a.normalizedForMatching()
+        let b = b.normalizedForMatching()
+        if a.isEmpty && b.isEmpty { return 1.0 }
+        let dist = Double(levenshtein(a, b))
+        let maxLen = Double(max(a.count, b.count))
+        return 1.0 - (dist / maxLen) // between 0.0 and 1.0
+    }
+
+    private func ngrams(from words: [String], maxN: Int = 3) -> [String] {
+        var result: [String] = []
+        for n in 1...maxN {
+            if words.count < n { break }
+            for i in 0...(words.count - n) {
+                result.append(words[i..<(i+n)].joined(separator: " "))
+            }
+        }
+        return result
+    }
+
+    // replacement getPlayerAssociatedToTranscript
     private func getPlayerAssociatedToTranscript(transcript: String) async throws -> PlayerTranscriptInfo? {
-        var playerAssociated: PlayerTranscriptInfo? = nil
-        if let players = audioRecordingModel.players {
-            print("we have some oplayers")
-            for player in players {
-                // check if the transcript is associated to a player
-                print("current player : \(player.firstName) \(player.lastName), nickname : \(player.nickname ?? "none")")
-                
-                if let nickname = player.nickname {
-                    // check if the player's nickname is mentionned in the transcript
-                    if transcript.contains(nickname) {
-                        playerAssociated = player
-                        print("found player wth nickname")
-                        return playerAssociated
+        guard let players = audioRecordingModel.players else { return nil }
+
+        // Normalize transcript -> tokens
+        let tokens = transcript
+            .folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+            .components(separatedBy: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
+            .filter { !$0.isEmpty }
+
+        let grams = ngrams(from: tokens, maxN: 3)
+
+        var bestPlayer: PlayerTranscriptInfo?
+        var bestScore: Double = 0.0
+        let threshold: Double = 0.70 // tune between ~0.6 - 0.85
+
+        for player in players {
+            // candidate name variants
+            var candidates: [String] = []
+            candidates.append(player.firstName)
+            candidates.append(player.lastName)
+            if let nick = player.nickname { candidates.append(nick) }
+
+            for cand in candidates {
+                let candNorm = cand.normalizedForMatching()
+                for gram in grams {
+                    let score = similarity(candNorm, gram.normalizedForMatching())
+                    if score > bestScore {
+                        bestScore = score
+                        bestPlayer = player
                     }
-                }
-                if transcript.contains(player.firstName) {
-                    playerAssociated = player
-                    print("found player wth name")
-                    
-                    return playerAssociated
                 }
             }
         }
-        
-        return nil
+
+        if let p = bestPlayer, bestScore >= threshold {
+            print("Matched player: \(p.firstName) \(p.lastName) with score \(bestScore)")
+            return p
+        } else {
+            print("No confident match (bestScore=\(bestScore)); returning nil")
+            return nil
+        }
     }
+    
+    
+    /// Attempts to associate the transcription with a player by matching names or nicknames
+//    private func getPlayerAssociatedToTranscript(transcript: String) async throws -> PlayerTranscriptInfo? {
+//        var playerAssociated: PlayerTranscriptInfo? = nil
+//        if let players = audioRecordingModel.players {
+//            print("we have some oplayers")
+//            for player in players {
+//                // check if the transcript is associated to a player
+//                print("current player : \(player.firstName) \(player.lastName), nickname : \(player.nickname ?? "none")")
+//                
+//                if let nickname = player.nickname {
+//                    // check if the player's nickname is mentionned in the transcript
+//                    if transcript.contains(nickname) {
+//                        playerAssociated = player
+//                        print("found player wth nickname")
+//                        return playerAssociated
+//                    }
+//                }
+//                if transcript.contains(player.firstName) {
+//                    playerAssociated = player
+//                    print("found player wth name")
+//                    
+//                    return playerAssociated
+//                }
+//            }
+//        }
+//        
+//        return nil
+//    }
     
     
     /// Scrolls the list to the most recent transcript
@@ -475,6 +606,18 @@ struct AudioRecordingView: View {
     }
 }
 
+// helper extensions / funcs (put near the top of the file)
+extension String {
+    func normalizedForMatching() -> String {
+        return self.folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .joined()
+    }
+}
+
+
+
 #Preview {
     AudioRecordingView(showLandingPageView: .constant(false), teamId: "")
 
@@ -526,7 +669,10 @@ struct RecordingRowView: View {
                 }
             }
         }
-    }    
+    }
+    
+    
+   
 }
 
 

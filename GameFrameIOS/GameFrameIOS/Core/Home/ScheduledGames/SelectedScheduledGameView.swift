@@ -619,7 +619,7 @@ struct SelectedScheduledGameView: View {
                 recordingViewModel.gameId = gameId
                 
                 // Attempt to create a recording entry in the database for the specified team
-                try await recordingViewModel.createFGRecording(teamId: teamId)
+                try await recordingViewModel.createFGRecording(teamId: teamId, gameId: gameId)
                 print("Recording successfully created in the database.")
             } catch {
                 // Handle and log any errors that occur during recording creation

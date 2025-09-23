@@ -6,6 +6,18 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BEC5657D2E7B1617009D4D17 /* DurationPicker in Frameworks */ = {isa = PBXBuildFile; productRef = BEC5657C2E7B1617009D4D17 /* DurationPicker */; };
+		BEC565802E7B1627009D4D17 /* SFSymbolsPicker in Frameworks */ = {isa = PBXBuildFile; productRef = BEC5657F2E7B1627009D4D17 /* SFSymbolsPicker */; };
+		BEC565832E7B1630009D4D17 /* TranscriptionKit in Frameworks */ = {isa = PBXBuildFile; productRef = BEC565822E7B1630009D4D17 /* TranscriptionKit */; };
+		BEC565862E7B163B009D4D17 /* TimerKit in Frameworks */ = {isa = PBXBuildFile; productRef = BEC565852E7B163B009D4D17 /* TimerKit */; };
+		BEC565892E7B167E009D4D17 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = BEC565882E7B167E009D4D17 /* FirebaseAnalytics */; };
+		BEC5658B2E7B167E009D4D17 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = BEC5658A2E7B167E009D4D17 /* FirebaseAuth */; };
+		BEC5658D2E7B167E009D4D17 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = BEC5658C2E7B167E009D4D17 /* FirebaseCore */; };
+		BEC5658F2E7B167E009D4D17 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BEC5658E2E7B167E009D4D17 /* FirebaseFirestore */; };
+		BEC565912E7B167E009D4D17 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = BEC565902E7B167E009D4D17 /* FirebaseStorage */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		BEF13CA82D4C30CC002DD096 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +77,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEC5657D2E7B1617009D4D17 /* DurationPicker in Frameworks */,
+				BEC5658B2E7B167E009D4D17 /* FirebaseAuth in Frameworks */,
+				BEC565912E7B167E009D4D17 /* FirebaseStorage in Frameworks */,
+				BEC565862E7B163B009D4D17 /* TimerKit in Frameworks */,
+				BEC565802E7B1627009D4D17 /* SFSymbolsPicker in Frameworks */,
+				BEC5658D2E7B167E009D4D17 /* FirebaseCore in Frameworks */,
+				BEC5658F2E7B167E009D4D17 /* FirebaseFirestore in Frameworks */,
+				BEC565892E7B167E009D4D17 /* FirebaseAnalytics in Frameworks */,
+				BEC565832E7B1630009D4D17 /* TranscriptionKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +146,15 @@
 			);
 			name = GameFrameIOS;
 			packageProductDependencies = (
+				BEC5657C2E7B1617009D4D17 /* DurationPicker */,
+				BEC5657F2E7B1627009D4D17 /* SFSymbolsPicker */,
+				BEC565822E7B1630009D4D17 /* TranscriptionKit */,
+				BEC565852E7B163B009D4D17 /* TimerKit */,
+				BEC565882E7B167E009D4D17 /* FirebaseAnalytics */,
+				BEC5658A2E7B167E009D4D17 /* FirebaseAuth */,
+				BEC5658C2E7B167E009D4D17 /* FirebaseCore */,
+				BEC5658E2E7B167E009D4D17 /* FirebaseFirestore */,
+				BEC565902E7B167E009D4D17 /* FirebaseStorage */,
 			);
 			productName = GameFrameIOS;
 			productReference = BEF13C932D4C30CA002DD096 /* GameFrameIOS.app */;
@@ -208,6 +238,13 @@
 			);
 			mainGroup = BEF13C8A2D4C30CA002DD096;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BEC5657B2E7B1617009D4D17 /* XCRemoteSwiftPackageReference "DurationPicker" */,
+				BEC5657E2E7B1627009D4D17 /* XCRemoteSwiftPackageReference "SFSymbolsPicker" */,
+				BEC565812E7B1630009D4D17 /* XCLocalSwiftPackageReference "../../../../Downloads/TranscribingSpeechToText/StartingProject/TutorialResources/TranscriptionKit" */,
+				BEC565842E7B163B009D4D17 /* XCLocalSwiftPackageReference "../../../../Downloads/TranscribingSpeechToText/StartingProject/TutorialResources/TimerKit" */,
+				BEC565872E7B167E009D4D17 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BEF13C942D4C30CA002DD096 /* Products */;
 			projectDirPath = "";
@@ -294,6 +331,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GameFrameIOS/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Need it to record games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -324,6 +362,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GameFrameIOS/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Need it to record games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -569,6 +608,90 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		BEC565812E7B1630009D4D17 /* XCLocalSwiftPackageReference "../../../../Downloads/TranscribingSpeechToText/StartingProject/TutorialResources/TranscriptionKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../../Downloads/TranscribingSpeechToText/StartingProject/TutorialResources/TranscriptionKit;
+		};
+		BEC565842E7B163B009D4D17 /* XCLocalSwiftPackageReference "../../../../Downloads/TranscribingSpeechToText/StartingProject/TutorialResources/TimerKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../../Downloads/TranscribingSpeechToText/StartingProject/TutorialResources/TimerKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BEC5657B2E7B1617009D4D17 /* XCRemoteSwiftPackageReference "DurationPicker" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mac-gallagher/DurationPicker";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.2;
+			};
+		};
+		BEC5657E2E7B1627009D4D17 /* XCRemoteSwiftPackageReference "SFSymbolsPicker" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/alessiorubicini/SFSymbolsPicker";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.7;
+			};
+		};
+		BEC565872E7B167E009D4D17 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.9.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BEC5657C2E7B1617009D4D17 /* DurationPicker */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEC5657B2E7B1617009D4D17 /* XCRemoteSwiftPackageReference "DurationPicker" */;
+			productName = DurationPicker;
+		};
+		BEC5657F2E7B1627009D4D17 /* SFSymbolsPicker */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEC5657E2E7B1627009D4D17 /* XCRemoteSwiftPackageReference "SFSymbolsPicker" */;
+			productName = SFSymbolsPicker;
+		};
+		BEC565822E7B1630009D4D17 /* TranscriptionKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TranscriptionKit;
+		};
+		BEC565852E7B163B009D4D17 /* TimerKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TimerKit;
+		};
+		BEC565882E7B167E009D4D17 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEC565872E7B167E009D4D17 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		BEC5658A2E7B167E009D4D17 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEC565872E7B167E009D4D17 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		BEC5658C2E7B167E009D4D17 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEC565872E7B167E009D4D17 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		BEC5658E2E7B167E009D4D17 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEC565872E7B167E009D4D17 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		BEC565902E7B167E009D4D17 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEC565872E7B167E009D4D17 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BEF13C8B2D4C30CA002DD096 /* Project object */;
 }
