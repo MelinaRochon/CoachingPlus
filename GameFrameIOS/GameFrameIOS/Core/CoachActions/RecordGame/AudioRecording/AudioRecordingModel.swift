@@ -54,6 +54,8 @@ final class AudioRecordingModel: ObservableObject {
     /// An array of players' information, specifically needed for associating feedback with specific players.
     /// This array is loaded with the player's first name, last name, nickname, and jersey number.
     @Published var players: [PlayerTranscriptInfo]? = []
+
+    @Published var fullGameUrl: String?
     
     
     /// Adds a new audio recording and its corresponding key moment and transcript to the database.
@@ -212,6 +214,23 @@ final class AudioRecordingModel: ObservableObject {
         } catch {
             print("Error when loading the recordings from the database. Error: \(error)")
             return
+        }
+    }
+
+
+    func getFullGameRecordingUrlIfExists(teamDocId: String, gameId: String) async throws -> URL? {
+        // Try to find the full game recording if it exists, otherwise, return nil
+        do {
+            guard let fullGame = try await FullGameVideoRecordingManager.shared.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
+                print("Unable to get full game video recording document")
+                return nil
+                // TODO: Shouldn't be an error here if we can't find a full game recording. However, it should be
+            }
+            if let url =  fullGame.fileURL { return URL(string: url) }
+            else { return nil }
+        } catch {
+            print(error.localizedDescription)
+            return nil
         }
     }
     

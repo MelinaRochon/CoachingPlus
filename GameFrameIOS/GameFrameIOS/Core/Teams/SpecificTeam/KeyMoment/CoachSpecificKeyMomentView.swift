@@ -31,6 +31,8 @@ struct CoachSpecificKeyMomentView: View {
     
     /// ViewModel for handling transcript-related logic.
     @StateObject private var transcriptModel = TranscriptModel()
+
+    @StateObject private var audioRecordingModel = AudioRecordingModel()
     
     /// The game associated with the key moment.
     @State var game: DBGame
@@ -44,6 +46,8 @@ struct CoachSpecificKeyMomentView: View {
     /// Stores feedback information for specific players.
     @State private var feedbackFor: [PlayerNameAndPhoto]? = []
     
+    @State private var videoURL: URL?
+
     var body: some View {
         ScrollView {
             VStack {
@@ -77,10 +81,21 @@ struct CoachSpecificKeyMomentView: View {
                 
                 // Key moment Video Frame
                 VStack (alignment: .center){
-                    Rectangle()
+                    // Rectangle()
+                    //     .fill(Color.gray.opacity(0.3))
+                    //     .frame(width: 340, height: 180)
+                    //     .cornerRadius(10).padding(.bottom, 5)
+
+                    if let url = videoURL {
+                        VideoPlayerView(url: url)   // 🔽 Custom player
+                            .frame(height: 300)
+                    } else {
+                        Rectangle()
                         .fill(Color.gray.opacity(0.3))
                         .frame(width: 340, height: 180)
                         .cornerRadius(10).padding(.bottom, 5)
+                    }
+
                     
                     // Progress Slider
                     Slider(value: $progress, in: 0...totalDuration)
@@ -128,6 +143,9 @@ struct CoachSpecificKeyMomentView: View {
                 if let gameStartTime = game.startTime {
                     totalDuration = specificKeyMoment.frameStart.timeIntervalSince(gameStartTime)
                 }
+
+                videoURL = try await audioRecordingModel.getFullGameRecordingUrlIfExists(teamDocId: team.id, gameId: game.gameId)
+                
             } catch {
                 print("Error when fetching specific footage info: \(error)")
             }

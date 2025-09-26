@@ -163,6 +163,13 @@ final class TranscriptModel: ObservableObject {
             var allRecordings: [keyMomentTranscript] = []
             var allKeyMoments: [keyMomentTranscript] = []
 
+            // If full game recording can be found
+            guard let fullGame = try await FullGameVideoRecordingManager.shared.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
+                print("Unable to get full game video recording document")
+                return (nil, nil)
+                // TODO: Shouldn't be an error here if we can't find a full game recording. However, it should be
+            }
+
             for transcript in transcripts {
                 guard let keyMoment = keyMomentsDict[transcript.keyMomentId] else {
                     print("Key moment not found for transcript \(transcript.transcriptId)")
@@ -198,7 +205,7 @@ final class TranscriptModel: ObservableObject {
                 allRecordings.append(newTranscript)
 
                 // Add to key moments list only if it's tied to a full game
-                if keyMoment.fullGameId != nil {
+                if fullGame.fileURL != nil {
                     let newKeyMom = keyMomentTranscript(
                         id: keyMomentsLength,
                         keyMomentId: transcript.keyMomentId,
@@ -261,6 +268,13 @@ final class TranscriptModel: ObservableObject {
             var allRecordings: [keyMomentTranscript] = []
             var allKeyMoments: [keyMomentTranscript] = []
 
+            // If full game recording can be found
+            guard let fullGame = try await FullGameVideoRecordingManager.shared.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
+                print("Unable to get full game video recording document")
+                return (nil, nil)
+                // TODO: Shouldn't be an error here if we can't find a full game recording. However, it should be
+            }
+
             for transcript in transcripts {
                 guard let keyMoment = keyMomentsDict[transcript.keyMomentId] else {
                     print("Key moment not found for transcript \(transcript.transcriptId)")
@@ -294,9 +308,9 @@ final class TranscriptModel: ObservableObject {
                     feedbackFor: feedbackPlayers
                 )
                 allRecordings.append(newTranscript)
-
+            
                 // Add to key moments list only if it's tied to a full game
-                if keyMoment.fullGameId != nil {
+                if fullGame.fileURL != nil {
                     let newKeyMom = keyMomentTranscript(
                         id: keyMomentsLength,
                         keyMomentId: transcript.keyMomentId,
