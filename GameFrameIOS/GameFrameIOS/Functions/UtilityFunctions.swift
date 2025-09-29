@@ -9,6 +9,7 @@
 //
 
 import Foundation
+import AVFoundation
 
 /// Converts a time interval (in seconds) into a formatted string (HH:MM:SS).
 /// - Parameter duration: The time interval in seconds.
@@ -138,4 +139,17 @@ func formatStartTime(_ startTime: Date?) -> String {
     let format = startTime?.formatted(.dateTime.year().month().day().hour().minute()) ??
                 Date().formatted(.dateTime.year().month().day().hour().minute())
     return format
+}
+
+
+/// Calculates the aspect ratio of a video from a given URL.
+/// - Parameter url: The URL of the video file.
+/// - Returns: The aspect ratio as a `CGFloat` (width / height). Defaults to 16:9 if the video track cannot be accessed.
+func videoAspectRatio(for url: URL) -> CGFloat {
+    let asset = AVAsset(url: url)
+    if let track = asset.tracks(withMediaType: .video).first {
+        let size = track.naturalSize.applying(track.preferredTransform)
+        return abs(size.width / size.height)
+    }
+    return 16/9 // fallback
 }

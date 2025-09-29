@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 /// A view that displays a searchable list of key moments for a given game.
 ///
@@ -25,55 +26,100 @@ struct SearchKeyMomentsView: View {
     @State var team: DBTeam
     
     /// A list of key moments retrieved for the given game.
-    @State var keyMoments: [keyMomentTranscript]?
+    @State var keyMoments: [keyMomentTranscript]
     
     /// The user type (e.g., Coach or Player) to customize the experience.
     @State var userType: String
-
+    
+    let prefix: Int?
+    let destinationBuilder: (keyMomentTranscript?) -> AnyView
+    
+    @State private var thumbnails: [String: UIImage] = [:]
+    @State var videoUrl: URL
+    
     var body: some View {
-        NavigationView {
-            VStack {
-                List  {
-                    if let keyMoments = keyMoments {
-                        if !keyMoments.isEmpty{
-                            ForEach(keyMoments, id: \.id) { keyMoment in
-                                HStack(alignment: .top) {
-                                    NavigationLink(destination: CoachSpecificKeyMomentView(game: game, team: team, specificKeyMoment: keyMoment)) {
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.3))
-                                            .frame(width: 110, height: 60)
-                                            .cornerRadius(10)
-                                        
-                                        VStack {
-                                            if let startTime = game.startTime {
-                                                HStack {
-                                                    let durationInSeconds = keyMoment.frameStart.timeIntervalSince(startTime)
-                                                    Text(formatDuration(durationInSeconds)).bold().font(.headline)
-                                                    Spacer()
-                                                    Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                                }
-                                            }
-                                            Text("Transcript: \(keyMoment.transcript)").font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).lineLimit(3)
-                                        }
-                                    }
-                                }
-                            }
+        
+        let recordings = prefix.map { Array(keyMoments.prefix($0)) } ?? keyMoments
+        ForEach(recordings, id: \.id) { recording in
+            HStack(alignment: .top) {
+                NavigationLink(destination: destinationBuilder(recording)) {
+                    HStack {
+                        if let image = thumbnails[recording.keyMomentId] {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 110, height: 60)
+                                .clipped()
+                                .cornerRadius(10)
                         } else {
-                            Text("No key moments found.").font(.caption).foregroundStyle(.secondary)
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 110, height: 60)
+                                .cornerRadius(10)
                         }
+                        
+                        keyMomentRow(for: recording)
                     }
                 }
-                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                .navigationTitle("All Key Moments").navigationBarTitleDisplayMode(.inline)
-                .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search key moments" )
+            }
+        }
+        .task {
+                    // Get the thumbail for each key moments
+            for keyMoment in keyMoments {
+                print("testttt")
+                // TODO: Add time before feedback? possibly for the thumbnail
+                if let gameStartTime = game.startTime {
+                    print("gee a thumbnail")
+                    let startTime = keyMoment.frameStart.timeIntervalSince(gameStartTime)
+                    generateThumbnail(for: videoUrl, key: keyMoment.keyMomentId, sec: startTime)
+                }
             }
         }
     }
-}
 
-#Preview {
-    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
-    let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
+    
+    /// Generates a thumbnail image from a video at a specified time.
+    /// - Parameters:
+    ///   - url: The URL of the video file.
+    ///   - key: A unique key used to store the generated thumbnail in a dictionary (optional, can be used to identify the thumbnail).
+    ///   - sec: The time in seconds within the video where the thumbnail should be captured.
+    /// - Returns: None. The thumbnail is stored asynchronously in the `thumbnails` dictionary.
+    private func generateThumbnail(for url: URL, key: String, sec: Double) {
+        let asset = AVAsset(url: url)
+        let imageGenerator = AVAssetImageGenerator(asset: asset)
+        imageGenerator.appliesPreferredTrackTransform = true
+        
+        let time = CMTime(seconds: sec, preferredTimescale: 600)
+        
+        DispatchQueue.global().async {
+            do {
+                let cgImage = try imageGenerator.copyCGImage(at: time, actualTime: nil)
+                let uiImage = UIImage(cgImage: cgImage)
+                DispatchQueue.main.async {
+                    thumbnails[key] = uiImage
+                }
+            } catch {
+                print("❌ Failed to generate thumbnail for \(key): \(error.localizedDescription)")
+            }
+        }
+    }
 
-    SearchKeyMomentsView(game: game, team: team, keyMoments: [], userType: "Player")
+    
+    /// Creates a view representing a single key moment row in the list of key moments.
+    /// - Parameter recording: A `keyMomentTranscript` object containing the key moment's details (start time and transcript).
+    /// - Returns: A SwiftUI view displaying the key moment's relative time and transcript text.
+    @ViewBuilder
+    private func keyMomentRow(for recording: keyMomentTranscript) -> some View {
+        
+        VStack {
+            if let startTime = game.startTime {
+                HStack {
+                    let durationInSeconds = recording.frameStart.timeIntervalSince(startTime)
+                    Text(formatDuration(durationInSeconds)).bold().font(.headline)
+                    Spacer()
+                }
+            }
+            Text(recording.transcript).font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).lineLimit(2)
+        }
+    }
 }

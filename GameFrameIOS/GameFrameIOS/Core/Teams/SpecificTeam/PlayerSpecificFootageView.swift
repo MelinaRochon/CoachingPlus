@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 /**
  This view is responsible for displaying detailed footage and related information for a specific game within a team. It is designed for players to view their individual game footage, transcripts, and key moments.
@@ -56,47 +57,54 @@ struct PlayerSpecificFootageView: View {
 
     /// Holds the list of key moments for the game.
     @State private var keyMoments: [keyMomentTranscript]?
+    
+    /// Cache of thumbnails for key moments, keyed by keyMomentId
+    @State private var thumbnails: [String: UIImage] = [:]
+    @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
+    @State private var videoURL: URL?
+
 
     var body: some View {
-//        NavigationView {
-            ScrollView {
-                VStack {
-                    HStack(alignment: .top) {
-                        VStack {
-                            Text(game.title).font(.title2)
-                            Text(team.teamNickname).font(.headline)
-                            
-                            if let gameStartTime = gameStartTime {
-                                Text(gameStartTime, style: .date).font(.subheadline).foregroundStyle(.secondary)
-                            }
-                            Button {
-                                isGameDetailsEnabled.toggle()
-                            } label: {
-                                Text("View Game Details").foregroundColor(Color.red).underline()
-                            }
-                            Divider()
-                        }
+        //        NavigationView {
+        ScrollView {
+            VStack {
+                HStack(alignment: .top) {
+                    VStack {
+                        Text(game.title).font(.title2)
+                        Text(team.teamNickname).font(.headline)
                         
+                        if let gameStartTime = gameStartTime {
+                            Text(gameStartTime, style: .date).font(.subheadline).foregroundStyle(.secondary)
+                        }
+                        Button {
+                            isGameDetailsEnabled.toggle()
+                        } label: {
+                            Text("View Game Details").foregroundColor(Color.red).underline()
+                        }
+                        Divider()
                     }
                     
-                    // Watch Full Game
-                    VStack(alignment: .leading, spacing: 0) {
-                        NavigationLink(destination: PlayerFullGameTranscriptView()) {
-                            Text("Full Game Transcript")
-                                .font(.headline)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text("Watch").foregroundColor(.gray)
-                            Image(systemName: "chevron.right").foregroundColor(.gray)
-                        }
-                    }.padding()
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
-                        .padding(.horizontal).padding(.top)
-                        .disabled(true) // TODO: - Implement full game transcription in future release
-                    
+                }
+                
+                // Watch Full Game
+                VStack(alignment: .leading, spacing: 0) {
+                    NavigationLink(destination: PlayerFullGameTranscriptView(teamDocId: team.id, gameId: game.gameId, recordStartTime: game.startTime, gameTitle: game.title)) {
+                        Text("Full Game Transcript")
+                            .font(.headline)
+                            .foregroundColor(.black)
+                        Spacer()
+                        Text("Watch").foregroundColor(.gray)
+                        Image(systemName: "chevron.right").foregroundColor(.gray)
+                    }
+                }.padding()
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
+                    .padding(.horizontal).padding(.top)
+                    .disabled(false) // TODO: - Implement full game transcription in future release (only disabled if no videoUrl
+                
+                if let videoURL = videoURL {
                     // Key moments
                     VStack(alignment: .leading, spacing: 10) {
-                        NavigationLink(destination: PlayerAllKeyMomentsView(game: game, team: team, keyMoments: keyMoments)) {
+                        NavigationLink(destination: PlayerAllKeyMomentsView(game: game, team: team, videoUrl: videoURL)) {
                             Text("Key moments")
                                 .font(.headline)
                                 .foregroundStyle(keyMomentsFound ? .black : .secondary)
@@ -107,115 +115,169 @@ struct PlayerSpecificFootageView: View {
                             
                         }.padding(.bottom, 4).disabled(!keyMomentsFound)
                         
-                        HStack (alignment: .top) {
-                            if let keyMoments = keyMoments {
-                                if !keyMoments.isEmpty {
-                                    ForEach(keyMoments, id: \.id) { keyMoment in
-                                        HStack(alignment: .top) {
-                                            NavigationLink(destination: PlayerSpecificKeyMomentView(game: game, team: team, specificKeyMoment: keyMoment)) {
+                        if let keyMoments = keyMoments {
+                            if !keyMoments.isEmpty {
+                                ForEach(keyMoments, id: \.id) { keyMoment in
+                                    HStack(alignment: .top) {
+                                        NavigationLink(destination: PlayerSpecificKeyMomentView(game: game, team: team, specificKeyMoment: keyMoment, videoUrl: videoURL)) {
+                                            if let image = thumbnails[keyMoment.keyMomentId] {
+                                                Image(uiImage: image)
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 110, height: 60)
+                                                    .clipped()
+                                                    .cornerRadius(10)
+                                            } else {
                                                 Rectangle()
                                                     .fill(Color.gray.opacity(0.3))
                                                     .frame(width: 110, height: 60)
                                                     .cornerRadius(10)
-                                                
-                                                VStack {
-                                                    HStack {
-                                                        if let gameStartTime = gameStartTime {
-                                                            let durationInSeconds = keyMoment.frameStart.timeIntervalSince(gameStartTime)
-                                                            Text(formatDuration(durationInSeconds)).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 2).foregroundStyle(.black)
-                                                            Spacer()
-                                                            Image(systemName: "person.crop.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray)
-                                                        }
+                                            }
+                                            VStack {
+                                                HStack {
+                                                    if let gameStartTime = gameStartTime {
+                                                        let durationInSeconds = keyMoment.frameStart.timeIntervalSince(gameStartTime)
+                                                        Text(formatDuration(durationInSeconds)).font(.headline).bold().foregroundStyle(.black)
+                                                        Spacer()
                                                     }
-                                                    
-                                                    Text(keyMoment.transcript).font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black).lineLimit(3)
                                                 }
+                                                Text(keyMoment.transcript).font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black).lineLimit(2)
                                             }
                                         }
                                     }
-                                } else {
-                                    // key moments empty
-                                    Text("No key moments.").font(.caption).foregroundColor(.secondary)
                                 }
+                            } else {
+                                // key moments empty
+                                Text("No key moments.").font(.caption).foregroundColor(.secondary)
                             }
                         }
                     }.padding()
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
                         .padding(.horizontal).padding(.top)
+                }
+                
+                // Transcript
+                VStack(alignment: .leading, spacing: 10) {
                     
-                    // Transcript
-                    VStack(alignment: .leading, spacing: 10) {
+                    NavigationLink(destination: PlayerAllTranscriptsView(game: game, team: team)) {
+                        Text("Transcript")
+                            .font(.headline)
+                            .foregroundStyle(transcriptsFound ? .black : .secondary)
                         
-                        NavigationLink(destination: PlayerAllTranscriptsView(game: game, team: team, transcripts: transcripts)) {
-                            Text("Transcript")
-                                .font(.headline)
-                                .foregroundStyle(transcriptsFound ? .black : .secondary)
-                            
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(transcriptsFound ? .black : .secondary)
-                            Spacer()
-                            
-                        }.padding(.bottom, 4).disabled(!transcriptsFound)
-                        if let transcripts = transcripts {
-                            if !transcripts.isEmpty {
-                                ForEach(transcripts, id: \.id) { recording in
-                                    HStack(alignment: .center) {
-                                        NavigationLink(destination: PlayerSpecificTranscriptView(game: game, team: team, transcript: recording)) {
-                                            HStack(alignment: .center) {
-                                                if let gameStartTime = gameStartTime {
-                                                    let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
-                                                    Text(formatDuration(durationInSeconds)).bold().font(.headline).foregroundColor(Color.black)
-                                                    Spacer()
-                                                    Text("Transcript: \(recording.transcript)")
-                                                        .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(3).padding(.top, 4).foregroundColor(Color.black)
-                                                    
-                                                    Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
-                                                }
-                                            }.tag(recording.id as Int)
-                                        }.foregroundStyle(.black)
-                                    }
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(transcriptsFound ? .black : .secondary)
+                        Spacer()
+                        
+                    }.padding(.bottom, 4).disabled(!transcriptsFound)
+                    if let transcripts = transcripts {
+                        if !transcripts.isEmpty {
+                            ForEach(transcripts, id: \.id) { recording in
+                                HStack(alignment: .center) {
+                                    NavigationLink(destination: PlayerSpecificTranscriptView(game: game, team: team, transcript: recording)) {
+                                        HStack(alignment: .center) {
+                                            if let gameStartTime = gameStartTime {
+                                                let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
+                                                Text(formatDuration(durationInSeconds)).bold().font(.headline).foregroundColor(Color.black)
+                                                Spacer()
+                                                Text(recording.transcript)
+                                                    .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(2).padding(.top, 4).foregroundColor(Color.black)
+                                                
+                                                Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
+                                            }
+                                        }.tag(recording.id as Int)
+                                    }.foregroundStyle(.black)
                                 }
-                            } else {
-                                // Transcripts empty
-                                Text("No transcripts.").font(.caption).foregroundColor(.secondary)
+                            }
+                        } else {
+                            // Transcripts empty
+                            Text("No transcripts.").font(.caption).foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
+                .padding(.horizontal).padding(.top)
+            }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .task {
+            do {
+                if let startTime = game.startTime {
+                    gameStartTime = startTime
+                }
+                let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getPreviewTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
+                
+                self.transcripts = tmpTranscripts
+                self.keyMoments = tmpKeyMom
+                
+                if let allTranscripts = transcripts {
+                    if !allTranscripts.isEmpty {
+                        transcriptsFound = true
+                    }
+                }
+                
+                // Get the full game video path
+                guard let videoPath = try await fgVideoRecordingModel.getFGRecordingVideoUrl(teamDocId: team.id, gameId: game.gameId) else {
+                    print("error with videoPath for \(team.id), \(game.gameId)")
+                    return
+                }
+                
+                let storageRef = StorageManager.shared.getAudioURL(path: videoPath)
+                storageRef.downloadURL { url, error in
+                    if let error = error {
+                        print("❌ Failed to get stream URL: \(error.localizedDescription)")
+                    } else if let url = url {
+                        print("✅ download url is: \(url)")
+                        self.videoURL = url
+                        if let allKeyMoments = keyMoments {
+                            print("key moments found")
+                            if !allKeyMoments.isEmpty {
+                                keyMomentsFound = true
+                            }
+                            
+                            // Get the thumbail for each key moments
+                            for keyMoment in allKeyMoments {
+                                print("are we at least passing here")
+                                // TODO: Add time before feedback? possibly for the thumbnail
+                                if let gameStartTime = gameStartTime {
+                                    print("generating a thumbnail")
+                                    let startTime = keyMoment.frameStart.timeIntervalSince(gameStartTime)
+                                    generateThumbnail(for: url, key: keyMoment.keyMomentId, sec: startTime)
+                                }
                             }
                         }
                     }
-                    .padding()
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
-                    .padding(.horizontal).padding(.top)
                 }
+                
+            } catch {
+                print("Error when fetching specific footage info: \(error)")
             }
-            .frame(maxHeight: .infinity, alignment: .top)
-            .task {
-                do {
-                    if let startTime = game.startTime {
-                        gameStartTime = startTime
-                    }
-                    let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getAllTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
-                    
-                    self.transcripts = tmpTranscripts
-                    self.keyMoments = tmpKeyMom
-                    
-                    if let allTranscripts = transcripts {
-                        if !allTranscripts.isEmpty {
-                            transcriptsFound = true
-                        }
-                    }
-                    
-                    if let allKeyMoments = keyMoments {
-                        if !allKeyMoments.isEmpty {
-                            keyMomentsFound = true
-                        }
-                    }
-                } catch {
-                    print("Error when fetching specific footage info: \(error)")
-                }
-            }
-            .sheet(isPresented: $isGameDetailsEnabled) {
-                GameDetailsView(selectedGame: game, team: team, userType: "Player", dismissOnRemove: .constant(false))
-            }
+        }
+        .sheet(isPresented: $isGameDetailsEnabled) {
+            GameDetailsView(selectedGame: game, team: team, userType: "Player", dismissOnRemove: .constant(false))
+        }
     }
+    
+    private func generateThumbnail(for url: URL, key: String, sec: Double) {
+        let asset = AVAsset(url: url)
+        let imageGenerator = AVAssetImageGenerator(asset: asset)
+        imageGenerator.appliesPreferredTrackTransform = true
+        
+        let time = CMTime(seconds: sec, preferredTimescale: 600)
+        
+        DispatchQueue.global().async {
+            do {
+                let cgImage = try imageGenerator.copyCGImage(at: time, actualTime: nil)
+                let uiImage = UIImage(cgImage: cgImage)
+                DispatchQueue.main.async {
+                    thumbnails[key] = uiImage
+                }
+            } catch {
+                print("❌ Failed to generate thumbnail for \(key): \(error.localizedDescription)")
+            }
+        }
+    }
+
 }
 
 #Preview {

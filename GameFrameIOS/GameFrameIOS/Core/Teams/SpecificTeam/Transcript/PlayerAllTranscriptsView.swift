@@ -24,7 +24,7 @@ struct PlayerAllTranscriptsView: View {
     @State var team: DBTeam
     
     /// List of transcripts for the game.
-    @State var transcripts: [keyMomentTranscript]?
+    @State private var transcripts: [keyMomentTranscript]?
     
     /// Indicates whether the transcripts should be sorted by time (duration).
     /// - If `true`, transcripts are sorted by their `frameStart` time (chronological order).
@@ -53,6 +53,10 @@ struct PlayerAllTranscriptsView: View {
     /// - Declared as `@StateObject` to ensure it's created once and retained during the view’s lifecycle.
     /// - Used to fetch, store, and interact with players' data (e.g., names, selection, filtering).
     @StateObject private var playerModel = PlayerModel()
+    
+    /// A view model for managing and fetching the transcripts and key moments of the game.
+    @StateObject private var transcriptModel = TranscriptModel()
+
 
     
     var body: some View {
@@ -154,13 +158,19 @@ struct PlayerAllTranscriptsView: View {
                 }
             }
             .onAppear {
-                if let recordings = transcripts {
-                    self.filteredTranscripts = recordings
-                    print(filteredTranscripts)
-                }
                 
                 Task {
                     do {
+                        
+                        let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getAllTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
+                        self.transcripts = tmpTranscripts
+                        
+                        if let recordings = tmpTranscripts {
+                            self.filteredTranscripts = recordings
+                            print(filteredTranscripts)
+                        }
+
+
                         // Get all player's name
                         if let players = team.players {
                             playersNames = try await playerModel.getAllPlayersNames(players: players) ?? []
@@ -179,5 +189,5 @@ struct PlayerAllTranscriptsView: View {
     
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
     
-    PlayerAllTranscriptsView(game: game, team: team, transcripts: [])
+    PlayerAllTranscriptsView(game: game, team: team)
 }

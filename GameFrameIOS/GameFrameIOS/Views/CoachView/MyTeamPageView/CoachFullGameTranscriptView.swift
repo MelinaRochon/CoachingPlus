@@ -24,6 +24,9 @@ struct CoachFullGameTranscriptView: View {
     /// Unique identifier of the game for which the video transcript is fetched.
     @State var gameId: String
     
+    @State var recordStartTime: Date?
+    @State var gameTitle: String
+    
     /// Whether the associated video file has been successfully downloaded and is ready for playback.
     @State private var videoFileRetrieved: Bool = false
     
@@ -31,20 +34,37 @@ struct CoachFullGameTranscriptView: View {
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
 
     var body: some View {
-        VStack {
-            Text("Full Game Transcript!")
-            
-            if videoFileRetrieved {
-                let localAudioURL = FileManager.default
-                    .urls(for: .documentDirectory, in: .userDomainMask)[0]
-                    .appendingPathComponent("downloaded_video.mov")
-                VideoPlayerView(url: localAudioURL)   // 🔽 Custom player
-                    .frame(height: 300)
-                    .onAppear {
-                        AVAudioSession.sharedInstance().setPlaybackCategory()
+        ZStack {
+            VStack(alignment: .leading) {
+                   Text("Full Game Transcript").bold()
+                       .frame(maxWidth: .infinity, alignment: .center)
+
+                if videoFileRetrieved {
+                    let localAudioURL = FileManager.default
+                        .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                        .appendingPathComponent("downloaded_video.mov")
+                    let ratio = videoAspectRatio(for: localAudioURL)
+                    VideoPlayerView(url: localAudioURL)
+                        .aspectRatio(ratio, contentMode: .fit)
+                                .frame(maxWidth: .infinity)
+                        .onAppear {
+                            AVAudioSession.sharedInstance().setPlaybackCategory()
+                        }
+                    
+                    VStack(alignment: .leading) {
+                        Text(gameTitle).font(.title3)
+                        if let gameStartTime = recordStartTime {
+                            Text(formatStartTime(gameStartTime)).font(.subheadline).foregroundStyle(.secondary)
+                        }
                     }
-            } else {
-                CustomUIFields.loadingSpinner("Loading full game...")
+                    .padding(.horizontal)
+                    .padding(.vertical, 10)
+                }
+                Spacer()
+            }
+            
+            if !videoFileRetrieved {
+                CustomUIFields.loadingSpinner("Loading full game...") //.frame(alignment: .center)
             }
         }
         .task {

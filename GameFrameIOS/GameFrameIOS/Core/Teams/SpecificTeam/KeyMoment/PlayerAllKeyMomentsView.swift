@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 /// A view that displays all key moments recorded for a game, allowing players to browse and filter them.
 ///
@@ -27,67 +28,105 @@ struct PlayerAllKeyMomentsView: View {
     /// The team associated with the game.
     @State var team: DBTeam
     
-    /// A list of key moments retrieved for the given game.
-    @State var keyMoments: [keyMomentTranscript]?
+    /// List of key moments recorded for the game.
+    @State private var keyMoments: [keyMomentTranscript]?
+    
+    @State var videoUrl: URL
+    
+    /// Holds the list of filtered key moments.
+    @State private var filteredKeyMoments: [keyMomentTranscript] = []
+    
+    @StateObject private var transcriptModel = TranscriptModel()
+    
     
     var body: some View {
-        NavigationView {
-            VStack (alignment: .leading) {
-                VStack (alignment: .leading) {
-                    HStack(spacing: 0) {
-                        Text(game.title)
-                            .font(.title2)
-                        Spacer()
-                        Button (action: {
-                            showFilterSelector.toggle()
-                        }) {
-                            Image(systemName: "line.3.horizontal.decrease.circle").resizable().frame(width: 20, height: 20)
+        NavigationStack {
+            VStack {
+                if let recordings = keyMoments {
+                    List {
+                        if !recordings.isEmpty {
+                            SearchKeyMomentsView(
+                                game: game,
+                                team: team,
+                                keyMoments: recordings,
+                                userType: "Coach",
+                                prefix: nil,
+                                destinationBuilder: { recording in
+                                    AnyView(CoachSpecificKeyMomentView(game: game, team: team, specificKeyMoment: recording!, videoUrl: videoUrl))
+                                },
+                                videoUrl: videoUrl
+                            )
+                        } else {
+                            Text("No key moments found.").font(.caption).foregroundStyle(.secondary)
                         }
                     }
+                    .listStyle(PlainListStyle())
+                } else {
+                    CustomUIFields.loadingSpinner("Loading key moments...")
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack {
+                        Text("All Key Moments").font(.headline)
+                        Text(game.title).font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search key moments")
+            .scrollContentBackground(.hidden)
+            .overlay {
+                if let recordings = keyMoments {
+                    if !recordings.isEmpty && filteredKeyMoments.isEmpty && searchText != "" {
+                        ContentUnavailableView {
+                            Label("No Results", systemImage: "magnifyingglass")
+                        } description: {
+                            Text("Try to search for another key moment.")
+                        }
+                    }
+                }
+            }
+            .onChange(of: searchText) {
+                if let recordings = keyMoments {
+                    if !recordings.isEmpty && searchText != "" {
+                        print("Filtering: \(searchText)")
+                        self.filteredKeyMoments = filterTranscripts(filteredKeyMoments, game, with: searchText)
+                    }
+                    else {
+                        self.filteredKeyMoments = recordings
+                    }
+                }
+            }
+            .task {
+                do {
+                    let tmpKeyMoments = try await transcriptModel.getAllTranscripts(gameId: game.gameId, teamDocId: team.id)
+                    self.keyMoments = tmpKeyMoments
+                    self.filteredKeyMoments = keyMoments ?? []
                     
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))
-                            if let startTime = game.startTime {
-                                Text(startTime.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
-                            }
-                        }
-                        Spacer()
-                    }
-                }.padding(.leading).padding(.trailing).padding(.top, 3)
-                
-                Divider().padding(.vertical, 2)
-                
-                // Embedded search and key moments list
-                SearchKeyMomentsView(game: game, team: team, keyMoments: keyMoments, userType: "Player")
-                
-            }// Show filters
-//            .sheet(isPresented: $showFilterSelector, content: {
-//                NavigationStack {
-//                    FilterTranscriptsListView()
-//                        .presentationDetents([.medium])
-//                        .toolbar {
-//                            ToolbarItem {
-//                                Button (action: {
-//                                    showFilterSelector = false // Close the filter options
-//                                }) {
-//                                    Text("Done")
-//                                }
-//                            }
-//                        }
-//                        .navigationTitle("Filter Options")
-//                        .navigationBarTitleDisplayMode(.inline)
-//                }
-//            })
+                } catch {
+                    print("Error. Aborting...")
+                }
+            }
+            // Show filters
+            //            .sheet(isPresented: $showFilterSelector, content: {
+            //                NavigationStack {
+            //                    FilterTranscriptsListView()
+            //                        .presentationDetents([.medium])
+            //                        .toolbar {
+            //                            ToolbarItem {
+            //                                Button (action: {
+            //                                    showFilterSelector = false // Close the filter options
+            //                                }) {
+            //                                    Text("Done")
+            //                                }
+            //                            }
+            //                        }
+            //                        .navigationTitle("Filter Options")
+            //                        .navigationBarTitleDisplayMode(.inline)
+            //                }
+            //            })
             
         }
     }
-}
-
-#Preview {
-    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
-    
-    let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
-    
-    PlayerAllKeyMomentsView(game: game, team: team, keyMoments: [])
 }
