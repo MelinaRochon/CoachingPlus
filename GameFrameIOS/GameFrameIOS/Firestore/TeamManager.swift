@@ -228,6 +228,29 @@ final class TeamManager {
         
         return false
     }
+    
+    
+    /// Retrieves the roster size (number of players) for a given team.
+    ///
+    /// - Parameter teamId: The unique identifier of the team to fetch.
+    ///
+    /// - Throws: An error if the Firestore request or data decoding fails.
+    ///
+    /// - Returns: The number of players in the team's roster, or:
+    ///   - `nil` if no team with the given ID exists,
+    ///   - `0` if the team exists but has no roster.
+    func getTeamRosterLength(teamId: String) async throws -> Int? {
+        guard let team = try await getTeam(teamId: teamId) else {
+            print("No team found with this team id")
+            return nil
+        }
+        
+        if let roster = team.players {
+            return roster.count
+        }
+        
+        return 0
+    }
  
     
     /// Removes a player from the team.

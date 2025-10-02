@@ -225,7 +225,7 @@ struct CoachSpecificFootageView: View {
                     }
                     
                     let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getPreviewTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
-
+                    
                     self.transcripts = tmpTranscripts
                     self.keyMoments = tmpKeyMom
                     

@@ -57,7 +57,6 @@ struct PlayerAllTranscriptsView: View {
     /// A view model for managing and fetching the transcripts and key moments of the game.
     @StateObject private var transcriptModel = TranscriptModel()
 
-
     
     var body: some View {
         NavigationStack {
@@ -72,7 +71,7 @@ struct PlayerAllTranscriptsView: View {
                             game: game,
                             team: team,
                             destinationBuilder: { recording in
-                                AnyView(CoachSpecificTranscriptView(game: game, team: team, transcript: recording))
+                                AnyView(PlayerSpecificTranscriptView(game: game, team: team, transcript: recording))
                             }
                         )
                     } else {

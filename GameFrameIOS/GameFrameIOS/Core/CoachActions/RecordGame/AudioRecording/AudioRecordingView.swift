@@ -172,7 +172,7 @@ struct AudioRecordingView: View {
                     
                     // Initialising the audio recorder
                     self.session = AVAudioSession.sharedInstance()
-                    try self.session.setCategory(.playAndRecord)
+                    try self.session.setCategory(.playAndRecord, mode: .default)
                     
                     // requesting permission
                     // require microphone usage description
@@ -181,12 +181,6 @@ struct AudioRecordingView: View {
                             // error msg
                             self.alert.toggle()
                         }
-                        //self.audios.removeAll()
-
-//                        else {
-//                            // if permission is granted, fetching data
-//                            self.getAudios()
-//                        }
                     }
                 } catch {
                     print("Error when loading the audio recording transcripts. Error: \(error)")
@@ -210,7 +204,6 @@ struct AudioRecordingView: View {
         } else {
             // Stop Recording: Save to recordings
             self.recorder.stop()
-//            self.getAudios() // updating data
             
             if let startTime = recordingStartTime {
                 let endTime = Date()
@@ -291,8 +284,6 @@ struct AudioRecordingView: View {
 
             try FileManager.default.createDirectory(at: audioDir, withIntermediateDirectories: true)
             let tempURL =  audioDir.appendingPathComponent("\(self.audios.count + 1).m4a")
-//            let tempURL = url.appendingPathComponent("audio/\(teamId)/\(gameId)/\(self.audios.count + 1)")
-//                .appendingPathExtension("m4a")
             let settings = [
                 AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
                 AVSampleRateKey: 12000,
@@ -335,51 +326,6 @@ struct AudioRecordingView: View {
         }
     }
     
-    //Saving audio file at: /Users/melina_rochon/Library/Developer/CoreSimulator/Devices/FA1F232C-56E4-4236-B408-CDDF90C3F447/data/Containers/Data/Application/55697331-1F14-4225-82C3-7A2F203DDB43/Documents/test55.m4a
-
-//    let audioURL = URL(fileURLWithPath: "/path/to/audio.m4a")
-//    uploadAudioFile(localFile: audioURL, fileName: "coach_feedback_001.m4a") { result in
-//        switch result {
-//        case .success(let url):
-//            print("Audio uploaded! File available at: \(url)")
-//        case .failure(let error):
-//            print("Upload failed: \(error.localizedDescription)")
-//        }
-//    }
-//
-//    
-//    func uploadAudioFile(localFile: URL, fileName: String, completion: @escaping (Result<URL, Error>) -> Void) {
-//        // 1. Create a reference to the location in Firebase Storage
-////        let storageRef = Storage.storage().reference().child("audio/\(fileName)")
-//        
-//        let fileName = "\(UUID().uuidString).m4a"
-//        let path = "audio/\(teamId)/\(gameId)/\(fileName)"
-//        let audioRef = StorageManager.shared.storage.child(path)
-//        
-////        let bucket = "gs://gameframe-4ea7d.firebasestorage.app"
-////        let storagePath = "\(bucket)/audio/\(fileName)"
-//        
-//        // 2. Upload the file
-//        let uploadTask = audioRef.putFile(from: localFile, metadata: nil) { metadata, error in
-//            if let error = error {
-//                completion(.failure(error))
-//                return
-//            }
-//
-//            // 3. Once uploaded, get the download URL
-//            audioRef.downloadURL { url, error in
-//                if let error = error {
-//                    completion(.failure(error))
-//                    return
-//                }
-//
-//                if let downloadURL = url {
-//                    completion(.success(downloadURL))
-//                }
-//            }
-//        }
-//    }
-
     
     /// Starts the transcription process
     private func startRecording() {
@@ -395,30 +341,7 @@ struct AudioRecordingView: View {
     private func endRecording() async throws {
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5-second delay
         speechRecognizer.stopTranscribing()
-        
-//        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-//
-//        let audioFilename = "test29.m4a"
-//
-//        // Construct the full local file URL
-//        let localURL = documentsPath.appendingPathComponent(audioFilename)
-//
-//        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
-//            .appendingPathComponent(UUID().uuidString)
-//            .appendingPathExtension("m4a")
-//        
-//        uploadAudioFile(localFile: localURL, fileName: "coach_feedback_test.m4a") { result in
-//            switch result {
-//            case .success(let url):
-//                print("Audio uploaded! File available at: \(url)")
-//            case .failure(let error):
-//                print("Upload failed: \(error.localizedDescription)")
-//            }
-//        }
-
-
     }
-    
     
     
     private func levenshtein(_ s: String, _ t: String) -> Int {
@@ -508,37 +431,7 @@ struct AudioRecordingView: View {
         }
     }
     
-    
-    /// Attempts to associate the transcription with a player by matching names or nicknames
-//    private func getPlayerAssociatedToTranscript(transcript: String) async throws -> PlayerTranscriptInfo? {
-//        var playerAssociated: PlayerTranscriptInfo? = nil
-//        if let players = audioRecordingModel.players {
-//            print("we have some oplayers")
-//            for player in players {
-//                // check if the transcript is associated to a player
-//                print("current player : \(player.firstName) \(player.lastName), nickname : \(player.nickname ?? "none")")
-//                
-//                if let nickname = player.nickname {
-//                    // check if the player's nickname is mentionned in the transcript
-//                    if transcript.contains(nickname) {
-//                        playerAssociated = player
-//                        print("found player wth nickname")
-//                        return playerAssociated
-//                    }
-//                }
-//                if transcript.contains(player.firstName) {
-//                    playerAssociated = player
-//                    print("found player wth name")
-//                    
-//                    return playerAssociated
-//                }
-//            }
-//        }
-//        
-//        return nil
-//    }
-    
-    
+        
     /// Scrolls the list to the most recent transcript
     private func scrollToBottom(proxy: ScrollViewProxy, newCount: Int) {
         guard let lastItem = audioRecordingModel.recordings.last else { return }
@@ -555,32 +448,6 @@ struct AudioRecordingView: View {
         handleRecordingStateChange(false)
     }
     
-        
-    /// Fetches all saved audio files from the document directory
-//    func getAudios() {
-//        let fileManager = FileManager.default
-//
-//        let folderURL = URL(fileURLWithPath: NSTemporaryDirectory())
-//            .appendingPathComponent("audio/\(teamId)/\(gameId)", isDirectory: true)
-//
-//        do {
-////            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-//
-////            do {
-//            let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
-//
-//            // fetch all data from document directory...
-////            let results = try FileManager.default.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil, options: .producesRelativePathURLs)
-//            let audioFiles = fileURLs.filter { $0.pathExtension == "m4a" }
-//
-//            // Add all the files in the audio array
-//            for i in audioFiles {
-//                self.audios.append(i)
-//            }
-//        } catch {
-//            print("ALLLOSSS>>>> \(error.localizedDescription)")
-//        }
-//    }
     
     func getAudios() {
         let fileManager = FileManager.default
@@ -620,8 +487,6 @@ extension String {
 
 #Preview {
     AudioRecordingView(showLandingPageView: .constant(false), teamId: "")
-
-//    AudioRecordingView(showLandingPageView: .constant(false), teamId: "", errorWrapper: .constant(nil))
 }
 
 
