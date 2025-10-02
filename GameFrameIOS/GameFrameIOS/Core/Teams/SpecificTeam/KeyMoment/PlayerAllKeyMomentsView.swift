@@ -49,10 +49,10 @@ struct PlayerAllKeyMomentsView: View {
                                 game: game,
                                 team: team,
                                 keyMoments: recordings,
-                                userType: "Coach",
+                                userType: .player,
                                 prefix: nil,
                                 destinationBuilder: { recording in
-                                    AnyView(CoachSpecificKeyMomentView(game: game, team: team, specificKeyMoment: recording!, videoUrl: videoUrl))
+                                    AnyView(PlayerSpecificKeyMomentView(game: game, team: team, specificKeyMoment: recording!, videoUrl: videoUrl))
                                 },
                                 videoUrl: videoUrl
                             )

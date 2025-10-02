@@ -95,13 +95,15 @@ final class GameModel: ObservableObject {
         }
         
         var teamsId: [String]? = []
-        if (user.userType == "Coach") {
+        if (user.userType == .coach) {
             // Get the list of teams the coach is managing.
             teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
-        } else {
+        } else if (user.userType == .player) {
             // Get the list of teams the player is enrolled in.
             teamsId = try await PlayerManager.shared.getPlayer(playerId: authUser.uid)!.teamsEnrolled
             // TODO: Make the recent footage for the player only the ones that are assigned them or the whole team
+        } else {
+            // TODO: Unknown user in database. Return error
         }
         
         return teamsId

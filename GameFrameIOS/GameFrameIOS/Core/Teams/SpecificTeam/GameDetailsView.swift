@@ -36,7 +36,7 @@ struct GameDetailsView: View {
     @State var team: DBTeam
 
     /// The user type (e.g., "Coach", "Player"), determining access to certain settings.
-    @State var userType: String
+    @State var userType: UserType
     
     @State private var gameName: String = ""
     
@@ -120,7 +120,7 @@ struct GameDetailsView: View {
                         // TODO: - If is not a scheduled game and there was a video recording, show the actual game duration!
                     }.padding(.horizontal)
                     
-                    if userType == "Coach" {
+                    if userType == .coach {
                         Divider()
                         // View the game Settings
                         List {
@@ -133,7 +133,7 @@ struct GameDetailsView: View {
                 }
             }
             .toolbar {
-                if userType == "Coach" {
+                if userType == .coach {
                     ToolbarItem(placement: .topBarLeading) {
                         if !isEditing {
                             Button {
@@ -157,7 +157,7 @@ struct GameDetailsView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    if isEditing && userType == "Coach" {
+                    if isEditing && userType == .coach {
                         Button {
                             withAnimation {
                                 isEditing = false
@@ -338,5 +338,5 @@ struct GameDetailsView: View {
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
     
     
-    GameDetailsView(selectedGame: game, team: team, userType: "Player", dismissOnRemove: .constant(false))
+    GameDetailsView(selectedGame: game, team: team, userType: .player, dismissOnRemove: .constant(false))
 }

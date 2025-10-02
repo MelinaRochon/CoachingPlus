@@ -29,7 +29,7 @@ struct SearchKeyMomentsView: View {
     @State var keyMoments: [keyMomentTranscript]
     
     /// The user type (e.g., Coach or Player) to customize the experience.
-    @State var userType: String
+    @State var userType: UserType
     
     let prefix: Int?
     let destinationBuilder: (keyMomentTranscript?) -> AnyView
@@ -64,12 +64,10 @@ struct SearchKeyMomentsView: View {
             }
         }
         .task {
-                    // Get the thumbail for each key moments
+            // Get the thumbail for each key moments
             for keyMoment in keyMoments {
-                print("testttt")
                 // TODO: Add time before feedback? possibly for the thumbnail
                 if let gameStartTime = game.startTime {
-                    print("gee a thumbnail")
                     let startTime = keyMoment.frameStart.timeIntervalSince(gameStartTime)
                     generateThumbnail(for: videoUrl, key: keyMoment.keyMomentId, sec: startTime)
                 }

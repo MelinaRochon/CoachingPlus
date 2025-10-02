@@ -88,16 +88,19 @@ final class TeamModel: ObservableObject {
         // Determine the user's role (Coach or Player).
         let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
                 
-        if (userType == "Coach") {
+        if (userType == .coach) {
             // Load all teams that the coach is managing.
             let tmpTeams = try await CoachManager.shared.loadAllTeamsCoaching(coachId: authUser.uid)
             if tmpTeams != nil {
                 return tmpTeams
             }
             return nil
-        } else {
+        } else if (userType == .player) {
             // Load all teams that the player is enrolled in.
             return try await PlayerManager.shared.getAllTeamsEnrolled(playerId: authUser.uid)
+        } else {
+            // TODO: Unknown user in database. Return error
+            return nil
         }
     }
         

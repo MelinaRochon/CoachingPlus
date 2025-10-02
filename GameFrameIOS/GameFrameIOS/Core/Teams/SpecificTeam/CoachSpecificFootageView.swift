@@ -272,7 +272,7 @@ struct CoachSpecificFootageView: View {
                 }
             }
             .sheet(isPresented: $isGameDetailsEnabled, onDismiss: refreshData) {
-                GameDetailsView(selectedGame: game, team: team, userType: "Coach", dismissOnRemove: $dismissOnRemove)
+                GameDetailsView(selectedGame: game, team: team, userType: .coach, dismissOnRemove: $dismissOnRemove)
             }
             .onChange(of: dismissOnRemove) {
                 Task {

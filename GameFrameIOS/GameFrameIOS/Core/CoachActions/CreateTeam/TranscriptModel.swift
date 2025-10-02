@@ -84,13 +84,15 @@ final class TranscriptModel: ObservableObject {
                 var feedbackPlayers: [PlayerTranscriptInfo]? = []
                 if let feedbackFor = keyMoment.feedbackFor {
                     // Players only see their own feedback for privacy reasons
-                    if user.userType == "Player", let userId = user.userId {
+                    if user.userType == .player, let userId = user.userId {
                         if feedbackFor.contains(userId), let p = playersDict[userId] {
                             feedbackPlayers = [p]
                         }
-                    } else {
+                    } else if user.userType == .coach {
                         // Coaches can see all key moments, so no filtering is needed.
                         feedbackPlayers = feedbackFor.compactMap { playersDict[$0] }
+                    } else {
+                        // TODO: Unknown user in database. Return error
                     }
                 }
                 
@@ -178,7 +180,7 @@ final class TranscriptModel: ObservableObject {
 
                 var feedbackPlayers: [PlayerTranscriptInfo]? = []
                 if let feedbackFor = keyMoment.feedbackFor {
-                    if user.userType == "Player", let userId = user.userId {
+                    if user.userType == .player, let userId = user.userId {
                         // Player only sees their own feedback
                         if feedbackFor.contains(userId), let p = playersDict[userId] {
                             // Add a new transcript
@@ -205,7 +207,7 @@ final class TranscriptModel: ObservableObject {
                                 }
                             }
                         }
-                    } else {
+                    } else if user.userType == .coach {
                         // Coach sees all feedback players
                         feedbackPlayers = feedbackFor.compactMap { playersDict[$0] }
                         
@@ -232,6 +234,8 @@ final class TranscriptModel: ObservableObject {
                                 allKeyMoments.append(newKeyMom)
                             }
                         }
+                    } else {
+                        // TODO: Unknown user in database. Return error
                     }
                 }
             }
@@ -332,7 +336,7 @@ final class TranscriptModel: ObservableObject {
 
                 var feedbackPlayers: [PlayerTranscriptInfo]? = []
                 if let feedbackFor = keyMoment.feedbackFor {
-                    if user.userType == "Player", let userId = user.userId {
+                    if user.userType == .player, let userId = user.userId {
                         // Player only sees their own feedback
                         if feedbackFor.contains(userId), let p = playersDict[userId] {
                             // Add a new transcript
@@ -359,7 +363,7 @@ final class TranscriptModel: ObservableObject {
                                 }
                             }
                         }
-                    } else {
+                    } else if user.userType == .coach {
                         // Coach sees all feedback players
                         feedbackPlayers = feedbackFor.compactMap { playersDict[$0] }
                         
@@ -386,6 +390,8 @@ final class TranscriptModel: ObservableObject {
                                 allKeyMoments.append(newKeyMom)
                             }
                         }
+                    } else {
+                        // TODO: Unknown user in database. Return error
                     }
                 }
             }

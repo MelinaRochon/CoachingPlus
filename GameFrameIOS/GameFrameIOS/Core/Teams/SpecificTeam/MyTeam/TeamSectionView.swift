@@ -20,7 +20,7 @@ struct TeamSectionView: View {
     @Binding var showRecentGames: Bool
     @Binding var showPlayers: [String]
     @Binding var showPlayersIndex: Int
-    @State var userType: String
+    @State var userType: UserType
     
     var body: some View {
         VStack {
@@ -44,7 +44,7 @@ struct TeamSectionView: View {
                         }
                     }
                 }
-                if userType == "Coach" {
+                if userType == .coach {
                     // Section for choosing which group of players to show using a picker
                     Section(header: Text("Player Settings")) {
                         Picker("Show Players", selection: $showPlayersIndex) {

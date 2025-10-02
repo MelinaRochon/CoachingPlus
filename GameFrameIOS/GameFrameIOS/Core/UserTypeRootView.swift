@@ -16,7 +16,7 @@ struct UserTypeRootView: View {
     @Binding var showSignInView: Bool
     
     /// State variable that stores the user type (e.g., "Coach" or "Player").
-    @State private var userType: String = ""
+    @State private var userType: UserType = .unknown // = ""
 
     // MARK: - View
 
@@ -25,10 +25,10 @@ struct UserTypeRootView: View {
             // Conditional rendering based on the user type.
             // If user is a Coach, show CoachMainTabView. If user is a Player, show PlayerMainTabView.
             // If userType is empty or loading, no screen is shown.
-            if userType == "Coach" {
+            if userType == .coach {
                 // Display the main tab view for the Coach if the user is identified as a Coach.
                 CoachMainTabView(showLandingPageView: $showSignInView)
-            } else if (userType == "Player") {
+            } else if (userType == .player) {
                 // Display the main tab view for the Player if the user is identified as a Player.
                 PlayerMainTabView(showLandingPageView: $showSignInView)
             } else {

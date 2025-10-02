@@ -39,7 +39,7 @@ struct SelectedRecentGameView: View {
     /// Stores the selected minutes for a time-related input (e.g., recording duration)
     @State private var minutes: Int = 0
     
-    @State var userType: String
+    @State var userType: UserType
     
     // MARK: - View
 
@@ -105,12 +105,12 @@ struct SelectedRecentGameView: View {
                         
                         if !canStartRecording {
                             VStack {
-                                if userType == "Coach" {
+                                if userType == .coach {
                                     NavigationLink(destination: CoachSpecificFootageView(game: selectedGame.game, team: selectedGame.team)) {
                                         navigationLabel()
                                     }
 
-                                } else {
+                                } else if userType == .player {
                                     NavigationLink(destination: PlayerSpecificFootageView(game: selectedGame.game, team: selectedGame.team)) {
                                         navigationLabel()
                                     }
@@ -232,5 +232,5 @@ struct SelectedRecentGameView: View {
     let date: Date = Date(timeIntervalSince1970: 150000)
     let game = HomeGameDTO(game: DBGame(gameId: "2oKD1iyUYXTFeWjelDz8", title: "Test vs Done", duration: 1400, scheduledTimeReminder: 10, startTime: date, timeBeforeFeedback: 10, timeAfterFeedback: 10, recordingReminder: true, teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7"),
                            team: DBTeam(id: "6mpZlv7mGho5XaBN8Xcs", teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7", name: "Hornets", teamNickname: "HORNET", sport: "Soccer", gender: "Female", ageGrp: "U15", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"]))
-    SelectedRecentGameView(selectedGame: game, userType: "Player")
+    SelectedRecentGameView(selectedGame: game, userType: .player)
 }

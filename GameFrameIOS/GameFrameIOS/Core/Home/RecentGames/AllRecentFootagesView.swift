@@ -32,7 +32,7 @@ struct AllRecentFootageView: View {
     @State var pastGames: [HomeGameDTO] = []
         
     /// Stores the type of user (e.g., "Coach", "Player"), fetched dynamically.
-    @State var userType: String
+    @State var userType: UserType
     
     /// Holds the list of filtered scheduled games.
     @State private var filteredGames: [HomeGameDTO] = []
@@ -91,5 +91,5 @@ struct AllRecentFootageView: View {
 }
 
 #Preview {
-    AllRecentFootageView(pastGames: [], userType: "Player")
+    AllRecentFootageView(pastGames: [], userType: .player)
 }

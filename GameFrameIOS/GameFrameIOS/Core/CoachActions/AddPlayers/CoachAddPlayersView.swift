@@ -137,7 +137,7 @@ struct CoachAddPlayersView: View {
                                     return
                                 }
                                 // Create a new user
-                                let user = UserDTO(userId: nil, email: email, userType: "Player", firstName: firstName, lastName: lastName)
+                                let user = UserDTO(userId: nil, email: email, userType: .player, firstName: firstName, lastName: lastName)
                                 let userDocId = try await userModel.addUser(userDTO: user)
                                 
                                 // Create a new player
@@ -302,7 +302,7 @@ struct tmpCoachAddPlayerView: View {
                                     playerExists.toggle()
                                 }
                                 // Create a new user
-                                let user = UserDTO(userId: nil, email: email, userType: "Player", firstName: firstName, lastName: lastName)
+                                let user = UserDTO(userId: nil, email: email, userType: .player, firstName: firstName, lastName: lastName)
                                 let userDocId = try await userModel.addUser(userDTO: user)
                                 
                                 // Create a new player
@@ -378,7 +378,7 @@ struct tmpCoachAddPlayerView: View {
                                     return
                                 }
                                 // Create a new user
-                                let user = UserDTO(userId: nil, email: email, userType: "Player", firstName: firstName, lastName: lastName)
+                                let user = UserDTO(userId: nil, email: email, userType: .player, firstName: firstName, lastName: lastName)
                                 let userDocId = try await userModel.addUser(userDTO: user)
                                 
                                 // Create a new player

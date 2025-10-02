@@ -16,7 +16,7 @@ struct DBUser: Codable {
     let email: String
     var photoUrl: String?
     let dateCreated: Date
-    let userType: String
+    let userType: UserType
     var firstName: String
     var lastName: String
     var dateOfBirth: Date?
@@ -24,7 +24,7 @@ struct DBUser: Codable {
     var country: String?
     
     // Initializes a user from Firebase authentication details.
-    init(auth: AuthDataResultModel, userType: String) {
+    init(auth: AuthDataResultModel, userType: UserType) {
         self.id = ""
         self.userId = auth.uid
         self.email = auth.email
@@ -60,7 +60,7 @@ struct DBUser: Codable {
         email: String,
         photoUrl: String? = nil,
         dateCreated: Date,
-        userType: String,
+        userType: UserType,
         firstName: String,
         lastName: String,
         dateOfBirth: Date? = nil,
@@ -102,7 +102,7 @@ struct DBUser: Codable {
         self.email = try container.decode(String.self, forKey: .email)
         self.photoUrl = try container.decodeIfPresent(String.self, forKey: .photoUrl)
         self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
-        self.userType = try container.decode(String.self, forKey: .userType)
+        self.userType = try container.decode(UserType.self, forKey: .userType)
         self.firstName = try container.decode(String.self, forKey: .firstName)
         self.lastName = try container.decode(String.self, forKey: .lastName)
         self.dateOfBirth = try container.decodeIfPresent(Date.self, forKey: .dateOfBirth)
@@ -157,7 +157,7 @@ final class UserManager {
      - Throws: An error if the user is not authenticated or if retrieval fails.
      - Returns: The user type (e.g., "coach", "player").
     */
-    func getUserType() async throws -> String {
+    func getUserType() async throws -> UserType {
         // returns the user type!
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         return try await getUser(userId: authUser.uid)!.userType
@@ -301,7 +301,7 @@ final class UserManager {
         - userId: The Firebase user ID.
      - Throws: An error if the update fails.
      */
-    func updateUserDTO(id: String, email: String, userTpe: String, firstName: String, lastName: String, dob: Date, phone: String?, country: String?, userId: String) async throws {
+    func updateUserDTO(id: String, email: String, userTpe: UserType, firstName: String, lastName: String, dob: Date, phone: String?, country: String?, userId: String) async throws {
         
         let data: [String: Any] = [
             DBUser.CodingKeys.userId.rawValue: userId,

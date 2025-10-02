@@ -120,7 +120,7 @@ import SwiftUI
                              
                              if !isEditing {
                                  Text("\(user.firstName) \(user.lastName)").font(.title)
-                                 Text(user.userType).font(.subheadline)
+                                 Text(user.userType.displayName).font(.subheadline)
                                  Text(user.email).font(.subheadline)
                                      .foregroundStyle(.secondary)
                                      .padding(.bottom)

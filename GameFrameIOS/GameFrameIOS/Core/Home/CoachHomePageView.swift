@@ -108,7 +108,7 @@ struct CoachHomePageView: View {
                         // Recent Footage Section
                         VStack(alignment: .leading, spacing: 10) {
                             // Navigation link to view all recent games
-                            NavigationLink(destination: AllRecentFootageView(pastGames: pastGames, userType: "Coach")) {
+                            NavigationLink(destination: AllRecentFootageView(pastGames: pastGames, userType: .coach)) {
                                 HStack {
                                     Text("Recent Games")
                                         .font(.headline)
@@ -128,7 +128,7 @@ struct CoachHomePageView: View {
                                     prefix: 3,
                                     gameType: .recent,
                                     destinationBuilder: { game in
-                                        AnyView(SelectedRecentGameView(selectedGame: game, userType: "Coach"))
+                                        AnyView(SelectedRecentGameView(selectedGame: game, userType: .coach))
                                     }
                                 )
                             } else {

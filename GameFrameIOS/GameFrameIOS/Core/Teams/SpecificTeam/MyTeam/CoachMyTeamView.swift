@@ -199,7 +199,7 @@ struct CoachMyTeamView: View {
         }
         .sheet(isPresented: $isGamesSettingsEnabled) {
             NavigationStack {
-                TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: "Coach")
+                TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: .coach)
                     .presentationDetents([.medium])
                     .toolbar {
                         ToolbarItem {
