@@ -64,6 +64,8 @@ final class AuthenticationModel: ObservableObject {
             return "Coach"
         case .player:
             return "Player"
+        default:
+            return "Unknown"
         }
     }
     
@@ -95,7 +97,7 @@ final class AuthenticationModel: ObservableObject {
         let authDataResult = try await AuthenticationManager.shared.createUser(email: email, password: password)
         
         // Create a new DTO
-        let user = UserDTO(userId: authDataResult.uid, email: authDataResult.email, userType: getUserType(for: userType), firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
+        let user = UserDTO(userId: authDataResult.uid, email: authDataResult.email, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
         try await UserManager.shared.createNewUser(userDTO: user)
         
         // Handle user creation based on type (Player or Coach).
@@ -110,7 +112,7 @@ final class AuthenticationModel: ObservableObject {
                 print("Invite for this player does not exists. Creating a new user.")
                 
                 // new user. Create a user and player, and add the playerId in the team
-                let user = UserDTO(userId: authDataResult.uid, email: email, userType: "Player", firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
+                let user = UserDTO(userId: authDataResult.uid, email: email, userType: .player, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
                 let userDocId = try await UserManager.shared.createNewUser(userDTO: user)
                 print("UserManager created at user doc: \(userDocId)")
                 
@@ -131,7 +133,7 @@ final class AuthenticationModel: ObservableObject {
             
             // update the user document
             print("update user")
-            try await UserManager.shared.updateUserDTO(id: invite.userDocId, email: email, userTpe: getUserType(for: userType), firstName: firstName, lastName: lastName, dob: dateOfBirth, phone: phone, country: country, userId: authDataResult.uid)
+            try await UserManager.shared.updateUserDTO(id: invite.userDocId, email: email, userTpe: userType, firstName: firstName, lastName: lastName, dob: dateOfBirth, phone: phone, country: country, userId: authDataResult.uid)
             
             // update the player document
             print("update player")

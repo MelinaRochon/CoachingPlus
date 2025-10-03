@@ -23,49 +23,58 @@ struct AudioPlayerView: View {
 
             // Audio Frame
             HStack {
-                VStack(alignment: .leading) {
-                    Button(action: {
-                        audioPlayerVM.playAudio(from: audioURL)
-                    }) {
-                        Image(systemName: audioPlayerVM.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                            .resizable()
-                            .frame(width: 40, height: 40)
-                            .foregroundColor(.red)
-                    }
-                    Text("").font(.caption)
-                }
-                
-                VStack(alignment: .leading) {
-                    
-                    // Progress Slider
-                    Slider(
-                        value: Binding(
-                            get: { audioPlayerVM.progress },
-                            set: { newValue in
-                                audioPlayerVM.seek(to: newValue)
-                            }
-                        ),
-                        in: 0...audioPlayerVM.totalDuration,
-                        onEditingChanged: { editing in
-                            if !editing && audioPlayerVM.isPlaying {
-                                audioPlayerVM.seek(to: audioPlayerVM.progress)
-                            }
+                if let totalDuration = audioPlayerVM.totalDuration {
+                    VStack(alignment: .leading) {
+                        Button(action: {
+                            audioPlayerVM.playAudio(from: audioURL)
+                        }) {
+                            Image(systemName: audioPlayerVM.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                .resizable()
+                                .frame(width: 40, height: 40)
+                                .foregroundColor(.red)
                         }
-                    )
-                    .tint(.gray)
-                    .frame(height: 30)
+                        Text("").font(.caption)
+                    }
                     
-                    // Time Labels (Start Time & Remaining Time)
-                    HStack {
-                        Text(formatTime(audioPlayerVM.progress)) // Current time
-                            .font(.caption)
-                        Spacer()
-                        Text("-\(formatTime(audioPlayerVM.totalDuration - audioPlayerVM.progress))") // Remaining time
-                            .font(.caption)
+                    VStack(alignment: .leading) {
+                        
+                        // Progress Slider
+                        Slider(
+                            value: Binding(
+                                get: { audioPlayerVM.progress },
+                                set: { newValue in
+                                    audioPlayerVM.seek(to: newValue)
+                                }
+                            ),
+                            in: 0...totalDuration,
+                            onEditingChanged: { editing in
+                                if !editing && audioPlayerVM.isPlaying {
+                                    audioPlayerVM.seek(to: audioPlayerVM.progress)
+                                }
+                            }
+                        )
+                        .tint(.gray)
+                        .frame(height: 30)
+                        
+                        // Time Labels (Start Time & Remaining Time)
+                        HStack {
+                            Text(formatTime(audioPlayerVM.progress)) // Current time
+                                .font(.caption)
+                            Spacer()
+                            Text("-\(formatTime(totalDuration - audioPlayerVM.progress))") // Remaining time
+                                .font(.caption)
+                        }
                     }
                 }
+            }.padding(.horizontal).padding(.bottom)
+        }
+        .task {
+            do {
+                // Set the audio duration
+                audioPlayerVM.setAudioDuration(from: audioURL)
+            } catch {
+                print("error getting the audio duration")
             }
-            .padding(.horizontal).padding(.bottom)
         }
     }
     

@@ -43,7 +43,7 @@ final class UserModel: ObservableObject {
     ///
     /// - Returns: A `String` representing the user's role.
     /// - Throws: An error if the user data is unavailable.
-    func getUserType() async throws -> String {
+    func getUserType() async throws -> UserType {
         return try await getUser()!.userType
     }
     

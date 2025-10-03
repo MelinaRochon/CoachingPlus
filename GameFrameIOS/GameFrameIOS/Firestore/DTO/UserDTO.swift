@@ -35,7 +35,7 @@ struct UserDTO {
     var photoUrl: String?
     
     /// The type of user (e.g., "coach", "player"). This field is required to differentiate between different user roles in the system.
-    let userType: String
+    let userType: UserType
     
     /// The user's first name. This is a mutable field, allowing the user to update their name in their profile.
     var firstName: String

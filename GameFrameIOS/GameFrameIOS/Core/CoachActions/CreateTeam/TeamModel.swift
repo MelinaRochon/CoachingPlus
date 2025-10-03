@@ -88,16 +88,19 @@ final class TeamModel: ObservableObject {
         // Determine the user's role (Coach or Player).
         let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
                 
-        if (userType == "Coach") {
+        if (userType == .coach) {
             // Load all teams that the coach is managing.
             let tmpTeams = try await CoachManager.shared.loadAllTeamsCoaching(coachId: authUser.uid)
             if tmpTeams != nil {
                 return tmpTeams
             }
             return nil
-        } else {
+        } else if (userType == .player) {
             // Load all teams that the player is enrolled in.
             return try await PlayerManager.shared.getAllTeamsEnrolled(playerId: authUser.uid)
+        } else {
+            // TODO: Unknown user in database. Return error
+            return nil
         }
     }
         
@@ -132,8 +135,16 @@ final class TeamModel: ObservableObject {
             throw TeamValidationError.userExists
         }
         
-        // Add the player to the team's players list in the database.
-        try await TeamManager.shared.addPlayerToTeam(id: team.id, playerId: authUser.uid)
+        // Add player to all feedback that is directed to the whole squad
+        let rosterCount = try await TeamManager.shared.getTeamRosterLength(teamId: team.teamId)
+        
+        if rosterCount == nil {
+            print("invalid team id was entered.. aborting request")
+            // TODO: Add an alert here
+            return nil
+        }
+                
+        try await addPlayerToAllTeamFeedback(rosterCount: rosterCount!, teamDocId: team.id, teamId: team.teamId, playerId: authUser.uid)
         
         // Fetch the player details.
         guard let player = try await PlayerManager.shared.getPlayer(playerId: authUser.uid) else {
@@ -145,6 +156,35 @@ final class TeamModel: ObservableObject {
         try await PlayerManager.shared.addTeamToPlayer(id: player.id, teamId: team.teamId)
         
         return team
+    }
+    
+    
+    /// Adds a player to a team and updates all team-related feedback in games.
+    ///
+    /// - Parameters:
+    ///   - rosterCount: The expected number of players in the team (used to check if feedback is for the entire team).
+    ///   - teamDocId: The Firestore document ID of the team.
+    ///   - teamId: The team’s unique identifier used to fetch its games.
+    ///   - playerId: The ID of the player being added.
+    ///
+    /// - Throws: Rethrows any errors encountered while updating the team roster
+    ///           or while fetching and updating games/key moments.
+    /// - Returns: Nothing. The function is `async` and `throws` but does not return a value.
+    func addPlayerToAllTeamFeedback(rosterCount: Int, teamDocId: String, teamId: String, playerId: String) async throws {
+        // Add the player to the team's players list in the database.
+        try await TeamManager.shared.addPlayerToTeam(id: teamDocId, playerId: playerId)
+                
+        // Check all transcripts/key moments and add the player's user_id if the feedback is meant to be for the entire team
+        guard let games = try await GameManager.shared.getAllGames(teamId: teamId) else {
+            print("No need to add the player to feedback as there are no games for this team")
+            return
+        }
+                
+        // Do all games
+        for game in games {
+            // Get all key moments under this game that have a feedback for all players
+            try await KeyMomentManager.shared.assignPlayerToKeyMomentsForEntireTeam(teamDocId: teamDocId, gameId: game.gameId, playersCount: rosterCount, playerId: playerId)
+        }
     }
     
     

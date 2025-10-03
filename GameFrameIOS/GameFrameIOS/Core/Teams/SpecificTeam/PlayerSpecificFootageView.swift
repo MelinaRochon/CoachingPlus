@@ -254,7 +254,7 @@ struct PlayerSpecificFootageView: View {
             }
         }
         .sheet(isPresented: $isGameDetailsEnabled) {
-            GameDetailsView(selectedGame: game, team: team, userType: "Player", dismissOnRemove: .constant(false))
+            GameDetailsView(selectedGame: game, team: team, userType: .player, dismissOnRemove: .constant(false))
         }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)

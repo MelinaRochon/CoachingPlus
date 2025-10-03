@@ -225,7 +225,7 @@ struct CoachSpecificFootageView: View {
                     }
                     
                     let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getPreviewTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
-
+                    
                     self.transcripts = tmpTranscripts
                     self.keyMoments = tmpKeyMom
                     
@@ -272,7 +272,7 @@ struct CoachSpecificFootageView: View {
                 }
             }
             .sheet(isPresented: $isGameDetailsEnabled, onDismiss: refreshData) {
-                GameDetailsView(selectedGame: game, team: team, userType: "Coach", dismissOnRemove: $dismissOnRemove)
+                GameDetailsView(selectedGame: game, team: team, userType: .coach, dismissOnRemove: $dismissOnRemove)
             }
             .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
                 Color.clear.frame(height: 75)

@@ -34,6 +34,7 @@ struct DBKeyMoment: Codable {
     let frameStart: Date // transcription start
     let frameEnd: Date // transcription end
     let feedbackFor: [String]?
+//    let feedbackForCount: Int
     
     // Initializer for setting up the DBKeyMoment object
     init(keyMomentId: String, fullGameId: String? = nil, gameId: String, uploadedBy: String, audioUrl: String? = nil, frameStart: Date, frameEnd: Date, feedbackFor: [String]? = nil) {
@@ -45,6 +46,7 @@ struct DBKeyMoment: Codable {
         self.frameStart = frameStart
         self.frameEnd = frameEnd
         self.feedbackFor = feedbackFor
+//        self.feedbackForCount = feedbackForCount
     }
     
     // Convert the DTO to a DBKeyMoment
@@ -57,6 +59,7 @@ struct DBKeyMoment: Codable {
         self.frameStart = keyMomentDTO.frameStart
         self.frameEnd = keyMomentDTO.frameEnd
         self.feedbackFor = keyMomentDTO.feedbackFor
+//        self.feedbackForCount = keyMomentDTO.feedbackFor?.count ?? 0
     }
     
     // Enum for coding keys to map the JSON keys to properties
@@ -69,6 +72,7 @@ struct DBKeyMoment: Codable {
         case frameStart = "frame_start"
         case frameEnd = "frame_end"
         case feedbackFor = "feedback_for"
+//        case feedbackForCount = "feedback_for_count"
     }
     
     // Decoder for decoding the object from JSON
@@ -82,6 +86,7 @@ struct DBKeyMoment: Codable {
         self.frameStart = try container.decode(Date.self, forKey: .frameStart)
         self.frameEnd = try container.decode(Date.self, forKey: .frameEnd)
         self.feedbackFor = try container.decodeIfPresent([String].self, forKey: .feedbackFor)
+//        self.feedbackForCount = try container.decode(Int.self, forKey: .feedbackForCount)
     }
     
     // Encoder for encoding the object to JSON
@@ -95,6 +100,7 @@ struct DBKeyMoment: Codable {
         try container.encode(self.frameStart, forKey: .frameStart)
         try container.encode(self.frameEnd, forKey: .frameEnd)
         try container.encodeIfPresent(self.feedbackFor, forKey: .feedbackFor)
+//        try container.encode(self.feedbackForCount, forKey: .feedbackForCount)
     }
 }
 
@@ -161,6 +167,34 @@ final class KeyMomentManager {
         }
         
         return try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentDocId).getDocument(as: DBKeyMoment.self)
+    }
+    
+    
+    /// Assigns a player to key moments for the entire team if the feedback list
+    /// already has the expected number of players but does not include this player.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: The Firestore document ID of the team.
+    ///   - gameId: The Firestore document ID of the game.
+    ///   - playersCount: The expected number of players in the team.
+    ///   - playerId: The ID of the player to be added to the key moment’s feedback list.
+    /// - Throws: Rethrows any error that occurs while fetching key moments
+    ///   or updating a key moment’s feedback field in Firestore.
+    /// - Returns: Nothing. The function is `async` and `throws` but has no return value.
+    func assignPlayerToKeyMomentsForEntireTeam(teamDocId: String, gameId: String, playersCount: Int, playerId: String) async throws {
+        guard let keyMoments = try await getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
+            print("No key moments found")
+            return
+        }
+        
+        // Check the length of each feedback_for field
+        for keyMoment in keyMoments {
+            if let feedbackFor = keyMoment.feedbackFor {
+                if feedbackFor.count == playersCount && !feedbackFor.contains(playerId) {
+                    try await addPlayerToFeedbackFor(teamDocId: teamDocId, gameId: gameId, keyMomentId: keyMoment.keyMomentId, newPlayerId: playerId)
+                }
+            }
+        }
     }
     
     
@@ -285,6 +319,25 @@ final class KeyMomentManager {
         try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentId).delete()
     }
     
+    
+    /// Adds a player ID to the `feedbackFor` field of a key moment document in Firestore.
+    ///
+    /// - Parameters:
+    ///   - teamDocId: The Firestore document ID of the team.
+    ///   - gameId: The Firestore document ID of the game.
+    ///   - keyMomentId: The Firestore document ID of the key moment being updated.
+    ///   - newPlayerId: The ID of the player to be added to the `feedbackFor` array field.
+    /// - Throws: Rethrows any error that occurs while updating the Firestore document.
+    /// - Returns: Nothing. The function is `async` and `throws` but has no return value.
+    func addPlayerToFeedbackFor(teamDocId: String, gameId: String, keyMomentId: String, newPlayerId: String) async throws {
+        let data: [String: Any] = [
+            DBKeyMoment.CodingKeys.feedbackFor.rawValue: FieldValue.arrayUnion([newPlayerId])
+        ]
+        
+        // TODO: - Make sure the playerId that we are adding isn't already in the database
+        // Update the document asynchronously
+        try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameId, keyMomentDocId: keyMomentId).updateData(data as [AnyHashable : Any])
+    }
     
     /// Deletes all key moment documents for a specific game within a team.
     ///

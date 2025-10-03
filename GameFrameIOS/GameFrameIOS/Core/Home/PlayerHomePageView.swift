@@ -112,7 +112,7 @@ struct PlayerHomePageView: View {
                         
                         // Recent Footage Section
                         VStack(alignment: .leading, spacing: 10) {
-                            NavigationLink(destination: AllRecentFootageView(pastGames: pastGames, userType: "Player")) {
+                            NavigationLink(destination: AllRecentFootageView(pastGames: pastGames, userType: .player)) {
                                 Text("Recent Footage")
                                     .font(.headline)
                                     .foregroundColor(recentGamesFound ? .red : .secondary)
@@ -130,7 +130,7 @@ struct PlayerHomePageView: View {
                                     prefix: 3,
                                     gameType: .recent,
                                     destinationBuilder: { game in
-                                        AnyView(SelectedRecentGameView(selectedGame: game, userType: "Player"))
+                                        AnyView(SelectedRecentGameView(selectedGame: game, userType: .player))
                                     }
                                 )
                             } else {

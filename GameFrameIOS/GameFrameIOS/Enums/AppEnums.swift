@@ -26,9 +26,36 @@ import Foundation
 /// - `coach`: Refers to a user who is a coach.
 /// - `player`: Refers to a user who is a player.
 /// - This enum can be used for distinguishing between different user roles in the authentication system, access control, and content customization.
-enum UserType {
-    case coach
-    case player
+enum UserType: String, Codable {
+    case coach = "Coach"
+    case player = "Player"
+    case unknown = "Unknown"
+    
+    var displayName: String {
+        return self.rawValue
+    }
+    
+    // Custom init to handle Firestore strings
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        
+        switch rawValue {
+        case "Coach": self = .coach
+        case "Player": self = .player
+        default: self = .unknown
+        }
+    }
+    
+    // Custom encoder to match Firestore values
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .coach: try container.encode("Coach")
+        case .player: try container.encode("Player")
+        case .unknown: try container.encode("Unknown")
+        }
+    }
 }
 
 /// **StatusEnum**: Enum representing different status types in the system when creating an `Invite`.

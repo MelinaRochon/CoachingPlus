@@ -29,6 +29,10 @@ struct PlayerSpecificTranscriptView: View {
     /// A list of players who received feedback in this transcript.
     @State private var feedbackFor: [PlayerNameAndPhoto]? = []
     
+    /// Whether the associated audio file has been downloaded and is available for playback.
+    @State private var audioFileRetrieved: Bool = false
+
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -69,6 +73,16 @@ struct PlayerSpecificTranscriptView: View {
                         
                         // Transcript details section.
                         VStack(alignment: .leading) {
+                            
+                            // Show audio file
+                            if audioFileRetrieved {
+                                let localAudioURL = FileManager.default
+                                    .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                                    .appendingPathComponent("downloaded_audio.m4a")
+                                
+                                AudioPlayerView(audioURL: localAudioURL)
+                            }
+                            
                             if let gameStartTime = game.startTime {
                                 let durationInSeconds = transcript.frameStart.timeIntervalSince(gameStartTime)
                                 Text(formatDuration(durationInSeconds)).font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal).padding(.bottom, 2)
@@ -83,8 +97,7 @@ struct PlayerSpecificTranscriptView: View {
                                 Text("Feedback For").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 10)
                                 ForEach(feedbackFor, id: \.playerId) { player in
                                     HStack {
-                                        Image(systemName: "person.circle").resizable().frame(width: 22, height: 22).foregroundStyle(.gray).padding(.vertical, 5)
-                                        Text(player.name)
+                                        Text(player.name).font(.caption).padding(.top, 2)
                                     }.tag(player.playerId as String)
                                 }
                             }.padding(.horizontal)
@@ -118,6 +131,27 @@ struct PlayerSpecificTranscriptView: View {
                         // Add a new key moment to the database
                         let fbFor: [String] = feedback.map { $0.playerId }
                         feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
+                        
+                        let audioURL = try await transcriptModel.getAudioFileUrl(keyMomentId: transcript.keyMomentId, gameId: game.gameId, teamId: team.teamId)
+                        
+                        if let url = audioURL {
+                            // Fetch audio file from db
+                            let storageRef = StorageManager.shared.getAudioURL(path: url)
+                            
+                            let localURL = FileManager.default
+                                .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                                .appendingPathComponent("downloaded_audio.m4a")
+                            
+                            storageRef.write(toFile: localURL) { url, error in
+                                if let error = error {
+                                    print("❌ Failed to download audio: \(error.localizedDescription)")
+                                } else {
+                                    print("✅ Audio downloaded to: \(url?.path ?? "")")
+                                    // You can now use this local file (e.g., to play it)
+                                    audioFileRetrieved = true
+                                }
+                            }
+                        }
                     }
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
