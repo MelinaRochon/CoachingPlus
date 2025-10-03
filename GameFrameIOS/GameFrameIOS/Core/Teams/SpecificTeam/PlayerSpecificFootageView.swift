@@ -256,6 +256,9 @@ struct PlayerSpecificFootageView: View {
         .sheet(isPresented: $isGameDetailsEnabled) {
             GameDetailsView(selectedGame: game, team: team, userType: "Player", dismissOnRemove: .constant(false))
         }
+        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+            Color.clear.frame(height: 75)
+        }
     }
     
     private func generateThumbnail(for url: URL, key: String, sec: Double) {

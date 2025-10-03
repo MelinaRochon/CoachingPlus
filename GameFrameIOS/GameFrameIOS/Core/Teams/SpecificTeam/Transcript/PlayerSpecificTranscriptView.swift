@@ -106,6 +106,9 @@ struct PlayerSpecificTranscriptView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                Color.clear.frame(height: 75)
+            }
             .task {
                 do {
                     // Loads feedback recipient data for the transcript.

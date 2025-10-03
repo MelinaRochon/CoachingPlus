@@ -202,6 +202,9 @@ struct PlayerSpecificKeyMomentView: View {
         .task {
             await loadVideoAndFeedback()
         }
+        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+            Color.clear.frame(height: 75)
+        }
     }
     
     
