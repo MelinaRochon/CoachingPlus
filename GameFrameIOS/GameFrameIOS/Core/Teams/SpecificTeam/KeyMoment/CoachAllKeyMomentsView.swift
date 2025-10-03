@@ -75,6 +75,9 @@ struct CoachAllKeyMomentsView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                Color.clear.frame(height: 75)
+            }
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search key moments")
             .scrollContentBackground(.hidden)
             .overlay {

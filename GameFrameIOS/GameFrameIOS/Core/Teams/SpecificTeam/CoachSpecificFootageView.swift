@@ -274,6 +274,9 @@ struct CoachSpecificFootageView: View {
             .sheet(isPresented: $isGameDetailsEnabled, onDismiss: refreshData) {
                 GameDetailsView(selectedGame: game, team: team, userType: "Coach", dismissOnRemove: $dismissOnRemove)
             }
+            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                Color.clear.frame(height: 75)
+            }
             .onChange(of: dismissOnRemove) {
                 Task {
                     do {

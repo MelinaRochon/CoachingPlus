@@ -155,6 +155,9 @@ struct CoachSpecificTranscriptView: View {
                 }
                 //                )
             }
+            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                Color.clear.frame(height: 75)
+            }
             .task {
                 do {
                     print("CoachSpecificTranscript, teamDocId: \(team.id)")
