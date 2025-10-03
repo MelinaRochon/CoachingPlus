@@ -87,7 +87,8 @@ final class FGVideoRecordingModel: ObservableObject {
             )
 
             // Upload the new video recording to the server.
-            let fgRecordingId = try await FullGameVideoRecordingManager.shared.addFullGameVideoRecording(fullGameVideoRecordingDTO: newFGVideoRecording)
+            let manager = FullGameVideoRecordingManager()
+            let fgRecordingId = try await manager.addFullGameVideoRecording(fullGameVideoRecordingDTO: newFGVideoRecording)
             return fgRecordingId
         } catch {
             // Handle any errors that occur during the process.
@@ -133,7 +134,8 @@ final class FGVideoRecordingModel: ObservableObject {
             }
             
             // Update full game document
-            try await FullGameVideoRecordingManager.shared.updateFullGameVideoRecording(fullGameId: fgRecordingId, teamDocId: team.id, endTime: endTime, path: path)
+            let manager = FullGameVideoRecordingManager()
+            try await manager.updateFullGameVideoRecording(fullGameId: fgRecordingId, teamDocId: team.id, endTime: endTime, path: path)
         } catch {
             print(error.localizedDescription)
             return
@@ -156,7 +158,8 @@ final class FGVideoRecordingModel: ObservableObject {
     ///           so callers will usually not see thrown errors unless you refactor it.
     func getFGRecordingVideoUrl(teamDocId: String, gameId: String) async throws -> String? {
         do {
-            guard let fullGame = try await FullGameVideoRecordingManager.shared.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
+            let manager = FullGameVideoRecordingManager()
+            guard let fullGame = try await manager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
                 print("Unable to get full game video recording document. Aborting")
                 return nil
             }

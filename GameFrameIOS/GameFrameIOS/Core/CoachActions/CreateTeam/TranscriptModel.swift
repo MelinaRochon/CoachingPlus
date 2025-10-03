@@ -166,7 +166,8 @@ final class TranscriptModel: ObservableObject {
             var allKeyMoments: [keyMomentTranscript] = []
 
             // If full game recording can be found
-            let fullGame = try await FullGameVideoRecordingManager.shared.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
+            let manager = FullGameVideoRecordingManager()
+            let fullGame = try await manager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
             // TODO: Shouldn't be an error here if we can't find a full game recording. However, it should be
 
             for transcript in transcripts {
@@ -322,7 +323,8 @@ final class TranscriptModel: ObservableObject {
             var allKeyMoments: [keyMomentTranscript] = []
 
             // If full game recording can be found
-            let fullGame = try await FullGameVideoRecordingManager.shared.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
+            let manager = FullGameVideoRecordingManager()
+            let fullGame = try await manager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
             // TODO: Shouldn't be an error here if we can't find a full game recording. However, it should be
 
             for transcript in transcripts {

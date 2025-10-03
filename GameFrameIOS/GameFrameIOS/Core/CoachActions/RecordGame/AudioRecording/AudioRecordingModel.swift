@@ -221,7 +221,8 @@ final class AudioRecordingModel: ObservableObject {
     func getFullGameRecordingUrlIfExists(teamDocId: String, gameId: String) async throws -> URL? {
         // Try to find the full game recording if it exists, otherwise, return nil
         do {
-            guard let fullGame = try await FullGameVideoRecordingManager.shared.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
+            let manager = FullGameVideoRecordingManager()
+            guard let fullGame = try await manager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
                 print("Unable to get full game video recording document")
                 return nil
                 // TODO: Shouldn't be an error here if we can't find a full game recording. However, it should be
