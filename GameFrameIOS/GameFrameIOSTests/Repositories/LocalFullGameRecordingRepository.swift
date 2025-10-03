@@ -11,6 +11,7 @@ import Foundation
 /// A local in-memory implementation of `FullGameVideoRecordingRepository`.
 /// Useful for unit tests or preview data without hitting Firestore.
 final class LocalFullGameRecordingRepository: FullGameVideoRecordingRepository {
+    
     /// Stores all full game video recordings locally in memory
     private var fullGameRecording: [DBFullGameVideoRecording] = []
 
