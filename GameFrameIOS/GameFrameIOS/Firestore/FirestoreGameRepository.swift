@@ -38,12 +38,13 @@ final class FirestoreGameRepository: GameRepository {
     
 
     func deleteAllGames(teamDocId: String) async throws {
+        let keyMomentManager = KeyMomentManager()
         let collectionRef = gameCollection(teamDocId: teamDocId)
         let snapshot = try await collectionRef.getDocuments()
         
         for document in snapshot.documents {
             // Delete all key moments
-            try await KeyMomentManager.shared.deleteAllKeyMoments(teamDocId: teamDocId, gameId: document.documentID)
+            try await keyMomentManager.deleteAllKeyMoments(teamDocId: teamDocId, gameId: document.documentID)
             
             // Delete all transcripts
             try await TranscriptManager.shared.deleteAllTranscripts(teamDocId: teamDocId, gameId: document.documentID)

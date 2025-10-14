@@ -68,6 +68,7 @@ final class AudioRecordingModel: ObservableObject {
     /// - Throws: An error if the operation fails.
     func addRecording(recordingStart: Date, recordingEnd: Date, transcription: String, feedbackFor: PlayerTranscriptInfo?, numAudioFiles: Int) async throws {
         do {
+            let keyMomentManager = KeyMomentManager()
             // Determine which players the feedback is for
             var fbFor: [String]
             if feedbackFor == nil {
@@ -103,7 +104,7 @@ final class AudioRecordingModel: ObservableObject {
             let keyMomentDTO = KeyMomentDTO(fullGameId: nil, gameId: gameId, uploadedBy: authUser.uid, audioUrl: path, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: fbFor)
             
             // Add a new key moment to the database
-            let keyMomentDocId = try await KeyMomentManager.shared.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)
+            let keyMomentDocId = try await keyMomentManager.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)
             guard let safeKeyMomentId = keyMomentDocId else {
                 print("Error: The key moment doc ID is nil. Aborting.")
                 return
@@ -183,6 +184,7 @@ final class AudioRecordingModel: ObservableObject {
     /// - Throws: An error if the operation fails.
     func loadAllRecordings() async throws {
         do {
+            let keyMomentManager = KeyMomentManager()
             
             // Get all the transcripts from the database
             guard let transcripts = try await TranscriptManager.shared.getAllTranscripts(teamId: teamId, gameId: gameId) else {
@@ -195,7 +197,7 @@ final class AudioRecordingModel: ObservableObject {
                 let keyMomentDocId = transcript.keyMomentId // get the key moment document id to be fetched
                 
                 // Fetch the key moment associated with the transcript
-                guard let keyMoment = try await KeyMomentManager.shared.getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentDocId) else {
+                guard let keyMoment = try await keyMomentManager.getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentDocId) else {
                     print("No key moment found. Aborting..")
                     return
                 }

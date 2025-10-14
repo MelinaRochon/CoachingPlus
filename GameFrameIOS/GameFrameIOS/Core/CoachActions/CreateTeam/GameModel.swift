@@ -233,7 +233,7 @@ final class GameModel: ObservableObject {
     func removeGame(gameId: String, teamDocId: String, teamId: String) async throws {
         let gameManager = GameManager()
         // Delete all key moments
-        try await KeyMomentManager.shared.deleteAllKeyMoments(teamDocId: teamDocId, gameId: gameId)
+        try await KeyMomentManager().deleteAllKeyMoments(teamDocId: teamDocId, gameId: gameId)
         
         // Delete all transcripts
         try await TranscriptManager.shared.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
