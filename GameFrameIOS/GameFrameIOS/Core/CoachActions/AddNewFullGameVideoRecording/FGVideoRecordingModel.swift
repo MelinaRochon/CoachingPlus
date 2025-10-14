@@ -66,13 +66,14 @@ final class FGVideoRecordingModel: ObservableObject {
     /// let success = try await createFGRecording(teamId: "123")
     /// ```
     func createFGRecording(teamId: String, gameId: String) async throws -> String? {
+        let gameManager = GameManager()
         do {
             // Retrieve the authenticated user's coach ID.
             let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
             let coachId = authUser.uid
 
             // Get the game Id
-            guard let game = try await GameManager.shared.getGame(gameId: gameId, teamId: teamId) else {
+            guard let game = try await gameManager.getGame(gameId: gameId, teamId: teamId) else {
                 return nil
             }
             
@@ -115,6 +116,7 @@ final class FGVideoRecordingModel: ObservableObject {
     ///         instead of using a completion handler.
     func updateFGRecording(endTime: Date, fgRecordingId: String, gameId: String, teamId: String, localFile: URL) async throws {
         do {
+            let teamManager = TeamManager()
             let path = "full_game/\(teamId)/\(gameId).mov"
             
             // Upload video to storage
@@ -128,7 +130,7 @@ final class FGVideoRecordingModel: ObservableObject {
                 }
             }
             
-            guard let team = try await TeamManager.shared.getTeam(teamId: teamId) else {
+            guard let team = try await teamManager.getTeam(teamId: teamId) else {
                 print("Unable to find team. Abort")
                 return
             }

@@ -173,12 +173,13 @@ struct PlayerMyTeamView: View {
     
     /// Function to refresh team data and load games and players
     private func refreshData() {
+        let teamManager = TeamManager()
         Task {
             do {
                 // Load games and players associated with the team
                 try await gameModel.getAllGames(teamId: selectedTeam.teamId)
                 self.groupedGames = groupGamesByWeek(gameModel.games)
-                self.selectedTeam = try await TeamManager.shared.getTeam(teamId: selectedTeam.teamId)!
+                self.selectedTeam = try await teamManager.getTeam(teamId: selectedTeam.teamId)!
                 guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TODO: - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team

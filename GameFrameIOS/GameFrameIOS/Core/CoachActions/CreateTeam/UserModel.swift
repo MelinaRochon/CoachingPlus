@@ -24,7 +24,8 @@ final class UserModel: ObservableObject {
     /// - Returns: A string representing the newly created user's ID.
     /// - Throws: An error if the user creation process fails.
     func addUser(userDTO: UserDTO) async throws -> String {
-        return try await UserManager.shared.createNewUser(userDTO: userDTO)
+        let userManager = UserManager()
+        return try await userManager.createNewUser(userDTO: userDTO)
     }
     
     
@@ -33,9 +34,10 @@ final class UserModel: ObservableObject {
     /// - Returns: A `DBUser` object representing the authenticated user, or `nil` if not found.
     /// - Throws: An error if authentication fails.
     func getUser() async throws -> DBUser? {
+        let userManager = UserManager()
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
-        return try await UserManager.shared.getUser(userId: authUser.uid)
+        return try await userManager.getUser(userId: authUser.uid)
     }
     
     
@@ -57,8 +59,8 @@ final class UserModel: ObservableObject {
     ///   - phone: Optional updated phone number for the user.
     /// - Throws: An error if the update operation fails.
     func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
-        
-        try await UserManager.shared.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
+        let userManager = UserManager()
+        try await userManager.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
     }
     
 }

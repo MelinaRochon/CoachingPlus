@@ -262,7 +262,8 @@ final class PlayerManager {
     - Throws: An error if updating the document fails.
     */
     func removeTeamFromPlayerWithTeamDocId(id: String, teamDocId: String) async throws {
-        let team = try await TeamManager.shared.getTeamWithDocId(docId: teamDocId)
+        let teamManager = TeamManager()
+        let team = try await teamManager.getTeamWithDocId(docId: teamDocId)
                 
         // find the team to remove
         let data: [String: Any] = [
@@ -426,18 +427,14 @@ final class PlayerManager {
      - Throws: An error if updating the document fails.
      */
     func getTeamsEnrolled(playerId: String) async throws -> [GetTeam] {
-        
-//        let player = try await getPlayer(playerId: playerId)!
-//        
-//        // Fetch the team documents with the IDs from the user's itemsArray
-//        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled).getDocuments()
+        let teamRepo = FirestoreTeamRepository()
         guard let player = try await getPlayer(playerId: playerId),
                   let teamIds = player.teamsEnrolled,
               !teamIds.isEmpty else {
             return [] // no teams enrolled
         }
         
-        let snapshot = try await TeamManager.shared.teamCollection
+        let snapshot = try await teamRepo.teamCollection()
                .whereField("team_id", in: teamIds)
                .getDocuments()
 
@@ -463,17 +460,14 @@ final class PlayerManager {
      - Throws: An error if fetching the player's document or teams fails.
      */
     func getAllTeamsEnrolled(playerId: String) async throws -> [DBTeam]? {
-        
-//        let player = try await getPlayer(playerId: playerId)!
-//        // Fetch the team documents with the IDs from the user's itemsArray
-//        let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: player.teamsEnrolled).getDocuments()
+        let teamRepo = FirestoreTeamRepository()
         guard let player = try await getPlayer(playerId: playerId),
                   let teamIds = player.teamsEnrolled,
               !teamIds.isEmpty else {
             return [] // no teams enrolled
         }
         
-        let snapshot = try await TeamManager.shared.teamCollection
+        let snapshot = try await teamRepo.teamCollection()
                .whereField("team_id", in: teamIds)
                .getDocuments()
 

@@ -1,145 +1,25 @@
 //
-//  TeamManager.swift
+//  FirestoreTeamRepository.swift
 //  GameFrameIOS
 //
-//  Created by Caterina Bosi on 2025-03-04.
+//  Created by Mélina Rochon on 2025-10-13.
 //
 
 import Foundation
 import FirebaseFirestore
 
-/// Represents a team in the database with all necessary properties.
-/// This structure conforms to `Codable` to support encoding and decoding
-/// between Swift objects and Firestore documents.
-struct DBTeam: Codable {
-    let id: String
-    let teamId: String
-    var name: String
-    var teamNickname: String
-    let sport: String
-    let logoUrl: String?
-    let colour: String?
-    var gender: String
-    var ageGrp: String
-    let accessCode: String?
-    let coaches: [String]
-    let players: [String]?
-    let invites: [String]?
+final class FirestoreTeamRepository: TeamRepository {
     
-    init(
-        id: String,
-        teamId: String,
-        name: String,
-        teamNickname: String,
-        sport: String,
-        logoUrl: String? = nil,
-        colour: String? = nil,
-        gender: String,
-        ageGrp: String,
-        accessCode: String? = nil,
-        coaches: [String],
-        players: [String]? = nil,
-        invites: [String]? = nil
-    ) {
-        self.id = id
-        self.teamId = teamId
-        self.name = name
-        self.teamNickname = teamNickname
-        self.sport = sport
-        self.logoUrl = logoUrl
-        self.colour = colour
-        self.gender = gender
-        self.ageGrp = ageGrp
-        self.accessCode = accessCode
-        self.coaches = coaches
-        self.players = players
-        self.invites = invites
+//    var teamCollection = Firestore.firestore().collection("teams") // team collection
+    func teamCollection() -> CollectionReference {
+        return Firestore.firestore().collection("teams")
     }
-    
-    init(id: String, teamDTO:TeamDTO) {
-        self.id = id
-        self.teamId = teamDTO.teamId
-        self.name = teamDTO.name
-        self.teamNickname = teamDTO.teamNickname
-        self.sport = teamDTO.sport
-        self.logoUrl = teamDTO.logoUrl
-        self.colour = teamDTO.colour
-        self.gender = teamDTO.gender
-        self.ageGrp = teamDTO.ageGrp
-        self.accessCode = teamDTO.accessCode //
-        self.coaches = teamDTO.coaches
-        self.players = teamDTO.players
-        self.invites = teamDTO.invites
-    }
-    
-    enum CodingKeys: String, CodingKey {
-        case id = "id"
-        case teamId = "team_id"
-        case name = "name"
-        case teamNickname = "team_nickname"
-        case sport = "sport"
-        case logoUrl = "logo_url"
-        case colour = "colour"
-        case gender = "gender"
-        case ageGrp = "age_grp"
-        case accessCode = "access_code"
-        case coaches = "coaches"
-        case players = "players"
-        case invites = "invites"
-    }
-    
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(String.self, forKey: .id)
-        self.teamId = try container.decode(String.self, forKey: .teamId)
-        self.name = try container.decode(String.self, forKey: .name)
-        self.teamNickname = try container.decode(String.self, forKey: .teamNickname)
-        self.sport = try container.decode(String.self, forKey: .sport)
-        self.logoUrl = try container.decode(String.self, forKey: .logoUrl)
-        self.colour = try container.decode(String.self, forKey: .colour)
-        self.gender = try container.decode(String.self, forKey: .gender)
-        self.ageGrp = try container.decode(String.self, forKey: .ageGrp)
-        self.accessCode = try container.decode(String.self, forKey: .accessCode)
-        self.coaches = try container.decode([String].self, forKey: .coaches)
-        self.players = try container.decodeIfPresent([String].self, forKey: .players)
-        self.invites = try container.decodeIfPresent([String].self, forKey: .invites)
-
-    }
-    
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.id, forKey: .id)
-        try container.encode(self.teamId, forKey: .teamId)
-        try container.encode(self.name, forKey: .name)
-        try container.encode(self.teamNickname, forKey: .teamNickname)
-        try container.encode(self.sport, forKey: .sport)
-        try container.encodeIfPresent(self.logoUrl, forKey: .logoUrl)
-        try container.encodeIfPresent(self.colour, forKey: .colour)
-        try container.encode(self.gender, forKey: .gender)
-        try container.encode(self.ageGrp, forKey: .ageGrp)
-        try container.encodeIfPresent(self.accessCode, forKey: .accessCode)
-        try container.encode(self.coaches, forKey: .coaches)
-        try container.encodeIfPresent(self.players, forKey: .players)
-        try container.encodeIfPresent(self.invites, forKey: .invites)
-    }
-}
-
-
-/// Manages operations related to teams, such as fetching, updating, and creating teams in Firestore.
-/// This class follows a singleton pattern to ensure a single instance is used throughout the app.
-final class TeamManager {
-    
-    static let shared = TeamManager()
-    private init() { } // TO DO - Will need to use something else than singleton
-    
-    let teamCollection = Firestore.firestore().collection("teams") // team collection
-
 
     /// Returns a reference to a specific team document in Firestore.
     /// - Parameter id: Firestore document ID of the team.
     /// - Returns: A `DocumentReference` pointing to the team document.
     private func teamDocument(id: String) -> DocumentReference {
-        teamCollection.document(id)
+        teamCollection().document(id)
     }
     
     
@@ -147,7 +27,7 @@ final class TeamManager {
     /// - Parameter teamId: The system-assigned team ID.
     /// - Returns: A `DBTeam` instance if found, otherwise `nil`.
     func getTeam(teamId: String) async throws -> DBTeam? {
-        let snapshot = try await teamCollection.whereField("team_id", isEqualTo: teamId).getDocuments()
+        let snapshot = try await teamCollection().whereField("team_id", isEqualTo: teamId).getDocuments()
 
         //try await teamDocument(teamId: teamId).getDocument(as: DBTeam.self)
         guard let doc = snapshot.documents.first else { return nil }
@@ -160,7 +40,7 @@ final class TeamManager {
     /// - Returns: A `DBTeam` instance if found, otherwise `nil`.
     func getAllTeams(teamIds: [String]) async throws -> [DBTeam] {
         guard !teamIds.isEmpty else { return [] }
-        let snapshot = try await teamCollection.whereField("team_id", isEqualTo: teamIds).getDocuments()
+        let snapshot = try await teamCollection().whereField("team_id", isEqualTo: teamIds).getDocuments()
 
         return snapshot.documents.compactMap { try? $0.data(as: DBTeam.self) }
 
@@ -182,7 +62,7 @@ final class TeamManager {
     func getTeamWithAccessCode(accessCode: String) async throws -> DBTeam? {
         print("acees_code givenn is: [\(accessCode)]")
         
-        let snapshot = try await teamCollection.whereField("access_code", isEqualTo: accessCode).getDocuments()
+        let snapshot = try await teamCollection().whereField("access_code", isEqualTo: accessCode).getDocuments()
         print("passe bien ici")
         print("snapshot of access code is: \(snapshot)")
         guard let doc = snapshot.documents.first else { return nil }
@@ -344,8 +224,9 @@ final class TeamManager {
         do {
             print("Sending team to Firestore: \(teamDTO)")
             // verifie coach valide
-            let coach = try await UserManager.shared.getUser(userId: coachId)
-            let teamDocument = teamCollection.document()
+            let userManager = UserManager()
+            let coach = try await userManager.getUser(userId: coachId)
+            let teamDocument = teamCollection().document()
             let documentId = teamDocument.documentID // get the document id
             
             // create a new team
@@ -365,7 +246,7 @@ final class TeamManager {
     /// - Parameter teamId: The team ID to check.
     /// - Returns: `true` if the team exists, otherwise `false`.
     func doesTeamExist(teamId: String) async throws -> Bool {
-        let snapshot = try await teamCollection.whereField("team_id", isEqualTo: teamId)
+        let snapshot = try await teamCollection().whereField("team_id", isEqualTo: teamId)
             .limit(to: 1) // Limit to 1 for efficiency
             .getDocuments()
         
@@ -384,7 +265,7 @@ final class TeamManager {
         while true {
             let newCode = generateCode()
 
-            let snapshot = try await teamCollection
+            let snapshot = try await teamCollection()
                 .whereField("access_code", isEqualTo: newCode)
                 .getDocuments()
 
@@ -444,4 +325,5 @@ final class TeamManager {
     func deleteTeam(id: String) async throws {
         try await teamDocument(id: id).delete()
     }
+
 }

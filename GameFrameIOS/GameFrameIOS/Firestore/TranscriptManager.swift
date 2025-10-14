@@ -97,7 +97,8 @@ final class TranscriptManager {
     ///   - gameDocId: The document ID of the game.
     /// - Returns: A Firestore collection reference for transcripts.
     func transcriptCollection(teamDocId: String, gameDocId: String) -> CollectionReference {
-        return GameManager.shared.gameCollection(teamDocId: teamDocId).document(gameDocId).collection("transcripts")
+        let gameRepo = FirestoreGameRepository()
+        return gameRepo.gameCollection(teamDocId: teamDocId).document(gameDocId).collection("transcripts")
     }
     
 
@@ -109,8 +110,9 @@ final class TranscriptManager {
     /// - Returns: A `DBTranscript` object if found, otherwise `nil`.
     /// - Throws: An error if the retrieval fails.
     func getTranscript(teamId: String, gameId: String, transcriptId: String) async throws -> DBTranscript? {
+        let teamManager = TeamManager()
         // Make sure the game document can be found under the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("getTranscript: Could not find team id. Aborting")
             return nil
         }
@@ -126,8 +128,9 @@ final class TranscriptManager {
     /// - Returns: An array of `DBTranscript` objects.
     /// - Throws: An error if the retrieval fails.
     func getAllTranscripts(teamId: String, gameId: String) async throws -> [DBTranscript]? {
+        let teamManager = TeamManager()
         // Make sure the game document can be found under the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("getAllTranscripts: Could not find team id. Aborting")
             return nil
         }
@@ -176,8 +179,9 @@ final class TranscriptManager {
     /// - Returns: The newly generated transcript ID, or `nil` if the operation fails.
     /// - Throws: An error if the save operation fails.
     func addNewTranscript(teamId: String, transcriptDTO: TranscriptDTO) async throws -> String?{
+        let teamManager = TeamManager()
         // Make sure the collection path can be found
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("addNewTranscript: Could not find team id. Aborting")
             return nil
         }
@@ -209,8 +213,9 @@ final class TranscriptManager {
     ///
     /// - Throws: If the team cannot be found or the delete operation fails.
     func removeTranscript(teamId: String, gameId: String, transcriptId: String) async throws {
+        let teamManager = TeamManager()
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("removeTranscript: Could not find team id. Aborting")
             return
         }

@@ -25,8 +25,9 @@ final class TranscriptModel: ObservableObject {
     /// - Returns: A `DBUser` object representing the authenticated user, or `nil` if not found.
     /// - Throws: An error if authentication fails.
     func getUser() async throws -> DBUser? {
+        let userManager = UserManager()
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-        return try await UserManager.shared.getUser(userId: authUser.uid)
+        return try await userManager.getUser(userId: authUser.uid)
     }
     
     /// Retrieves all transcripts and key moments for a specific game.
@@ -434,8 +435,9 @@ final class TranscriptModel: ObservableObject {
     /// - Returns: A `PlayerTranscriptInfo` object containing the player's details, or `nil` if not found.
     /// - Throws: An error if retrieval fails.
     func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
+        let userManager = UserManager()
         // Retrieve user information.
-        guard let user = try await UserManager.shared.getUser(userId: playerId) else {
+        guard let user = try await userManager.getUser(userId: playerId) else {
             print("no user found. abort")
             return nil
         }
@@ -468,9 +470,10 @@ final class TranscriptModel: ObservableObject {
     /// - Returns: An array of `PlayerNameAndPhoto` objects containing player names and profile pictures.
     /// - Throws: An error if retrieval fails.
     func getFeebackFor(feedbackFor: [String]) async throws -> [PlayerNameAndPhoto] {
+        let userManager = UserManager()
         var results: [PlayerNameAndPhoto] = []
         for id in feedbackFor {
-            if let user = try await UserManager.shared.getUser(userId: id) {
+            if let user = try await userManager.getUser(userId: id) {
                 print("player: \(user.firstName) \(user.lastName)")
                 results.append(
                     PlayerNameAndPhoto(playerId: id, name: user.firstName + " " + user.lastName, photoURL: nil)

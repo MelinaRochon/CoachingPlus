@@ -36,9 +36,6 @@ struct CoachFullGameTranscriptView: View {
     var body: some View {
         ZStack {
             VStack(alignment: .leading) {
-                   Text("Full Game Transcript").bold()
-                       .frame(maxWidth: .infinity, alignment: .center)
-
                 if videoFileRetrieved {
                     let localAudioURL = FileManager.default
                         .urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -67,6 +64,8 @@ struct CoachFullGameTranscriptView: View {
                 CustomUIFields.loadingSpinner("Loading full game...") //.frame(alignment: .center)
             }
         }
+        .navigationTitle("Full Game Transcript")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             do {
                 // Get full game transcript video url
