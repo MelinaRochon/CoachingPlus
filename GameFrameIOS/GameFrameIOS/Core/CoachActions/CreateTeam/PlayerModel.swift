@@ -66,7 +66,7 @@ final class PlayerModel: ObservableObject {
         // Process pending invites and retrieve user details.
         for inviteDocId in invites {
             // Fetch the invite information.
-            guard let invite = try await InviteManager.shared.getInvite(id: inviteDocId) else {
+            guard let invite = try await InviteManager().getInvite(id: inviteDocId) else {
                 print("Could not find the invite's info.. Aborting")
                 return
             }

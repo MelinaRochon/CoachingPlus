@@ -25,6 +25,6 @@ final class InviteModel: ObservableObject {
     /// - Throws: An error if the invitation could not be created.
     func addInvite(inviteDTO: InviteDTO) async throws -> String {
         // Calls the `InviteManager` to create a new invitation and return its ID.
-        return try await InviteManager.shared.createNewInvite(inviteDTO: inviteDTO)
+        return try await InviteManager().createNewInvite(inviteDTO: inviteDTO)
     }
 }

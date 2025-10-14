@@ -88,6 +88,7 @@ final class AuthenticationModel: ObservableObject {
         let userManager = UserManager()
         let teamManager = TeamManager()
         let coachManager = CoachManager()
+        let inviteManager = InviteManager()
         let verifyUser =  try await verifyEmailAddress()
         if let verifyUser = verifyUser {
             if verifyUser.userId != nil {
@@ -111,7 +112,7 @@ final class AuthenticationModel: ObservableObject {
                 return
             }
             
-            guard let invite = try await InviteManager.shared.getInviteByEmailAndTeamId(email: email, teamId: teamId) else {
+            guard let invite = try await inviteManager.getInviteByEmailAndTeamId(email: email, teamId: teamId) else {
                 print("Invite for this player does not exists. Creating a new user.")
                 
                 // new user. Create a user and player, and add the playerId in the team
@@ -157,7 +158,7 @@ final class AuthenticationModel: ObservableObject {
             
             // update the status of the player
             // Set to accepted
-            try await InviteManager.shared.updateInviteStatus(id: invite.id, newStatus: "Accepted")
+            try await inviteManager.updateInviteStatus(id: invite.id, newStatus: "Accepted")
         } else {
             // Create a new coach entry in the database.
             try await coachManager.addCoach(coachId: authDataResult.uid)

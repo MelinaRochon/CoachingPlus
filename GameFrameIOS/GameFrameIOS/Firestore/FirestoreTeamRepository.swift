@@ -176,7 +176,7 @@ final class FirestoreTeamRepository: TeamRepository {
     }
     
     func getInviteDocIdOfPlayerAndTeam(teamDocId: String, playerDocId: String) async throws -> String? {
-        guard let invite = try await InviteManager.shared.getInviteByPlayerDocIdAndTeamId(playerDocId: playerDocId, teamDocId: teamDocId) else {
+        guard let invite = try await InviteManager().getInviteByPlayerDocIdAndTeamId(playerDocId: playerDocId, teamDocId: teamDocId) else {
             print("Invite does not exists")
             return nil
         }

@@ -257,7 +257,7 @@ final class TeamModel: ObservableObject {
         // Remove all invites affiliation to the team
         if let invites = team.invites {
             for inviteId in invites {
-                try await InviteManager.shared.deleteInvite(id: inviteId)
+                try await InviteManager().deleteInvite(id: inviteId)
             }
         }
         
