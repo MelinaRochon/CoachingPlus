@@ -91,6 +91,7 @@ final class GameModel: ObservableObject {
     func getTeamsAssociatedToUser() async throws -> [String]? {
         let userManager = UserManager()
         let coachManager = CoachManager()
+        let playerManager = PlayerManager()
         // Fetch the authenticated user's information.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
@@ -105,7 +106,7 @@ final class GameModel: ObservableObject {
             teamsId = try await coachManager.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
         } else if (user.userType == .player) {
             // Get the list of teams the player is enrolled in.
-            teamsId = try await PlayerManager.shared.getPlayer(playerId: authUser.uid)!.teamsEnrolled
+            teamsId = try await playerManager.getPlayer(playerId: authUser.uid)!.teamsEnrolled
             // TODO: Make the recent footage for the player only the ones that are assigned them or the whole team
         } else {
             // TODO: Unknown user in database. Return error

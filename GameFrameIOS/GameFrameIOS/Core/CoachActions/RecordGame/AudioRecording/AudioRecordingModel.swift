@@ -332,13 +332,14 @@ final class AudioRecordingModel: ObservableObject {
     /// - Returns: A `PlayerTranscriptInfo` object, or `nil` if not found.
     func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
         let userManager = UserManager()
+        let playerManager = PlayerManager()
         // get the user info
         guard let user = try await userManager.getUser(userId: playerId) else {
             print("no user found. abort")
             return nil
         }
         
-        guard let player = try await PlayerManager.shared.getPlayer(playerId: playerId) else {
+        guard let player = try await playerManager.getPlayer(playerId: playerId) else {
             print("no player found. abprt")
             return nil
         }

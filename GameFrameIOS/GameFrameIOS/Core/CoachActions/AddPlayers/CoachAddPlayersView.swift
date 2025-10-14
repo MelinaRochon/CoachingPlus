@@ -142,7 +142,7 @@ struct CoachAddPlayersView: View {
                                 
                                 // Create a new player
                                 let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                let playerDocId = try await PlayerManager.shared.createNewPlayer(playerDTO: player)
+                                let playerDocId = try await PlayerManager().createNewPlayer(playerDTO: player)
                                 
                                 // Create a new invite
                                 let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)
@@ -307,7 +307,7 @@ struct tmpCoachAddPlayerView: View {
                                 
                                 // Create a new player
                                 let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                let playerDocId = try await PlayerManager.shared.createNewPlayer(playerDTO: player)
+                                let playerDocId = try await PlayerManager().createNewPlayer(playerDTO: player)
                                 
                                 // Create a new invite
                                 let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)
@@ -383,7 +383,7 @@ struct tmpCoachAddPlayerView: View {
                                 
                                 // Create a new player
                                 let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                let playerDocId = try await PlayerManager.shared.createNewPlayer(playerDTO: player)
+                                let playerDocId = try await PlayerManager().createNewPlayer(playerDTO: player)
                                 
                                 // Create a new invite
                                 let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)

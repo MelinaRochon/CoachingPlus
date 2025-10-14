@@ -89,6 +89,7 @@ final class AuthenticationModel: ObservableObject {
         let teamManager = TeamManager()
         let coachManager = CoachManager()
         let inviteManager = InviteManager()
+        let playerManager = PlayerManager()
         let verifyUser =  try await verifyEmailAddress()
         if let verifyUser = verifyUser {
             if verifyUser.userId != nil {
@@ -122,7 +123,7 @@ final class AuthenticationModel: ObservableObject {
                 
                 // create a new player,
                 let player = PlayerDTO(playerId: authDataResult.uid, jerseyNum: 0, nickName: nil, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: nil, guardianEmail: nil, guardianPhone: nil)
-                let playerDocId = try await PlayerManager.shared.createNewPlayer(playerDTO: player)
+                let playerDocId = try await playerManager.createNewPlayer(playerDTO: player)
                 print("Player doc id was created! \(playerDocId)")
                 
                 let subdocId = team.teamId // <- we store per-team info using team.teamId as the subdoc id
@@ -141,7 +142,7 @@ final class AuthenticationModel: ObservableObject {
             
             // update the player document
             print("update player")
-            try await PlayerManager.shared.updatePlayerId(id: invite.playerDocId, playerId: authDataResult.uid)
+            try await playerManager.updatePlayerId(id: invite.playerDocId, playerId: authDataResult.uid)
             
             // Create playerTeamInfo under players/{playerDocId}/playerTeamInfo/{team.teamId}
             let subdocId = team.teamId

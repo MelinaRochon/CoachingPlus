@@ -439,6 +439,7 @@ final class TranscriptModel: ObservableObject {
     /// - Throws: An error if retrieval fails.
     func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
         let userManager = UserManager()
+        let playerManager = PlayerManager()
         // Retrieve user information.
         guard let user = try await userManager.getUser(userId: playerId) else {
             print("no user found. abort")
@@ -446,7 +447,7 @@ final class TranscriptModel: ObservableObject {
         }
         
         // Retrieve player-specific information.
-        guard let player = try await PlayerManager.shared.getPlayer(playerId: playerId) else {
+        guard let player = try await playerManager.getPlayer(playerId: playerId) else {
             print("no player found. abprt")
             return nil
         }

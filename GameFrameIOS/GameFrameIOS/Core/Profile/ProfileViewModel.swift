@@ -66,7 +66,7 @@ final class PlayerProfileModel: ObservableObject {
         let userManager = UserManager()
         // Fetch user and player data from the database
         self.user = try await userManager.getUser(userId: authDataResult.uid)
-        self.player = try await PlayerManager.shared.getPlayer(playerId: authDataResult.uid)
+        self.player = try await PlayerManager().getPlayer(playerId: authDataResult.uid)
     }
     
     
@@ -86,6 +86,7 @@ final class PlayerProfileModel: ObservableObject {
      */
     func updatePlayerInformation(jersey: Int, nickname: String, guardianName: String, guardianEmail: String, guardianPhone: String) {
         guard let player else { return }
+        let playerManager = PlayerManager()
         
         
         // Create a new DBPlayer object with updated information
@@ -93,9 +94,9 @@ final class PlayerProfileModel: ObservableObject {
         
         Task {
             // Update the player's information in the database
-            try await PlayerManager.shared.updatePlayerInfo(player: playerInfo)
+            try await playerManager.updatePlayerInfo(player: playerInfo)
             // Refresh player data after the update
-            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -111,6 +112,7 @@ final class PlayerProfileModel: ObservableObject {
     ///   - gender: Optional updated gender of the player.
     func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) {
         guard var player else { return }
+        let playerManager = PlayerManager()
         
         player.jerseyNum = jersey ?? player.jerseyNum
         player.nickName = nickname ?? player.nickName
@@ -121,9 +123,9 @@ final class PlayerProfileModel: ObservableObject {
         
         Task {
             // Update the player's information in the database
-            try await PlayerManager.shared.updatePlayerSettings(id: id, jersey: jersey, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, gender: gender)
+            try await playerManager.updatePlayerSettings(id: id, jersey: jersey, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, gender: gender)
             
-            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -138,10 +140,10 @@ final class PlayerProfileModel: ObservableObject {
      */
     func updateGuardianName(name: String) {
         guard let player else { return }
-        
+        let playerManager = PlayerManager()
         Task {
-            try await PlayerManager.shared.updateGuardianName(id: player.id, name: name)
-            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+            try await playerManager.updateGuardianName(id: player.id, name: name)
+            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -154,10 +156,11 @@ final class PlayerProfileModel: ObservableObject {
      */
     func removeGuardianInfo() {
         guard let player else { return }
+        let playerManager = PlayerManager()
         
         Task {
-            try await PlayerManager.shared.removeGuardianInfo(id: player.id)
-            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+            try await playerManager.removeGuardianInfo(id: player.id)
+            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -169,9 +172,10 @@ final class PlayerProfileModel: ObservableObject {
      */
     func removeGuardianName() {
         guard let player else { return }
+        let playerManager = PlayerManager()
         Task {
-            try await PlayerManager.shared.removeGuardianInfoName(id: player.id)
-            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+            try await playerManager.removeGuardianInfoName(id: player.id)
+            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -183,9 +187,10 @@ final class PlayerProfileModel: ObservableObject {
      */
     func removeGuardianEmail() {
         guard let player else { return }
+        let playerManager = PlayerManager()
         Task {
-            try await PlayerManager.shared.removeGuardianInfoEmail(id: player.id)
-            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+            try await playerManager.removeGuardianInfoEmail(id: player.id)
+            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -197,9 +202,10 @@ final class PlayerProfileModel: ObservableObject {
      */
     func removeGuardianPhone() {
         guard let player else { return }
+        let playerManager = PlayerManager()
         Task {
-            try await PlayerManager.shared.removeGuardianInfoPhone(id: player.id)
-            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+            try await playerManager.removeGuardianInfoPhone(id: player.id)
+            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     

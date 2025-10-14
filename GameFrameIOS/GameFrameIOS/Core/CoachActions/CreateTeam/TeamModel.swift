@@ -87,6 +87,7 @@ final class TeamModel: ObservableObject {
     func loadAllTeams() async throws -> [DBTeam]? {
         let userManager = UserManager()
         let coachManager = CoachManager()
+        let playerManager = PlayerManager()
         // Get the authenticated user's details.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
@@ -102,7 +103,7 @@ final class TeamModel: ObservableObject {
             return nil
         } else if (userType == .player) {
             // Load all teams that the player is enrolled in.
-            return try await PlayerManager.shared.getAllTeamsEnrolled(playerId: authUser.uid)
+            return try await playerManager.getAllTeamsEnrolled(playerId: authUser.uid)
         } else {
             // TODO: Unknown user in database. Return error
             return nil
@@ -132,11 +133,12 @@ final class TeamModel: ObservableObject {
     /// - Throws: `TeamValidationError.userExists` if the player is already enrolled in the team.
     func addingPlayerToTeam(team: DBTeam) async throws -> DBTeam? {
         let teamManager = TeamManager()
+        let playerManager = PlayerManager()
         // Get the authenticated user's details.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
         // Check if the player is already enrolled in the team.
-        let playerEnrolledToTeam = try await PlayerManager.shared.isPlayerEnrolledToTeam(playerId: authUser.uid, teamId: team.teamId)
+        let playerEnrolledToTeam = try await playerManager.isPlayerEnrolledToTeam(playerId: authUser.uid, teamId: team.teamId)
         if playerEnrolledToTeam {
             print("player is already enrolled to team")
             throw TeamValidationError.userExists
@@ -154,13 +156,13 @@ final class TeamModel: ObservableObject {
         try await addPlayerToAllTeamFeedback(rosterCount: rosterCount!, teamDocId: team.id, teamId: team.teamId, playerId: authUser.uid)
         
         // Fetch the player details.
-        guard let player = try await PlayerManager.shared.getPlayer(playerId: authUser.uid) else {
+        guard let player = try await playerManager.getPlayer(playerId: authUser.uid) else {
             print("Error. Access code is invalid")
             throw TeamValidationError.userExists
         }
         
         // Add the team to the player's list of enrolled teams.
-        try await PlayerManager.shared.addTeamToPlayer(id: player.id, teamId: team.teamId)
+        try await playerManager.addTeamToPlayer(id: player.id, teamId: team.teamId)
         
         return team
     }
@@ -180,6 +182,7 @@ final class TeamModel: ObservableObject {
     func addPlayerToAllTeamFeedback(rosterCount: Int, teamDocId: String, teamId: String, playerId: String) async throws {
         let teamManager = TeamManager()
         let gameManager = GameManager()
+        let keyMomentManager = KeyMomentManager()
         // Add the player to the team's players list in the database.
         try await teamManager.addPlayerToTeam(id: teamDocId, playerId: playerId)
                 
@@ -192,7 +195,7 @@ final class TeamModel: ObservableObject {
         // Do all games
         for game in games {
             // Get all key moments under this game that have a feedback for all players
-            try await KeyMomentManager.shared.assignPlayerToKeyMomentsForEntireTeam(teamDocId: teamDocId, gameId: game.gameId, playersCount: rosterCount, playerId: playerId)
+            try await keyMomentManager.assignPlayerToKeyMomentsForEntireTeam(teamDocId: teamDocId, gameId: game.gameId, playersCount: rosterCount, playerId: playerId)
         }
     }
     
@@ -232,6 +235,8 @@ final class TeamModel: ObservableObject {
     func deleteTeam(teamDocId: String) async throws {
         let teamManager = TeamManager()
         let gameManager = GameManager()
+        let playerManager = PlayerManager()
+        let coachManager = CoachManager()
         let team = try await teamManager.getTeamWithDocId(docId: teamDocId)
                 
         // Delete the game
@@ -240,16 +245,16 @@ final class TeamModel: ObservableObject {
                 
         // Remove the coaches affiliation to the team
         for coachId in team.coaches {
-            try await CoachManager().removeTeamToCoach(coachId: coachId, teamId: team.teamId)
+            try await coachManager.removeTeamToCoach(coachId: coachId, teamId: team.teamId)
         }
         
         
         // Remove all players affiliation to the team
         if let players = team.players {
             for playerId in players {
-                let playerInfo = try await PlayerManager.shared.getPlayer(playerId: playerId)
+                let playerInfo = try await playerManager.getPlayer(playerId: playerId)
                 if let player = playerInfo {
-                    try await PlayerManager.shared.removeTeamFromPlayer(id: player.id, teamId: team.teamId)
+                    try await playerManager.removeTeamFromPlayer(id: player.id, teamId: team.teamId)
                 }
             }
         }
