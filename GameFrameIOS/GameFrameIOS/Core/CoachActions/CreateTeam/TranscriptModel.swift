@@ -42,8 +42,9 @@ final class TranscriptModel: ObservableObject {
     func getAllTranscripts(gameId: String, teamDocId: String) async throws -> [keyMomentTranscript]? {
         do {
             let keyMomentManager = KeyMomentManager()
+            let transcriptManager = TranscriptManager()
             // Retrieve all transcripts associated with the game.
-            guard let transcripts = try await TranscriptManager.shared.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
+            guard let transcripts = try await transcriptManager.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
                 return nil
             }
@@ -133,8 +134,10 @@ final class TranscriptModel: ObservableObject {
     func getAllTranscriptsAndKeyMoments(gameId: String, teamDocId: String) async throws -> ([keyMomentTranscript]?, [keyMomentTranscript]?) {
         do {
             let keyMomentManager = KeyMomentManager()
+            let transcriptManager = TranscriptManager()
+            
             // Retrieve all transcripts associated with the game.
-            guard let transcripts = try await TranscriptManager.shared.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
+            guard let transcripts = try await transcriptManager.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
                 return (nil, nil)
             }
@@ -291,8 +294,10 @@ final class TranscriptModel: ObservableObject {
     func getPreviewTranscriptsAndKeyMoments(gameId: String, teamDocId: String) async throws -> ([keyMomentTranscript]?, [keyMomentTranscript]?) {
         do {
             let keyMomentManager = KeyMomentManager()
+            let transcriptManager = TranscriptManager()
+            
             // Retrieve the first three transcripts associated with the game.
-            guard let transcripts = try await TranscriptManager.shared.getTranscriptsPreviewWithDocId(teamDocId: teamDocId, gameId: gameId) else {
+            guard let transcripts = try await transcriptManager.getTranscriptsPreviewWithDocId(teamDocId: teamDocId, gameId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
                 return (nil, nil)
             }
@@ -518,7 +523,7 @@ final class TranscriptModel: ObservableObject {
         }
         
         if let transcript = transcript {
-            try await TranscriptManager.shared.updateTranscript(teamDocId: teamDocId, gameId: gameId, transcriptId: transcriptId, transcript: transcript)
+            try await TranscriptManager().updateTranscript(teamDocId: teamDocId, gameId: gameId, transcriptId: transcriptId, transcript: transcript)
         }
     }
     
@@ -533,8 +538,9 @@ final class TranscriptModel: ObservableObject {
     /// - Throws: Propagates any errors thrown by `TranscriptManager` or `KeyMomentManager` during deletion.
     func removeTranscript(gameId: String, teamId: String, transcriptId: String, keyMomentId: String) async throws {
         let keyMomentManager = KeyMomentManager()
+        let transcriptManager = TranscriptManager()
         // Remove transcript first
-        try await TranscriptManager.shared.removeTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
+        try await transcriptManager.removeTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
         
         // Get the audio url before deleting the key moment document
         let audioUrl = try await keyMomentManager.getAudioUrl(teamDocId: teamId, gameDocId: gameId, keyMomentId: keyMomentId)

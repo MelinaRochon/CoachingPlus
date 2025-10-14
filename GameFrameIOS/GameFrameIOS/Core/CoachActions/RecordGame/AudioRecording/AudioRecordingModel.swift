@@ -69,6 +69,8 @@ final class AudioRecordingModel: ObservableObject {
     func addRecording(recordingStart: Date, recordingEnd: Date, transcription: String, feedbackFor: PlayerTranscriptInfo?, numAudioFiles: Int) async throws {
         do {
             let keyMomentManager = KeyMomentManager()
+            let transcriptManager = TranscriptManager()
+            
             // Determine which players the feedback is for
             var fbFor: [String]
             if feedbackFor == nil {
@@ -116,7 +118,7 @@ final class AudioRecordingModel: ObservableObject {
             // Create a new transcript entry
             let transcriptDTO = TranscriptDTO(keyMomentId: keyMomentDocId!, transcript: transcription, language: "English", generatedBy: authUser.uid, confidence: confidence, gameId: gameId)
             // Add a new transcript to the database
-            guard let transcriptDocId = try await TranscriptManager.shared.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
+            guard let transcriptDocId = try await transcriptManager.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
                 print("Error: the transcript doc ID is nil.")
                 return
             }
@@ -185,9 +187,10 @@ final class AudioRecordingModel: ObservableObject {
     func loadAllRecordings() async throws {
         do {
             let keyMomentManager = KeyMomentManager()
+            let transcriptManager = TranscriptManager()
             
             // Get all the transcripts from the database
-            guard let transcripts = try await TranscriptManager.shared.getAllTranscripts(teamId: teamId, gameId: gameId) else {
+            guard let transcripts = try await transcriptManager.getAllTranscripts(teamId: teamId, gameId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
                 return
             }

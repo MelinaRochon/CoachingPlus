@@ -233,11 +233,12 @@ final class GameModel: ObservableObject {
     ///         Any subcollections (e.g., feedback, transcripts) must be deleted separately if needed.
     func removeGame(gameId: String, teamDocId: String, teamId: String) async throws {
         let gameManager = GameManager()
+        let transcriptManager = TranscriptManager()
         // Delete all key moments
         try await KeyMomentManager().deleteAllKeyMoments(teamDocId: teamDocId, gameId: gameId)
         
         // Delete all transcripts
-        try await TranscriptManager.shared.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
+        try await transcriptManager.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
         
         // Delete the game
         try await gameManager.deleteGame(gameId: gameId, teamDocId: teamDocId)

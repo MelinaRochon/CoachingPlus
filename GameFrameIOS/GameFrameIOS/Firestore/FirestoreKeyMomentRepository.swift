@@ -265,9 +265,11 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
         feedbackFor: [PlayerNameAndPhoto]
     ) async throws {
         let keyMomentRepo = FirestoreKeyMomentRepository()
+        let transcriptManager = TranscriptManager()
+        
         let feedbackData = feedbackFor.map { $0.playerId }
         
-        guard let keyMomentId = try await TranscriptManager.shared.getTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)?.keyMomentId else {
+        guard let keyMomentId = try await transcriptManager.getTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)?.keyMomentId else {
             print("Unable to get key moment id for transcript \(transcriptId).")
             return
         }
