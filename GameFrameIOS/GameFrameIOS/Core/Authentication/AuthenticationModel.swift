@@ -87,6 +87,7 @@ final class AuthenticationModel: ObservableObject {
     func signUp(userType: UserType) async throws {
         let userManager = UserManager()
         let teamManager = TeamManager()
+        let coachManager = CoachManager()
         let verifyUser =  try await verifyEmailAddress()
         if let verifyUser = verifyUser {
             if verifyUser.userId != nil {
@@ -159,7 +160,7 @@ final class AuthenticationModel: ObservableObject {
             try await InviteManager.shared.updateInviteStatus(id: invite.id, newStatus: "Accepted")
         } else {
             // Create a new coach entry in the database.
-            try await CoachManager.shared.addCoach(coachId: authDataResult.uid)
+            try await coachManager.addCoach(coachId: authDataResult.uid)
         }
     }
     

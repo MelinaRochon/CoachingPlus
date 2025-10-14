@@ -10,7 +10,6 @@ import FirebaseFirestore
 
 final class FirestoreTeamRepository: TeamRepository {
     
-//    var teamCollection = Firestore.firestore().collection("teams") // team collection
     func teamCollection() -> CollectionReference {
         return Firestore.firestore().collection("teams")
     }
@@ -234,7 +233,7 @@ final class FirestoreTeamRepository: TeamRepository {
             try teamDocument.setData(from: team, merge: false)
             
             // Add the team in the coach's document
-            try await CoachManager.shared.addTeamToCoach(coachId: coachId, teamId: teamDTO.teamId)
+            try await CoachManager().addTeamToCoach(coachId: coachId, teamId: teamDTO.teamId)
         } catch let error as NSError {
             print("Error creating team: \(error.localizedDescription)")
             throw error

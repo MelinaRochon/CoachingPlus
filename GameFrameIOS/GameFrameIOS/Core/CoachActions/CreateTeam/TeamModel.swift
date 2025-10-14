@@ -86,6 +86,7 @@ final class TeamModel: ObservableObject {
     /// - Throws: An error if the retrieval fails.
     func loadAllTeams() async throws -> [DBTeam]? {
         let userManager = UserManager()
+        let coachManager = CoachManager()
         // Get the authenticated user's details.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
@@ -94,7 +95,7 @@ final class TeamModel: ObservableObject {
                 
         if (userType == .coach) {
             // Load all teams that the coach is managing.
-            let tmpTeams = try await CoachManager.shared.loadAllTeamsCoaching(coachId: authUser.uid)
+            let tmpTeams = try await coachManager.loadAllTeamsCoaching(coachId: authUser.uid)
             if tmpTeams != nil {
                 return tmpTeams
             }
@@ -239,7 +240,7 @@ final class TeamModel: ObservableObject {
                 
         // Remove the coaches affiliation to the team
         for coachId in team.coaches {
-            try await CoachManager.shared.removeTeamToCoach(coachId: coachId, teamId: team.teamId)
+            try await CoachManager().removeTeamToCoach(coachId: coachId, teamId: team.teamId)
         }
         
         

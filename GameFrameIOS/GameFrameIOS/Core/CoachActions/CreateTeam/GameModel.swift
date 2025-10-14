@@ -90,6 +90,7 @@ final class GameModel: ObservableObject {
     /// - Throws: An error if fetching user or team data fails.
     func getTeamsAssociatedToUser() async throws -> [String]? {
         let userManager = UserManager()
+        let coachManager = CoachManager()
         // Fetch the authenticated user's information.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
@@ -101,7 +102,7 @@ final class GameModel: ObservableObject {
         var teamsId: [String]? = []
         if (user.userType == .coach) {
             // Get the list of teams the coach is managing.
-            teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
+            teamsId = try await coachManager.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
         } else if (user.userType == .player) {
             // Get the list of teams the player is enrolled in.
             teamsId = try await PlayerManager.shared.getPlayer(playerId: authUser.uid)!.teamsEnrolled
