@@ -68,6 +68,9 @@ final class AudioRecordingModel: ObservableObject {
     /// - Throws: An error if the operation fails.
     func addRecording(recordingStart: Date, recordingEnd: Date, transcription: String, feedbackFor: PlayerTranscriptInfo?, numAudioFiles: Int) async throws {
         do {
+            let keyMomentManager = KeyMomentManager()
+            let transcriptManager = TranscriptManager()
+            
             // Determine which players the feedback is for
             var fbFor: [String]
             if feedbackFor == nil {
@@ -103,7 +106,7 @@ final class AudioRecordingModel: ObservableObject {
             let keyMomentDTO = KeyMomentDTO(fullGameId: nil, gameId: gameId, uploadedBy: authUser.uid, audioUrl: path, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: fbFor)
             
             // Add a new key moment to the database
-            let keyMomentDocId = try await KeyMomentManager.shared.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)
+            let keyMomentDocId = try await keyMomentManager.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)
             guard let safeKeyMomentId = keyMomentDocId else {
                 print("Error: The key moment doc ID is nil. Aborting.")
                 return
@@ -115,7 +118,7 @@ final class AudioRecordingModel: ObservableObject {
             // Create a new transcript entry
             let transcriptDTO = TranscriptDTO(keyMomentId: keyMomentDocId!, transcript: transcription, language: "English", generatedBy: authUser.uid, confidence: confidence, gameId: gameId)
             // Add a new transcript to the database
-            guard let transcriptDocId = try await TranscriptManager.shared.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
+            guard let transcriptDocId = try await transcriptManager.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
                 print("Error: the transcript doc ID is nil.")
                 return
             }
@@ -183,9 +186,11 @@ final class AudioRecordingModel: ObservableObject {
     /// - Throws: An error if the operation fails.
     func loadAllRecordings() async throws {
         do {
+            let keyMomentManager = KeyMomentManager()
+            let transcriptManager = TranscriptManager()
             
             // Get all the transcripts from the database
-            guard let transcripts = try await TranscriptManager.shared.getAllTranscripts(teamId: teamId, gameId: gameId) else {
+            guard let transcripts = try await transcriptManager.getAllTranscripts(teamId: teamId, gameId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
                 return
             }
@@ -195,7 +200,7 @@ final class AudioRecordingModel: ObservableObject {
                 let keyMomentDocId = transcript.keyMomentId // get the key moment document id to be fetched
                 
                 // Fetch the key moment associated with the transcript
-                guard let keyMoment = try await KeyMomentManager.shared.getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentDocId) else {
+                guard let keyMoment = try await keyMomentManager.getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentDocId) else {
                     print("No key moment found. Aborting..")
                     return
                 }
@@ -330,13 +335,14 @@ final class AudioRecordingModel: ObservableObject {
     /// - Returns: A `PlayerTranscriptInfo` object, or `nil` if not found.
     func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
         let userManager = UserManager()
+        let playerManager = PlayerManager()
         // get the user info
         guard let user = try await userManager.getUser(userId: playerId) else {
             print("no user found. abort")
             return nil
         }
         
-        guard let player = try await PlayerManager.shared.getPlayer(playerId: playerId) else {
+        guard let player = try await playerManager.getPlayer(playerId: playerId) else {
             print("no player found. abprt")
             return nil
         }

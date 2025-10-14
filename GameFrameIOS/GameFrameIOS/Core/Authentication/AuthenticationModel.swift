@@ -87,6 +87,11 @@ final class AuthenticationModel: ObservableObject {
     func signUp(userType: UserType) async throws {
         let userManager = UserManager()
         let teamManager = TeamManager()
+        let coachManager = CoachManager()
+        let inviteManager = InviteManager()
+        let playerManager = PlayerManager()
+        let playerTeamInfoManager = PlayerTeamInfoManager()
+        
         let verifyUser =  try await verifyEmailAddress()
         if let verifyUser = verifyUser {
             if verifyUser.userId != nil {
@@ -110,7 +115,7 @@ final class AuthenticationModel: ObservableObject {
                 return
             }
             
-            guard let invite = try await InviteManager.shared.getInviteByEmailAndTeamId(email: email, teamId: teamId) else {
+            guard let invite = try await inviteManager.getInviteByEmailAndTeamId(email: email, teamId: teamId) else {
                 print("Invite for this player does not exists. Creating a new user.")
                 
                 // new user. Create a user and player, and add the playerId in the team
@@ -120,13 +125,13 @@ final class AuthenticationModel: ObservableObject {
                 
                 // create a new player,
                 let player = PlayerDTO(playerId: authDataResult.uid, jerseyNum: 0, nickName: nil, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: nil, guardianEmail: nil, guardianPhone: nil)
-                let playerDocId = try await PlayerManager.shared.createNewPlayer(playerDTO: player)
+                let playerDocId = try await playerManager.createNewPlayer(playerDTO: player)
                 print("Player doc id was created! \(playerDocId)")
                 
                 let subdocId = team.teamId // <- we store per-team info using team.teamId as the subdoc id
 
                 let dto = PlayerTeamInfoDTO(id: subdocId, playerId: playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil) // nil => server time
-                _ = try await PlayerTeamInfoManager.shared.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
+                _ = try await playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
 
                 // Add player to team
                 try await teamManager.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
@@ -139,12 +144,12 @@ final class AuthenticationModel: ObservableObject {
             
             // update the player document
             print("update player")
-            try await PlayerManager.shared.updatePlayerId(id: invite.playerDocId, playerId: authDataResult.uid)
+            try await playerManager.updatePlayerId(id: invite.playerDocId, playerId: authDataResult.uid)
             
             // Create playerTeamInfo under players/{playerDocId}/playerTeamInfo/{team.teamId}
             let subdocId = team.teamId
             let dto = PlayerTeamInfoDTO(id: subdocId, playerId: invite.playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil)
-            _ = try await PlayerTeamInfoManager.shared.createNewPlayerTeamInfo(playerDocId: invite.playerDocId, playerTeamInfoDTO: dto)
+            _ = try await playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: invite.playerDocId, playerTeamInfoDTO: dto)
 
             // Look for the correct team
             guard let team = try await teamManager.getTeam(teamId: invite.teamId) else {
@@ -156,10 +161,10 @@ final class AuthenticationModel: ObservableObject {
             
             // update the status of the player
             // Set to accepted
-            try await InviteManager.shared.updateInviteStatus(id: invite.id, newStatus: "Accepted")
+            try await inviteManager.updateInviteStatus(id: invite.id, newStatus: "Accepted")
         } else {
             // Create a new coach entry in the database.
-            try await CoachManager.shared.addCoach(coachId: authDataResult.uid)
+            try await coachManager.addCoach(coachId: authDataResult.uid)
         }
     }
     

@@ -27,12 +27,13 @@ final class CommentSectionViewModel: ObservableObject {
      This function interacts with the `CommentManager` to retrieve the comments from Firestore and updates the `comments` property.
      */
     func loadCommentsForKeyMoment(teamId: String, keyMomentId: String) async {
+        let commentManager = CommentManager()
         guard !teamId.isEmpty, !keyMomentId.isEmpty else {
             print("Invalid teamId or keyMomentId")
             return
         }
         do {
-            if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificKeyMomentId(teamId: teamId, keyMomentId: keyMomentId) {
+            if let fetchedComments = try await commentManager.getAllCommentsForSpecificKeyMomentId(teamId: teamId, keyMomentId: keyMomentId) {
                 self.comments = fetchedComments.sorted { $0.createdAt > $1.createdAt } // Order by newest first
                 print("Loaded \(self.comments.count) comments")
             } else {
@@ -53,13 +54,14 @@ final class CommentSectionViewModel: ObservableObject {
      It also replaces the `uploadedBy` field with the user's full name.
      */
     func loadCommentsForTranscript(teamDocId: String, transcriptId: String) async {
+        let commentManager = CommentManager()
         guard !teamDocId.isEmpty, !transcriptId.isEmpty else {
             print("Invalid teamId or transcriptId")
             return
         }
             
         do {
-            if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: transcriptId) {
+            if let fetchedComments = try await commentManager.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: transcriptId) {
                 let userManager = UserManager()
                 
                 var updatedComments: [DBComment] = []
@@ -104,6 +106,7 @@ final class CommentSectionViewModel: ObservableObject {
      This function creates a new `CommentDTO` object and adds it to Firestore. After adding, it reloads the comments for the given transcript.
      */
     func addComment(teamDocId: String, keyMomentId: String, gameId: String, transcriptId: String, text: String) async {
+        let commentManager = CommentManager()
         do {
             print("In CommentSectionViewModel, teamId: \(teamDocId)")
             guard !teamDocId.isEmpty, !keyMomentId.isEmpty, !text.isEmpty else {
@@ -121,7 +124,7 @@ final class CommentSectionViewModel: ObservableObject {
                 createdAt: Date()
             )
             print("trying to add comment: \(text)")
-            try await CommentManager.shared.addNewComment(teamDocId: teamDocId, commentDTO: newComment)
+            try await commentManager.addNewComment(teamDocId: teamDocId, commentDTO: newComment)
             print("success!")
             
             // Refresh comments after adding

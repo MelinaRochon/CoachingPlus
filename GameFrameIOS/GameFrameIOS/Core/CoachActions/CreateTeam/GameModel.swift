@@ -90,6 +90,8 @@ final class GameModel: ObservableObject {
     /// - Throws: An error if fetching user or team data fails.
     func getTeamsAssociatedToUser() async throws -> [String]? {
         let userManager = UserManager()
+        let coachManager = CoachManager()
+        let playerManager = PlayerManager()
         // Fetch the authenticated user's information.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
@@ -101,10 +103,10 @@ final class GameModel: ObservableObject {
         var teamsId: [String]? = []
         if (user.userType == .coach) {
             // Get the list of teams the coach is managing.
-            teamsId = try await CoachManager.shared.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
+            teamsId = try await coachManager.getCoach(coachId: authUser.uid)!.teamsCoaching ?? []
         } else if (user.userType == .player) {
             // Get the list of teams the player is enrolled in.
-            teamsId = try await PlayerManager.shared.getPlayer(playerId: authUser.uid)!.teamsEnrolled
+            teamsId = try await playerManager.getPlayer(playerId: authUser.uid)!.teamsEnrolled
             // TODO: Make the recent footage for the player only the ones that are assigned them or the whole team
         } else {
             // TODO: Unknown user in database. Return error
@@ -231,11 +233,12 @@ final class GameModel: ObservableObject {
     ///         Any subcollections (e.g., feedback, transcripts) must be deleted separately if needed.
     func removeGame(gameId: String, teamDocId: String, teamId: String) async throws {
         let gameManager = GameManager()
+        let transcriptManager = TranscriptManager()
         // Delete all key moments
-        try await KeyMomentManager.shared.deleteAllKeyMoments(teamDocId: teamDocId, gameId: gameId)
+        try await KeyMomentManager().deleteAllKeyMoments(teamDocId: teamDocId, gameId: gameId)
         
         // Delete all transcripts
-        try await TranscriptManager.shared.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
+        try await transcriptManager.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
         
         // Delete the game
         try await gameManager.deleteGame(gameId: gameId, teamDocId: teamDocId)

@@ -86,12 +86,13 @@ final class CoachProfileViewModel: ObservableObject {
      */
     func loadPlayer(userDocId: String, playerDocId: String) async throws {
         let userManager = UserManager()
+        let playerManager = PlayerManager()
         
         // Get the user information from the player's id
         self.user = try await userManager.findUserWithId(id: userDocId)
         
         // Get the player's information
-        self.player = try await PlayerManager.shared.findPlayerWithId(id: playerDocId)
+        self.player = try await playerManager.findPlayerWithId(id: playerDocId)
     }
     
     
@@ -105,10 +106,11 @@ final class CoachProfileViewModel: ObservableObject {
      */
     func updatePlayerInformation(jersey: Int, nickname: String) {
         guard let player else { return }
+        let playerManager = PlayerManager()
     
         Task {
             // Updating the player information on the database
-            try await PlayerManager.shared.updatePlayerJerseyAndNickname(playerDocId: player.id, jersey: jersey, nickname: nickname)
+            try await playerManager.updatePlayerJerseyAndNickname(playerDocId: player.id, jersey: jersey, nickname: nickname)
         }
     }
     
@@ -174,6 +176,7 @@ final class CoachProfileViewModel: ObservableObject {
     /// Remove a player from the database
     func removePlayer(teamDocId: String) async throws {
         let teamManager = TeamManager()
+        let playerManager = PlayerManager()
         // TODO: Remove a player from db cannot be done.
         guard let player else { return }
         
@@ -204,7 +207,7 @@ final class CoachProfileViewModel: ObservableObject {
         }
         
         // Remove team id player was enrolled in players team_enrolled array
-        try await PlayerManager.shared.removeTeamFromPlayerWithTeamDocId(id: player.id, teamDocId: teamDocId)
+        try await playerManager.removeTeamFromPlayerWithTeamDocId(id: player.id, teamDocId: teamDocId)
     }
     
     
@@ -223,6 +226,7 @@ final class CoachProfileViewModel: ObservableObject {
     ///   - guardianPhone: Optional updated guardian's phone number.
     ///   - gender: Optional updated gender of the player.
     func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) {
+        let playerManager = PlayerManager()
         guard var player else { return }
         
         player.jerseyNum = jersey ?? player.jerseyNum
@@ -234,9 +238,9 @@ final class CoachProfileViewModel: ObservableObject {
         
         Task {
             // Update the player's information in the database
-            try await PlayerManager.shared.updatePlayerSettings(id: id, jersey: jersey, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, gender: gender)
+            try await playerManager.updatePlayerSettings(id: id, jersey: jersey, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, gender: gender)
             
-            self.player = try await PlayerManager.shared.getPlayer(playerId: player.playerId!)
+            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
         }
     }
 }

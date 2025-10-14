@@ -12,16 +12,17 @@ import SwiftUI
 @MainActor
 final class PlayerTeamInfoModel: ObservableObject {
     func createPlayerTeamInfo(playerTeamInfoDTO dto: PlayerTeamInfoDTO) async throws -> String {
+        let playerManager = PlayerManager()
         print("In PlayerTeamInfoModel!!")
 
         // 1) Resolve to player **document id**
-        guard let player = try await PlayerManager.shared.getPlayer(playerId: dto.playerId) else {
+        guard let player = try await playerManager.getPlayer(playerId: dto.playerId) else {
                     throw NSError(domain: "PlayerTeamInfoModel", code: 404,
                                   userInfo: [NSLocalizedDescriptionKey: "Player doc not found for current user"])
                 }
 
         // 2) Create subdoc via manager
-        let docId = try await PlayerTeamInfoManager.shared
+        let docId = try await PlayerTeamInfoManager()
             .createNewPlayerTeamInfo(playerDocId: player.id, playerTeamInfoDTO: dto)
 
         return docId

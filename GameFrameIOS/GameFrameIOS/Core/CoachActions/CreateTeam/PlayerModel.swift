@@ -62,11 +62,13 @@ final class PlayerModel: ObservableObject {
         // Temporary array to store player details before updating the `players` state variable.
         var tmpArrayPlayer: [User_Status] = []
         let userManager = UserManager()
+        let playerManager = PlayerManager()
+        let inviteManager = InviteManager()
         
         // Process pending invites and retrieve user details.
         for inviteDocId in invites {
             // Fetch the invite information.
-            guard let invite = try await InviteManager.shared.getInvite(id: inviteDocId) else {
+            guard let invite = try await inviteManager.getInvite(id: inviteDocId) else {
                 print("Could not find the invite's info.. Aborting")
                 return
             }
@@ -93,7 +95,7 @@ final class PlayerModel: ObservableObject {
                 return
             }
             
-            guard let player = try await PlayerManager.shared.getPlayer(playerId: playerId) else {
+            guard let player = try await playerManager.getPlayer(playerId: playerId) else {
                 print("Could not find the player's info.. Aborting")
                 return
             }
@@ -173,7 +175,7 @@ final class PlayerModel: ObservableObject {
     /// - Returns: The unique document ID of the newly created player.
     /// - Throws: An error if the operation fails.
     func addPlayer(playerDTO: PlayerDTO) async throws -> String {
-        return try await PlayerManager.shared.createNewPlayer(playerDTO: playerDTO)
+        return try await PlayerManager().createNewPlayer(playerDTO: playerDTO)
     }
     
     
