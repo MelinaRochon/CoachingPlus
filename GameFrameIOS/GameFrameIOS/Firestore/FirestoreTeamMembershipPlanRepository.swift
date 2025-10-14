@@ -1,38 +1,14 @@
 //
-//  TeamMembershipPlanManager.swift
+//  FirestoreTeamMembershipPlanRepository.swift
 //  GameFrameIOS
 //
-//  Created by Caterina Bosi on 2025-03-27.
+//  Created by Mélina Rochon on 2025-10-14.
 //
 
 import Foundation
 import FirebaseFirestore
 
-/// Represents a membership plan for a team, containing pricing, benefits, and duration details.
-struct TeamMembershipPlan: Codable {
-    let planId: String
-    let teamId: String
-    let name: String
-    let price: Double
-    let benefits: [String]
-    let durationInMonths: Int // Duration of the plan
-
-    init(planId: String, teamId: String, name: String, price: Double, benefits: [String], durationInMonths: Int) {
-        self.planId = planId
-        self.teamId = teamId
-        self.name = name
-        self.price = price
-        self.benefits = benefits
-        self.durationInMonths = durationInMonths
-    }
-}
-
-/// Manages team membership plans, allowing for creation, retrieval, updating, and deletion.
-final class TeamMembershipPlanManager {
-    
-    static let shared = TeamMembershipPlanManager()
-    private init() {}
-    
+final class FirestoreTeamMembershipPlanRepository: TeamMembershipPlanRepository {
     
     /// Returns a reference to the Firestore collection for membership plans of a specific team.
     /// - Parameter teamId: The ID of the team.
@@ -46,9 +22,9 @@ final class TeamMembershipPlanManager {
     /// - Parameter teamId: The ID of the team.
     /// - Returns: An array of `TeamMembershipPlan` objects.
     /// - Throws: An error if the database query fails.
-    func getAllMembershipPlans(teamId: String) async throws -> [TeamMembershipPlan] {
+    func getAllMembershipPlans(teamId: String) async throws -> [DBTeamMembershipPlan] {
         let snapshot = try await membershipPlanCollection(teamId: teamId).getDocuments()
-        return snapshot.documents.compactMap { try? $0.data(as: TeamMembershipPlan.self) }
+        return snapshot.documents.compactMap { try? $0.data(as: DBTeamMembershipPlan.self) }
     }
     
     
@@ -58,9 +34,9 @@ final class TeamMembershipPlanManager {
     ///   - planId: The ID of the membership plan.
     /// - Returns: A `TeamMembershipPlan` object if found, otherwise `nil`.
     /// - Throws: An error if the database query fails.
-    func getMembershipPlan(teamId: String, planId: String) async throws -> TeamMembershipPlan? {
+    func getMembershipPlan(teamId: String, planId: String) async throws -> DBTeamMembershipPlan? {
         let document = try await membershipPlanCollection(teamId: teamId).document(planId).getDocument()
-        return try? document.data(as: TeamMembershipPlan.self)
+        return try? document.data(as: DBTeamMembershipPlan.self)
     }
     
     
@@ -74,7 +50,7 @@ final class TeamMembershipPlanManager {
     /// - Throws: An error if the operation fails.
     func addMembershipPlan(teamId: String, name: String, price: Double, benefits: [String], durationInMonths: Int) async throws {
         let planDocument = membershipPlanCollection(teamId: teamId).document()
-        let newPlan = TeamMembershipPlan(planId: planDocument.documentID, teamId: teamId, name: name, price: price, benefits: benefits, durationInMonths: durationInMonths)
+        let newPlan = DBTeamMembershipPlan(planId: planDocument.documentID, teamId: teamId, name: name, price: price, benefits: benefits, durationInMonths: durationInMonths)
         try planDocument.setData(from: newPlan, merge: false)
     }
     

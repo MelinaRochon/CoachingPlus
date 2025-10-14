@@ -90,6 +90,8 @@ final class AuthenticationModel: ObservableObject {
         let coachManager = CoachManager()
         let inviteManager = InviteManager()
         let playerManager = PlayerManager()
+        let playerTeamInfoManager = PlayerTeamInfoManager()
+        
         let verifyUser =  try await verifyEmailAddress()
         if let verifyUser = verifyUser {
             if verifyUser.userId != nil {
@@ -129,7 +131,7 @@ final class AuthenticationModel: ObservableObject {
                 let subdocId = team.teamId // <- we store per-team info using team.teamId as the subdoc id
 
                 let dto = PlayerTeamInfoDTO(id: subdocId, playerId: playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil) // nil => server time
-                _ = try await PlayerTeamInfoManager.shared.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
+                _ = try await playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
 
                 // Add player to team
                 try await teamManager.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
@@ -147,7 +149,7 @@ final class AuthenticationModel: ObservableObject {
             // Create playerTeamInfo under players/{playerDocId}/playerTeamInfo/{team.teamId}
             let subdocId = team.teamId
             let dto = PlayerTeamInfoDTO(id: subdocId, playerId: invite.playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil)
-            _ = try await PlayerTeamInfoManager.shared.createNewPlayerTeamInfo(playerDocId: invite.playerDocId, playerTeamInfoDTO: dto)
+            _ = try await playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: invite.playerDocId, playerTeamInfoDTO: dto)
 
             // Look for the correct team
             guard let team = try await teamManager.getTeam(teamId: invite.teamId) else {

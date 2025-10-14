@@ -22,7 +22,7 @@ final class PlayerTeamInfoModel: ObservableObject {
                 }
 
         // 2) Create subdoc via manager
-        let docId = try await PlayerTeamInfoManager.shared
+        let docId = try await PlayerTeamInfoManager()
             .createNewPlayerTeamInfo(playerDocId: player.id, playerTeamInfoDTO: dto)
 
         return docId
