@@ -131,4 +131,12 @@ final class CommentSectionViewModel: ObservableObject {
         }
     }
     
+//    func getCommentCreatedAt(commentId: String, teamId: String?, gameId: String?) async throws -> Date? {
+//        
+//    }
+    
+//    func streamComments(forTeamIds: [String]) -> AnyPublisher<[CommentDTO], Error>{
+//        
+//    }
+    
 }

@@ -11,63 +11,66 @@ import SwiftUI
  This structure is the recent activity view. All the recent acitivities made in the app (all types of notifications) will be shown here.
  */
 struct CoachNotificationView: View {
+    @StateObject private var vm = NotificationsViewModel()
+    let coachId: String // inject from session/auth
+
     var body: some View {
-        NavigationView {
-            VStack {
-                
-                Divider() // This adds a divider after the title
-                
-                List {
-                    Section(header: HStack {
-                        Text("Notifications") // Section header text
-                    }) {
-                        
-                        // Notification 1
-                        HStack {
-                            Image(systemName: "person.crop.circle").resizable().frame(width: 30, height: 30).aspectRatio(contentMode: .fill)
-                                .clipShape(Circle())
-                                .clipped()
-                            VStack {
-                                Text("X commented on Game 1...").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Text("1 hour ago").font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        
-                        // Notification 2
-                        HStack {
-                            Image(systemName: "person.crop.circle").resizable().frame(width: 30, height: 30).aspectRatio(contentMode: .fill)
-                                .clipShape(Circle())
-                                .clipped()
-                            VStack {
-                                Text("X commented on Game 1...").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Text("1 hour ago").font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        
-                        // Notification 3
-                        HStack {
-                            Image(systemName: "person.crop.circle").resizable().frame(width: 30, height: 30).aspectRatio(contentMode: .fill)
-                                .clipShape(Circle())
-                                .clipped()
-                            VStack {
-                                Text("X commented on Game 1...").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Text("1 hour ago").font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+        NavigationStack {
+            Group {
+                if vm.isLoading {
+                    ProgressView("Loading last 7 days…")
+                } else if let err = vm.error {
+                    VStack(spacing: 8) {
+                        Text("Couldn’t load activity").font(.headline)
+                        Text(err).font(.footnote).foregroundStyle(.secondary)
+                        Button("Retry") { Task { await vm.loadLastWeekComments(coachId: coachId) } }
+                            .buttonStyle(.borderedProminent)
+                            .padding(.top, 4)
+                    }
+                } else if vm.recentComments.isEmpty {
+                    ContentUnavailableView("No comments this week", systemImage: "bubble.left", description: Text("New comments in the last 7 days will appear here."))
+                } else {
+                    List {
+                        Section("Comments (last 7 days)") {
+                            ForEach(vm.recentComments, id: \.commentId) { c in
+                                ActivityCommentRow(comment: c)
                             }
                         }
                     }
+                    .listStyle(.insetGrouped)
                 }
-                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                .background(Color.white) // Set background color to white for the List
-                
             }
-            .background(Color.white)
-            .navigationTitle(Text("Recent Activity"))
-            
+            .navigationTitle("Recent Activity")
         }
-        
+        .task { await vm.loadLastWeekComments(coachId: coachId) }
+    }
+}
+
+private func relative(_ date: Date) -> String {
+    let f = RelativeDateTimeFormatter()
+    f.unitsStyle = .abbreviated
+    return f.localizedString(for: date, relativeTo: Date())
+}
+
+struct ActivityCommentRow: View {
+    let comment: DBComment
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(comment.comment)
+                .font(.body)
+                .lineLimit(2)
+            HStack(spacing: 8) {
+                Text("Game \(comment.gameId)")
+                Text("•")
+                Text(relative(comment.createdAt))
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 6)
     }
 }
 
 #Preview {
-    CoachNotificationView()
+    CoachNotificationView(coachId: "FQzOD32960ZCORcwmULPPh21Ql53")
 }

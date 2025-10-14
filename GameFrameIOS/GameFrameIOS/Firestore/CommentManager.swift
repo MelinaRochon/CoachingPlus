@@ -7,6 +7,7 @@
 
 import Foundation
 import FirebaseFirestore
+import Combine
 
 /// Model representing a comment in the database
 struct DBComment: Codable {
@@ -236,5 +237,36 @@ final class CommentManager {
         }
         
         try await commentDocument(teamDocId: teamDocId, commentDocId: commentId).delete()
+    }
+}
+
+extension CommentManager {
+
+    /// Fetch comments newer than `since` for many team doc IDs (no listeners).
+    func fetchRecentComments(forTeamDocIds teamDocIds: [String], since: Date) async throws -> [DBComment] {
+        guard !teamDocIds.isEmpty else { return [] }
+        let ts = Timestamp(date: since)
+
+        // Run queries in parallel per team
+        return try await withThrowingTaskGroup(of: [DBComment].self) { group in
+            for teamDocId in teamDocIds {
+                group.addTask { [weak self] in
+                    guard let self else { return [] }
+                    let snap = try await self.commentCollection(teamDocId: teamDocId)
+                        .whereField("created_at", isGreaterThan: ts)
+                        .order(by: "created_at", descending: true)
+                        .getDocuments()
+                    return snap.documents.compactMap { try? $0.data(as: DBComment.self) }
+                }
+            }
+
+            var all: [DBComment] = []
+            for try await chunk in group { all.append(contentsOf: chunk) }
+
+            // Dedupe (if the same id could appear twice) and sort newest first
+            var byId: [String: DBComment] = [:]
+            for c in all { byId[c.commentId] = c }
+            return byId.values.sorted { $0.createdAt > $1.createdAt }
+        }
     }
 }

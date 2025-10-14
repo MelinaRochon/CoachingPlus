@@ -20,11 +20,13 @@ struct CoachMainTabView: View {
     @State private var showCoachRecordingConfig = false // Controls modal visibility
     @State private var selectedTab: Int = 3 // Track selected tab
     @Binding var showLandingPageView: Bool
+    let coachId: String
 
-    init(showLandingPageView: Binding<Bool>) {
+    init(showLandingPageView: Binding<Bool>, coachId: String) {
         // Remove the default bottom shadow/line from the tab bar
         UITabBar.appearance().scrollEdgeAppearance = UITabBarAppearance()
         self._showLandingPageView = showLandingPageView
+        self.coachId = coachId
     }
 
     var body: some View {
@@ -32,7 +34,7 @@ struct CoachMainTabView: View {
             Group {
                 switch selectedTab {
                 case 0: CoachHomePageView()
-                case 1: CoachNotificationView()
+                case 1: CoachNotificationView(coachId: coachId)
                 case 2: CoachAllTeamsView()
                 case 3: CoachProfileView(showLandingPageView: $showLandingPageView)
                 default: CoachHomePageView()
@@ -107,5 +109,5 @@ struct CoachMainTabView: View {
 }
 
 #Preview {
-    CoachMainTabView(showLandingPageView: .constant(false))
+    CoachMainTabView(showLandingPageView: .constant(false), coachId: "...")
 }
