@@ -60,7 +60,8 @@ final class PlayerModel: ObservableObject {
     /// - Throws: An error if any database request fails.
     func getAllPlayers(invites: [String], players: [String]) async throws {
         // Temporary array to store player details before updating the `players` state variable.
-        var tmpArrayPlayer: [User_Status] = [] 
+        var tmpArrayPlayer: [User_Status] = []
+        let userManager = UserManager()
         
         // Process pending invites and retrieve user details.
         for inviteDocId in invites {
@@ -74,7 +75,7 @@ final class PlayerModel: ObservableObject {
             if invite.status == "Pending" {
                 print("We are here. with \(inviteDocId)")
                 // get the user info
-                guard let user = try await UserManager.shared.getUserWithDocId(id: invite.userDocId) else {
+                guard let user = try await userManager.getUserWithDocId(id: invite.userDocId) else {
                     print("Could not find the user's info.. Aborting")
                     return
                 }
@@ -87,7 +88,7 @@ final class PlayerModel: ObservableObject {
         
         // Process accepted players and retrieve their details.
         for playerId in players {
-            guard let user = try await UserManager.shared.getUser(userId: playerId) else {
+            guard let user = try await userManager.getUser(userId: playerId) else {
                 print("Could not find the user's info.. Aborting")
                 return
             }
@@ -119,13 +120,13 @@ final class PlayerModel: ObservableObject {
     /// - Returns: An optional array of full player names (`[String]?`). Returns `nil` if a user cannot be found.
     /// - Throws: An error if the `getUser` call fails.
     func getAllPlayersNames(players: [String]) async throws -> [(String, String)]? {
-
+        let userManager = UserManager()
         var tmpPlayersNames: [(String, String)] = [("0", "All")]
         
         // Process each player ID and retrieve their corresponding user data.
         for playerId in players {
             // Attempt to get user data from UserManager.
-            guard let user = try await UserManager.shared.getUser(userId: playerId) else {
+            guard let user = try await userManager.getUser(userId: playerId) else {
                 print("Could not find the user's info.. Aborting")
                 return nil // Return nil if any player info is missing.
             }
@@ -147,11 +148,11 @@ final class PlayerModel: ObservableObject {
     /// - Returns: An array of tuples `(id, name, photoUrl)`.
     /// - Throws: If fetching user data fails.
     func getAllPlayersNamesAndUrl(players: [String]) async throws -> [(String, String, URL?)] {
-        
+        let userManager = UserManager()
         var results: [(String, String, URL?)] = [] ; //[("0", "All", nil)]
         
         for playerId in players {
-            guard let user = try await UserManager.shared.getUser(userId: playerId) else {
+            guard let user = try await userManager.getUser(userId: playerId) else {
                 print("getAllPlayersNamesAndUrl : Could not find user \(playerId)")
                 continue
             }
@@ -184,8 +185,9 @@ final class PlayerModel: ObservableObject {
     /// - Returns: `true` if the operation succeeds, `false` otherwise.
     func addPlayerToTeam(teamDocId: String, inviteDocId: String) async throws -> Bool {
         do {
+            let teamManager = TeamManager()
             // Add the player's invite to the team document in the database.
-            try await TeamManager.shared.addInviteToTeam(id: teamDocId, inviteDocId: inviteDocId)
+            try await teamManager.addInviteToTeam(id: teamDocId, inviteDocId: inviteDocId)
             return true
         } catch {
             print("Failed to add player to the team.. \(error.localizedDescription)")

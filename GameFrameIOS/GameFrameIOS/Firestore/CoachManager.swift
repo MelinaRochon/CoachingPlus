@@ -156,12 +156,12 @@ final class CoachManager {
     /// - Parameter coachId: The unique coach ID to retrieve their teams.
     /// - Returns: An optional array of `GetTeam` objects containing the team information.
     func loadTeamsCoaching(coachId: String) async throws -> [GetTeam]? {
-        
+        let teamRepo = FirestoreTeamRepository()
         let coach = try await getCoach(coachId: coachId)!
         if let teamsCoaching = coach.teamsCoaching {
             if teamsCoaching != [] {
                 // Fetch the team documents with the IDs from the user's itemsArray
-                let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: teamsCoaching).getDocuments()
+                let snapshot = try await teamRepo.teamCollection().whereField("team_id", in: teamsCoaching).getDocuments()
                 // Map the documents to Team objects and get their names
                 var teams: [GetTeam] = []
                 for document in snapshot.documents {
@@ -186,12 +186,12 @@ final class CoachManager {
     /// - Parameter coachId: The unique coach ID to retrieve their teams.
     /// - Returns: An optional array of `DBTeam` objects.
     func loadAllTeamsCoaching(coachId: String) async throws -> [DBTeam]? {
-        
+        let teamRepo = FirestoreTeamRepository()
         let coach = try await getCoach(coachId: coachId)!
         if let teamsCoaching = coach.teamsCoaching {
             if teamsCoaching != [] {
                 // Fetch the team documents with the IDs from the user's itemsArray
-                let snapshot = try await TeamManager.shared.teamCollection.whereField("team_id", in: teamsCoaching).getDocuments()
+                let snapshot = try await teamRepo.teamCollection().whereField("team_id", in: teamsCoaching).getDocuments()
                 // Map the documents to Team objects and get their names
                 var teams: [DBTeam] = []
                 for document in snapshot.documents {

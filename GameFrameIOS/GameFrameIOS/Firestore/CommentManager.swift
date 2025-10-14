@@ -106,7 +106,8 @@ final class CommentManager {
      * - Returns: A `CollectionReference` to the team's comments collection in Firestore
      */
     func commentCollection(teamDocId: String) -> CollectionReference {
-        return TeamManager.shared.teamCollection.document(teamDocId).collection("comments")
+        let teamRepo = FirestoreTeamRepository()
+        return teamRepo.teamCollection().document(teamDocId).collection("comments")
     }
     
     
@@ -121,8 +122,9 @@ final class CommentManager {
      * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comment
      */
     func getComment(teamId: String, commentDocId: String) async throws -> DBComment? {
+        let teamManager = TeamManager()
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("getComment: Could not find team id. Aborting")
             return nil
         }
@@ -140,8 +142,9 @@ final class CommentManager {
      * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comments
      */
     func getAllComments(teamId: String) async throws -> [DBComment]? {
+        let teamManager = TeamManager()
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("getAllComments: Could not find team id. Aborting")
             return nil
         }
@@ -163,8 +166,9 @@ final class CommentManager {
      * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comments
      */
     func getAllCommentsForSpecificKeyMomentId(teamId: String, keyMomentId: String) async throws -> [DBComment]? {
+        let teamManager = TeamManager()
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("getAllCommentsForSpecificKeyMomentId: Could not find team id. Aborting")
             return nil
         }
@@ -203,12 +207,10 @@ final class CommentManager {
      * - Throws: Throws an error if there is an issue adding the comment to Firestore
      */
     func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
-        print("in manager!")
-        print("teamId: \(teamDocId)")
-        print("trying to add comment: \(commentDTO)")
+        let teamManager = TeamManager()
 
         // Make sure the team document can be found with the team id given
-        let teamDocId = try await TeamManager.shared.getTeamWithDocId(docId: teamDocId).id
+        let teamDocId = try await teamManager.getTeamWithDocId(docId: teamDocId).id
 
         let commentDocument = commentCollection(teamDocId: teamDocId).document()
         let documentId = commentDocument.documentID // get the document ID
@@ -230,8 +232,9 @@ final class CommentManager {
      * - Throws: Throws an error if there is an issue deleting the comment
      */
     func removeComment(teamId: String, commentId: String) async throws {
+        let teamManager = TeamManager()
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("removeComment: Could not find team id. Aborting")
             return
         }

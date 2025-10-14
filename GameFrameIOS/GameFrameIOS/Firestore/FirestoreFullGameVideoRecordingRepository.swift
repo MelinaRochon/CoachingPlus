@@ -29,7 +29,8 @@ final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRep
      * - Returns: A `CollectionReference` to the team's full game video recording collection in Firestore.
      */
     func fullGameVideoRecordingCollection(teamDocId: String) -> CollectionReference {
-        return TeamManager.shared.teamCollection.document(teamDocId).collection("fg_video_recording")
+        let teamRepo = FirestoreTeamRepository() // direct repo
+        return teamRepo.teamCollection().document(teamDocId).collection("fg_video_recording")
     }
     
     
@@ -45,11 +46,12 @@ final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRep
     /// Creates and saves a new full game video recording in Firestore
     func addFullGameVideoRecording(fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws -> String? {
         do {
+            let teamManager = TeamManager()
             // Log the recording we are about to send
             print("Sending new full game recording to Firestore: \(fullGameVideoRecordingDTO)")
             
             // Fetch the team document ID from TeamManager using the teamId
-            guard let teamDocId = try await TeamManager.shared.getTeam(teamId: fullGameVideoRecordingDTO.teamId)?.id else {
+            guard let teamDocId = try await teamManager.getTeam(teamId: fullGameVideoRecordingDTO.teamId)?.id else {
                 print("Could not find team id. Aborting")
                 return nil
             }

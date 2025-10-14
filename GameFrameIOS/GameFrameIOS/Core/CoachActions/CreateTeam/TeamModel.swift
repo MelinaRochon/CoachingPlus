@@ -43,7 +43,8 @@ final class TeamModel: ObservableObject {
     /// - Throws: An error if the creation process fails.
     func createTeam(teamDTO: TeamDTO, coachId: String) async throws -> Bool{
         do {
-            try await TeamManager.shared.createNewTeam(coachId: coachId, teamDTO: teamDTO)
+            let teamManager = TeamManager()
+            try await teamManager.createNewTeam(coachId: coachId, teamDTO: teamDTO)
             return true
             
         } catch {
@@ -58,7 +59,8 @@ final class TeamModel: ObservableObject {
     /// - Returns: A `String` representing the unique team access code.
     /// - Throws: An error if the access code generation fails.
     func generateAccessCode() async throws -> String {
-        return try await TeamManager.shared.generateUniqueTeamAccessCode()
+        let teamManager = TeamManager()
+        return try await teamManager.generateUniqueTeamAccessCode()
     }
     
     
@@ -68,7 +70,8 @@ final class TeamModel: ObservableObject {
     /// - Throws: An error if the team cannot be found.
     func getTeam(teamId: String) async throws {
         // Fetch the team from the database.
-        guard let tmpTeam = try await TeamManager.shared.getTeam(teamId: teamId) else {
+        let teamManager = TeamManager()
+        guard let tmpTeam = try await teamManager.getTeam(teamId: teamId) else {
             print("Error when loading the team. Aborting")
             return
         }
@@ -82,11 +85,12 @@ final class TeamModel: ObservableObject {
     /// - Returns: An optional array of `DBTeam` objects representing the user's teams.
     /// - Throws: An error if the retrieval fails.
     func loadAllTeams() async throws -> [DBTeam]? {
+        let userManager = UserManager()
         // Get the authenticated user's details.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
         // Determine the user's role (Coach or Player).
-        let userType = try await UserManager.shared.getUser(userId: authUser.uid)!.userType
+        let userType = try await userManager.getUser(userId: authUser.uid)!.userType
                 
         if (userType == .coach) {
             // Load all teams that the coach is managing.
@@ -111,7 +115,8 @@ final class TeamModel: ObservableObject {
     /// - Returns: The `DBTeam` associated with the access code.
     /// - Throws: `TeamValidationError.invalidAccessCode` if the access code is invalid.
     func validateTeamAccessCode(accessCode: String) async throws -> DBTeam {
-        guard let team = try await TeamManager.shared.getTeamWithAccessCode(accessCode: accessCode) else {
+        let teamManager = TeamManager()
+        guard let team = try await teamManager.getTeamWithAccessCode(accessCode: accessCode) else {
             print("Error. Access code is invalid")
             throw TeamValidationError.invalidAccessCode
         }
@@ -125,6 +130,7 @@ final class TeamModel: ObservableObject {
     /// - Returns: The updated `DBTeam` object if successful, or `nil` if an error occurs.
     /// - Throws: `TeamValidationError.userExists` if the player is already enrolled in the team.
     func addingPlayerToTeam(team: DBTeam) async throws -> DBTeam? {
+        let teamManager = TeamManager()
         // Get the authenticated user's details.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
@@ -136,7 +142,7 @@ final class TeamModel: ObservableObject {
         }
         
         // Add player to all feedback that is directed to the whole squad
-        let rosterCount = try await TeamManager.shared.getTeamRosterLength(teamId: team.teamId)
+        let rosterCount = try await teamManager.getTeamRosterLength(teamId: team.teamId)
         
         if rosterCount == nil {
             print("invalid team id was entered.. aborting request")
@@ -171,11 +177,13 @@ final class TeamModel: ObservableObject {
     ///           or while fetching and updating games/key moments.
     /// - Returns: Nothing. The function is `async` and `throws` but does not return a value.
     func addPlayerToAllTeamFeedback(rosterCount: Int, teamDocId: String, teamId: String, playerId: String) async throws {
+        let teamManager = TeamManager()
+        let gameManager = GameManager()
         // Add the player to the team's players list in the database.
-        try await TeamManager.shared.addPlayerToTeam(id: teamDocId, playerId: playerId)
+        try await teamManager.addPlayerToTeam(id: teamDocId, playerId: playerId)
                 
         // Check all transcripts/key moments and add the player's user_id if the feedback is meant to be for the entire team
-        guard let games = try await GameManager.shared.getAllGames(teamId: teamId) else {
+        guard let games = try await gameManager.getAllGames(teamId: teamId) else {
             print("No need to add the player to feedback as there are no games for this team")
             return
         }
@@ -201,7 +209,8 @@ final class TeamModel: ObservableObject {
     /// - Note: This function is asynchronous and must be called from within an `async` context.
     ///         Internally, it forwards the request to `TeamManager.shared.updateTeamSettings`.
     func updatingTeamSettings(id: String, name: String?, nickname: String?, ageGrp: String?, gender: String?) async throws {
-        try await TeamManager.shared.updateTeamSettings(id: id, name: name, nickname: nickname, ageGrp: ageGrp, gender: gender)
+        let teamManager = TeamManager()
+        try await teamManager.updateTeamSettings(id: id, name: name, nickname: nickname, ageGrp: ageGrp, gender: gender)
     }
     
     
@@ -220,11 +229,12 @@ final class TeamModel: ObservableObject {
      - Note: Player subcollections (created by Cate) are not yet handled — see TODO in the function.
      */
     func deleteTeam(teamDocId: String) async throws {
-                
-        let team = try await TeamManager.shared.getTeamWithDocId(docId: teamDocId)
+        let teamManager = TeamManager()
+        let gameManager = GameManager()
+        let team = try await teamManager.getTeamWithDocId(docId: teamDocId)
                 
         // Delete the game
-        try await GameManager.shared.deleteAllGames(teamDocId: teamDocId)
+        try await gameManager.deleteAllGames(teamDocId: teamDocId)
 
                 
         // Remove the coaches affiliation to the team
@@ -253,7 +263,7 @@ final class TeamModel: ObservableObject {
         // TODO: Get the collection under players that Cate created to delete
         
         // Remove team
-        try await TeamManager.shared.deleteTeam(id: teamDocId)
+        try await teamManager.deleteTeam(id: teamDocId)
         
         // Delete all audio files in the storage under the team id
         let folderPath = "audio/\(team.teamId)"

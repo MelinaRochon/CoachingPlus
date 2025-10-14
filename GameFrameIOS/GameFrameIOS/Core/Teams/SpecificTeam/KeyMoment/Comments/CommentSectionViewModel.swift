@@ -60,10 +60,11 @@ final class CommentSectionViewModel: ObservableObject {
             
         do {
             if let fetchedComments = try await CommentManager.shared.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: transcriptId) {
+                let userManager = UserManager()
                 
                 var updatedComments: [DBComment] = []
                 for comment in fetchedComments {
-                    if let user = try? await UserManager.shared.getUser(userId: comment.uploadedBy) {
+                    if let user = try? await userManager.getUser(userId: comment.uploadedBy) {
                         let updatedComment = DBComment(
                             commentId: comment.commentId,
                             keyMomentId: comment.keyMomentId,

@@ -146,7 +146,8 @@ final class KeyMomentManager {
      - Returns: A `CollectionReference` pointing to the key moments sub-collection in Firestore.
      */
     func keyMomentCollection(teamDocId: String, gameDocId: String) -> CollectionReference {
-        return GameManager.shared.gameCollection(teamDocId: teamDocId).document(gameDocId).collection("key_moments")
+        let gameRepo = FirestoreGameRepository()
+        return gameRepo.gameCollection(teamDocId: teamDocId).document(gameDocId).collection("key_moments")
     }
     
     
@@ -160,8 +161,9 @@ final class KeyMomentManager {
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing team, game, or key moment document).
      */
     func getKeyMoment(teamId: String, gameId: String, keyMomentDocId: String) async throws -> DBKeyMoment? {
+        let teamManager = TeamManager()
         // Make sure the game document can be found under the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("getKeyMoment: Could not find team id. Aborting")
             return nil
         }
@@ -240,8 +242,9 @@ final class KeyMomentManager {
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing team or game document).
      */
     func getAllKeyMoments(teamId: String, gameId: String) async throws -> [DBKeyMoment]? {
+        let teamManager = TeamManager()
         // Make sure the game document can be found under the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("getAllKeyMoments: Could not find team id. Aborting")
             return nil
         }
@@ -281,8 +284,9 @@ final class KeyMomentManager {
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing team document or database write failure).
      */
     func addNewKeyMoment(teamId: String, keyMomentDTO: KeyMomentDTO) async throws -> String? {
+        let teamManager = TeamManager()
         // Make sure the collection path can be found
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("addNewKeyMoment: Could not find team id. Aborting")
             return nil
         }
@@ -310,8 +314,9 @@ final class KeyMomentManager {
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing documents or deletion failure).
      */
     func removeKeyMoment(teamId: String, gameId: String, keyMomentId: String) async throws {
+        let teamManager = TeamManager()
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("removeKeyMoment: Could not find team id. Aborting")
             return
         }

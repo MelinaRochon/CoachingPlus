@@ -29,8 +29,9 @@ final class GameModel: ObservableObject {
     /// - Parameter teamId: The ID of the team for which to fetch games.
     /// - Throws: An error if fetching fails.
     func getAllGames (teamId: String) async throws {
+        let gameManager = GameManager()
         // Get the list of games, if they exists.
-        guard let tmpGames: [DBGame] = try await GameManager.shared.getAllGames(teamId: teamId) else {
+        guard let tmpGames: [DBGame] = try await gameManager.getAllGames(teamId: teamId) else {
             print("Could not get games. Abort,,,")
             return
         }
@@ -49,8 +50,9 @@ final class GameModel: ObservableObject {
     ///  - gameId: The ID of the game to fetch
     /// - Throws: An error if fetching fails.
     func getGame (teamId: String, gameId: String) async throws -> DBGame? {
+        let gameManager = GameManager()
         // Get the list of games, if they exists.
-        guard let game = try await GameManager.shared.getGame(gameId: gameId, teamId: teamId) else {
+        guard let game = try await gameManager.getGame(gameId: gameId, teamId: teamId) else {
             print("Could not load game. Abort...")
             return nil
         }
@@ -68,9 +70,10 @@ final class GameModel: ObservableObject {
     /// - Returns: `true` if the game was added successfully, `false` otherwise.
     /// - Throws: An error if the addition fails.
     func addNewGame(gameDTO: GameDTO) async throws -> Bool {
+        let gameManager = GameManager()
         do {
             // Add game to the database
-            try await GameManager.shared.addNewGame(gameDTO: gameDTO)
+            try await gameManager.addNewGame(gameDTO: gameDTO)
             return true
         } catch {
             print("Failed to add a new game: \(error.localizedDescription)")
@@ -86,11 +89,12 @@ final class GameModel: ObservableObject {
     /// - Returns: An array of team IDs the user is coaching or playing for.
     /// - Throws: An error if fetching user or team data fails.
     func getTeamsAssociatedToUser() async throws -> [String]? {
+        let userManager = UserManager()
         // Fetch the authenticated user's information.
         let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
         
         // Retrieve the user type (Coach or Player).
-        guard let user = try await UserManager.shared.getUser(userId: authUser.uid) else {
+        guard let user = try await userManager.getUser(userId: authUser.uid) else {
             throw NSError(domain: "UserNotFound", code: 404)
         }
         
@@ -118,6 +122,8 @@ final class GameModel: ObservableObject {
     /// - Returns: An array of `HomeGameDTO` objects, each containing game and team details.
     /// - Throws: An error if any data retrieval operation fails.
     func loadAllAssociatedGames() async throws -> [HomeGameDTO] {
+        let teamManager = TeamManager()
+        let gameRepo = FirestoreGameRepository()
         // Retrieve the list of team IDs associated with the user.
         guard let teamsId = try await getTeamsAssociatedToUser() else {
             print("No games associated to user")
@@ -130,13 +136,13 @@ final class GameModel: ObservableObject {
         // Iterate through each team ID to fetch associated games.
         for teamId in teamsId {
             // Attempt to fetch the team document.
-            guard let team = try await TeamManager.shared.getTeam(teamId: teamId) else {
+            guard let team = try await teamManager.getTeam(teamId: teamId) else {
                 print("Could not find team. Aborting")
                 return [] // Return an empty list if the team is not found.
             }
             
             // Fetch game documents for the team.
-            let gameSnapshot = try await GameManager.shared.gameCollection(teamDocId: team.id).getDocuments()
+            let gameSnapshot = try await gameRepo.gameCollection(teamDocId: team.id).getDocuments()
             
             // Convert each document into a `DBGame` object and append it to the games list.
             for document in gameSnapshot.documents {
@@ -165,7 +171,8 @@ final class GameModel: ObservableObject {
     ///
     /// - Throws: Rethrows any errors thrown by `GameManager.updateGameTitle`.
     func updateGameTitle(gameId: String, teamDocId: String, title: String) async throws {
-        try await GameManager.shared.updateGameTitle(gameId: gameId, teamDocId: teamDocId, title: title)
+        let gameManager = GameManager()
+        try await gameManager.updateGameTitle(gameId: gameId, teamDocId: teamDocId, title: title)
     }
     
     
@@ -197,8 +204,9 @@ final class GameModel: ObservableObject {
         location: String?,
         scheduledTimeReminder: Int?
     ) async throws {
+        let gameManager = GameManager()
         
-        try await GameManager.shared.updateScheduledGameSettings(
+        try await gameManager.updateScheduledGameSettings(
             id: gameId,
             teamDocId: teamDocId,
             title: title,
@@ -222,7 +230,7 @@ final class GameModel: ObservableObject {
     /// - Note: This only removes the game document itself.
     ///         Any subcollections (e.g., feedback, transcripts) must be deleted separately if needed.
     func removeGame(gameId: String, teamDocId: String, teamId: String) async throws {
-        
+        let gameManager = GameManager()
         // Delete all key moments
         try await KeyMomentManager.shared.deleteAllKeyMoments(teamDocId: teamDocId, gameId: gameId)
         
@@ -230,7 +238,7 @@ final class GameModel: ObservableObject {
         try await TranscriptManager.shared.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
         
         // Delete the game
-        try await GameManager.shared.deleteGame(gameId: gameId, teamDocId: teamDocId)
+        try await gameManager.deleteGame(gameId: gameId, teamDocId: teamDocId)
         
         // Delete each audio files that are assigned to this game
         let folderPath = "audio/\(teamId)/\(gameId)"

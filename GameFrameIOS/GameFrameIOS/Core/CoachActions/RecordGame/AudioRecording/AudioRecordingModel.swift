@@ -172,8 +172,9 @@ final class AudioRecordingModel: ObservableObject {
     /// - Returns: The ID of the created game, or `nil` if the operation fails.
     /// - Throws: An error if the operation fails.
     func addUnknownGame(teamId: String) async throws -> String? {
+        let gameManager = GameManager()
         // Add game to the database
-        return try await GameManager.shared.addNewUnkownGame(teamId: teamId)
+        return try await gameManager.addNewUnkownGame(teamId: teamId)
     }
     
 
@@ -243,13 +244,15 @@ final class AudioRecordingModel: ObservableObject {
     ///   - gameId: The ID of the game.
     /// - Throws: An error if the operation fails.
     func endAudioRecordingGame(teamId: String, gameId: String) async throws {
+        let gameManager = GameManager()
+        let teamManager = TeamManager()
         // Update the game's duration, and add the end time
-        guard let team = try await TeamManager.shared.getTeam(teamId: teamId) else {
+        guard let team = try await teamManager.getTeam(teamId: teamId) else {
             print("Team could not be found. Aborting.")
             return
         }
         
-        guard let game = try await GameManager.shared.getGame(gameId: gameId, teamId: teamId) else {
+        guard let game = try await gameManager.getGame(gameId: gameId, teamId: teamId) else {
             print("Could not get the game. Aborting.")
             return
         }
@@ -260,7 +263,7 @@ final class AudioRecordingModel: ObservableObject {
             // Get the duration of the game in seconds
             let duration = endTime.timeIntervalSince(startTime)
             let durationInSeconds = Int(duration)
-            try await GameManager.shared.updateGameDurationUsingTeamDocId(gameId: gameId, teamDocId: team.id, duration: durationInSeconds)
+            try await gameManager.updateGameDurationUsingTeamDocId(gameId: gameId, teamDocId: team.id, duration: durationInSeconds)
         }
     }
     
@@ -270,8 +273,9 @@ final class AudioRecordingModel: ObservableObject {
     /// - Parameter teamId: The ID of the team.
     /// - Throws: An error if the operation fails.
     func loadPlayersForTranscription(teamId: String) async throws {
+        let teamManager = TeamManager()
         // Get the player, if there are some
-        guard let team = try await TeamManager.shared.getTeam(teamId: teamId) else {
+        guard let team = try await teamManager.getTeam(teamId: teamId) else {
             print("Error when loading team.")
             return
         }
@@ -325,8 +329,9 @@ final class AudioRecordingModel: ObservableObject {
     /// - Parameter playerId: The player's ID.
     /// - Returns: A `PlayerTranscriptInfo` object, or `nil` if not found.
     func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
+        let userManager = UserManager()
         // get the user info
-        guard let user = try await UserManager.shared.getUser(userId: playerId) else {
+        guard let user = try await userManager.getUser(userId: playerId) else {
             print("no user found. abort")
             return nil
         }

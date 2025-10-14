@@ -17,12 +17,14 @@ final class FirestoreGameRepository: GameRepository {
       
     /// Returns a reference to the "games" collection for the specified team.
     func gameCollection(teamDocId: String) -> CollectionReference {
-        return TeamManager.shared.teamCollection.document(teamDocId).collection("games")
+        let teamRepo = FirestoreTeamRepository()
+        return teamRepo.teamCollection().document(teamDocId).collection("games")
     }
     
     
     func getGame(gameId: String, teamId: String) async throws -> DBGame? {
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        let teamManager = TeamManager()
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("Could not find team id. Aborting")
             return nil
         }
@@ -52,7 +54,8 @@ final class FirestoreGameRepository: GameRepository {
     
 
     func getAllGames(teamId: String) async throws -> [DBGame]? {
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        let teamManager = TeamManager()
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("Could not find team id. Aborting")
             return nil
         }
@@ -66,7 +69,8 @@ final class FirestoreGameRepository: GameRepository {
                 
     
     func addNewGame(gameDTO: GameDTO) async throws {
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: gameDTO.teamId)?.id else {
+        let teamManager = TeamManager()
+        guard let teamDocId = try await teamManager.getTeam(teamId: gameDTO.teamId)?.id else {
             print("Could not find team id. Aborting")
             return
         }
@@ -82,7 +86,8 @@ final class FirestoreGameRepository: GameRepository {
     
     
     func addNewUnkownGame(teamId: String) async throws -> String? {
-        guard let teamDocId = try await TeamManager.shared.getTeam(teamId: teamId)?.id else {
+        let teamManager = TeamManager()
+        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
             print("Could not find team doc id. Aborting")
             return nil
         }

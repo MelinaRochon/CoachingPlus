@@ -63,8 +63,9 @@ final class PlayerProfileModel: ObservableObject {
         
         print("This is from the loadCurrentUser function: userid = \(authDataResult.uid)")
         
+        let userManager = UserManager()
         // Fetch user and player data from the database
-        self.user = try await UserManager.shared.getUser(userId: authDataResult.uid)
+        self.user = try await userManager.getUser(userId: authDataResult.uid)
         self.player = try await PlayerManager.shared.getPlayer(playerId: authDataResult.uid)
     }
     
@@ -213,7 +214,8 @@ final class PlayerProfileModel: ObservableObject {
     /// - Throws: An error if the update operation fails.
     func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
         
-        try await UserManager.shared.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
+        let userManager = UserManager()
+        try await userManager.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
     }
     
 }

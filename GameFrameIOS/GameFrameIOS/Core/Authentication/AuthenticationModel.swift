@@ -85,6 +85,8 @@ final class AuthenticationModel: ObservableObject {
     /// - Parameter userType: The type of user being created, either "Coach" or "Player".
     /// - Throws: An error if the sign-up fails (e.g., email already in use or issues with team validation).
     func signUp(userType: UserType) async throws {
+        let userManager = UserManager()
+        let teamManager = TeamManager()
         let verifyUser =  try await verifyEmailAddress()
         if let verifyUser = verifyUser {
             if verifyUser.userId != nil {
@@ -98,12 +100,12 @@ final class AuthenticationModel: ObservableObject {
         
         // Create a new DTO
         let user = UserDTO(userId: authDataResult.uid, email: authDataResult.email, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
-        try await UserManager.shared.createNewUser(userDTO: user)
+        try await userManager.createNewUser(userDTO: user)
         
         // Handle user creation based on type (Player or Coach).
         if (userType == .player) {
             // Verify if the team access code entered is valid
-            guard let team = try await TeamManager.shared.getTeamWithAccessCode(accessCode: teamAccessCode) else {
+            guard let team = try await teamManager.getTeamWithAccessCode(accessCode: teamAccessCode) else {
                 print("Error. Not a valid team access code. ")
                 return
             }
@@ -113,7 +115,7 @@ final class AuthenticationModel: ObservableObject {
                 
                 // new user. Create a user and player, and add the playerId in the team
                 let user = UserDTO(userId: authDataResult.uid, email: email, userType: .player, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
-                let userDocId = try await UserManager.shared.createNewUser(userDTO: user)
+                let userDocId = try await userManager.createNewUser(userDTO: user)
                 print("UserManager created at user doc: \(userDocId)")
                 
                 // create a new player,
@@ -127,13 +129,13 @@ final class AuthenticationModel: ObservableObject {
                 _ = try await PlayerTeamInfoManager.shared.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
 
                 // Add player to team
-                try await TeamManager.shared.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
+                try await teamManager.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
                 return  // TODO: Might need to delete the existing user from the database otherwise, will never be able to create an account with that email
             }
             
             // update the user document
             print("update user")
-            try await UserManager.shared.updateUserDTO(id: invite.userDocId, email: email, userTpe: userType, firstName: firstName, lastName: lastName, dob: dateOfBirth, phone: phone, country: country, userId: authDataResult.uid)
+            try await userManager.updateUserDTO(id: invite.userDocId, email: email, userTpe: userType, firstName: firstName, lastName: lastName, dob: dateOfBirth, phone: phone, country: country, userId: authDataResult.uid)
             
             // update the player document
             print("update player")
@@ -145,12 +147,12 @@ final class AuthenticationModel: ObservableObject {
             _ = try await PlayerTeamInfoManager.shared.createNewPlayerTeamInfo(playerDocId: invite.playerDocId, playerTeamInfoDTO: dto)
 
             // Look for the correct team
-            guard let team = try await TeamManager.shared.getTeam(teamId: invite.teamId) else {
+            guard let team = try await teamManager.getTeam(teamId: invite.teamId) else {
                 print("Team looking for does not exist. Abort")
                 return
             }
             // Add user in the players array
-            try await TeamManager.shared.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
+            try await teamManager.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
             
             // update the status of the player
             // Set to accepted
@@ -167,7 +169,8 @@ final class AuthenticationModel: ObservableObject {
     /// - Returns: A `DBTeam` object if the access code is valid, otherwise throws a `TeamValidationError`.
     /// - Throws: A `TeamValidationError` if the access code is invalid.
     func validateTeamAccessCode() async throws -> DBTeam {
-        guard let team = try await TeamManager.shared.getTeamWithAccessCode(accessCode: teamAccessCode) else {
+        let teamManager = TeamManager()
+        guard let team = try await teamManager.getTeamWithAccessCode(accessCode: teamAccessCode) else {
             print("Invalid access code")
             throw TeamValidationError.invalidAccessCode
         }
@@ -182,8 +185,9 @@ final class AuthenticationModel: ObservableObject {
     /// - Returns: A `DBUser` object if the email exists, otherwise `nil`.
     /// - Throws: An error if the query to check the email fails.
     func verifyEmailAddress() async throws -> DBUser? {
+        let userManager = UserManager()
         // verify the email address.
-        guard let user = try await UserManager.shared.getUserWithEmail(email: email) else {
+        guard let user = try await userManager.getUserWithEmail(email: email) else {
             print("User does not exist")
             return nil
         }

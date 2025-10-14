@@ -42,8 +42,9 @@ struct UserTypeRootView: View {
             // It makes an asynchronous call to fetch the user type from the UserManager.
             Task {
                 do {
+                    let userManager = UserManager()
                     // Attempt to fetch the user type asynchronously using UserManager.
-                    let type = try await UserManager.shared.getUserType() // get user type
+                    let type = try await userManager.getUserType() // get user type
                     
                     // Update the userType state with the fetched type (either "Coach" or "Player").
                     self.userType = type

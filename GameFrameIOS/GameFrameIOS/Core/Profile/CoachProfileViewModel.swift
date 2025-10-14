@@ -69,10 +69,11 @@ final class CoachProfileViewModel: ObservableObject {
      `UserManager.shared.getUser()` method. The user data is stored in the `user` property.
      */
     func loadCurrentUser() async throws {
+        let userManager = UserManager()
         let authDataResult = try AuthenticationManager.shared.getAuthenticatedUser() // get user profile
         
         print("This is from the loadCurrentUser function: userid = \(authDataResult.uid)")
-        self.user = try await UserManager.shared.getUser(userId: authDataResult.uid)
+        self.user = try await userManager.getUser(userId: authDataResult.uid)
     }
     
     
@@ -84,9 +85,10 @@ final class CoachProfileViewModel: ObservableObject {
      fetched data is assigned to the `user` and `player` properties, respectively.
      */
     func loadPlayer(userDocId: String, playerDocId: String) async throws {
+        let userManager = UserManager()
         
         // Get the user information from the player's id
-        self.user = try await UserManager.shared.findUserWithId(id: userDocId)
+        self.user = try await userManager.findUserWithId(id: userDocId)
         
         // Get the player's information
         self.player = try await PlayerManager.shared.findPlayerWithId(id: playerDocId)
@@ -126,11 +128,13 @@ final class CoachProfileViewModel: ObservableObject {
         // Update the user's phone number and membership details
         user.phone = phone
         user.dateOfBirth = dateOfBirth
+        
+        let userManager = UserManager()
         Task {
             // Call UserManager to update the coach's profile
-            try await UserManager.shared.updateCoachProfile(user: user)
+            try await userManager.updateCoachProfile(user: user)
             // Refresh the user object after updating
-            self.user = try await UserManager.shared.getUser(userId: userId)
+            self.user = try await userManager.getUser(userId: userId)
         }
     }
     
@@ -157,30 +161,31 @@ final class CoachProfileViewModel: ObservableObject {
             user.lastName = lastName ?? ""
 
         }
+        let userManager = UserManager()
         Task {
             // Call UserManager to update the coach's profile
-            try await UserManager.shared.updateCoachSettings(id: user.id, phone: phone, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, membershipDetails: membershipDetails)
+            try await userManager.updateCoachSettings(id: user.id, phone: phone, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, membershipDetails: membershipDetails)
             // Refresh the user object after updating
-            self.user = try await UserManager.shared.getUser(userId: userId)
+            self.user = try await userManager.getUser(userId: userId)
         }
     }
 
     
     /// Remove a player from the database
     func removePlayer(teamDocId: String) async throws {
-        
+        let teamManager = TeamManager()
         // TODO: Remove a player from db cannot be done.
         guard let player else { return }
         
         // Remove the player from the team
         
         // Remove from invites, if player id is found in array
-        var inviteDocId = try await TeamManager.shared.getInviteDocIdOfPlayerAndTeam(teamDocId: teamDocId, playerDocId: player.id)
+        var inviteDocId = try await teamManager.getInviteDocIdOfPlayerAndTeam(teamDocId: teamDocId, playerDocId: player.id)
         print("the invite doc id is \(inviteDocId ?? "DOES NOT exexist. player was not added by the coach")")
         if inviteDocId != nil {
             // Remove the invite id from the invites array
             print("removing player's invite from the teamP: \(teamDocId)")
-            try await TeamManager.shared.removeInviteFromTeam(id: teamDocId, inviteDocId: inviteDocId!)
+            try await teamManager.removeInviteFromTeam(id: teamDocId, inviteDocId: inviteDocId!)
         } else {
             print("player not in invite array... no need to remove")
         }
@@ -188,11 +193,11 @@ final class CoachProfileViewModel: ObservableObject {
         // Remove from accepted, if player is found in array
         if let playerId = player.playerId {
             print("player id exists. chek if player is assigned to a team ({playersz})")
-            let playerIsOnTeam = try await TeamManager.shared.isPlayerOnTeam(id: teamDocId, playerId: playerId)
+            let playerIsOnTeam = try await teamManager.isPlayerOnTeam(id: teamDocId, playerId: playerId)
             print("is player set on a team: (\(playerIsOnTeam))")
             if playerIsOnTeam {
                 print("removing p0layer from the team")
-                try await TeamManager.shared.removePlayerFromTeam(id: teamDocId, playerId: playerId)
+                try await teamManager.removePlayerFromTeam(id: teamDocId, playerId: playerId)
             } else {
                 print("player nhot on the team/. . . no need to remove from the player array (in teams)")
             }
@@ -204,8 +209,8 @@ final class CoachProfileViewModel: ObservableObject {
     
     
     func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
-        
-        try await UserManager.shared.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
+        let userManager = UserManager()
+        try await userManager.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
     }
     
     /// Updates the settings for the currently loaded player.
