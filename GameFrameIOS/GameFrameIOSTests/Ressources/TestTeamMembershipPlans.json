@@ -1,0 +1,26 @@
+[
+    {
+        "plan_id": "Pid001",
+        "team_id": "team1",
+        "name": "Free",
+        "price": 0.00,
+        "benefits": ["TBD"],
+        "duration_in_months": 1
+    },
+    {
+        "plan_id": "Pid001",
+        "team_id": "team2",
+        "name": "Plus",
+        "price": 50.00,
+        "benefits": ["TBD"],
+        "duration_in_months": 6
+    },
+    {
+        "plan_id": "Pid001",
+        "team_id": "team3",
+        "name": "Premium",
+        "price": 90.00,
+        "benefits": ["TBD"],
+        "duration_in_months": 12
+    }
+]

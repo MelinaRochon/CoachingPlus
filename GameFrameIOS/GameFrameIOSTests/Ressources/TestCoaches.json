@@ -1,0 +1,12 @@
+ [
+    {
+      "id": "coach1",
+      "coach_id": "uid001",
+      "teams_coaching": ["team1", "team3"]
+    },
+    {
+      "id": "coach2",
+      "coach_id": "uid004",
+      "teams_coaching": ["team2"]
+    }
+ ]
