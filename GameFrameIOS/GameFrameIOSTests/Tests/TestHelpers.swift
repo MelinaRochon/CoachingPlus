@@ -24,3 +24,8 @@ func createCoach(for manager: CoachManager, coachId: String = "coach_123") async
     try await manager.addCoach(coachId: coachId)
     return try await manager.getCoach(coachId: coachId)
 }
+
+func createUser(for manager: UserManager, userDTO: UserDTO, userId: String = "user_123") async throws -> DBUser? {
+    try await manager.createNewUser(userDTO: userDTO)
+    return try await manager.getUser(userId: userId)
+}
