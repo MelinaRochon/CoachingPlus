@@ -26,7 +26,7 @@ final class LocalCoachRepository: CoachRepository {
     /// - Throws: An error if the retrieval fails.
     func getCoach(coachId: String) async throws -> DBCoach? {
         // Search the local array for a coach with the matching ID
-        return coaches.first(where: { $0.id == coachId })
+        return coaches.first(where: { $0.coachId == coachId })
     }
 
     /// Associates a team with a specific coach.
@@ -36,7 +36,7 @@ final class LocalCoachRepository: CoachRepository {
     /// - Throws: An error if the operation fails.
     func addTeamToCoach(coachId: String, teamId: String) async throws {
         // Find the index of the coach in the local array
-        guard let index = coaches.firstIndex(where: { $0.id == coachId }) else {
+        guard let index = coaches.firstIndex(where: { $0.coachId == coachId }) else {
             throw NSError(domain: "LocalCoachRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Coach not found"])
         }
         
@@ -58,7 +58,7 @@ final class LocalCoachRepository: CoachRepository {
     /// - Throws: An error if the operation fails.
     func removeTeamToCoach(coachId: String, teamId: String) async throws {
         // Find the index of the coach in the local array
-        guard let index = coaches.firstIndex(where: { $0.id == coachId }) else {
+        guard let index = coaches.firstIndex(where: { $0.coachId == coachId }) else {
             throw NSError(domain: "LocalCoachRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Coach not found"])
         }
         
