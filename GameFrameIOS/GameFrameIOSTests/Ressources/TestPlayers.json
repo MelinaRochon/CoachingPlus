@@ -1,0 +1,122 @@
+[
+    {
+        "id": "uidP001",
+        "player_id": "uid002",
+        "jersey_num": 10,
+        "nickname": null,
+        "gender": "female",
+        "guardian_name": "Lise White",
+        "guardian_email": "mom1@gmail.com",
+        "guardian_phone": "6131112345",
+        "profile_picture": null,
+        "teams_enrolled": ["team1"]
+    },
+    {
+        "id": "uidP002",
+        "player_id": "uid003",
+        "jersey_num": 9,
+        "nickname": null,
+        "gender": "female",
+        "guardian_name": "Chirstina Kiss",
+        "guardian_email": "christinakiss@gmail.com",
+        "guardian_phone": "9890987654",
+        "profile_picture": null,
+        "teams_enrolled": ["team1"]
+    },
+    {
+        "id": "uidP003",
+        "player_id": "uid005",
+        "jersey_num": 7,
+        "nickname": "Chris",
+        "gender": "male",
+        "guardian_name": "Lea Adams",
+        "guardian_email": "leaadams@gmail.com",
+        "guardian_phone": null,
+        "profile_picture": null,
+        "teams_enrolled": ["team2", "team3"]
+    },
+    {
+        "id": "uidP004",
+        "player_id": "uid006",
+        "jersey_num": 3,
+        "nickname": null,
+        "gender": "male",
+        "guardian_name": null,
+        "guardian_email": null,
+        "guardian_phone": null,
+        "profile_picture": null,
+        "teams_enrolled": ["team2"]
+    },
+    {
+        "id": "uidP005",
+        "player_id": "uid007",
+        "jersey_num": 18,
+        "nickname": "Pat",
+        "gender": "male",
+        "guardian_name": null,
+        "guardian_email": null,
+        "guardian_phone": null,
+        "profile_picture": null,
+        "teams_enrolled": ["team2"]
+    },
+    {
+        "id": "uidP006",
+        "player_id": "uid008",
+        "jersey_num": 12,
+        "nickname": null,
+        "gender": "male",
+        "guardian_name": null,
+        "guardian_email": null,
+        "guardian_phone": null,
+        "profile_picture": null,
+        "teams_enrolled": ["team3"]
+    },
+    {
+        "id": "uidP007",
+        "player_id": "uid009",
+        "jersey_num": 34,
+        "nickname": null,
+        "gender": "male",
+        "guardian_name": null,
+        "guardian_email": null,
+        "guardian_phone": null,
+        "profile_picture": null,
+        "teams_enrolled": ["team3"]
+    },
+    {
+        "id": "uidP008",
+        "player_id": "uid010",
+        "jersey_num": 15,
+        "nickname": null,
+        "gender": "male",
+        "guardian_name": "",
+        "guardian_email": "",
+        "guardian_phone": "",
+        "profile_picture": null,
+        "teams_enrolled": ["team3"]
+    },
+    {
+        "id": "uidP009",
+        "player_id": "uid011",
+        "jersey_num": 98,
+        "nickname": "Nate",
+        "gender": "male",
+        "guardian_name": null,
+        "guardian_email": null,
+        "guardian_phone": null,
+        "profile_picture": null,
+        "teams_enrolled": ["team3"]
+    },
+    {
+        "id": "uidP010",
+        "player_id": "uid012",
+        "jersey_num": 0,
+        "nickname": "",
+        "gender": "male",
+        "guardian_name": null,
+        "guardian_email": null,
+        "guardian_phone": null,
+        "profile_picture": null,
+        "teams_enrolled": ["team3"]
+    }
+]
