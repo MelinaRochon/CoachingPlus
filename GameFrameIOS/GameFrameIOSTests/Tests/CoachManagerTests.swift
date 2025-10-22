@@ -150,4 +150,44 @@ final class CoachManagerTests: XCTestCase {
             sampleTeams.first(where: { $0.coaches.contains(coach.coachId) })?.teamId
         )
     }
+    
+    // MARK: Negative Testing
+    
+    /// Tests that getting a coach can be successfully performed.
+    func testGetInvalidCoach() async throws {
+        let coachId = "coach_123"
+        
+        // Add a new coach
+        try await manager.addCoach(coachId: coachId)
+        
+        // Get the coach object
+        let invalidCoachId = "invalid_coach_id"
+        let coach = try await manager.getCoach(coachId: invalidCoachId)
+        
+        XCTAssertNil(coach, "Coach should not exist because of the invalid coach ID")
+    }
+    
+    /// Tests that removing a team to an existing coach correctly updates the coach's record.
+    func testRemoveInvalidTeamToCoach() async throws {
+        let coachId = "coach123"
+        let teamId = "team123"
+        
+        // Add a coach
+        guard let coach = try await createCoach(for: manager, coachId: coachId) else {
+            XCTFail("Coach should exist")
+            return
+        }
+        
+        // Add team to coach
+        try await manager.addTeamToCoach(coachId: coach.coachId, teamId: teamId)
+        var updatedCoach = try await manager.getCoach(coachId: coachId)
+        XCTAssertTrue(updatedCoach?.teamsCoaching?.contains(teamId) ?? false, "A team should have been added under the coach.")
+        
+        // Remove invalid team id to coach
+        let invalidTeamId = "invalid_team_id"
+        try await manager.removeTeamToCoach(coachId: coach.coachId, teamId: invalidTeamId)
+        updatedCoach = try await manager.getCoach(coachId: coach.coachId)
+        
+        XCTAssertTrue(updatedCoach?.teamsCoaching?.contains(teamId) ?? false, "The team should still exist under the coach as the invalid team ID was not found.")
+    }
 }

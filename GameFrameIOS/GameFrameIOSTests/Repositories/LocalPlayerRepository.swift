@@ -10,8 +10,6 @@ import Foundation
 
 final class LocalPlayerRepository: PlayerRepository {
     private var players: [DBPlayer] = []
-    private var teams: [DBTeam] = []
-
     
     func createNewPlayer(playerDTO: GameFrameIOS.PlayerDTO) async throws -> String {
         let id = UUID().uuidString
@@ -29,131 +27,90 @@ final class LocalPlayerRepository: PlayerRepository {
     }
     
     func updateGuardianName(id: String, name: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == id }) {
+            players[index].guardianName = name
         }
-        
-        player.guardianName = name
     }
     
     func removeGuardianInfo(id: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == id }) {
+            players[index].guardianName = nil
+            players[index].guardianEmail = nil
+            players[index].guardianPhone = nil
         }
-        player.guardianName = nil
-        player.guardianPhone = nil
-        player.guardianEmail = nil
     }
     
     func addTeamToPlayer(id: String, teamId: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == id }) {
+            players[index].teamsEnrolled?.append(teamId)
         }
-        
-        player.teamsEnrolled?.append(teamId)
     }
     
     func removeTeamFromPlayer(id: String, teamId: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        guard let index = players.firstIndex(where: { $0.id == id }) else {
+            throw NSError(domain: "LocalPlayerRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Player not found"])
         }
-        guard let index = player.teamsEnrolled?.firstIndex(where: { $0 == teamId }) else {
-            print("Could not find team id in teams enrolled for player with id \(id)")
-            return
+
+        if let playerIndex = players[index].teamsEnrolled?.firstIndex(of: teamId) {
+            players[index].teamsEnrolled?.remove(at: playerIndex)
         }
-        
-        player.teamsEnrolled?.remove(at: index)
     }
     
     func removeTeamFromPlayerWithTeamDocId(id: String, teamDocId: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        guard let index = players.firstIndex(where: { $0.id == id }) else {
+            throw NSError(domain: "LocalPlayerRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Player not found"])
         }
-        guard let team = teams.first(where: { $0.id == teamDocId }) else {
-            print("Could not find team with doc id \(teamDocId)")
-            return
-        }
-                
-        guard let index = player.teamsEnrolled?.firstIndex(where: { $0 == team.teamId }) else {
-            print("Could not find team id in teams enrolled for player with id \(id)")
-            return
-        }
-        
-        player.teamsEnrolled?.remove(at: index)
 
+        let team = try await TeamManager().getTeamWithDocId(docId: teamDocId)
+        if let playerIndex = players[index].teamsEnrolled?.firstIndex(of: team.teamId) {
+            players[index].teamsEnrolled?.remove(at: playerIndex)
+        }
     }
     
     func removeGuardianInfoName(id: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == id }) {
+            players[index].guardianName = nil
         }
-        
-        player.guardianName = nil
     }
     
     func removeGuardianInfoEmail(id: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == id }) {
+            players[index].guardianEmail = nil
         }
-        
-        player.guardianEmail = nil
     }
     
     func removeGuardianInfoPhone(id: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == id }) {
+            players[index].guardianPhone = nil
         }
-
-        player.guardianPhone = nil
     }
     
     func updatePlayerInfo(player: GameFrameIOS.DBPlayer) async throws {
-        guard var tmpPlayer = try await findPlayerWithId(id: player.id) else {
-            print("Could not find a player with id \(player.id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == player.id}) {
+            players[index] = player
         }
-        tmpPlayer = player
-        
     }
     
     func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == id}) {
+            players[index].jerseyNum = jersey ?? players[index].jerseyNum
+            players[index].nickName = nickname ?? players[index].nickName
+            players[index].guardianName = guardianName ?? players[index].guardianName
+            players[index].guardianEmail = guardianEmail ?? players[index].guardianEmail
+            players[index].guardianPhone = guardianPhone ?? players[index].guardianPhone
+            players[index].gender = gender ?? players[index].gender
         }
-        
-        player.jerseyNum = jersey ?? player.jerseyNum
-        player.nickName = nickname ?? player.nickName
-        player.guardianName = guardianName ?? player.guardianName
-        player.guardianEmail = guardianEmail ?? player.guardianEmail
-        player.guardianPhone = guardianPhone ?? player.guardianPhone
-        player.gender = gender ?? player.gender
     }
     
     func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
-        guard var player = try await findPlayerWithId(id: playerDocId) else {
-            print("Could not find a player with id \(playerDocId)")
-            return
+        if let index = players.firstIndex(where: { $0.id == playerDocId}) {        players[index].jerseyNum = jersey
+            players[index].nickName = nickname
         }
-        
-        player.jerseyNum = jersey
-        player.nickName = nickname
     }
     
     func updatePlayerId(id: String, playerId: String) async throws {
-        guard var player = try await findPlayerWithId(id: id) else {
-            print("Could not find a player with id \(id)")
-            return
+        if let index = players.firstIndex(where: { $0.id == id}) {        players[index].playerId = playerId
         }
-        player.playerId = playerId
     }
     
     func getTeamsEnrolled(playerId: String) async throws -> [GameFrameIOS.GetTeam] {
@@ -169,8 +126,8 @@ final class LocalPlayerRepository: PlayerRepository {
         }
         
         for teamId in player.teamsEnrolled! {
-            guard var team = teams.first(where: { $0.teamId == teamId }) else {
-                print("Did not find a team with teamId \(teamId)")
+            guard let team = try await TeamManager().getTeam(teamId: teamId) else {
+                print("Could not find a team with teamId \(teamId)")
                 return []
             }
             // Add a Team object with the teamId and team name
@@ -182,7 +139,7 @@ final class LocalPlayerRepository: PlayerRepository {
     }
     
     func getAllTeamsEnrolled(playerId: String) async throws -> [GameFrameIOS.DBTeam]? {
-        guard var player = try await getPlayer(playerId: playerId) else {
+        guard let player = try await getPlayer(playerId: playerId) else {
             print("Could not find a player with player id \(playerId)")
             return nil
         }
@@ -192,10 +149,10 @@ final class LocalPlayerRepository: PlayerRepository {
             print("Teams enrolled to player id \(playerId) is empty")
             return nil
         }
-        
+        let teamManager = TeamManager()
         for teamId in player.teamsEnrolled! {
-            guard var team = teams.first(where: { $0.teamId == teamId }) else {
-                print("Did not find a team with teamId \(teamId)")
+            guard let team = try await teamManager.getTeam(teamId: teamId) else {
+                print("Could not find a team with teamId \(teamId)")
                 return nil
             }
             teamsEnrolled.append(team)
@@ -205,7 +162,7 @@ final class LocalPlayerRepository: PlayerRepository {
     }
     
     func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
-        guard var player = try await getPlayer(playerId: playerId) else {
+        guard let player = try await getPlayer(playerId: playerId) else {
             print("Could not find a player with player id \(playerId)")
             return false
         }

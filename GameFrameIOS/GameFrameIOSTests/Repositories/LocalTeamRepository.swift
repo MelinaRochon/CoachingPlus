@@ -9,6 +9,8 @@ import Foundation
 @testable import GameFrameIOS
 
 final class LocalTeamRepository: TeamRepository {
+
+    
     private var teams: [DBTeam] = []
     
     /// Retrieves a team by its team ID.
@@ -212,6 +214,10 @@ final class LocalTeamRepository: TeamRepository {
         
         print("⚠️ No invite found for player \(playerDocId) in team \(teamDocId)")
         return nil
+    }
+    
+    func getTeamsWithCoach(coachId: String) async throws -> [GameFrameIOS.DBTeam] {        
+        return teams.filter { $0.coaches.contains(coachId) }
     }
     
     

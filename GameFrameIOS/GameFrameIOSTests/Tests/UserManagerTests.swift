@@ -35,50 +35,50 @@ final class UserManagerTests: XCTestCase {
         XCTAssertEqual(user?.userId, userId)
     }
     
-    func testGetUserType() async throws {
-        let userId = "user_123"
-        let userType = UserType.player
+    func testGetValidUserType() async throws {
+        let userId = "uid001" // User Id taken from JSON file
+        let userType = UserType.coach
         
-        // Add a new user
-        let userDTO = UserDTO(userId: userId, email: "user@example.com", userType: userType, firstName: "John", lastName: "Doe")
-        guard let user = try await createUser(for: manager, userDTO: userDTO, userId: userId) else {
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        let sampleUser = sampleUsers.first(where: { $0.userId == userId })
+        guard let user = try await createUserFromJSON(for: manager, user: sampleUser!, userId: userId) else {
             XCTFail("User should exist")
             return
         }
         
-        XCTAssertEqual(user.userType, userType, "User type should match")
+        XCTAssertEqual(user.userType, userType, "User type should match \(userType)")
     }
     
     func testGetUser() async throws {
-        let userId = "user_123"
-        let userType = UserType.coach
-        let email = "user@example.com"
-        let firstName = "John"
-        let lastName = "Doe"
-        
-        // Add a new user
-        let userDTO = UserDTO(userId: userId, email: email, userType: userType, firstName: firstName, lastName: lastName)
-        guard let user = try await createUser(for: manager, userDTO: userDTO, userId: userId) else {
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first else { return }
+        guard let user = try await createUserFromJSON(for: manager, user: sampleUser, userId: sampleUser.userId!) else {
             XCTFail("User should exist")
             return
         }
         
-        XCTAssertEqual(user.userId, userId, "User ID should match")
-        XCTAssertEqual(user.firstName, firstName, "User's first name should match")
-        XCTAssertEqual(user.lastName, lastName, "User's last name should match")
-        XCTAssertEqual(user.userType, userType, "User type should match")
-        XCTAssertEqual(user.email, email, "User's email should match")
+        XCTAssertEqual(user.userId, sampleUser.userId!, "User ID should match")
+        XCTAssertEqual(user.firstName, sampleUser.firstName, "User's first name should match")
+        XCTAssertEqual(user.lastName, sampleUser.lastName, "User's last name should match")
+        XCTAssertEqual(user.userType, sampleUser.userType, "User type should match")
+        XCTAssertEqual(user.email, sampleUser.email, "User's email should match")
     }
     
     func testGetUserWithDocId() async throws {
-        let userId = "user_123"
+        let userId = "uid001"
         
-        // Add a new user
-        let userDTO = UserDTO(userId: userId, email: "user@example.com", userType: .player, firstName: "John", lastName: "Doe")
-        let id = try await manager.createNewUser(userDTO: userDTO)
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        let sampleUser = sampleUsers.first(where: { $0.userId == userId })
+        guard let jsonUser = try await createUserFromJSON(for: manager, user: sampleUser!, userId: userId) else {
+            XCTFail("User should exist")
+            return
+        }
 
         // Get the user with the document id
-        guard let user = try await manager.getUserWithDocId(id: id) else {
+        guard let user = try await manager.getUserWithDocId(id: jsonUser.id) else {
             XCTFail("User should exist")
             return
         }
@@ -87,62 +87,56 @@ final class UserManagerTests: XCTestCase {
     }
     
     func testGetUserWithEmail() async throws {
-        let userId = "user_123"
-        let email = "user@example.com"
-
-        // Add a new user
-        let userDTO = UserDTO(userId: userId, email: email, userType: .player, firstName: "John", lastName: "Doe")
-        try await manager.createNewUser(userDTO: userDTO)
-        guard let user = try await manager.getUserWithEmail(email: email) else {
+        let userId = "uid001"
+        
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        let sampleUser = sampleUsers.first(where: { $0.userId == userId })
+        guard let jsonUser = try await createUserFromJSON(for: manager, user: sampleUser!, userId: userId) else {
             XCTFail("User should exist")
             return
         }
-        
-        XCTAssertEqual(user.userId, userId, "User ID should match")
-        XCTAssertEqual(user.email, email, "User's email should match")
+
+        let user = try await manager.getUserWithEmail(email: jsonUser.email)
+        XCTAssertEqual(user?.userId, userId, "User ID should match")
+        XCTAssertEqual(jsonUser.email, user?.email, "User's email should match")
     }
     
     func testUpdatedCoachProfile() async throws {
-        let userId = "user_123"
-        let userType = UserType.coach
-        let updatedFirstName = "Brian"
-        
-        var userDTO = UserDTO(userId: userId, email: "user@example.com", userType: userType, firstName: "John", lastName: "Doe")
-        guard var user = try await createUser(for: manager, userDTO: userDTO, userId: userId) else {
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first else { return }
+        guard var jsonUser = try await createUserFromJSON(for: manager, user: sampleUser, userId: sampleUser.userId!) else {
             XCTFail("User should exist")
             return
         }
-        
-        XCTAssertEqual(user.userType, userType, "User type should match")
-       
+
         // Update coach profile
-        user.firstName = updatedFirstName
-        try await manager.updateCoachProfile(user: user)
+        let updatedFirstName = "Brian"
+        jsonUser.firstName = updatedFirstName
+        try await manager.updateCoachProfile(user: jsonUser)
         
-        let updatedUser = try await manager.getUser(userId: userId)
+        let updatedUser = try await manager.getUser(userId: jsonUser.userId!)
         XCTAssertEqual(updatedUser?.firstName, updatedFirstName, "User's first name should have changed")
     }
     
     func testUpdateCoachSettings() async throws {
-        let userId = "user_123"
-        let userType = UserType.coach
-        
-        var userDTO = UserDTO(userId: userId, email: "user@example.com", userType: userType, firstName: "John", lastName: "Doe")
-        guard var user = try await createUser(for: manager, userDTO: userDTO, userId: userId) else {
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first else { return }
+        guard let jsonUser = try await createUserFromJSON(for: manager, user: sampleUser, userId: sampleUser.userId!) else {
             XCTFail("User should exist")
             return
         }
-        
-        XCTAssertEqual(user.userType, userType, "User type should match")
         
         let updatedPhone = "6661234567"
         let updatedFirstName = "Brian"
         let updatedLastName = "Adams"
         
         // Update coach profile
-        try await manager.updateCoachSettings(id: user.id, phone: updatedPhone, dateOfBirth: user.dateOfBirth, firstName: updatedFirstName, lastName: updatedLastName, membershipDetails: nil)
+        try await manager.updateCoachSettings(id: jsonUser.id, phone: updatedPhone, dateOfBirth: jsonUser.dateOfBirth, firstName: updatedFirstName, lastName: updatedLastName, membershipDetails: nil)
         
-        let updatedUser = try await manager.getUser(userId: userId)
+        let updatedUser = try await manager.getUser(userId: jsonUser.userId!)
         XCTAssertEqual(updatedUser?.firstName, updatedFirstName, "User's first name should have changed")
         XCTAssertEqual(updatedUser?.lastName, updatedLastName, "User's last name should have changed")
         XCTAssertEqual(updatedUser?.phone, updatedPhone, "User's phone name should have changed")
@@ -157,15 +151,13 @@ final class UserManagerTests: XCTestCase {
     }
     
     func testUpdatedUserDTO() async throws {
-        let userId = "user_123"
-        
-        var userDTO = UserDTO(userId: userId, email: "user@example.com", userType: .player, firstName: "John", lastName: "Doe")
-        guard var user = try await createUser(for: manager, userDTO: userDTO, userId: userId) else {
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first else { return }
+        guard let jsonUser = try await createUserFromJSON(for: manager, user: sampleUser, userId: sampleUser.userId!) else {
             XCTFail("User should exist")
             return
         }
-        
-        XCTAssertEqual(user.userId, userId, "User ID should match")
         
         // Update DTO
         let updatedFirstName = "Jane"
@@ -176,10 +168,10 @@ final class UserManagerTests: XCTestCase {
         let updatedCountry = "Mexico"
         let updatedDob = Date()
         
-        try await manager.updateUserDTO(id: user.id, email: updatedEmail, userTpe: updatedUserType, firstName: updatedFirstName, lastName: updatedLastName, dob: updatedDob, phone: updatedPhone, country: updatedCountry, userId: userId)
+        try await manager.updateUserDTO(id: jsonUser.id, email: updatedEmail, userTpe: updatedUserType, firstName: updatedFirstName, lastName: updatedLastName, dob: updatedDob, phone: updatedPhone, country: updatedCountry, userId: jsonUser.userId!)
         
-        let updatedUser = try await manager.getUser(userId: userId)
-        XCTAssertEqual(updatedUser?.userId, userId, "User ID should match")
+        let updatedUser = try await manager.getUser(userId: jsonUser.userId!)
+        XCTAssertEqual(updatedUser?.userId, jsonUser.userId!, "User ID should match")
         XCTAssertEqual(updatedUser?.firstName, updatedFirstName, "User first name should match")
         XCTAssertEqual(updatedUser?.lastName, updatedLastName, "User last name should match")
         XCTAssertEqual(updatedUser?.email, updatedEmail, "User email should match")
@@ -190,37 +182,35 @@ final class UserManagerTests: XCTestCase {
     }
     
     func testUpdatedUserDoB() async throws {
-        let userId = "user_123"
         let isoFormatter = ISO8601DateFormatter()
         let updatedDob = isoFormatter.date(from: "2019-05-05T00:00:00Z")!
 
-        var userDTO = UserDTO(userId: userId, email: "user@example.com", userType: .player, firstName: "John", lastName: "Doe")
-        guard var user = try await createUser(for: manager, userDTO: userDTO, userId: userId) else {
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first else { return }
+        guard let jsonUser = try await createUserFromJSON(for: manager, user: sampleUser, userId: sampleUser.userId!) else {
             XCTFail("User should exist")
             return
         }
         
-        XCTAssertEqual(user.userId, userId, "User ID should match")
-        
         // Update date of birth
-        try await manager.updateUserDOB(id: user.id, dob: updatedDob)
+        try await manager.updateUserDOB(id: jsonUser.id, dob: updatedDob)
     
-        let updatedUser = try await manager.getUser(userId: userId)
-        XCTAssertEqual(updatedUser?.userId, userId, "User ID should match")
+        let updatedUser = try await manager.getUser(userId: jsonUser.userId!)
+        XCTAssertEqual(updatedUser?.userId, jsonUser.userId!, "User ID should match")
         XCTAssertEqual(updatedUser?.dateOfBirth, updatedDob, "User date of birth should match")
     }
     
     func testUpdateUserSettings() async throws {
-        let userId = "user_123"
         let isoFormatter = ISO8601DateFormatter()
 
-        var userDTO = UserDTO(userId: userId, email: "user@example.com", userType: .player, firstName: "John", lastName: "Doe")
-        guard var user = try await createUser(for: manager, userDTO: userDTO, userId: userId) else {
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first else { return }
+        guard let jsonUser = try await createUserFromJSON(for: manager, user: sampleUser, userId: sampleUser.userId!) else {
             XCTFail("User should exist")
             return
         }
-        
-        XCTAssertEqual(user.userId, userId, "User ID should match")
         
         // Update DTO
         let updatedFirstName = "Jane"
@@ -228,13 +218,94 @@ final class UserManagerTests: XCTestCase {
         let updatedPhone = "1234567890"
         let updatedDob = isoFormatter.date(from: "2019-05-05T00:00:00Z")!
 
+        try await manager.updateUserSettings(id: jsonUser.id, dateOfBirth: updatedDob, firstName: updatedFirstName, lastName: updatedLastName, phone: updatedPhone)
         
-        try await manager.updateUserSettings(id: user.id, dateOfBirth: updatedDob, firstName: updatedFirstName, lastName: updatedLastName, phone: updatedPhone)
-        let updatedUser = try await manager.getUser(userId: userId)
-        XCTAssertEqual(updatedUser?.userId, userId, "User ID should match")
+        let updatedUser = try await manager.getUser(userId: jsonUser.userId!)
+        XCTAssertEqual(updatedUser?.userId, sampleUser.userId!, "User ID should match")
         XCTAssertEqual(updatedUser?.firstName, updatedFirstName, "User first name should match")
         XCTAssertEqual(updatedUser?.lastName, updatedLastName, "User last name should match")
         XCTAssertEqual(updatedUser?.phone, updatedPhone, "User phone number should match")
         XCTAssertEqual(updatedUser?.dateOfBirth, updatedDob, "User date of birth should match")
+    }
+    
+    // MARK: Negative Testing
+    
+    /// Tests an invalid user type
+    func testGetInvalidUserType() async throws {
+        let userId = "uid001" // User Id taken from JSON file
+        
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("InvalidTestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first(where: { $0.userId == userId }) else {
+            XCTFail("No user found with userId \(userId)")
+            return
+        }
+
+        // Add a new user
+        guard let user = try await createUserFromJSON(for: manager, user: sampleUser, userId: userId) else {
+            XCTFail("User should exist")
+            return
+        }
+        
+        // Check that an unknown user type was found
+        XCTAssertEqual(user.userType, .unknown, "User type should match")
+    }
+
+    func testGetInvalidUser() async throws {
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first else { return }
+        guard try await createUserFromJSON(for: manager, user: sampleUser, userId: sampleUser.userId!) != nil else {
+            XCTFail("User should exist")
+            return
+        }
+        
+        // Get unvalid user
+        let userId = "user_123"
+        let invalidUser = try await manager.getUser(userId: userId)
+        
+        XCTAssertNil(invalidUser, "User should be nil")
+    }
+
+    func testGetUserWithInvalidDocId() async throws {
+        let userId = "uid001"
+        
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        guard let sampleUser = sampleUsers.first(where: { $0.userId == userId }) else { return }
+        guard try await createUserFromJSON(for: manager, user: sampleUser, userId: userId) != nil else {
+            XCTFail("User should exist")
+            return
+        }
+
+        // Try to get a user document with invalid user id
+        let invalidUserId = "user_123"
+        let user = try await manager.getUserWithDocId(id: invalidUserId)
+        XCTAssertNil(user, "User should be nil")
+    }
+    
+    func testGetUserWithInvalidEmail() async throws {
+        let userId = "uid001"
+        
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        let sampleUser = sampleUsers.first(where: { $0.userId == userId })
+        guard try await createUserFromJSON(for: manager, user: sampleUser!, userId: userId) != nil else {
+            XCTFail("User should exist")
+            return
+        }
+
+        // Try to get the user with an invalid email address
+        let user = try await manager.getUserWithEmail(email: "notvalidemail@gmail.com")
+        XCTAssertNil(user, "User should be nil")
+    }
+
+    
+    func testFindUserWithInvalidId() async throws {
+        let id = "uu010"
+        // Load users from JSON test file
+        let sampleUsers: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
+        
+        XCTAssertNotEqual(sampleUsers.first(where: { $0.id == id })?.id, id, "User doc ID should not match")
     }
 }
