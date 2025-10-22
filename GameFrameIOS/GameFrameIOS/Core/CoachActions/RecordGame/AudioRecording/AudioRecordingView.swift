@@ -27,6 +27,8 @@ import FirebaseStorage
 struct AudioRecordingView: View {
     
     // MARK: - ViewModel and State Variables
+    
+    let coachId: String
         
     @Binding var showLandingPageView: Bool
 
@@ -106,7 +108,7 @@ struct AudioRecordingView: View {
                 }
                 
                 /** Link to go back to the main tab */
-                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView), isActive: $navigateToHome) { EmptyView()
+                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView, coachId: coachId), isActive: $navigateToHome) { EmptyView()
                 }
                 
             }
@@ -486,7 +488,7 @@ extension String {
 
 
 #Preview {
-    AudioRecordingView(showLandingPageView: .constant(false), teamId: "")
+    AudioRecordingView(coachId: "", showLandingPageView: .constant(false), teamId: "")
 }
 
 

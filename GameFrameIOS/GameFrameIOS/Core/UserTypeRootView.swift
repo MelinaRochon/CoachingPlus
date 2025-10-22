@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 /// View that serves as the root screen after sign-in, directing users to either the coach or player main screen based on their user type.
 struct UserTypeRootView: View {
@@ -18,6 +19,9 @@ struct UserTypeRootView: View {
     /// State variable that stores the user type (e.g., "Coach" or "Player").
     @State private var userType: UserType = .unknown // = ""
 
+    /// Currently signed-in Firebase user id (UID). Needed by CoachMainTabView.
+//    @State private var coachId: String?
+
     // MARK: - View
 
     var body: some View {
@@ -27,7 +31,11 @@ struct UserTypeRootView: View {
             // If userType is empty or loading, no screen is shown.
             if userType == .coach {
                 // Display the main tab view for the Coach if the user is identified as a Coach.
-                CoachMainTabView(showLandingPageView: $showSignInView)
+                if let uid = Auth.auth().currentUser?.uid {
+                    CoachMainTabView(showLandingPageView: $showSignInView, coachId: uid)
+                } else {
+                    CustomUIFields.loadingSpinner("Loading coach…")
+                }
             } else if (userType == .player) {
                 // Display the main tab view for the Player if the user is identified as a Player.
                 PlayerMainTabView(showLandingPageView: $showSignInView)

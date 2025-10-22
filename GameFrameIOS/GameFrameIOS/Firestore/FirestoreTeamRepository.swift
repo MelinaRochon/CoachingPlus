@@ -68,6 +68,14 @@ final class FirestoreTeamRepository: TeamRepository {
         print("doc of access code is: \(doc)")
         return try doc.data(as: DBTeam.self)
     }
+
+
+    func getTeamsWithCoach(coachId: String) async throws -> [DBTeam] {
+        let snapshot = try await teamCollection()
+                .whereField("coach_id", isEqualTo: coachId)
+                .getDocuments()
+        return snapshot.documents.compactMap { try? $0.data(as: DBTeam.self) }
+    }
     
     
     /// Retrieves a team name by its team ID.

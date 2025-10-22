@@ -17,10 +17,12 @@ import SwiftUI
   - Custom tab bar with icons and labels, which dynamically changes based on the selected tab.
 */
 struct CoachMainTabView: View {
+    
+    let coachId: String
+
     @State private var showCoachRecordingConfig = false // Controls modal visibility
     @State private var selectedTab: Int = 3 // Track selected tab
     @Binding var showLandingPageView: Bool
-    let coachId: String
 
     init(showLandingPageView: Binding<Bool>, coachId: String) {
         // Remove the default bottom shadow/line from the tab bar
@@ -86,7 +88,7 @@ struct CoachMainTabView: View {
         }
         // Show CoachRecordingView when the plus button is clicked
         .fullScreenCover(isPresented: $showCoachRecordingConfig) {
-            CoachRecordingConfigView(showLandingPageView: $showLandingPageView)
+            CoachRecordingConfigView(coachId: coachId, showLandingPageView: $showLandingPageView)
         }.navigationBarBackButtonHidden(true) // ✅ Hides the back button
     }
 

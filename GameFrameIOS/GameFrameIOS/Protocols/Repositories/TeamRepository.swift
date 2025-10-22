@@ -40,6 +40,8 @@ protocol TeamRepository {
     /// - Returns: The name of the team as a `String`.
     func getTeamName(teamId: String) async throws -> String
     
+    func getTeamsWithCoach(coachId: String) async throws -> [DBTeam]
+    
     
     /// Adds a player to a specific team.
     /// - Parameters:

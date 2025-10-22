@@ -23,6 +23,8 @@ import SwiftUI
 struct CoachRecordingConfigView: View {
     
     // MARK: - State Properties
+    
+    let coachId: String
 
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
@@ -37,7 +39,7 @@ struct CoachRecordingConfigView: View {
     @State private var selectedTeamId: String? = nil // Holds the selected team ID
 
     /// This variable holds the label for the selected recording type. It defaults to "Video", but the user can select a different type (e.g., Audio).
-    @State private var selectedRecordingTypeLabel: String = ""
+    @State private var selectedRecordingTypeLabel: String = "Video"
 
     /// This variable tracks whether Apple Watch recording is enabled. It is a Boolean, where `true` means recording is enabled and `false` means it's not.
     @State private var selectedAppleWatchUseLabel: Bool = false // Indicates if Apple Watch recording is enabled
@@ -94,20 +96,46 @@ struct CoachRecordingConfigView: View {
                 // Button to start the recording (Video or Audio)
                 
                 if (selectedRecordingTypeLabel == "Audio Only"){
-                    NavigationLink(destination: AudioRecordingView(showLandingPageView: $showLandingPageView, teamId: selectedTeamId!)) {
-
-                        // Custom Styled 'Start Audio Recording' button
+                    if let tid = selectedTeamId { // ✅ avoid force unwrap
+                        NavigationLink(
+                            destination: AudioRecordingView(
+                                coachId: coachId,
+                                showLandingPageView: $showLandingPageView,
+                                teamId: tid
+                            )
+                        ) {
+                            // Custom Styled 'Start Audio Recording' button
+                            CustomUIFields.styledHStack(content: {
+                                Text("Start Audio Recording").font(.title2).bold()
+                            }, background: .black)
+                        }
+                    } else {
+                        // Disabled look when no team is selected
                         CustomUIFields.styledHStack(content: {
                             Text("Start Audio Recording").font(.title2).bold()
-                        }, background: selectedTeamId != nil ? .black : .gray)
-                        
-                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
+                        }, background: .gray)
+                        .disabled(true)
+                    }
                 } else if (selectedRecordingTypeLabel == "Video") {
-                    NavigationLink(destination: VideoRecordingView(teamId: selectedTeamId!, showLandingPageView: $showLandingPageView)) {
+                    if let tid = selectedTeamId { // ✅ avoid force unwrap
+                        NavigationLink(
+                            destination: VideoRecordingView(
+                                coachId: coachId,
+                                teamId: tid,
+                                showLandingPageView: $showLandingPageView
+                            )
+                        ) {
+                            CustomUIFields.styledHStack(content: {
+                                Text("Start Video Recording").font(.title2).bold()
+                            }, background: .black)
+                        }
+                    } else {
+                        // Disabled look when no team is selected
                         CustomUIFields.styledHStack(content: {
                             Text("Start Video Recording").font(.title2).bold()
-                        }, background: selectedTeamId != nil ? .black : .gray)
-                    }.disabled(selectedTeamId == nil) // Disable button if no team is selected
+                        }, background: .gray)
+                        .disabled(true)
+                    }
                 }
             }.toolbar {
                 // Cancel Button (Top Left)
@@ -162,5 +190,5 @@ struct CoachRecordingConfigView: View {
 }
 
 #Preview {
-    CoachRecordingConfigView(showLandingPageView: .constant(false))
+    CoachRecordingConfigView(coachId: "preview-coach-id", showLandingPageView: .constant(false))
 }

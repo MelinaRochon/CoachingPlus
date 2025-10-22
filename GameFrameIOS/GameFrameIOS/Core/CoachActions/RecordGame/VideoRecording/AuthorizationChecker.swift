@@ -52,6 +52,9 @@ struct VideoPickerView: UIViewControllerRepresentable {
 }
 
 struct VideoRecordingView: View {
+    
+    let coachId: String
+
     @State private var showingCamera = false
     @State private var videoURL: URL?
     
@@ -85,7 +88,7 @@ struct VideoRecordingView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
 
-                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView), isActive: $recordingIsDone) { EmptyView() }
+                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView, coachId: coachId), isActive: $recordingIsDone) { EmptyView() }
                 
             }.sheet(isPresented: $showingCamera) {
                 VideoPickerView(videoURL: $videoURL)

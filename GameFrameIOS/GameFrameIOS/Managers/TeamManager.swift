@@ -57,6 +57,11 @@ final class TeamManager {
     func getTeamName(teamId: String) async throws -> String {
        return try await repo.getTeamName(teamId: teamId)
     }
+    
+    func getTeamsOwnedByCoach(coachId: String) async throws -> [DBTeam] {
+        try await repo.getTeamsWithCoach(coachId: coachId)
+        // or: try await repo.getTeamsSubcollection(forCoach: coachId)
+    }
         
     /// Adds a player to the team.
     /// - Parameters:
