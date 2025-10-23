@@ -11,8 +11,14 @@ import Foundation
 final class LocalTranscriptRepository: TranscriptRepository {
     private var transcripts: [GameFrameIOS.DBTranscript] = []
     
+    init(transcripts: [DBTranscript]? = nil) {
+        // If no transcripts provided, fallback to default JSON
+        self.transcripts = transcripts ?? TestDataLoader.load("TestTranscripts", as: [DBTranscript].self)
+    }
+
+    
     func getTranscript(teamId: String, gameId: String, transcriptId: String) async throws -> GameFrameIOS.DBTranscript? {
-        return transcripts.first(where: { $0.transcriptId == transcriptId })
+        return transcripts.first(where: { $0.transcriptId == transcriptId && $0.gameId == gameId })
     }
     
     func getAllTranscripts(teamId: String, gameId: String) async throws -> [GameFrameIOS.DBTranscript]? {
@@ -20,7 +26,8 @@ final class LocalTranscriptRepository: TranscriptRepository {
     }
     
     func getTranscriptsPreviewWithDocId(teamDocId: String, gameId: String) async throws -> [GameFrameIOS.DBTranscript]? {
-        return transcripts.filter( { $0.gameId == gameId })
+        let filtered = transcripts.filter { $0.gameId == gameId }
+        return Array(filtered.prefix(3))
     }
     
     func getAllTranscriptsWithDocId(teamDocId: String, gameDocId: String) async throws -> [GameFrameIOS.DBTranscript]? {
@@ -46,8 +53,7 @@ final class LocalTranscriptRepository: TranscriptRepository {
     }
     
     func deleteAllTranscripts(teamDocId: String, gameId: String) async throws {
-        var transcriptsToBeRm = transcripts.filter( { $0.gameId == gameId })
-        transcriptsToBeRm.removeAll()
+        transcripts.removeAll(where: { $0.gameId == gameId })
     }
     
     func updateTranscript(teamDocId: String, gameId: String, transcriptId: String, transcript: String) async throws {

@@ -1,452 +1,452 @@
 [
   {
-    "transcriptId": "T001",
-    "keyMomentId": "KM001",
+    "transcript_id": "T001",
+    "key_moment_id": "KM001",
     "transcript": "Great pass through the middle.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G001"
+    "game_id": "G001"
   },
   {
-    "transcriptId": "T002",
-    "keyMomentId": "KM002",
+    "transcript_id": "T002",
+    "key_moment_id": "KM002",
     "transcript": "Defensive line held strong Jill. Stay vocal.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G001"
+    "game_id": "G001"
   },
   {
-    "transcriptId": "T003",
-    "keyMomentId": "KM003",
+    "transcript_id": "T003",
+    "key_moment_id": "KM003",
     "transcript": "Nice try Jane, it went just over the bar.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G001"
+    "game_id": "G001"
   },
   {
-    "transcriptId": "T004",
-    "keyMomentId": "KM004",
+    "transcript_id": "T004",
+    "key_moment_id": "KM004",
     "transcript": "Jane you need to drop, your play was left unmarked.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G001"
+    "game_id": "G001"
   },
   {
-    "transcriptId": "T005",
-    "keyMomentId": "KM005",
+    "transcript_id": "T005",
+    "key_moment_id": "KM005",
     "transcript": "Jill you lost possession too easily.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G001"
+    "game_id": "G001"
   },
   {
-    "transcriptId": "T006",
-    "keyMomentId": "KM006",
+    "transcript_id": "T006",
+    "key_moment_id": "KM006",
     "transcript": "Striker made a quick recovery.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G002"
+    "game_id": "G002"
   },
   {
-    "transcriptId": "T007",
-    "keyMomentId": "KM007",
+    "transcript_id": "T007",
+    "key_moment_id": "KM007",
     "transcript": "Try to position yourself Jane to face goalside on this play.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G002"
+    "game_id": "G002"
   },
   {
-    "transcriptId": "T008",
-    "keyMomentId": "KM008",
+    "transcript_id": "T008",
+    "key_moment_id": "KM008",
     "transcript": "Jill, next time clear the ball faster. You took too many unecessary touched.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G002"
+    "game_id": "G002"
   },
   {
-    "transcriptId": "T009",
-    "keyMomentId": "KM009",
+    "transcript_id": "T009",
+    "key_moment_id": "KM009",
     "transcript": "On a corner kick, Jill, you have to be post side. The goal is on you.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G002"
+    "game_id": "G002"
   },
   {
-    "transcriptId": "T010",
-    "keyMomentId": "KM010",
+    "transcript_id": "T010",
+    "key_moment_id": "KM010",
     "transcript": "Solid attack there Jane. Good job at winning the ball.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G002"
+    "game_id": "G002"
   },
   {
-    "transcriptId": "T011",
-    "keyMomentId": "KM011",
+    "transcript_id": "T011",
+    "key_moment_id": "KM011",
     "transcript": "Jane you should been pressing goalside here with the rest of your team.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G003"
+    "game_id": "G003"
   },
   {
-    "transcriptId": "T012",
-    "keyMomentId": "KM012",
+    "transcript_id": "T012",
+    "key_moment_id": "KM012",
     "transcript": "Jane you cannot keep causing counterattacks. Keep your head up.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G003"
+    "game_id": "G003"
   },
   {
-    "transcriptId": "T013",
-    "keyMomentId": "KM013",
+    "transcript_id": "T013",
+    "key_moment_id": "KM013",
     "transcript": "Jane that was a perfect timing run. Make sure next time to be more vocal to let the striker know you're there.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G003"
+    "game_id": "G003"
   },
   {
-    "transcriptId": "T014",
-    "keyMomentId": "KM014",
+    "transcript_id": "T014",
+    "key_moment_id": "KM014",
     "transcript": "Player communication improved this play.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G003"
+    "game_id": "G003"
   },
   {
-    "transcriptId": "T015",
-    "keyMomentId": "KM015",
+    "transcript_id": "T015",
+    "key_moment_id": "KM015",
     "transcript": "Jill don't be afraid to be louder. That should've been your ball.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G003"
+    "game_id": "G003"
   },
   {
-    "transcriptId": "T016",
-    "keyMomentId": "KM016",
+    "transcript_id": "T016",
+    "key_moment_id": "KM016",
     "transcript": "Excellent stop Bob. Way to get there faster.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G004"
+    "game_id": "G004"
   },
   {
-    "transcriptId": "T017",
-    "keyMomentId": "KM017",
+    "transcript_id": "T017",
+    "key_moment_id": "KM017",
     "transcript": "Patrick, that was a smart through ball between the defenders. Please do that again.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G004"
+    "game_id": "G004"
   },
   {
-    "transcriptId": "T018",
-    "keyMomentId": "KM018",
+    "transcript_id": "T018",
+    "key_moment_id": "KM018",
     "transcript": "Chris, I want you to clear the ball there next time away from danger.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G004"
+    "game_id": "G004"
   },
   {
-    "transcriptId": "T019",
-    "keyMomentId": "KM019",
+    "transcript_id": "T019",
+    "key_moment_id": "KM019",
     "transcript": "Midfield pressure forced an early mistake.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G004"
+    "game_id": "G004"
   },
   {
-    "transcriptId": "T020",
-    "keyMomentId": "KM020",
+    "transcript_id": "T020",
+    "key_moment_id": "KM020",
     "transcript": "Chris you need to regain shape quickly after turnovers like these.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G004"
+    "game_id": "G004"
   },
   {
-    "transcriptId": "T021",
-    "keyMomentId": "KM021",
+    "transcript_id": "T021",
+    "key_moment_id": "KM021",
     "transcript": "Good positioning Bob, that surely prevented a goal chance.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G005"
+    "game_id": "G005"
   },
   {
-    "transcriptId": "T022",
-    "keyMomentId": "KM022",
+    "transcript_id": "T022",
+    "key_moment_id": "KM022",
     "transcript": "Nice track back Pat. Make sure though you get between the player and the net.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G005"
+    "game_id": "G005"
   },
   {
-    "transcriptId": "T023",
-    "keyMomentId": "KM023",
+    "transcript_id": "T023",
+    "key_moment_id": "KM023",
     "transcript": "Forward missed an open goal opportunity.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G005"
+    "game_id": "G005"
   },
   {
-    "transcriptId": "T024",
-    "keyMomentId": "KM024",
+    "transcript_id": "T024",
+    "key_moment_id": "KM024",
     "transcript": "Bob you need to work on your passing accuracy. That went straight to the player on the other team.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G005"
+    "game_id": "G005"
   },
   {
-    "transcriptId": "T025",
-    "keyMomentId": "KM025",
+    "transcript_id": "T025",
+    "key_moment_id": "KM025",
     "transcript": "Goalkeeper organized the defense well.",
     "language": "English",
-    "generatedBy": "uid004",
+    "generated_by": "uid004",
     "confidence": 5,
-    "gameId": "G005"
+    "game_id": "G005"
   },
   {
-    "transcriptId": "T026",
-    "keyMomentId": "KM026",
+    "transcript_id": "T026",
+    "key_moment_id": "KM026",
     "transcript": "Quick reaction saved a goal attempt.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G006"
+    "game_id": "G006"
   },
   {
-    "transcriptId": "T027",
-    "keyMomentId": "KM027",
+    "transcript_id": "T027",
+    "key_moment_id": "KM027",
     "transcript": "Nice aggressive tackle Tyler. That's what I want to see.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G006"
+    "game_id": "G006"
   },
   {
-    "transcriptId": "T028",
-    "keyMomentId": "KM028",
+    "transcript_id": "T028",
+    "key_moment_id": "KM028",
     "transcript": "Mason, that was a brilliant build-up that let to scoring chance.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G006"
+    "game_id": "G006"
   },
   {
-    "transcriptId": "T029",
-    "keyMomentId": "KM029",
+    "transcript_id": "T029",
+    "key_moment_id": "KM029",
     "transcript": "That was a great build-up Chris. Keep up the good work.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G006"
+    "game_id": "G006"
   },
   {
-    "transcriptId": "T030",
-    "keyMomentId": "KM030",
+    "transcript_id": "T030",
+    "key_moment_id": "KM030",
     "transcript": "Good job Ethan, you blocked a dangerous cross.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G006"
+    "game_id": "G006"
   },
   {
-    "transcriptId": "T031",
-    "keyMomentId": "KM031",
+    "transcript_id": "T031",
+    "key_moment_id": "KM031",
     "transcript": "Patient buildup before a smart finish.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G007"
+    "game_id": "G007"
   },
   {
-    "transcriptId": "T032",
-    "keyMomentId": "KM032",
+    "transcript_id": "T032",
+    "key_moment_id": "KM032",
     "transcript": "Ethan be careful. You dribbled past two defenders but it was risky and you had your striker open. Look up, next time.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G007"
+    "game_id": "G007"
   },
   {
-    "transcriptId": "T033",
-    "keyMomentId": "KM033",
+    "transcript_id": "T033",
+    "key_moment_id": "KM033",
     "transcript": "Good transition from defense to attack Christopher.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G007"
+    "game_id": "G007"
   },
   {
-    "transcriptId": "T034",
-    "keyMomentId": "KM034",
+    "transcript_id": "T034",
+    "key_moment_id": "KM034",
     "transcript": "Tyler you cannot lose focus under pressure.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G007"
+    "game_id": "G007"
   },
   {
-    "transcriptId": "T035",
-    "keyMomentId": "KM035",
+    "transcript_id": "T035",
+    "key_moment_id": "KM035",
     "transcript": "Nice cross Mason. This is the type of cross that will create a goal chance.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G007"
+    "game_id": "G007"
   },
   {
-    "transcriptId": "T036",
-    "keyMomentId": "KM036",
+    "transcript_id": "T036",
+    "key_moment_id": "KM036",
     "transcript": "Good job Tyler, you made a crucial interception.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G008"
+    "game_id": "G008"
   },
   {
-    "transcriptId": "T037",
-    "keyMomentId": "KM037",
+    "transcript_id": "T037",
+    "key_moment_id": "KM037",
     "transcript": "Player maintained possession under pressure.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G008"
+    "game_id": "G008"
   },
   {
-    "transcriptId": "T038",
-    "keyMomentId": "KM038",
+    "transcript_id": "T038",
+    "key_moment_id": "KM038",
     "transcript": "That quick pass Tyler was dangeround and led to a goal opportunity for the other team.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G008"
+    "game_id": "G008"
   },
   {
-    "transcriptId": "T039",
-    "keyMomentId": "KM039",
+    "transcript_id": "T039",
+    "key_moment_id": "KM039",
     "transcript": "Don't be afraid next time to try deaking the goalkeeper Chris",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G008"
+    "game_id": "G008"
   },
   {
-    "transcriptId": "T040",
-    "keyMomentId": "KM040",
+    "transcript_id": "T040",
+    "key_moment_id": "KM040",
     "transcript": "Ethan, that offside trap worked perfectly this time.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G008"
+    "game_id": "G008"
   },
   {
-    "transcriptId": "T041",
-    "keyMomentId": "KM041",
+    "transcript_id": "T041",
+    "key_moment_id": "KM041",
     "transcript": "Nice switch of play Christopher.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G009"
+    "game_id": "G009"
   },
   {
-    "transcriptId": "T042",
-    "keyMomentId": "KM042",
+    "transcript_id": "T042",
+    "key_moment_id": "KM042",
     "transcript": "Excellent run behind the defense line.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G009"
+    "game_id": "G009"
   },
   {
-    "transcriptId": "T043",
-    "keyMomentId": "KM043",
+    "transcript_id": "T043",
+    "key_moment_id": "KM043",
     "transcript": "Good pressing forced a throw-in.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G009"
+    "game_id": "G009"
   },
   {
-    "transcriptId": "T044",
-    "keyMomentId": "KM044",
+    "transcript_id": "T044",
+    "key_moment_id": "KM044",
     "transcript": "Mason, you're captain. Please encourage your players to push forward. I can't always be the one screeming.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G009"
+    "game_id": "G009"
   },
   {
-    "transcriptId": "T045",
-    "keyMomentId": "KM045",
+    "transcript_id": "T045",
+    "key_moment_id": "KM045",
     "transcript": "Unlucky deflection Tyler. It happens.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G010"
+    "game_id": "G010"
   },
   {
-    "transcriptId": "T046",
-    "keyMomentId": "KM046",
+    "transcript_id": "T046",
+    "key_moment_id": "KM046",
     "transcript": "Excellent recovery Ethan after a missed pass.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G010"
+    "game_id": "G010"
   },
   {
-    "transcriptId": "T047",
-    "keyMomentId": "KM047",
+    "transcript_id": "T047",
+    "key_moment_id": "KM047",
     "transcript": "Ethan don't play under pressure, if you need, take the extra touch there.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G010"
+    "game_id": "G010"
   },
   {
-    "transcriptId": "T048",
-    "keyMomentId": "KM048",
+    "transcript_id": "T048",
+    "key_moment_id": "KM048",
     "transcript": "Play slowed down to maintain control.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G010"
+    "game_id": "G010"
   },
   {
-    "transcriptId": "T049",
-    "keyMomentId": "KM049",
+    "transcript_id": "T049",
+    "key_moment_id": "KM049",
     "transcript": "Mason be careful. That Midfielder anticipated your pass perfectly which caused a turnover.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G010"
+    "game_id": "G010"
   },
   {
-    "transcriptId": "T050",
-    "keyMomentId": "KM050",
+    "transcript_id": "T050",
+    "key_moment_id": "KM050",
     "transcript": "Great goal Chris. Impressive hat trick.",
     "language": "English",
-    "generatedBy": "uid001",
+    "generated_by": "uid001",
     "confidence": 5,
-    "gameId": "G010"
+    "game_id": "G010"
   }
 ]
