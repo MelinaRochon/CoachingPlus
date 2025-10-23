@@ -6,11 +6,18 @@
 //
 
 import Foundation
+
 @testable import GameFrameIOS
 
 final class LocalCoachRepository: CoachRepository {
     private var coaches: [DBCoach] = []
-    
+
+    init(coaches: [DBCoach]? = nil) {
+        // If no coach provided, fallback to default JSON
+        self.coaches =
+            coaches ?? TestDataLoader.load("TestCoaches", as: [DBCoach].self)
+    }
+
     /// Adds a new coach to the database.
     /// - Parameter coachId: The unique identifier of the coach to add.
     /// - Throws: An error if the operation fails.
@@ -36,15 +43,20 @@ final class LocalCoachRepository: CoachRepository {
     /// - Throws: An error if the operation fails.
     func addTeamToCoach(coachId: String, teamId: String) async throws {
         // Find the index of the coach in the local array
-        guard let index = coaches.firstIndex(where: { $0.coachId == coachId }) else {
-            throw NSError(domain: "LocalCoachRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Coach not found"])
+        guard let index = coaches.firstIndex(where: { $0.coachId == coachId })
+        else {
+            throw NSError(
+                domain: "LocalCoachRepository",
+                code: 404,
+                userInfo: [NSLocalizedDescriptionKey: "Coach not found"]
+            )
         }
-        
+
         // Initialize the teams array if nil
         if coaches[index].teamsCoaching == nil {
             coaches[index].teamsCoaching = []
         }
-        
+
         // Add the teamId if it is not already in the coach's teams
         if !coaches[index].teamsCoaching!.contains(teamId) {
             coaches[index].teamsCoaching!.append(teamId)
@@ -58,12 +70,18 @@ final class LocalCoachRepository: CoachRepository {
     /// - Throws: An error if the operation fails.
     func removeTeamToCoach(coachId: String, teamId: String) async throws {
         // Find the index of the coach in the local array
-        guard let index = coaches.firstIndex(where: { $0.coachId == coachId }) else {
-            throw NSError(domain: "LocalCoachRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Coach not found"])
+        guard let index = coaches.firstIndex(where: { $0.coachId == coachId })
+        else {
+            throw NSError(
+                domain: "LocalCoachRepository",
+                code: 404,
+                userInfo: [NSLocalizedDescriptionKey: "Coach not found"]
+            )
         }
-        
+
         // Safely remove the teamId if the teams array exists
-        if let teamIndex = coaches[index].teamsCoaching?.firstIndex(of: teamId) {
+        if let teamIndex = coaches[index].teamsCoaching?.firstIndex(of: teamId)
+        {
             coaches[index].teamsCoaching?.remove(at: teamIndex)
         }
     }
@@ -75,19 +93,25 @@ final class LocalCoachRepository: CoachRepository {
     func loadTeamsCoaching(coachId: String) async throws -> [GetTeam]? {
         // 1. Find the coach in your local array (or fetch from Firestore)
         guard let coach = coaches.first(where: { $0.coachId == coachId }) else {
-            return nil // Coach not found
+            return nil  // Coach not found
         }
 
         // 2. Make sure the coach has teams
         guard let teamIds = coach.teamsCoaching, !teamIds.isEmpty else {
-            return nil // No teams for this coach
+            return nil  // No teams for this coach
         }
 
         // 3. Fetch each team asynchronously
         var getTeams: [GetTeam] = []
         for teamId in teamIds {
             if let team = try await TeamManager().getTeam(teamId: teamId) {
-                getTeams.append(GetTeam(teamId: teamId, name: team.name, nickname: team.teamNickname))
+                getTeams.append(
+                    GetTeam(
+                        teamId: teamId,
+                        name: team.name,
+                        nickname: team.teamNickname
+                    )
+                )
             }
         }
         return getTeams

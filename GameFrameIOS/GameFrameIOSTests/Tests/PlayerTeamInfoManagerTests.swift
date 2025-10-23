@@ -29,7 +29,13 @@ final class PlayerTeamInfoManagerTests: XCTestCase {
         let playerId = "player_123"
         let playerTeamInfoDocId = "playerTeamInfoDocId01"
         // Add a new user
-        let playerTeamDTO = PlayerTeamInfoDTO(id: playerTeamInfoId, playerId: playerId, nickname: nil, jerseyNum: 12, joinedAt: Date())
+        let playerTeamDTO = PlayerTeamInfoDTO(
+            id: playerTeamInfoId,
+            playerId: playerId,
+            nickname: nil,
+            jerseyNum: 12,
+            joinedAt: Date()
+        )
         let playerTeamInfo = try await manager.createNewPlayerTeamInfo(playerDocId: playerTeamInfoDocId, playerTeamInfoDTO: playerTeamDTO)
         
         XCTAssertNotNil(playerTeamInfo, "User should exist after being added")

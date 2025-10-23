@@ -11,6 +11,12 @@ import Foundation
 final class LocalPlayerRepository: PlayerRepository {
     private var players: [DBPlayer] = []
     
+    init(players: [DBPlayer]? = nil) {
+        // If no player provided, fallback to default JSON
+        self.players =
+            players ?? TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
+    }
+
     func createNewPlayer(playerDTO: GameFrameIOS.PlayerDTO) async throws -> String {
         let id = UUID().uuidString
         let player = DBPlayer(id: id, playerDTO: playerDTO)

@@ -27,246 +27,297 @@ final class PlayerManagerTests: XCTestCase {
     func testAddPlayer() async throws {
         let playerId = "player_123"
         
-        // Add a player
-        let playerDTO = PlayerDTO(playerId: playerId, jerseyNum: 12, nickName: "Nick", gender: "Male", profilePicture: nil, teamsEnrolled: ["team_123"], guardianName: nil, guardianEmail: nil, guardianPhone: nil)
-        let player = try await createPlayer(for: manager, playerDTO: playerDTO, playerId: playerId)
+        // Make sure the new player to be added does not exist
+        let tmpPlayer = try await manager.getPlayer(playerId: playerId)
+        XCTAssertNil(tmpPlayer, "Player should not exist before being added")
         
-        XCTAssertNotNil(player, "Player should exist after being added")
+        // Add a new player
+        let playerDTO = PlayerDTO(
+            playerId: playerId,
+            jerseyNum: 12,
+            nickName: "Nick",
+            gender: "Male",
+            profilePicture: nil,
+            teamsEnrolled: ["team_123"],
+            guardianName: nil,
+            guardianEmail: nil,
+            guardianPhone: nil
+        )
+        try await manager.createNewPlayer(playerDTO: playerDTO)
+        let player = try await manager.getPlayer(playerId: playerId)
+        
+        XCTAssertNotNil(player)
         XCTAssertEqual(player?.playerId, playerId, "Player ID should match")
+        XCTAssertEqual(player?.jerseyNum, playerDTO.jerseyNum)
+        XCTAssertEqual(player?.nickName, playerDTO.nickName)
+        XCTAssertEqual(player?.gender, playerDTO.gender)
+        XCTAssertEqual(player?.profilePicture, playerDTO.profilePicture)
+        XCTAssertEqual(player?.teamsEnrolled, playerDTO.teamsEnrolled)
+        XCTAssertEqual(player?.guardianName, playerDTO.guardianName)
+        XCTAssertEqual(player?.guardianEmail, playerDTO.guardianEmail)
+        XCTAssertEqual(player?.guardianPhone, playerDTO.guardianPhone)
     }
     
     func testGetPlayer() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let player = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-
-        XCTAssertEqual(player.playerId, samplePlayer.playerId, "Player ID should match")
+        let playerId = "uid002"
+        let player = try await manager.getPlayer(playerId: playerId)
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.playerId, playerId, "Player ID should match")
     }
     
     func testFindPlayerWithId() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-
-        let player = try await manager.findPlayerWithId(id: jsonPlayer.id)
+        let playerDocId = "uidP001"
         
-        XCTAssertNotNil(player, "Player added should not be nil")
-        XCTAssertEqual(player?.playerId, jsonPlayer.playerId, "Player ID should match")
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.id, playerDocId, "Player ID should match")
     }
     
     func testUpdateGuardianName() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-
+        let playerDocId = "uidP001"
         let updatedGuardianName = "Johnny Doe"
-        try await manager.updateGuardianName(id: jsonPlayer.id, name: updatedGuardianName)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
         
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId, "Player ID should match")
+        // Make sure the player has a different guardian name setup
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotNil(player)
+        XCTAssertNotEqual(player?.guardianName, updatedGuardianName)
+        XCTAssertNotNil(player?.playerId)
+
+        // Update the guardian name
+        try await manager.updateGuardianName(id: playerDocId, name: updatedGuardianName)
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
+        
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId, "Player ID should match")
         XCTAssertEqual(updatedPlayer?.guardianName, updatedGuardianName, "Guardian Name should match")
     }
     
     func testRemoveGuardianInfo() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-
-        try await manager.removeGuardianInfo(id: jsonPlayer.id)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
+        let playerDocId = "uidP001"
         
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId, "Player ID should match")
-        XCTAssertEqual(updatedPlayer?.guardianName, nil, "Guardian Name should be set to nil")
-        XCTAssertEqual(updatedPlayer?.guardianEmail, nil, "Guardian Email should be set to nil")
-        XCTAssertEqual(updatedPlayer?.guardianPhone, nil, "Guardian Phone should be set to nil")
+        // Make sure guardian info is not set to nil initially
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotEqual(player?.guardianName, nil)
+        XCTAssertNotEqual(player?.guardianEmail, nil)
+        XCTAssertNotEqual(player?.guardianPhone, nil)
+        
+        // Remove guardian info
+        try await manager.removeGuardianInfo(id: playerDocId)
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
+        
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId, "Player ID should match")
+        XCTAssertEqual(updatedPlayer?.guardianName, nil)
+        XCTAssertEqual(updatedPlayer?.guardianEmail, nil)
+        XCTAssertEqual(updatedPlayer?.guardianPhone, nil)
     }
     
     func testAddTeamToPlayer() async throws {
         let teamId = "team_123"
+        let playerDocId = "uidP001"
         
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        // Make sure team adding to player does not exist
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotNil(player)
+        XCTAssertNotNil(player?.playerId)
+
+        let isPlayerEnrolledtoTeam = try await manager.isPlayerEnrolledToTeam(playerId: player!.playerId!, teamId: teamId)
+        XCTAssertFalse(isPlayerEnrolledtoTeam)
         
         // Adding a team to the player
-        try await manager.addTeamToPlayer(id: jsonPlayer.id, teamId: teamId)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
+        try await manager.addTeamToPlayer(id: playerDocId, teamId: teamId)
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
         
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId, "Player ID should match")
-        XCTAssertTrue(updatedPlayer?.teamsEnrolled?.contains(teamId) ?? false, "A team should have been added under the player")
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId, "Player ID should match")
+        XCTAssertTrue(
+            updatedPlayer?.teamsEnrolled?.contains(teamId) ?? false,
+            "A team should have been added under the player"
+        )
     }
     
     func testRemoveTeamFromPlayer() async throws {
         let teamId = "team1"
+        let playerDocId = "uidP001"
         
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first(where: { $0.teamsEnrolled!.contains(teamId) }) else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        // Make sure the team we are removing is under teams enrolled
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotNil(player)
+        XCTAssertNotNil(player?.playerId)
+
+        let isPlayerEnrolledToTeam = try await manager.isPlayerEnrolledToTeam(playerId: player!.playerId!, teamId: teamId)
+        XCTAssertTrue(isPlayerEnrolledToTeam)
 
         // Remove team from player
-        try await manager.removeTeamFromPlayer(id: jsonPlayer.id, teamId: teamId)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
+        try await manager.removeTeamFromPlayer(id: playerDocId, teamId: teamId)
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
 
         XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId, "Player ID should match")
-        XCTAssertFalse(updatedPlayer?.teamsEnrolled?.contains(teamId) ?? true, "A team should have been removed under the player")
+        XCTAssertEqual(updatedPlayer?.id, playerDocId, "Player ID should match")
+        XCTAssertFalse(
+            updatedPlayer?.teamsEnrolled?.contains(teamId) ?? true,
+            "A team should have been removed under the player"
+        )
     }
     
     func testRemoveTeamFromPlayerWithTeamDocId() async throws {
-        // Load player & Team from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        let playerId = "uid002"
         
+        // Make sure the player exist
+        let player = try await manager.getPlayer(playerId: playerId)
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.playerId, playerId)
+        XCTAssertNotNil(player?.playerId)
+
+        // Load teams from JSON test file
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
-        guard let sampleTeam = sampleTeams.first(where: { $0.teamId == jsonPlayer.teamsEnrolled?.first }) else { return }
+        guard let sampleTeam = sampleTeams.first(where: { $0.teamId == player?.teamsEnrolled?.first }) else { return }
         guard let jsonTeam = try await createTeamForJSON(for: TeamManager(), team: sampleTeam) else {
             XCTFail("Team should exist")
             return
         }
                 
         // Remove team from player with document id
-        try await manager.removeTeamFromPlayerWithTeamDocId(id: jsonPlayer.id, teamDocId: jsonTeam.id)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
+        try await manager.removeTeamFromPlayerWithTeamDocId(id: player!.id, teamDocId: jsonTeam.id)
+        let updatedPlayer = try await manager.getPlayer(playerId: playerId)
         
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId, "Player ID should match")
-        XCTAssertFalse(updatedPlayer?.teamsEnrolled?.contains(sampleTeam.teamId) ?? true, "A team should have been removed under the player")
+        XCTAssertEqual(updatedPlayer?.playerId, playerId, "Player ID should match")
+        XCTAssertTrue(updatedPlayer?.teamsEnrolled?.count == 0)
+        XCTAssertFalse(
+            updatedPlayer?.teamsEnrolled?.contains(sampleTeam.teamId) ?? true,
+            "A team should have been removed under the player"
+        )
     }
     
     func testRemoveGuardianInfoName() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first(where: { $0.guardianName != nil }) else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        let playerDocId = "uidP001"
         
+        // Make sure the guardian info name is not nil initially
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotNil(player)
+        XCTAssertNotEqual(player?.guardianName, nil)
+        XCTAssertNotNil(player?.playerId)
+
         // Remove guardian name info
-        try await manager.removeGuardianInfoName(id: jsonPlayer.id)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
-        
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId!, "Player ID should match")
+        try await manager.removeGuardianInfoName(id: playerDocId)
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
+
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId, "Player ID should match")
         XCTAssertEqual(updatedPlayer?.guardianName, nil, "Guardian Name should be set to nil")
+        XCTAssertEqual(updatedPlayer?.playerId, player?.playerId)
     }
     
     func testRemoveGuardianInfoEmail() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first(where: { $0.guardianEmail != nil }) else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-
-        // Remove guardian phone info
-        try await manager.removeGuardianInfoEmail(id: jsonPlayer.id)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
+        let playerDocId = "uidP001"
         
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId!, "Player ID should match")
+        // Make sure the guardian info email is not nil initially
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotNil(player)
+        XCTAssertNotEqual(player?.guardianEmail, nil)
+        XCTAssertNotNil(player?.playerId)
+
+        // Remove guardian email info
+        try await manager.removeGuardianInfoEmail(id: playerDocId)
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
+
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId)
+        XCTAssertEqual(updatedPlayer?.playerId, player?.playerId, "Player ID should match")
         XCTAssertEqual(updatedPlayer?.guardianEmail, nil, "Guardian Email should be set to nil")
     }
     
     func testRemoveGuardianInfoPhone() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first(where: { $0.guardianPhone != nil }) else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        let playerDocId = "uidP001"
+        
+        // Make sure the guardian info phone is not nil initially
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotNil(player)
+        XCTAssertNotEqual(player?.guardianPhone, nil)
+        XCTAssertNotNil(player?.playerId)
 
         // Remove guardian phone info
-        try await manager.removeGuardianInfoPhone(id: jsonPlayer.id)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
-        
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId!, "Player ID should match")
+        try await manager.removeGuardianInfoPhone(id: playerDocId)
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
+
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId)
+        XCTAssertEqual(updatedPlayer?.playerId, player?.playerId, "Player ID should match")
         XCTAssertEqual(updatedPlayer?.guardianPhone, nil, "Guardian Phone should be set to nil")
     }
     
     func testUpdatePlayerInfo() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard var jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-
-        // Update player info
+        let playerDocId = "uidP001"
         let updatedGuardianName = "Hugo Loris"
         let updatedGender = "Female"
         let updatedJersey = 24
         
-        jsonPlayer.guardianName = updatedGuardianName
-        jsonPlayer.gender = updatedGender
-        jsonPlayer.jerseyNum = updatedJersey
-
-        try await manager.updatePlayerInfo(player: jsonPlayer)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
+        // Make sure the updated player's info does not match the player's info initially
+        guard var player = try await manager.findPlayerWithId(id: playerDocId) else {
+            XCTFail()
+            return
+        }
+        XCTAssertNotNil(player)
+        XCTAssertNotEqual(player.guardianName, updatedGuardianName)
+        XCTAssertNotEqual(player.gender, updatedGender)
+        XCTAssertNotEqual(player.jerseyNum, updatedJersey)
+        XCTAssertNotNil(player.playerId)
         
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId!, "Player ID should match")
+        // Update the player's info
+        player.guardianName = updatedGuardianName
+        player.gender = updatedGender
+        player.jerseyNum = updatedJersey
+
+        try await manager.updatePlayerInfo(player: player)
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
+
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId)
+        XCTAssertEqual(updatedPlayer?.playerId, player.playerId, "Player ID should match")
         XCTAssertEqual(updatedPlayer?.guardianName, updatedGuardianName, "Player's Guardian Name should match")
         XCTAssertEqual(updatedPlayer?.gender, updatedGender, "Player Gender should match")
         XCTAssertEqual(updatedPlayer?.jerseyNum, updatedJersey, "Player Jersey number should match")
     }
     
     func testUpdatePlayerSetting() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-
-        // Update player info
+        let playerDocId = "uidP001"
         let updatedJersey = 34
         let updatedNickname = "Cyn"
         let updatedGuardianName = "Ronn Bronco"
         let updatedGuardianEmail = "ronn@gmail.com"
         let updatedGuardianPhone = "7180986789"
         let updatedGender = "Female"
-        
-        try await manager.updatePlayerSettings(id: jsonPlayer.id, jersey: updatedJersey, nickname: updatedNickname, guardianName: updatedGuardianName, guardianEmail: updatedGuardianEmail, guardianPhone: updatedGuardianPhone, gender: updatedGender)
-        
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
-        
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId!, "Updated Player ID should match")
+
+        // Make sure the updated player's info does not match the player's info initially
+        guard var player = try await manager.findPlayerWithId(id: playerDocId) else {
+            XCTFail()
+            return
+        }
+        XCTAssertNotNil(player)
+        XCTAssertNotEqual(player.jerseyNum, updatedJersey)
+        XCTAssertNotEqual(player.nickName, updatedNickname)
+        XCTAssertNotEqual(player.gender, updatedGender)
+        XCTAssertNotEqual(player.guardianName, updatedGuardianName)
+        XCTAssertNotEqual(player.guardianEmail, updatedGuardianEmail)
+        XCTAssertNotEqual(player.guardianPhone, updatedGuardianPhone)
+        XCTAssertNotNil(player.playerId)
+
+        // Update the player info
+        try await manager.updatePlayerSettings(
+            id: playerDocId,
+            jersey: updatedJersey,
+            nickname: updatedNickname,
+            guardianName: updatedGuardianName,
+            guardianEmail: updatedGuardianEmail,
+            guardianPhone: updatedGuardianPhone,
+            gender: updatedGender
+        )
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
+
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId)
+        XCTAssertEqual(updatedPlayer?.playerId, player.playerId, "Player ID should match")
         XCTAssertEqual(updatedPlayer?.jerseyNum, updatedJersey, "Updated Jersey number should match")
         XCTAssertEqual(updatedPlayer?.nickName, updatedNickname, "Updated Player Nickname should match")
         XCTAssertEqual(updatedPlayer?.gender, updatedGender, "Updated Player Gender should match")
@@ -276,176 +327,163 @@ final class PlayerManagerTests: XCTestCase {
     }
     
     func testUpdatePlayerJerseyAndNickname() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-
-        // Update player info
+        let playerDocId = "uidP001"
         let updatedJersey = 34
         let updatedNickname = "Cyn"
         
-        try await manager.updatePlayerJerseyAndNickname(playerDocId: jsonPlayer.id, jersey: updatedJersey, nickname: updatedNickname)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
+        // Make sure the player's jersey and nickname are different
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotNil(player)
+        XCTAssertNotEqual(player?.jerseyNum, updatedJersey)
+        XCTAssertNotEqual(player?.nickName, updatedNickname)
+        XCTAssertNotNil(player?.playerId)
+
+        // Update the player's jersey number and nickname
+        try await manager.updatePlayerJerseyAndNickname(
+            playerDocId: playerDocId,
+            jersey: updatedJersey,
+            nickname: updatedNickname
+        )
+        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
         
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId!, "Updated Player ID should match")
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId)
+        XCTAssertEqual(updatedPlayer?.playerId, player?.playerId, "Player ID should match")
         XCTAssertEqual(updatedPlayer?.jerseyNum, updatedJersey, "Updated Jersey number should match")
         XCTAssertEqual(updatedPlayer?.nickName, updatedNickname, "Updated Player Nickname should match")
     }
     
     func testUpdatedPlayerId() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        let playerDocId = "uidP001"
+        
+        // Make sure the player exist before changing the player_id
+        let player = try await manager.findPlayerWithId(id: playerDocId)
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.id, playerDocId)
 
-        // Update player info
+        // Update the player's id
         let updatedPlayerId = "player_456"
-        try await manager.updatePlayerId(id: jsonPlayer.id, playerId: updatedPlayerId)
+        try await manager.updatePlayerId(id: playerDocId, playerId: updatedPlayerId)
         let updatedPlayer = try await manager.getPlayer(playerId: updatedPlayerId)
         
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.id, playerDocId)
         XCTAssertEqual(updatedPlayer?.playerId, updatedPlayerId, "Updated Player ID should match")
     }
     
     func testGetTeamsEnrolled() async throws {
-        // Load player & Team from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        let playerId = "uid002"
         
+        // Make sure the player exist
+        let player = try await manager.getPlayer(playerId: playerId)
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.playerId, playerId)
+        XCTAssertNotNil(player?.playerId)
+        XCTAssertTrue(player?.teamsEnrolled?.count == 1)
+
+        // Load teams from JSON test file
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
-        guard let sampleTeam = sampleTeams.first(where: { $0.teamId == jsonPlayer.teamsEnrolled?.first }) else { return }
-        guard let jsonTeam = try await createTeamForJSON(for: TeamManager(), team: sampleTeam) else {
+        guard let sampleTeam = sampleTeams.first(where: { $0.teamId == player?.teamsEnrolled?.first }) else { return }
+        guard try await createTeamForJSON(for: TeamManager(), team: sampleTeam) != nil else {
             XCTFail("Team should exist")
             return
         }
-
-        let teamsEnrolled = try await manager.getTeamsEnrolled(playerId: jsonPlayer.playerId!)
+        
+        // Get the teams enrolled
+        let teamsEnrolled = try await manager.getTeamsEnrolled(playerId: playerId)
         
         XCTAssertEqual(teamsEnrolled.count, 1)
+        XCTAssertEqual(teamsEnrolled.count, player?.teamsEnrolled?.count)
         XCTAssertEqual(teamsEnrolled[0].teamId, sampleTeam.teamId, "Team ID of the enrolled team should match")
     }
     
     func testGetAllTeamsEnrolled() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        let playerId = "uid005"
+        
+        // Make sure the player exist
+        let player = try await manager.getPlayer(playerId: playerId)
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.playerId, playerId)
+        XCTAssertNotNil(player?.playerId)
+        XCTAssertTrue(player?.teamsEnrolled?.count == 2)
 
         // Load teams from JSON test file
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
-        let enrolledTeams = sampleTeams.filter { $0.players!.contains(jsonPlayer.playerId!) }
+        let enrolledTeams = sampleTeams.filter { $0.players!.contains(playerId) }
         
         let teamManager = TeamManager()
         for team in enrolledTeams {
             try await createTeamForJSON(for: teamManager, team: team)
         }
         
-        let teamsEnrolled = try await manager.getAllTeamsEnrolled(playerId: jsonPlayer.playerId!)
+        // Get all teams enrolled
+        let teamsEnrolled = try await manager.getAllTeamsEnrolled(playerId: playerId)
         
-        XCTAssertTrue(teamsEnrolled?.first?.players?.contains(samplePlayer.playerId!) ?? false, "Team enrolled should contain the player ID")
+        XCTAssertTrue(
+            teamsEnrolled?.first?.players?.contains(playerId) ?? false,
+            "Team enrolled should contain the player ID"
+        )
+        XCTAssertEqual(teamsEnrolled?.count, 2)
+        XCTAssertEqual(teamsEnrolled?.count, player?.teamsEnrolled?.count)
     }
         
     func testPlayerIsEnrolledToTeam() async throws {
-        let teamId = "team1"
+        let playerId = "uid005"
         
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first(where: { $0.teamsEnrolled!.contains(teamId) }) else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-                
-        let isPlayerEnrolledToTeam = try await manager.isPlayerEnrolledToTeam(playerId: jsonPlayer.playerId!, teamId: teamId)
+        // Make sure the player exist
+        let player = try await manager.getPlayer(playerId: playerId)
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.playerId, playerId)
+        XCTAssertNotNil(player?.playerId)
+        XCTAssertTrue(player?.teamsEnrolled?.count == 2)
+
+        // Check if the player is enrolled to a team or not
+        let isPlayerEnrolledToTeam = try await manager.isPlayerEnrolledToTeam(playerId: playerId, teamId: player!.teamsEnrolled!.first!)
         XCTAssertTrue(isPlayerEnrolledToTeam, "Player should be enrolled to a team")
     }
 
     // MARK: Negative Testing
     
     func testFindPlayerWithInvalidId() async throws {
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-        
         let invalidPlayerId = "player_123"
         let player = try await manager.findPlayerWithId(id: invalidPlayerId)
-        
         XCTAssertNil(player, "Player added should be nil")
     }
             
     func testRemoveInvalidTeamFromPlayer() async throws {
-        let teamId = "team1"
-        
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first(where: { $0.teamsEnrolled!.contains(teamId) }) else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        let playerId = "uid005"
 
-        // Remove team from player
+        // Make sure the player can be found
+        let player = try await manager.getPlayer(playerId: playerId)
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.playerId, playerId)
+        XCTAssertNotNil(player?.playerId)
+        XCTAssertTrue(player?.teamsEnrolled?.count == 2)
+
+        // Remove an invalid team from player
         let invalidTeamId = "team_123"
-        try await manager.removeTeamFromPlayer(id: jsonPlayer.id, teamId: invalidTeamId)
-        let updatedPlayer = try await manager.getPlayer(playerId: jsonPlayer.playerId!)
+        try await manager.removeTeamFromPlayer(id: player!.id, teamId: invalidTeamId)
+        let updatedPlayer = try await manager.getPlayer(playerId: playerId)
 
-        XCTAssertNotNil(updatedPlayer, "Updated Player should not be nil")
-        XCTAssertEqual(updatedPlayer?.playerId, samplePlayer.playerId, "Player ID should match")
-        XCTAssertTrue(updatedPlayer?.teamsEnrolled?.contains(teamId) ?? false, "A team could not be removed under the player")
+        XCTAssertNotNil(updatedPlayer)
+        XCTAssertEqual(updatedPlayer?.playerId, playerId)
+        XCTAssertEqual(updatedPlayer?.teamsEnrolled?.count, player?.teamsEnrolled?.count)
+        XCTAssertFalse(updatedPlayer?.teamsEnrolled?.contains(invalidTeamId) ?? true)
     }
-            
-    func testGetInvalidTeamsEnrolled() async throws {
-        // Load player & Team from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
-        
-        let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
-        guard let sampleTeam = sampleTeams.first(where: { $0.teamId == jsonPlayer.teamsEnrolled?.first }) else { return }
-        guard let jsonTeam = try await createTeamForJSON(for: TeamManager(), team: sampleTeam) else {
-            XCTFail("Team should exist")
-            return
-        }
-        
-        // Get teams enrolled with an invalid player id
-        let teamsEnrolled = try await manager.getTeamsEnrolled(playerId: "player_123")
-        XCTAssertEqual(teamsEnrolled, [], "Team enrolled should be empty")
-    }
-        
+                    
     func testPlayerNotEnrolledToTeam() async throws {
-        let teamId = "team_123"
+        let playerId = "uid011"
         
-        // Load players from JSON test file
-        let samplePlayers: [DBPlayer] = TestDataLoader.load("TestPlayers", as: [DBPlayer].self)
-        guard let samplePlayer = samplePlayers.first(where: { $0.teamsEnrolled!.contains(teamId) }) else { return }
-        guard let jsonPlayer = try await createPlayerForJSON(for: manager, player: samplePlayer) else {
-            XCTFail("User should exist")
-            return
-        }
+        // Double check that the player exist
+        let player = try await manager.getPlayer(playerId: playerId)
+        XCTAssertNotNil(player)
+        XCTAssertEqual(player?.playerId, playerId)
+        XCTAssertNotNil(player?.playerId)
+        XCTAssertTrue(player?.teamsEnrolled?.count == 1)
 
-        let isPlayerEnrolledToTeam = try await manager.isPlayerEnrolledToTeam(playerId: jsonPlayer.playerId!, teamId: teamId)
+        // Check if the player is enrolled to a team or not
+        let teamIdNotEnrolled = "team2"
+        let isPlayerEnrolledToTeam = try await manager.isPlayerEnrolledToTeam(playerId: playerId, teamId: teamIdNotEnrolled)
         XCTAssertFalse(isPlayerEnrolledToTeam, "Player should not be enrolled to a team")
     }
 }

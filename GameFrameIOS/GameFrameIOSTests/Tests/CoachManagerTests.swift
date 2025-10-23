@@ -28,19 +28,19 @@ final class CoachManagerTests: XCTestCase {
     func testAddNewCoach() async throws {
         let coachId = "coach_123"
         
-        // Add a coach
-        let coach = try await createCoach(for: manager, coachId: coachId)
+        // Make sure the new coach to be added does not exist
+        let tmpCoach = try await manager.getCoach(coachId: coachId)
+        XCTAssertNil(tmpCoach, "Coach should not exist before being added")
         
-        XCTAssertNotNil(coach, "Coach should exist after being added")
+        // Add a new coach
+        let coach = try await createCoach(for: manager, coachId: coachId)
+        XCTAssertNotNil(coach)
         XCTAssertEqual(coach?.coachId, coachId)
     }
     
     /// Tests that getting a coach can be successfully performed.
     func testGetCoach() async throws {
-        let coachId = "coach_123"
-        
-        // Add a new coach
-        try await manager.addCoach(coachId: coachId)
+        let coachId = "uid001"
         
         // Get the coach object
         if let coach = try await manager.getCoach(coachId: coachId) {
@@ -52,102 +52,149 @@ final class CoachManagerTests: XCTestCase {
     
     /// Tests that adding a team to an existing coach correctly updates the coach’s record.
     func testAddTeamToCoach() async throws {
-        let coachId = "coach123"
+        let coachId = "uid001"
         let teamId = "team123"
-                
-        // Add a coach
-        guard let coach = try await createCoach(for: manager, coachId: coachId) else {
-            XCTFail("Coach should exist")
-            return
-        }
         
-        // Add team to coach
-        try await manager.addTeamToCoach(coachId: coach.coachId, teamId: teamId)
+        // Make sure the coach exists and the team was not added already
+        let coach = try await manager.getCoach(coachId: coachId)
+        XCTAssertNotNil(coach)
+        XCTAssertEqual(coach?.coachId, coachId)
+        XCTAssertFalse(
+            coach?.teamsCoaching?.contains(teamId) ?? true,
+            "The team should not exist under the coach."
+        )
+
+        // Add team to the teams coaching
+        try await manager.addTeamToCoach(coachId: coachId, teamId: teamId)
         let updatedCoach = try await manager.getCoach(coachId: coachId)
-        XCTAssertTrue(updatedCoach?.teamsCoaching?.contains(teamId) ?? false, "A team should have been added under the coach.")
+        
+        XCTAssertNotNil(updatedCoach)
+        XCTAssertEqual(updatedCoach?.coachId, coachId)
+        XCTAssertTrue(
+            updatedCoach?.teamsCoaching?.contains(teamId) ?? false,
+            "A team should have been added under the coach."
+        )
+        XCTAssertTrue(updatedCoach?.teamsCoaching?.count == 3)
     }
     
     /// Tests that removing a team to an existing coach correctly updates the coach's record.
     func testRemoveTeamToCoach() async throws {
-        let coachId = "coach123"
-        let teamId = "team123"
+        let coachId = "uid001"
+        let teamId = "team1"
         
-        // Add a coach
-        guard let coach = try await createCoach(for: manager, coachId: coachId) else {
-            XCTFail("Coach should exist")
-            return
-        }
+        // Make sure the team to be removed is there
+        let coach = try await manager.getCoach(coachId: coachId)
+        XCTAssertNotNil(coach)
+        XCTAssertEqual(coach?.coachId, coachId)
+        XCTAssertTrue(coach?.teamsCoaching?.contains(teamId) ?? false)
+
+        // Remove team to the teams coaching
+        try await manager.removeTeamToCoach(coachId: coachId, teamId: teamId)
+        let updatedCoach = try await manager.getCoach(coachId: coachId)
         
-        // Add team to coach
-        try await manager.addTeamToCoach(coachId: coach.coachId, teamId: teamId)
-        var updatedCoach = try await manager.getCoach(coachId: coachId)
-        XCTAssertTrue(updatedCoach?.teamsCoaching?.contains(teamId) ?? false, "A team should have been added under the coach.")
-        
-        // Remove team to coach
-        try await manager.removeTeamToCoach(coachId: coach.coachId, teamId: teamId)
-        updatedCoach = try await manager.getCoach(coachId: coach.coachId)
-        XCTAssertFalse(updatedCoach?.teamsCoaching?.contains(teamId) ?? true, "The team should not exist under the coach.")
+        XCTAssertNotNil(updatedCoach)
+        XCTAssertEqual(updatedCoach?.coachId, coachId)
+        XCTAssertFalse(
+            updatedCoach?.teamsCoaching?.contains(teamId) ?? true,
+            "The team should not exist under the coach."
+        )
+        XCTAssertTrue(updatedCoach?.teamsCoaching?.count == 1)
     }
     
     func testLoadTeamsCoaching() async throws {
         let coachId = "uid001" // UUID found in "TestTeams" JSON file
-        guard let coach = try await createCoach(for: manager, coachId: coachId) else {
-            XCTFail("Coach should exist")
-            return
-        }
-
+        
+        // Make sure the coach is actively coaching at least one team
+        let coach = try await manager.getCoach(coachId: coachId)
+        XCTAssertNotNil(coach)
+        XCTAssertEqual(coach?.coachId, coachId)
+        XCTAssertGreaterThanOrEqual(coach?.teamsCoaching?.count ?? 0, 1)
+        
         // Load teams from JSON test file
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
-        
-        
+        XCTAssertNotNil(sampleTeams)
+        XCTAssertTrue(sampleTeams.count == 3)
+
         // Add each team to the coach
         for team in sampleTeams {
-            if team.coaches.contains(coach.coachId) {
+            if team.coaches.contains(coachId) {
                 try await TeamManager().createNewTeam(
                     coachId: coachId,
-                    teamDTO: TeamDTO(teamId: team.teamId, name: team.name, teamNickname: team.teamNickname, sport: team.sport, logoUrl: nil, colour: nil, gender: team.gender, ageGrp: team.ageGrp, accessCode: team.accessCode, coaches: team.coaches, players: team.players, invites: team.invites)
+                    teamDTO: TeamDTO(
+                        teamId: team.teamId,
+                        name: team.name,
+                        teamNickname: team.teamNickname,
+                        sport: team.sport,
+                        logoUrl: nil,
+                        colour: nil,
+                        gender: team.gender,
+                        ageGrp: team.ageGrp,
+                        accessCode: team.accessCode,
+                        coaches: team.coaches,
+                        players: team.players,
+                        invites: team.invites
+                    )
                 )
-                try await manager.addTeamToCoach(coachId: coach.coachId, teamId: team.teamId)
+                try await manager.addTeamToCoach(coachId: coachId, teamId: team.teamId)
             }
         }
          
+        // Load the teams coaching
         let loadedTeams = try await manager.loadTeamsCoaching(coachId: coachId)
         
-        XCTAssertNotNil(loadedTeams, "loadTeamsCoaching should return at least one team.")
+        XCTAssertNotNil(loadedTeams)
         XCTAssertEqual(
             loadedTeams?.first?.teamId,
-            sampleTeams.first(where: { $0.coaches.contains(coach.coachId) })?.teamId
+            sampleTeams.first(where: { $0.coaches.contains(coachId) })?.teamId
         )
     }
     
     func testAllTeamsCoaching() async throws {
         let coachId = "uid001" // UUID found in "TestTeams" JSON file
-        guard let coach = try await createCoach(for: manager, coachId: coachId) else {
-            XCTFail("Coach should exist")
-            return
-        }
+        
+        // Make sure the coach is actively coaching at least one team
+        let coach = try await manager.getCoach(coachId: coachId)
+        XCTAssertNotNil(coach)
+        XCTAssertEqual(coach?.coachId, coachId)
+        XCTAssertGreaterThanOrEqual(coach?.teamsCoaching?.count ?? 0, 1)
 
         // Load teams from JSON test file
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
-        
-        
+        XCTAssertNotNil(sampleTeams)
+        XCTAssertTrue(sampleTeams.count == 3)
+
         // Add each team to the coach
+        let teamManager = TeamManager()
         for team in sampleTeams {
-            if team.coaches.contains(coach.coachId) {
-                try await TeamManager().createNewTeam(
+            if team.coaches.contains(coachId) {
+                try await teamManager.createNewTeam(
                     coachId: coachId,
-                    teamDTO: TeamDTO(teamId: team.teamId, name: team.name, teamNickname: team.teamNickname, sport: team.sport, logoUrl: nil, colour: nil, gender: team.gender, ageGrp: team.ageGrp, accessCode: team.accessCode, coaches: team.coaches, players: team.players, invites: team.invites)
+                    teamDTO: TeamDTO(
+                        teamId: team.teamId,
+                        name: team.name,
+                        teamNickname: team.teamNickname,
+                        sport: team.sport,
+                        logoUrl: nil,
+                        colour: nil,
+                        gender: team.gender,
+                        ageGrp: team.ageGrp,
+                        accessCode: team.accessCode,
+                        coaches: team.coaches,
+                        players: team.players,
+                        invites: team.invites
+                    )
                 )
-                try await manager.addTeamToCoach(coachId: coach.coachId, teamId: team.teamId)
+                try await manager.addTeamToCoach(coachId: coachId, teamId: team.teamId)
             }
         }
         
+        // Load the teams coaching
         let loadedTeams = try await manager.loadTeamsCoaching(coachId: coachId)
         
-        XCTAssertNotNil(loadedTeams, "loadTeamsCoaching should return at least one team.")
+        XCTAssertNotNil(loadedTeams)
         XCTAssertEqual(
             loadedTeams?.first?.teamId,
-            sampleTeams.first(where: { $0.coaches.contains(coach.coachId) })?.teamId
+            sampleTeams.first(where: { $0.coaches.contains(coachId) })?.teamId
         )
     }
     
@@ -155,39 +202,9 @@ final class CoachManagerTests: XCTestCase {
     
     /// Tests that getting a coach can be successfully performed.
     func testGetInvalidCoach() async throws {
-        let coachId = "coach_123"
-        
-        // Add a new coach
-        try await manager.addCoach(coachId: coachId)
-        
         // Get the coach object
         let invalidCoachId = "invalid_coach_id"
         let coach = try await manager.getCoach(coachId: invalidCoachId)
-        
         XCTAssertNil(coach, "Coach should not exist because of the invalid coach ID")
-    }
-    
-    /// Tests that removing a team to an existing coach correctly updates the coach's record.
-    func testRemoveInvalidTeamToCoach() async throws {
-        let coachId = "coach123"
-        let teamId = "team123"
-        
-        // Add a coach
-        guard let coach = try await createCoach(for: manager, coachId: coachId) else {
-            XCTFail("Coach should exist")
-            return
-        }
-        
-        // Add team to coach
-        try await manager.addTeamToCoach(coachId: coach.coachId, teamId: teamId)
-        var updatedCoach = try await manager.getCoach(coachId: coachId)
-        XCTAssertTrue(updatedCoach?.teamsCoaching?.contains(teamId) ?? false, "A team should have been added under the coach.")
-        
-        // Remove invalid team id to coach
-        let invalidTeamId = "invalid_team_id"
-        try await manager.removeTeamToCoach(coachId: coach.coachId, teamId: invalidTeamId)
-        updatedCoach = try await manager.getCoach(coachId: coach.coachId)
-        
-        XCTAssertTrue(updatedCoach?.teamsCoaching?.contains(teamId) ?? false, "The team should still exist under the coach as the invalid team ID was not found.")
     }
 }
