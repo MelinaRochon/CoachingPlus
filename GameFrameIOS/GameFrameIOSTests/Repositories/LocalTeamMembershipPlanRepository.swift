@@ -26,15 +26,20 @@ final class LocalTeamMembershipPlanRepository: TeamMembershipPlanRepository {
     }
     
     func updateMembershipPlan(teamId: String, planId: String, name: String?, price: Double?, benefits: [String]?, durationInMonths: Int?) async throws {
-        guard var membershipObj = try await getMembershipPlan(teamId: teamId, planId: planId) else {
-            print("Could not get membership object with id \(planId)")
-            return
-        }
-        
-        membershipObj.name = name ?? membershipObj.name
-        membershipObj.benefits = benefits ?? membershipObj.benefits
-        membershipObj.price = price ?? membershipObj.price
-        membershipObj.durationInMonths = durationInMonths ?? membershipObj.durationInMonths
+        // Find the index first so we can persist back into the array
+            guard let idx = teamMembershipPlans.firstIndex(where: { $0.teamId == teamId && $0.planId == planId }) else {
+                throw NSError(domain: "LocalTeamMembershipPlanRepository",
+                              code: 404,
+                              userInfo: [NSLocalizedDescriptionKey: "Membership plan not found"])
+            }
+
+            var plan = teamMembershipPlans[idx]
+            if let name { plan.name = name }
+            if let price { plan.price = price }
+            if let benefits { plan.benefits = benefits }
+            if let durationInMonths { plan.durationInMonths = durationInMonths }
+
+            teamMembershipPlans[idx] = plan
     }
     
     func removeMembershipPlan(teamId: String, planId: String) async throws {
