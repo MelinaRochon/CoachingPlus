@@ -39,7 +39,7 @@ final class CommentManagerTests: XCTestCase {
             createdAt: sampleComment.createdAt
         )
 
-        let comment = try await localRepo.addNewComment(teamDocId: teamDocId, commentDTO: dto)
+        let comment = try await manager.addNewComment(teamDocId: teamDocId, commentDTO: dto)
         XCTAssertNotNil(comment, "Comment should exist after being added")
     }
     
@@ -60,7 +60,7 @@ final class CommentManagerTests: XCTestCase {
 
         let id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto)
 
-        let c = try await localRepo.getComment(teamId: teamDocId, commentDocId: id)
+        let c = try await manager.getComment(teamId: teamDocId, commentDocId: id)
         XCTAssertNotNil(c)
         XCTAssertEqual(c?.comment, sampleComment.comment)
     }
@@ -92,7 +92,7 @@ final class CommentManagerTests: XCTestCase {
         let comment1_id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto1)
         let comment2_id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto2)
 
-        let tr = try await localRepo.getAllCommentsForSpecificKeyMomentId(teamId: teamDocId, keyMomentId: sampleComment2.keyMomentId)
+        let tr = try await manager.getAllCommentsForSpecificKeyMomentId(teamId: teamDocId, keyMomentId: sampleComment2.keyMomentId)
         XCTAssertEqual(tr?.count, 1)
         XCTAssertEqual(tr?.first?.commentId, comment2_id)
     }
@@ -125,7 +125,7 @@ final class CommentManagerTests: XCTestCase {
         let comment1_id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto1)
         let comment2_id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto2)
 
-        let tr = try await localRepo.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: sampleComment1.transcriptId)
+        let tr = try await manager.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: sampleComment1.transcriptId)
         XCTAssertEqual(tr?.count, 1)
         XCTAssertEqual(tr?.first?.commentId, comment1_id)
     }
@@ -150,13 +150,13 @@ final class CommentManagerTests: XCTestCase {
         let id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto)
         
         do {
-            let beforeAll = try await localRepo.getAllComments(teamId: teamDocId) ?? []
+            let beforeAll = try await manager.getAllComments(teamId: teamDocId) ?? []
             XCTAssertTrue(beforeAll.contains { $0.commentId == id })
         }
 
-        try await localRepo.removeComment(teamId: teamDocId, commentId: id)
+        try await manager.removeComment(teamId: teamDocId, commentId: id)
 
-        let all = try await localRepo.getAllComments(teamId: teamDocId) ?? []
+        let all = try await manager.getAllComments(teamId: teamDocId) ?? []
         XCTAssertFalse(all.contains { $0.commentId == id })
     }
 
