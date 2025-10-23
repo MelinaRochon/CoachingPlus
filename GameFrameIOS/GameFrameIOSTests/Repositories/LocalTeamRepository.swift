@@ -48,6 +48,13 @@ final class LocalTeamRepository: TeamRepository {
         return teams.first(where: { $0.accessCode == accessCode })
     }
     
+    /// Retrieves all teams coached by a given coach (by coach uid).
+    /// - Parameter coachId: The ID of the coach to add.
+    /// - Returns: A `DBTeam` if found, otherwise `nil`.
+    func getTeamsWithCoach(coachId: String) async throws -> [DBTeam] {
+        teams.filter { $0.coaches.contains(coachId) }
+    }
+    
     
     /// Retrieves the name of a team by its ID.
     /// - Parameter teamId: The unique identifier of the team.

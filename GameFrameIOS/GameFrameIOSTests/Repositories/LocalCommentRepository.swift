@@ -10,6 +10,7 @@ import Foundation
 
 final class LocalCommentRepository: CommentRepository {
     private var comments: [DBComment] = []
+    private var store: [String: [DBComment]] = [:]
     
     /// Retrieves a specific comment by its document ID for a given team.
     /// - Parameters:
@@ -29,9 +30,8 @@ final class LocalCommentRepository: CommentRepository {
     /// - Throws: An error if the retrieval fails.
     func getAllComments(teamId: String) async throws -> [DBComment]? {
         // Filter the local array for comments belonging to the specified team
-//       let teamComments = comments.filter { $0.teamId == teamId }
-//       return teamComments.isEmpty ? nil : teamComments
-        return comments
+        // Since DBComment has no teamId field, simply return comments
+        return comments.isEmpty ? nil : comments
     }
 
     
@@ -67,14 +67,14 @@ final class LocalCommentRepository: CommentRepository {
     ///   - teamDocId: The Firestore document ID of the team.
     ///   - commentDTO: A data transfer object containing the comment details to be added.
     /// - Throws: An error if adding the comment fails.
-    func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
-        // Create a DBComment from the DTO
-        let newComment = DBComment(commentId: UUID().uuidString, commentDTO: commentDTO)
-        
-        // Add to local array
-        comments.append(newComment)
-
-    }
+//    func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
+//        // Create a DBComment from the DTO
+//        let newComment = DBComment(commentId: UUID().uuidString, commentDTO: commentDTO)
+//        
+//        // Add to local array
+//        comments.append(newComment)
+//
+//    }
 
     
     /// Removes a comment from a team's collection.
@@ -88,6 +88,18 @@ final class LocalCommentRepository: CommentRepository {
             return
         }
         comments.remove(at: index)
+    }
+    
+    
+    @discardableResult
+    func addNewCommentReturningId(teamDocId: String, commentDTO: CommentDTO) async throws -> String {
+        let id = UUID().uuidString
+        comments.append(DBComment(commentId: id, commentDTO: commentDTO))
+        return id
+    }
+
+    func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
+        _ = try await addNewCommentReturningId(teamDocId: teamDocId, commentDTO: commentDTO)
     }
 
 }
