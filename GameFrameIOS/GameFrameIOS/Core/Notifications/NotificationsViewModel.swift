@@ -25,7 +25,7 @@ final class NotificationsViewModel: ObservableObject {
     init(
         loadTeamsOwnedByCoach: @escaping (_ coachId: String) async throws -> [DBTeam] = { coachId in
             // Default: call your concrete manager directly
-            try await TeamManager().getTeamsOwnedByCoach(coachId: coachId)
+            try await TeamManager().getTeamsWithCoach(coachId: coachId)
         },
         fetchRecentCommentsForTeams: @escaping (_ teamDocIds: [String], _ since: Date) async throws -> [DBComment] = { teamDocIds, since in
             // Default: use the Firestore repository directly

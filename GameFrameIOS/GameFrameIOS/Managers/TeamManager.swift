@@ -58,7 +58,7 @@ final class TeamManager {
        return try await repo.getTeamName(teamId: teamId)
     }
     
-    func getTeamsOwnedByCoach(coachId: String) async throws -> [DBTeam] {
+    func getTeamsWithCoach(coachId: String) async throws -> [DBTeam] {
         try await repo.getTeamsWithCoach(coachId: coachId)
         // or: try await repo.getTeamsSubcollection(forCoach: coachId)
     }

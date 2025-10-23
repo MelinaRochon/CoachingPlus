@@ -10,9 +10,13 @@ import Foundation
 
 final class LocalTeamRepository: TeamRepository {
 
+    private var teams: [DBTeam]
     
-    private var teams: [DBTeam] = []
-    
+    init(teams: [DBTeam]? = nil) {
+        // If no teams provided, fallback to default JSON
+        self.teams = teams ?? TestDataLoader.load("TestTeams", as: [DBTeam].self)
+    }
+
     /// Retrieves a team by its team ID.
     /// - Parameter teamId: The team’s unique identifier.
     /// - Returns: A `DBTeam` object if found, otherwise `nil`.
@@ -189,9 +193,14 @@ final class LocalTeamRepository: TeamRepository {
         // Access the team object
         var team = teams[index]
         
-        // Add the invite if not already present
+        // Initialize invites array if nil
+        if team.invites == nil {
+            team.invites = []
+        }
+        
+        // Add the invite only if not already in the list
         if !team.invites!.contains(inviteDocId) {
-            team.invites?.append(inviteDocId)
+            team.invites!.append(inviteDocId)
             teams[index] = team
             print("✅ Invite \(inviteDocId) added to team \(id)")
         } else {
@@ -281,7 +290,7 @@ final class LocalTeamRepository: TeamRepository {
     /// - Returns: `true` if the team exists, otherwise `false`.
     func doesTeamExist(teamId: String) async throws -> Bool {
         // Look for a team in the local teams array that matches the provided teamId
-        return teams.contains { $0.id == teamId }
+        return teams.contains { $0.teamId == teamId }
     }
     
     
