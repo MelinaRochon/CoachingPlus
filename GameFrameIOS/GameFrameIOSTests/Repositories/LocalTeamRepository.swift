@@ -223,10 +223,6 @@ final class LocalTeamRepository: TeamRepository {
         return nil
     }
     
-    func getTeamsWithCoach(coachId: String) async throws -> [GameFrameIOS.DBTeam] {        
-        return teams.filter { $0.coaches.contains(coachId) }
-    }
-    
     
     /// Removes an invite document from a team.
     /// - Parameters:
