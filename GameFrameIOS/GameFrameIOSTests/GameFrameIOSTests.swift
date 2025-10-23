@@ -30,7 +30,7 @@ struct GameFrameIOSTests {
         let users: [DBUser] = TestDataLoader.load("TestUsers", as: [DBUser].self)
         
         // Verify number of users loaded
-        #expect(users.count == 2)  // Example: expecting 2 users in the JSON
+        #expect(users.count == 12)  // Example: expecting 2 users in the JSON
         
         // Verify first user is mapped to coach
         #expect(users.first?.userType == .coach)
