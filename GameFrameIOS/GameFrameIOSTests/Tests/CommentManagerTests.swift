@@ -26,14 +26,17 @@ final class CommentManagerTests: XCTestCase {
 
     func testAddNewComment() async throws {
         let teamDocId = "test"
+        
+        let sampleComments: [DBComment] = TestDataLoader.load("TestComments", as: [DBComment].self)
+        guard let sampleComment = sampleComments.first else { return }
 
         let dto = CommentDTO(
-            keyMomentId: "KM050",
-            gameId: "G050",
-            transcriptId: "T050",
-            uploadedBy: "uid999",
-            comment: "New test comment",
-            createdAt: ISO8601DateFormatter().date(from: "2025-11-20T12:00:00Z")!
+            keyMomentId: sampleComment.keyMomentId,
+            gameId: sampleComment.gameId,
+            transcriptId: sampleComment.transcriptId,
+            uploadedBy: sampleComment.uploadedBy,
+            comment: sampleComment.comment,
+            createdAt: sampleComment.createdAt
         )
 
         let comment = try await localRepo.addNewComment(teamDocId: teamDocId, commentDTO: dto)
@@ -42,47 +45,54 @@ final class CommentManagerTests: XCTestCase {
     
     func testGetComment() async throws {
         let teamDocId = "test"
+        
+        let sampleComments: [DBComment] = TestDataLoader.load("TestComments", as: [DBComment].self)
+        guard let sampleComment = sampleComments.first else { return }
 
         let dto = CommentDTO(
-            keyMomentId: "KM017",
-            gameId: "G004",
-            transcriptId: "T017",
-            uploadedBy: "uid004",
-            comment: "Patrick, take the time to look at this key moment.",
-            createdAt: ISO8601DateFormatter().date(from: "2025-11-20T12:00:00Z")!
+            keyMomentId: sampleComment.keyMomentId,
+            gameId: sampleComment.gameId,
+            transcriptId: sampleComment.transcriptId,
+            uploadedBy: sampleComment.uploadedBy,
+            comment: sampleComment.comment,
+            createdAt: sampleComment.createdAt
         )
 
         let id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto)
 
         let c = try await localRepo.getComment(teamId: teamDocId, commentDocId: id)
         XCTAssertNotNil(c)
-        XCTAssertEqual(c?.comment, "Patrick, take the time to look at this key moment.")
+        XCTAssertEqual(c?.comment, sampleComment.comment)
     }
 
     func testFilterByKeyMoment() async throws {
         let teamDocId = "test"
+        
+        let sampleComments: [DBComment] = TestDataLoader.load("TestComments", as: [DBComment].self)
+        guard let sampleComment1 = sampleComments.first else { return }
+        guard let sampleComment2 = sampleComments.last else { return }
 
         let dto1 = CommentDTO(
-            keyMomentId: "KM023",
-            gameId: "G005",
-            transcriptId: "T023",
-            uploadedBy: "uid006",
-            comment: "Coach, where should I aim to shoot next time?",
-            createdAt: ISO8601DateFormatter().date(from: "2025-11-20T12:00:00Z")!
+            keyMomentId: sampleComment1.keyMomentId,
+            gameId: sampleComment1.gameId,
+            transcriptId: sampleComment1.transcriptId,
+            uploadedBy: sampleComment1.uploadedBy,
+            comment: sampleComment1.comment,
+            createdAt: sampleComment1.createdAt
         )
         let dto2 = CommentDTO(
-            keyMomentId: "KM031",
-            gameId: "G007",
-            transcriptId: "T031",
-            uploadedBy: "uid009",
-            comment: "I noticed I was not well positioned. Coach, where can I be next time to help with the attack when it's a corner kick?",
-            createdAt: ISO8601DateFormatter().date(from: "2025-11-20T12:00:00Z")!
+            keyMomentId: sampleComment2.keyMomentId,
+            gameId: sampleComment2.gameId,
+            transcriptId: sampleComment2.transcriptId,
+            uploadedBy: sampleComment2.uploadedBy,
+            comment: sampleComment2.comment,
+            createdAt: sampleComment2.createdAt
         )
 
         let comment1_id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto1)
         let comment2_id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto2)
 
-        let tr = try await localRepo.getAllCommentsForSpecificKeyMomentId(teamId: teamDocId, keyMomentId: "KM031")
+        let tr = try await localRepo.getAllCommentsForSpecificKeyMomentId(teamId: teamDocId, keyMomentId: sampleComment2.keyMomentId)
         XCTAssertEqual(tr?.count, 1)
         XCTAssertEqual(tr?.first?.commentId, comment2_id)
     }
@@ -91,27 +101,31 @@ final class CommentManagerTests: XCTestCase {
     func testFilterByTranscript() async throws {
         let teamDocId = "test"
 
+        let sampleComments: [DBComment] = TestDataLoader.load("TestComments", as: [DBComment].self)
+        guard let sampleComment1 = sampleComments.first else { return }
+        guard let sampleComment2 = sampleComments.last else { return }
+
         let dto1 = CommentDTO(
-            keyMomentId: "KM023",
-            gameId: "G005",
-            transcriptId: "T023",
-            uploadedBy: "uid006",
-            comment: "Coach, where should I aim to shoot next time?",
-            createdAt: ISO8601DateFormatter().date(from: "2025-11-20T12:00:00Z")!
+            keyMomentId: sampleComment1.keyMomentId,
+            gameId: sampleComment1.gameId,
+            transcriptId: sampleComment1.transcriptId,
+            uploadedBy: sampleComment1.uploadedBy,
+            comment: sampleComment1.comment,
+            createdAt: sampleComment1.createdAt
         )
         let dto2 = CommentDTO(
-            keyMomentId: "KM031",
-            gameId: "G007",
-            transcriptId: "T031",
-            uploadedBy: "uid009",
-            comment: "I noticed I was not well positioned. Coach, where can I be next time to help with the attack when it's a corner kick?",
-            createdAt: ISO8601DateFormatter().date(from: "2025-11-20T12:00:00Z")!
+            keyMomentId: sampleComment2.keyMomentId,
+            gameId: sampleComment2.gameId,
+            transcriptId: sampleComment2.transcriptId,
+            uploadedBy: sampleComment2.uploadedBy,
+            comment: sampleComment2.comment,
+            createdAt: sampleComment2.createdAt
         )
 
         let comment1_id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto1)
         let comment2_id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto2)
 
-        let tr = try await localRepo.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: "T023")
+        let tr = try await localRepo.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: sampleComment1.transcriptId)
         XCTAssertEqual(tr?.count, 1)
         XCTAssertEqual(tr?.first?.commentId, comment1_id)
     }
@@ -120,14 +134,17 @@ final class CommentManagerTests: XCTestCase {
 
     func testRemoveComment() async throws {
         let teamDocId = "test"
+        
+        let sampleComments: [DBComment] = TestDataLoader.load("TestComments", as: [DBComment].self)
+        guard let sampleComment = sampleComments.first else { return }
 
         let dto = CommentDTO(
-            keyMomentId: "T049",
-            gameId: "G010",
-            transcriptId: "T049",
-            uploadedBy: "uid001",
-            comment: "Mason make sure to look at this key moment as it happens often.",
-            createdAt: ISO8601DateFormatter().date(from: "2025-11-20T12:00:00Z")!
+            keyMomentId: sampleComment.keyMomentId,
+            gameId: sampleComment.gameId,
+            transcriptId: sampleComment.transcriptId,
+            uploadedBy: sampleComment.uploadedBy,
+            comment: sampleComment.comment,
+            createdAt: sampleComment.createdAt
         )
 
         let id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto)
