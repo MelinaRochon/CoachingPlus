@@ -14,7 +14,11 @@ final class LocalFullGameRecordingRepository: FullGameVideoRecordingRepository {
     
     /// Stores all full game video recordings locally in memory
     private var fullGameRecording: [DBFullGameVideoRecording] = []
-
+    
+    init(fg_recording: [DBFullGameVideoRecording]? = nil) {
+        // If no teams provided, fallback to default JSON
+        self.fullGameRecording = fg_recording ?? TestDataLoader.load("TestFullGameRecordings", as: [DBFullGameVideoRecording].self)
+    }
     
     /// Retrieves a full game video recording by its ID.
     /// - Parameters:
