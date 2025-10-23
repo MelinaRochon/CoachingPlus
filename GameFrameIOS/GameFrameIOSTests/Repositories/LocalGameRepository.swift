@@ -15,6 +15,11 @@ final class LocalGameRepository: GameRepository {
     /// In-memory storage for all games.
     private var games: [DBGame] = []
     
+    init(games: [DBGame]? = nil) {
+        // If no teams provided, fallback to default JSON
+        self.games = games ?? TestDataLoader.load("TestGames", as: [DBGame].self)
+    }
+
     /// Retrieves a specific game matching the given `gameId` and `teamId`.
     /// - Parameters:
     ///   - gameId: The ID of the game to retrieve.
@@ -37,7 +42,8 @@ final class LocalGameRepository: GameRepository {
     /// Deletes all games for a given team from local memory.
     /// - Parameter teamDocId: The document ID of the team whose games should be deleted.
     func deleteAllGames(teamDocId: String) async throws {
-        return games.removeAll()
+        let team = try await TeamManager().getTeamWithDocId(docId: teamDocId)
+        return games.removeAll(where: { $0.teamId == team.teamId })
     }
     
     /// Fetches all locally stored games for a given team.
@@ -114,15 +120,30 @@ final class LocalGameRepository: GameRepository {
         scheduledTimeReminder: Int?
     ) async throws {
         if let index = games.firstIndex(where: { $0.gameId == id }) {
-            var game = games[index]
-            game.title = title ?? ""
-            game.startTime = startTime
-            game.duration = duration ?? 0
-            game.timeBeforeFeedback = timeBeforeFeedback ?? 10
-            game.timeAfterFeedback = timeAfterFeedback ?? 10
-            game.recordingReminder = recordingReminder ?? false
-            game.location = location
-            game.scheduledTimeReminder = scheduledTimeReminder ?? 0
+            if let title = title {
+                games[index].title = title
+            }
+            if let startTime = startTime {
+                games[index].startTime = startTime
+            }
+            if let duration = duration {
+                games[index].duration = duration
+            }
+            if let timeBeforeFeedback = timeBeforeFeedback {
+                games[index].timeBeforeFeedback = timeBeforeFeedback
+            }
+            if let timeAfterFeedback = timeAfterFeedback {
+                games[index].timeAfterFeedback = timeAfterFeedback
+            }
+            if let recordingReminder = recordingReminder {
+                games[index].recordingReminder = recordingReminder
+            }
+            if let location = location {
+                games[index].location = location
+            }
+            if let scheduledTimeReminder = scheduledTimeReminder {
+                games[index].scheduledTimeReminder = scheduledTimeReminder
+            }
         }
     }
     
