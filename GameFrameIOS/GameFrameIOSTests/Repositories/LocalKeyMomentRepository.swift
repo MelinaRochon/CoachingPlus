@@ -12,7 +12,19 @@ final class LocalKeyMomentRepository: KeyMomentRepository {
     
     private var keyMoments: [DBKeyMoment] = []
     private var transcripts: [DBTranscript] = []
+
+    init(keyMoments: [DBKeyMoment]? = nil) {
+        // If no teams provided, fallback to default JSON
+        self.keyMoments = keyMoments ?? TestDataLoader.load("TestKeyMoments", as: [DBKeyMoment].self)
+    }
     
+    #if DEBUG
+    /// Test-only: seed transcripts when a test needs them.
+    func seedTranscripts(_ items: [DBTranscript]) {
+        self.transcripts = items
+    }
+    #endif
+
     /// Retrieves a specific key moment by its ID for the given team and game.
     /// - Parameters:
     ///   - teamId: The unique identifier of the team.
@@ -32,19 +44,23 @@ final class LocalKeyMomentRepository: KeyMomentRepository {
     ///   - playerId: The Firestore document ID of the player being assigned.
     /// - Throws: An error if the assignment process fails.
     func assignPlayerToKeyMomentsForEntireTeam(teamDocId: String, gameId: String, playersCount: Int, playerId: String) async throws {
-        var keyMoments = keyMoments.filter { $0.gameId == gameId && $0.feedbackFor?.count ?? 0 == playersCount }
-        
-        guard !keyMoments.isEmpty else {
+        // Find the indices to mutate in-place
+        let targetIndices = keyMoments.indices.filter {
+            keyMoments[$0].gameId == gameId && (keyMoments[$0].feedbackFor?.count ?? 0) == playersCount
+        }
+
+        guard !targetIndices.isEmpty else {
             throw NSError(domain: "KeyMomentRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "No key moments found."])
         }
-        
-        for (index, moment) in keyMoments.enumerated() {
-            var tmpKeyMoment = moment
-            if !tmpKeyMoment.feedbackFor!.isEmpty {
-                tmpKeyMoment.feedbackFor!.append(playerId)
+
+        for idx in targetIndices {
+            var km = keyMoments[idx]
+            var feedback = km.feedbackFor ?? []
+            if !feedback.contains(playerId) {
+                feedback.append(playerId)
+                km.feedbackFor = feedback
+                keyMoments[idx] = km
             }
-            
-            keyMoments[index] = tmpKeyMoment
         }
     }
     
@@ -99,29 +115,43 @@ final class LocalKeyMomentRepository: KeyMomentRepository {
     }
     
     func deleteAllKeyMoments(teamDocId: String, gameId: String) async throws {
-        var keyMoments = keyMoments.filter( {$0.gameId == gameId} )
-        
-        if keyMoments.isEmpty {
+        let before = keyMoments.count
+
+        // remove from the stored array in-place
+        keyMoments.removeAll { $0.gameId == gameId /* && $0.teamId == teamDocId (if you have one) */ }
+
+        if before == keyMoments.count {
             print("Could not find any key moments to be deleted for gameId: \(gameId)")
-            return
         }
-        
-        // Remove all key moments from the local list
-        keyMoments.removeAll()
     }
     
     func updateFeedbackFor(transcriptId: String, gameId: String, teamId: String, teamDocId: String, feedbackFor: [PlayerNameAndPhoto]) async throws {
-        guard var transcript = transcripts.first(where: { $0.transcriptId == transcriptId && $0.gameId == gameId }) else {
-            print("Transcript not found with id: \(transcriptId)")
-            return
-        }
-                
-        guard var keyMomentsToUpdate = keyMoments.first(where: { $0.gameId == gameId && $0.keyMomentId == transcript.keyMomentId }) else {
-            print("Key moment not found with id: \(transcript.keyMomentId)")
-            return
-        }
-        for player in feedbackFor {
-            keyMomentsToUpdate.feedbackFor?.append(player.playerId)
-        }
+        // Find the transcript first
+            guard let tr = transcripts.first(where: { $0.transcriptId == transcriptId && $0.gameId == gameId }) else {
+                print("Transcript not found with id: \(transcriptId)")
+                return
+            }
+
+            // Find the index of the key moment we need to update
+            guard let idx = keyMoments.firstIndex(where: { $0.gameId == gameId && $0.keyMomentId == tr.keyMomentId }) else {
+                print("Key moment not found with id: \(tr.keyMomentId)")
+                return
+            }
+
+            // Copy–modify–write-back
+            var km = keyMoments[idx]
+
+            // Start from existing recipients (could be nil)
+            var recipients = Set(km.feedbackFor ?? [])
+
+            // Add new players (deduped)
+            for p in feedbackFor {
+                recipients.insert(p.playerId)
+            }
+
+            km.feedbackFor = Array(recipients)
+
+            // Persist the change back into the repository storage
+            keyMoments[idx] = km
     }
 }
