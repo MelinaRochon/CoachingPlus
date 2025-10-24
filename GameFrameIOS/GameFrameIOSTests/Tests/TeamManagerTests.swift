@@ -156,7 +156,10 @@ final class TeamManagerTests: XCTestCase {
         XCTAssertNotNil(updatedTeam)
         XCTAssertEqual(updatedTeam.id, teamDocId)
         XCTAssertEqual(updatedTeam.players?.count, 1, "Player count should be equal to 1")
-        XCTAssertFalse(updatedTeam.players?.contains(playerId) ?? false, "Player ID should not be present in the team roster")
+        XCTAssertFalse(
+            updatedTeam.players?.contains(playerId) ?? false,
+            "Player ID should not be present in the team roster"
+        )
     }
     
     func testAddCoachToTeam() async throws {
