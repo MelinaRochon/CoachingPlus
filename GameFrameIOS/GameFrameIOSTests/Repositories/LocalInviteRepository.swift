@@ -11,6 +11,11 @@ import Foundation
 final class LocalInviteRepository: InviteRepository {
     private var invites: [DBInvite] = []
     
+    init(invites: [DBInvite]? = nil) {
+        // If no teams provided, fallback to default JSON
+        self.invites = invites ?? TestDataLoader.load("TestInvites", as: [DBInvite].self)
+    }
+    
     /// Creates a new invite document in the database.
     /// - Parameter inviteDTO: A data transfer object containing the invite details to be saved.
     /// - Returns: The Firestore document ID of the newly created invite.
