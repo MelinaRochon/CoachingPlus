@@ -15,6 +15,12 @@ final class LocalUserRepository: UserRepository {
     /// Local in-memory storage for users, keyed by document ID
     private var users: [DBUser] = []
     
+    init(users: [DBUser]? = nil) {
+        // If no coach provided, fallback to default JSON
+        self.users = users ?? TestDataLoader.load("TestUsers", as: [DBUser].self)
+    }
+
+    
     func getUserType() async throws -> UserType {
         // Return type of the first user if available (for test purposes)
         return users.first?.userType ?? .player
