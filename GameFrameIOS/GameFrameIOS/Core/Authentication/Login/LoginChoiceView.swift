@@ -39,6 +39,7 @@ struct LoginChoiceView: View {
                                     .background(Color.black)
                                     .foregroundColor(.white)
                                     .clipShape(Capsule())
+                                    .accessibilityIdentifier("loginAsCoachButton")
                             }
                             
                             // Navigation link for "Player" selection
@@ -50,6 +51,7 @@ struct LoginChoiceView: View {
                                     .background(Color.black)
                                     .foregroundColor(.white)
                                     .clipShape(Capsule())
+                                    .accessibilityIdentifier("loginAsPlayerButton")
                             }
                         }
                     }

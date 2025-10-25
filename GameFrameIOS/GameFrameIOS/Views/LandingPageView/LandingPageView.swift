@@ -32,17 +32,21 @@ struct LandingPageView: View {
                         Text("GameFrame")
                             .font(.title)
                             .fontWeight(.bold)
+                            .accessibilityIdentifier("gameframeWelcomeLabel")
                         
                         Text("leveling up your game")
                             .font(.subheadline)
                             .foregroundColor(.gray)
+                            .accessibilityIdentifier("gameframeSloganLabel")
                     }
                     
                     Spacer()
                     
                     NavigationLink(destination: LoginChoiceView(showSignInView: $showSignInView)){
                         HStack {
-                            Text("Log in").foregroundColor(.gray)
+                            Text("Log in")
+                                .foregroundColor(.gray)
+                                .accessibilityIdentifier("loginButton")
                             
                             Image(systemName: "person.circle")
                                 .resizable()
@@ -70,6 +74,7 @@ struct LandingPageView: View {
                         }
                         .padding(.horizontal)
                     }
+                    .accessibilityIdentifier("aboutPageNavLink")
                     
                     Rectangle()
                         .fill(Color.gray.opacity(0.3))
@@ -126,6 +131,7 @@ struct LandingPageView: View {
                                 .foregroundColor(.gray)
                         }
                     }
+                    .accessibilityIdentifier("pricingNavLink")
                 }
             }
             }.frame(maxWidth: .infinity)

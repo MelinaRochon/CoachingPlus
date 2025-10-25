@@ -28,18 +28,14 @@ struct RootView: View {
         }
         .onAppear {
             // Check if the user is authenticated when the view appears
-            let authUser = try? AuthenticationManager.shared.getAuthenticatedUser()
-            // Set the sign-in view state based on user authentication status
-            self.showSignInView = authUser == nil
-//            
-//            Task {
-//                do {
-//                    try await endRecording()
-//                    
-//                } catch {
-//                    print("\(error)")
-//                }
-//            }
+            if CommandLine.arguments.contains("RESET_DATA") {
+                // For UI testing, always start with reset_data
+                self.showSignInView = true
+            } else {
+                let authUser = try? AuthenticationManager.shared.getAuthenticatedUser()
+                // Set the sign-in view state based on user authentication status
+                self.showSignInView = authUser == nil
+            }
         }
         // Show full-screen cover for landing page if the user is not authenticated
         .fullScreenCover(isPresented: $showSignInView) {
@@ -49,58 +45,6 @@ struct RootView: View {
             }.tint(.red)
         }
     }
-    
-//    private func endRecording() async throws {
-////        let audioURL = URL(fileURLWithPath: "/Users/melina_rochon/Library/Developer/CoreSimulator/Devices/FA1F232C-56E4-4236-B408-CDDF90C3F447/data/Containers/Data/Application/55697331-1F14-4225-82C3-7A2F203DDB43/Documents/\("test29").m4a")
-//        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-//
-//        let audioFilename = "test29.m4a"
-//
-//        // Construct the full local file URL
-//        let localURL = documentsPath.appendingPathComponent(audioFilename)
-//
-//        uploadAudioFile(localFile: localURL, fileName: "coach_feedback_test.m4a") { result in
-//            switch result {
-//            case .success(let url):
-//                print("Audio uploaded! File available at: \(url)")
-//            case .failure(let error):
-//                print("Upload failed: \(error.localizedDescription)")
-//            }
-//        }
-//
-//    }
-//    
-//    func uploadAudioFile(localFile: URL, fileName: String, completion: @escaping (Result<URL, Error>) -> Void) {
-//        // 1. Create a reference to the location in Firebase Storage
-////        let storageRef = Storage.storage().reference().child("audio/\(fileName)")
-//        
-//        let fileName = "\(UUID().uuidString).m4a"
-//        let path = "audio/\(teamId)/\(gameId/)/\(keyMomentId)/\(fileName)"
-//        let audioRef = StorageManager.shared.storage.child(path)
-//
-////        let bucket = "gs://gameframe-4ea7d.firebasestorage.app"
-////        let storagePath = "\(bucket)/audio/\(fileName)"
-//        
-//        // 2. Upload the file
-//        let uploadTask = audioRef.putFile(from: localFile, metadata: nil) { metadata, error in
-//            if let error = error {
-//                completion(.failure(error))
-//                return
-//            }
-//
-//            // 3. Once uploaded, get the download URL
-//            audioRef.downloadURL { url, error in
-//                if let error = error {
-//                    completion(.failure(error))
-//                    return
-//                }
-//
-//                if let downloadURL = url {
-//                    completion(.success(downloadURL))
-//                }
-//            }
-//        }
-//    }
 }
 
 #Preview {

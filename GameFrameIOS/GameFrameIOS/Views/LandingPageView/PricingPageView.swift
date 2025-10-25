@@ -33,10 +33,12 @@ struct PricingPageView: View {
                                 Text("View our plans!")
                                     .font(.title2)
                                     .fontWeight(.bold)
+                                    .accessibilityIdentifier("pricingPage.title")
                                 HStack(spacing: 10) {
-                                    pricingButton(title: "Free", description: "Limited features, no cost!")
-                                    pricingButton(title: "Plus", description: "More features for personal use!")
-                                    pricingButton(title: "Premium", description: "Best for teams and professionals!")
+                                    ForEach(PricingPlan.allCases, id: \.self) { plan in
+                                        pricingButton(title: plan.rawValue, description: plan.description)
+                                            .accessibilityIdentifier(plan.accessibilityId)
+                                    }
                                 }
                             }
                             .padding()
@@ -49,6 +51,7 @@ struct PricingPageView: View {
                         .cornerRadius(10)
                         .padding(.horizontal, 20)
                         .multilineTextAlignment(.center)
+                        .accessibilityIdentifier("pricing.selectedPlan.label")
                 }
             }
         }

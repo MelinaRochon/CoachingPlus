@@ -108,3 +108,24 @@ enum TranscriptTypeEnum {
     case keyMoment
     case fullGame
 }
+
+enum PricingPlan: String, CaseIterable {
+    case free = "Free"
+    case plus = "Plus"
+    case premium = "Premium"
+    
+    public var description: String {
+        switch self {
+        case .free:
+            return "Limited features, no cost!"
+        case .plus:
+            return "More features for personal use!"
+        case .premium:
+            return "Best for teams and professionals!"
+        }
+    }
+    
+    public var accessibilityId: String {
+        "pricing.plan.\(self.rawValue.lowercased()).btn"
+    }
+}

@@ -29,6 +29,7 @@ struct AboutPageView: View {
                     Text("Hey there!")
                         .font(.title2)
                         .fontWeight(.bold)
+                        .accessibilityIdentifier("aboutPage.welcomeMessage")
                     
                     Text("About us...")
                         .font(.subheadline)
