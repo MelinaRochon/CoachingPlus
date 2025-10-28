@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  `AllRecentFootageView` displays all previously recorded game footage for coaches.
@@ -40,7 +41,6 @@ struct AllRecentFootageView: View {
     // MARK: - View
     
     var body: some View {
-//        NavigationStack {
         List  {
             Section {
                 if !pastGames.isEmpty {
@@ -83,7 +83,6 @@ struct AllRecentFootageView: View {
         .onAppear {
             self.filteredGames = pastGames
         }
-//        }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)
         }

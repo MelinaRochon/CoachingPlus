@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  `AllScheduledGamesView` displays all scheduled games added by the coach.

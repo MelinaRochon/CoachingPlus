@@ -16,7 +16,9 @@ struct CoachCreateAccountView: View {
     
     /// View model for handling user authentication and account creation.
     @StateObject private var viewModel = AuthenticationModel()
-    
+
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// A binding boolean to control whether to show the sign-in view.
     @Binding var showSignInView: Bool
     
@@ -26,6 +28,9 @@ struct CoachCreateAccountView: View {
     /// A boolean to control whether the user is redirected to Login.
     @State private var errorGoToLogin: Bool = false
     
+    // Detect if the app is running in UI test mode
+    private let isUITest = ProcessInfo.processInfo.arguments.contains("UI_TEST_MODE")
+        
     // MARK: - View
 
     var body: some View {
@@ -36,6 +41,7 @@ struct CoachCreateAccountView: View {
                     VStack(spacing: 5) {
                         Text("Hey Coach!")
                             .font(.title3).bold()
+                            .accessibilityIdentifier("page.signup.coach.title")
                         
                         // Text link to navigate to the login screen
                         HStack {
@@ -54,10 +60,12 @@ struct CoachCreateAccountView: View {
                         // First Name Text Field
                         CustomUIFields.customTextField("First Name", text: $viewModel.firstName)
                             .autocorrectionDisabled(true)
+                            .accessibilityIdentifier("page.signup.coach.firstName")
 
                         // Last Name Text Field
                         CustomUIFields.customTextField("Last Name", text: $viewModel.lastName)
                             .autocorrectionDisabled(true)
+                            .accessibilityIdentifier("page.signup.coach.lastName")
 
                         // Date Picker Styled Like Other Fields
                         HStack {
@@ -88,6 +96,7 @@ struct CoachCreateAccountView: View {
                                 // Formats the phone number when it changes
                                 viewModel.phone = formatPhoneNumber(newVal)
                             }
+                            .accessibilityIdentifier("page.signup.coach.phone")
                         
                         // Country Picker
                         HStack {
@@ -98,6 +107,7 @@ struct CoachCreateAccountView: View {
                                     Text(c).tag(c)
                                 }
                             }
+                            .accessibilityIdentifier("page.signup.coach.country")
                         }
                         .frame(height: 45)
                         .pickerStyle(.automatic)
@@ -112,9 +122,20 @@ struct CoachCreateAccountView: View {
                             .autocapitalization(.none)
                             .autocorrectionDisabled(true)
                             .keyboardType(.emailAddress) // Shows email-specific keyboard
+                            .accessibilityIdentifier("page.signup.coach.email")
 
                         // Password Field with Eye Toggle
-                        CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
+                        Group {
+                            if isUITest {
+                                CustomUIFields.customTextField("Password", text: $viewModel.password)
+                                    .accessibilityIdentifier("page.signup.coach.password")
+                                    .textInputAutocapitalization(.never)
+                                    .disableAutocorrection(true)
+                            } else {
+                                CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
+                                    .accessibilityIdentifier("page.signup.coach.password")
+                            }
+                        }
                     }
                     .padding(.horizontal)
                     
@@ -145,6 +166,7 @@ struct CoachCreateAccountView: View {
                     }
                     .disabled(!signUpIsValid)
                     .opacity(signUpIsValid ? 1.0 : 0.5)
+                    .accessibilityIdentifier("page.signup.coach.createAccountBtn")
                     
                     Spacer()
                 }.alert("Account exists", isPresented: $showErrorAlert){
@@ -163,6 +185,10 @@ struct CoachCreateAccountView: View {
                 .navigationDestination(isPresented: $errorGoToLogin) {
                     CoachLoginView(showSignInView: $showSignInView)
                 }
+                .scrollContentBackground(.hidden)
+            }
+            .onAppear {
+                viewModel.setDependencies(dependencies)
             }
         }
     }    
@@ -188,6 +214,13 @@ extension CoachCreateAccountView: AuthenticationSignUpProtocol {
     }
 }
 
-#Preview {
-    CoachCreateAccountView(showSignInView: .constant(false))
+extension View {
+    @ViewBuilder
+    func applyIf<T: View>(_ condition: Bool, transform: (Self) -> T) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
 }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import GameFrameIOSShared
 
 /// **Displays all recorded key moments from a specific game for coaches.**
 ///
@@ -38,7 +39,7 @@ struct CoachAllKeyMomentsView: View {
     @State private var filteredKeyMoments: [keyMomentTranscript] = []
     
     @StateObject private var transcriptModel = TranscriptModel()
-
+    @EnvironmentObject private var dependencies: DependencyContainer
     
     var body: some View {
         NavigationStack {
@@ -111,6 +112,9 @@ struct CoachAllKeyMomentsView: View {
                 } catch {
                     print("Error. Aborting...")
                 }
+            }
+            .onAppear {
+                transcriptModel.setDependencies(dependencies)
             }
 
            

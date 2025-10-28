@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameFrameIOSShared
 
 /**
   `PlayerProfileModel` is an `ObservableObject` class responsible for managing and updating the player's profile data.
@@ -15,6 +16,9 @@ import Foundation
 @MainActor
 final class PlayerProfileModel: ObservableObject {
     
+    /// Holds the app’s shared dependency container, used to access services and repositories.
+    private var dependencies: DependencyContainer?
+
     /**
      A `@Published` property that holds the user’s profile information.
      This state is used to store the user's profile data retrieved from the database and is updated whenever the user data is modified.
@@ -27,14 +31,30 @@ final class PlayerProfileModel: ObservableObject {
      */
     @Published var player: DBPlayer? = nil // player information
         
+    // MARK: - Dependency Injection
     
+    /// Injects the provided `DependencyContainer` into the current context.
+    ///
+    /// This allows the view, view model, or controller to access shared
+    /// dependencies such as managers or repositories from a central container.
+    /// Useful for testing, environment configuration (e.g., local vs. Firestore),
+    /// or replacing dependencies at runtime.
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+    }
+
     /**
      Logs out the current authenticated user.
      - This function calls `signOut()` from the `AuthenticationManager` to log the user out of the system. After the logout, the user's session is terminated.
      - Throws: It can throw an error if there’s an issue during the sign-out process.
      */
     func logOut() throws {
-        try AuthenticationManager.shared.signOut()
+        guard let repo = dependencies?.authenticationManager else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+
+        try repo.signOut()
     }
     
     
@@ -44,10 +64,15 @@ final class PlayerProfileModel: ObservableObject {
      - Throws: It can throw an error if the user cannot be retrieved or if the password reset fails.
      */
     func resetPassword() async throws {
-        let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+        guard let repo = dependencies?.authenticationManager else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+
+        let authUser = try repo.getAuthenticatedUser()
         
         // Send password reset email to the user
-        try await AuthenticationManager.shared.resetPassword(email: authUser.email) // TODO: - NEED TO VERIFY USER GETS EMAIL
+        try await repo.resetPassword(email: authUser.email) // TODO: - NEED TO VERIFY USER GETS EMAIL
     }
     
     
@@ -59,14 +84,18 @@ final class PlayerProfileModel: ObservableObject {
      - Throws: It can throw an error if there is an issue with user authentication or data fetching.
      */
     func loadCurrentPlayer() async throws {
-        let authDataResult = try AuthenticationManager.shared.getAuthenticatedUser() // get user profile
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+
+        let authDataResult = try repo.authenticationManager.getAuthenticatedUser() // get user profile
         
         print("This is from the loadCurrentUser function: userid = \(authDataResult.uid)")
         
-        let userManager = UserManager()
         // Fetch user and player data from the database
-        self.user = try await userManager.getUser(userId: authDataResult.uid)
-        self.player = try await PlayerManager().getPlayer(playerId: authDataResult.uid)
+        self.user = try await repo.userManager.getUser(userId: authDataResult.uid)
+        self.player = try await repo.playerManager.getPlayer(playerId: authDataResult.uid)
     }
     
     
@@ -86,17 +115,25 @@ final class PlayerProfileModel: ObservableObject {
      */
     func updatePlayerInformation(jersey: Int, nickname: String, guardianName: String, guardianEmail: String, guardianPhone: String) {
         guard let player else { return }
-        let playerManager = PlayerManager()
-        
         
         // Create a new DBPlayer object with updated information
-        let playerInfo = DBPlayer(id: player.id, playerId: player.playerId, jerseyNum: jersey, nickName: nickname, gender: player.gender, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, teamsEnrolled: player.teamsEnrolled)
+        let playerInfo = DBPlayer(
+            id: player.id,
+            playerId: player.playerId,
+            jerseyNum: jersey,
+            nickName: nickname,
+            gender: player.gender,
+            guardianName: guardianName,
+            guardianEmail: guardianEmail,
+            guardianPhone: guardianPhone,
+            teamsEnrolled: player.teamsEnrolled
+        )
         
         Task {
             // Update the player's information in the database
-            try await playerManager.updatePlayerInfo(player: playerInfo)
+            try await dependencies?.playerManager.updatePlayerInfo(player: playerInfo)
             // Refresh player data after the update
-            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
+            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -112,7 +149,6 @@ final class PlayerProfileModel: ObservableObject {
     ///   - gender: Optional updated gender of the player.
     func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) {
         guard var player else { return }
-        let playerManager = PlayerManager()
         
         player.jerseyNum = jersey ?? player.jerseyNum
         player.nickName = nickname ?? player.nickName
@@ -123,9 +159,17 @@ final class PlayerProfileModel: ObservableObject {
         
         Task {
             // Update the player's information in the database
-            try await playerManager.updatePlayerSettings(id: id, jersey: jersey, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, gender: gender)
+            try await dependencies?.playerManager.updatePlayerSettings(
+                id: id,
+                jersey: jersey,
+                nickname: nickname,
+                guardianName: guardianName,
+                guardianEmail: guardianEmail,
+                guardianPhone: guardianPhone,
+                gender: gender
+            )
             
-            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
+            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -140,10 +184,9 @@ final class PlayerProfileModel: ObservableObject {
      */
     func updateGuardianName(name: String) {
         guard let player else { return }
-        let playerManager = PlayerManager()
         Task {
-            try await playerManager.updateGuardianName(id: player.id, name: name)
-            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
+            try await dependencies?.playerManager.updateGuardianName(id: player.id, name: name)
+            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -156,11 +199,9 @@ final class PlayerProfileModel: ObservableObject {
      */
     func removeGuardianInfo() {
         guard let player else { return }
-        let playerManager = PlayerManager()
-        
         Task {
-            try await playerManager.removeGuardianInfo(id: player.id)
-            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
+            try await dependencies?.playerManager.removeGuardianInfo(id: player.id)
+            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -172,10 +213,9 @@ final class PlayerProfileModel: ObservableObject {
      */
     func removeGuardianName() {
         guard let player else { return }
-        let playerManager = PlayerManager()
         Task {
-            try await playerManager.removeGuardianInfoName(id: player.id)
-            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
+            try await dependencies?.playerManager.removeGuardianInfoName(id: player.id)
+            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -187,10 +227,9 @@ final class PlayerProfileModel: ObservableObject {
      */
     func removeGuardianEmail() {
         guard let player else { return }
-        let playerManager = PlayerManager()
         Task {
-            try await playerManager.removeGuardianInfoEmail(id: player.id)
-            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
+            try await dependencies?.playerManager.removeGuardianInfoEmail(id: player.id)
+            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -202,10 +241,9 @@ final class PlayerProfileModel: ObservableObject {
      */
     func removeGuardianPhone() {
         guard let player else { return }
-        let playerManager = PlayerManager()
         Task {
-            try await playerManager.removeGuardianInfoPhone(id: player.id)
-            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
+            try await dependencies?.playerManager.removeGuardianInfoPhone(id: player.id)
+            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
         }
     }
     
@@ -219,9 +257,13 @@ final class PlayerProfileModel: ObservableObject {
     ///   - phone: Optional updated phone number for the user.
     /// - Throws: An error if the update operation fails.
     func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
-        
-        let userManager = UserManager()
-        try await userManager.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
+        try await dependencies?.userManager.updateUserSettings(
+            id: id,
+            dateOfBirth: dateOfBirth,
+            firstName: firstName,
+            lastName: lastName,
+            phone: phone
+        )
     }
     
 }

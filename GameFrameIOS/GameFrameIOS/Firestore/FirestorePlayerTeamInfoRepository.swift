@@ -7,8 +7,9 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestorePlayerTeamInfoRepository: PlayerTeamInfoRepository {
+public final class FirestorePlayerTeamInfoRepository: PlayerTeamInfoRepository {
     private let playerCollection = Firestore.firestore().collection("players") // user collection
     
     private func playerDocument(id: String) -> DocumentReference {
@@ -25,7 +26,7 @@ final class FirestorePlayerTeamInfoRepository: PlayerTeamInfoRepository {
     
     /// Creates/updates players/{playerDocId}/playerTeamInfo/{dto.id}
     /// - Returns: the document id (== teamId)
-    func createNewPlayerTeamInfo(playerDocId: String, playerTeamInfoDTO dto: PlayerTeamInfoDTO) async throws -> String {
+    public func createNewPlayerTeamInfo(playerDocId: String, playerTeamInfoDTO dto: PlayerTeamInfoDTO) async throws -> String {
         print("creating new player team info document!")
         guard !dto.id.isEmpty else {
             throw NSError(domain: "PlayerTeamInfoManager",

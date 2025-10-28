@@ -24,6 +24,8 @@ struct CoachLoginView: View {
     /// ViewModel responsible for handling authentication logic.
     @StateObject private var authModel = AuthenticationModel()
 
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// Controls the visibility of the entered password.
     @State private var showPassword: Bool = false
 
@@ -50,6 +52,7 @@ struct CoachLoginView: View {
                     VStack(spacing: 5) {
                         Text("Glad to have you back Coach!")
                             .font(.title3).bold()
+                            .accessibilityIdentifier("coachLoginPage.title")
                         
                         // Navigation link to the account creation view
                         HStack {
@@ -60,6 +63,7 @@ struct CoachLoginView: View {
                             NavigationLink(destination: CoachCreateAccountView(showSignInView: $showSignInView)) {
                                 CustomUIFields.linkButton("Create one")
                             }
+                            .accessibilityIdentifier("coachLoginPage.createAccountLink")
                         }
                     }
                     
@@ -70,9 +74,11 @@ struct CoachLoginView: View {
                             .autocapitalization(.none)
                             .keyboardType(.emailAddress)
                             .autocorrectionDisabled(true)
+                            .accessibilityIdentifier("coachLoginPage.emailField")
 
                         // Password Field with Eye Toggle
                         CustomUIFields.customPasswordField("Password", text: $authModel.password, showPassword: $showPassword)
+                            .accessibilityIdentifier("coachLoginPage.passwordField")
                     }
                     .padding(.horizontal)
                     
@@ -98,6 +104,7 @@ struct CoachLoginView: View {
                     }
                     .disabled(!loginIsValid)
                     .opacity(loginIsValid ? 1.0 : 0.5)
+                    .accessibilityIdentifier("coachLoginPage.signInButton")
                     
                     Spacer()
                 }
@@ -128,6 +135,9 @@ struct CoachLoginView: View {
             }
             .navigationDestination(isPresented: $errorGoToSignUp) { CoachCreateAccountView(showSignInView: $showSignInView)
             }
+            .onAppear {
+                authModel.setDependencies(dependencies)
+            }
         }
     }
 }
@@ -143,9 +153,4 @@ extension CoachLoginView: AuthenticationLoginProtocol {
         && !authModel.password.isEmpty // Ensure password is not empty
         && authModel.password.count > 5 // Enforce a minimum password length
     }
-}
-
-
-#Preview {
-    CoachLoginView(showSignInView: .constant(false))
 }

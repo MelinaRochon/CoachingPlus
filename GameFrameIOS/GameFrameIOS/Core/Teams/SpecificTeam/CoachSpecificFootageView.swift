@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import GameFrameIOSShared
 
 /**
  `CoachSpecificFootageView` is a SwiftUI view designed for soccer coaches to review game footage,
@@ -48,7 +49,8 @@ struct CoachSpecificFootageView: View {
     
     /// ViewModel for handling transcript-related data operations.
     @StateObject private var transcriptModel = TranscriptModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// The start time of the game, used for timestamp calculations.
     @State private var gameStartTime: Date?
     
@@ -287,6 +289,11 @@ struct CoachSpecificFootageView: View {
                         print(error.localizedDescription)
                     }
                 }
+            }
+            .onAppear {
+                transcriptModel.setDependencies(dependencies)
+                gameModel.setDependencies(dependencies)
+                fgVideoRecordingModel.setDependencies(dependencies)
             }
         }
     }

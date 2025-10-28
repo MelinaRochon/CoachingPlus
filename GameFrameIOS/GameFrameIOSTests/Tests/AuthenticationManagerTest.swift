@@ -6,27 +6,35 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class AuthenticationManagerTest: XCTestCase {
-    var repo: LocalAuthenticationRepository!
+    var manager: AuthenticationManager!
+    var localRepo: LocalAuthenticationRepository!
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        repo = LocalAuthenticationRepository()
+        localRepo = LocalAuthenticationRepository()
+        manager = AuthenticationManager(repo: localRepo)
     }
 
     override func tearDownWithError() throws {
-        repo = nil
+        manager = nil
+        localRepo = nil
         try super.tearDownWithError()
     }
     
-    func testGetAuthenticatedUser() throws {
-        let authId = "auth002"
+    func testGetAuthenticatedUser() async throws {
+        let email = "coach1@example.com"
+        let pwd = "alicesmith"
         
-        let authUser = try repo.getAuthenticatedUser(id: authId)
+        // Authenticate a user first
+        let user = try await manager.signInUser(email: email, password: pwd)
+        XCTAssertNotEqual(user.uid, "")
+        
+        let authUser = try manager.getAuthenticatedUser()
         XCTAssertNotNil(authUser)
-        XCTAssertEqual(authUser?.id, authId)
+        XCTAssertEqual(authUser.uid, user.uid)
     }
     
     func testAddNewUser() async throws {
@@ -34,15 +42,8 @@ final class AuthenticationManagerTest: XCTestCase {
         let password = "pwd123456"
         
         // Make sure a user with these settings does not already exist
-        let tmpUser = try await repo.findUserWithEmail(email: email)
-        XCTAssertNil(tmpUser)
-        
-        try await repo.createUser(email: email, password: password)
-        let authUser = try await repo.findUserWithEmail(email: email)
-        
-        XCTAssertNotNil(authUser)
-        XCTAssertEqual(authUser?.email, email)
-        XCTAssertEqual(authUser?.password, password)
+        let user = try await manager.createUser(email: email, password: password)
+        XCTAssertEqual(user.email, email)
     }
     
     func testSignOutUser() async throws {
@@ -50,225 +51,195 @@ final class AuthenticationManagerTest: XCTestCase {
         let pwd = "alicesmith"
         
         // Sign in user before proceeding
-        guard let user = try await repo.signInUser(email: email, password: pwd) else {
+        let user = try await manager.signInUser(email: email, password: pwd)
+        if user.uid == "" {
             XCTFail()
             return
         }
         XCTAssertEqual(user.email, email)
-        XCTAssertEqual(user.password, pwd)
-        XCTAssertTrue(user.isSignedIn)
         
         // Sign out user
-        try repo.signOut(id: user.id)
+        try manager.signOut()
         
-        // Make sure user is signed out
-        let userAfterSignOut = try await repo.findUserWithEmail(email: email)
-        XCTAssertNotNil(userAfterSignOut)
-        XCTAssertEqual(userAfterSignOut?.email, email)
-        XCTAssertFalse(userAfterSignOut?.isSignedIn ?? true)
+        do {
+            // Make sure user is signed out
+            _ = try manager.getAuthenticatedUser()
+        } catch AuthError.noAuthenticatedUser {
+            // Error catched
+            print("AuthError.noAuthenticatedUser error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testSignInUser() async throws {
-        let id = "auth001"
-        
-        // Make sure user is signed out before proceeding
-        guard let authUser = try repo.getAuthenticatedUser(id: id) else {
-            XCTFail()
-            return
+        let email = "coach1@example.com"
+        let pwd = "alicesmith"
+
+        do {
+            // Make sure user is signed out before proceeding
+            _ = try manager.getAuthenticatedUser()
+        } catch AuthError.noAuthenticatedUser {
+            // Error catched
+            print("AuthError.noAuthenticatedUser error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
-        XCTAssertEqual(authUser.id, id)
-        XCTAssertFalse(authUser.isSignedIn)
         
         // Sign in user
-        let user = try await repo.signInUser(email: authUser.email, password: authUser.password)
-        XCTAssertNotNil(user)
-        XCTAssertEqual(user?.id, id)
-        XCTAssertEqual(user?.email, authUser.email)
-        XCTAssertEqual(user?.password, authUser.password)
-        XCTAssertTrue(user?.isSignedIn ?? false)
+        let user = try await manager.signInUser(email: email, password: pwd)
+        XCTAssertEqual(user.email, email)
+        
+        // Make sure user is signed in
+        let userSignedIn = try manager.getAuthenticatedUser()
+        XCTAssertEqual(userSignedIn.uid, user.uid)
     }
-    
-    func testResetPassword() async throws {
-        let email = "coach1@example.com"
-        let newPwd = "newPassword123"
-
-        // Make sure user exists before reseting password
-        let tmpUser = try await repo.findUserWithEmail(email: email)
-        XCTAssertNotNil(tmpUser)
-        XCTAssertEqual(tmpUser?.email, email)
-        
-        // Make sure the current password does not match the new one
-        XCTAssertNotEqual(tmpUser?.password, newPwd)
-        
-        // Reset password
-        try await repo.resetPassword(email: email, newPwd: newPwd)
-        
-        // Make sure new password was saved
-        let user = try await repo.findUserWithEmail(email: email)
-        XCTAssertNotNil(user)
-        XCTAssertEqual(user?.email, email)
-        XCTAssertEqual(user?.password, newPwd)
-    }
-        
+            
     func testUpdateEmail() async throws {
-        let id = "auth001"
+        let email = "coach1@example.com"
         let newEmail = "coach1@admin.com"
-
-        // Make sure user exists before reseting password
-        let tmpUser = try repo.getAuthenticatedUser(id: id)
-        XCTAssertNotNil(tmpUser)
-        XCTAssertEqual(tmpUser?.id, id)
-        XCTAssertNotEqual(tmpUser?.email, newEmail)
+        let pwd = "alicesmith"
+        
+        let signInUser = try await manager.signInUser(email: email, password: pwd)
+        XCTAssertEqual(signInUser.email, email)
+        
+        // Sign in user before updating email address
+        let tmpUser = try manager.getAuthenticatedUser()
+        XCTAssertEqual(tmpUser.uid, signInUser.uid)
+        XCTAssertEqual(tmpUser.email, email)
         
         // Change the email address
-        try await repo.updateEmail(id: id, email: newEmail)
-        let user = try repo.getAuthenticatedUser(id: id)
-        XCTAssertNotNil(user)
-        XCTAssertEqual(user?.id, id)
-        XCTAssertEqual(user?.email, newEmail)
-    }
-    
-    func testFindUserWithEmail() async throws {
-        let email = "coach1@example.com"
-        
-        let tmpUser = try await repo.findUserWithEmail(email: email)
-        XCTAssertNotNil(tmpUser)
-        XCTAssertEqual(tmpUser?.email, email)
+        try await manager.updateEmail(email: newEmail)
+        let user = try manager.getAuthenticatedUser()
+        XCTAssertEqual(user.uid, signInUser.uid)
+        XCTAssertEqual(user.email, newEmail)
     }
     
     // MARK: Negative Tests
     
-    func testGetInvalidAuthenticatedUser() async throws {
-        let authId = "auth111"
-        
-        let authUser = try repo.getAuthenticatedUser(id: authId)
-        XCTAssertNil(authUser)
+    func testGetInvalidAuthenticatedUser() async {
+        // Try to see who's authenticated
+        // Invalid because no user is autenticated at first so will return error
+        do {
+            _ = try manager.getAuthenticatedUser()
+            XCTFail("Expected error not thrown")
+        } catch AuthError.noAuthenticatedUser {
+            // Error catched
+            print("AuthError.noAuthenticatedUser error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
-    func testCreateUserWithInvalidEmail() async throws {
+    func testCreateUserWithInvalidEmail() async {
         let email = "testing"
         let password = "pwd123456"
         
-        // Make sure a user with these settings does not already exist
-        let tmpUser = try await repo.findUserWithEmail(email: email)
-        XCTAssertNil(tmpUser)
-        
-        try await repo.createUser(email: email, password: password)
-        let authUser = try await repo.findUserWithEmail(email: email)
-        
-        XCTAssertNil(authUser)
+        do {
+            _ = try await manager.createUser(email: email, password: password)
+            XCTFail("Expected error not thrown")
+        } catch AuthError.invalidEmail {
+            // Error catched
+            print("AuthError.invalidEmail error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
-    
+
     func testCreateUserWithInvalidPwd() async throws {
         let email = "testing@gmail.com"
         let password = "pwd"
-        
-        // Make sure a user with these settings does not already exist
-        let tmpUser = try await repo.findUserWithEmail(email: email)
-        XCTAssertNil(tmpUser)
-        
-        try await repo.createUser(email: email, password: password)
-        let authUser = try await repo.findUserWithEmail(email: email)
-        
-        XCTAssertNil(authUser)
+                        
+        do {
+            _ = try await manager.createUser(email: email, password: password)
+            XCTFail("Expected error not thrown")
+        } catch AuthError.invalidPwd {
+            // Error catch
+            print("AuthError.invalidPwd error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
-    
     func testSignInUserWithInvalidEmail() async throws {
-        let id = "auth001"
         let invalidEmail = "testing"
-        
-        // Make sure user is signed out before proceeding
-        guard let authUser = try repo.getAuthenticatedUser(id: id) else {
-            XCTFail()
-            return
+        let password = "pwd123456"
+
+        do {
+            _ = try await manager.signInUser(email: invalidEmail, password: password)
+            XCTFail("Expected error not thrown")
+        } catch AuthError.invalidEmail {
+            // Error catch
+            print("AuthError.invalidEmail error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
-        XCTAssertEqual(authUser.id, id)
-        XCTAssertFalse(authUser.isSignedIn)
-        
-        // Sign in user
-        let user = try await repo.signInUser(email: invalidEmail, password: authUser.password)
-        XCTAssertNil(user)
     }
 
     func testSignInUserWithInvalidPwd() async throws {
-        let id = "auth001"
         let invalidPwd = "pwd"
+        let email = "testing@gmail.com"
         
-        // Make sure user is signed out before proceeding
-        guard let authUser = try repo.getAuthenticatedUser(id: id) else {
-            XCTFail()
-            return
+        do {
+            _ = try await manager.signInUser(email: email, password: invalidPwd)
+            XCTFail("Expected error not thrown")
+        } catch AuthError.invalidPwd {
+            // Error catch
+            print("AuthError.invalidPwd error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
-        XCTAssertEqual(authUser.id, id)
-        XCTAssertFalse(authUser.isSignedIn)
-        
-        // Sign in user
-        let user = try await repo.signInUser(email: authUser.email, password: invalidPwd)
-        XCTAssertNil(user)
     }
     
-    func testResetPasswordWithInvalidEmail() async throws {
-        let email = "coach1"
-        let newPwd = "newPassword123"
+    func testSignInUserWithInvalidCredentials() async throws {
+        let pwd = "pwd123456"
+        let email = "testing@testing.com"
         
-        // Reset password
-        try await repo.resetPassword(email: email, newPwd: newPwd)
-        
-        // Make sure new password was saved
-        let user = try await repo.findUserWithEmail(email: email)
-        XCTAssertNil(user)
+        do {
+            _ = try await manager.signInUser(email: email, password: pwd)
+            XCTFail("Expected error not thrown")
+        } catch AuthError.userNotFound {
+            // Error catch
+            print("AuthError.userNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
-    func testResetPasswordWithInvalidNewPwd() async throws {
-        let email = "coach1@example.com"
-        let newPwd = "pwd"
-
-        // Make sure user exists before reseting password
-        let tmpUser = try await repo.findUserWithEmail(email: email)
-        XCTAssertNotNil(tmpUser)
-        XCTAssertEqual(tmpUser?.email, email)
-        
-        // Make sure the current password does not match the new one
-        XCTAssertNotEqual(tmpUser?.password, newPwd)
-        
-        // Reset password
-        try await repo.resetPassword(email: email, newPwd: newPwd)
-        
-        // Make sure new password was saved
-        let user = try await repo.findUserWithEmail(email: email)
-        XCTAssertNotNil(user)
-        XCTAssertEqual(user?.email, email)
-        XCTAssertNotEqual(user?.password, newPwd) // should not have changed
-        XCTAssertEqual(user?.password, tmpUser?.password)
-    }
-
-    func testUpdateEmailWithInvalidId() async throws {
-        let id = "auth111"
-        let newEmail = "coach1@admin.com"
-
-        // Change the email address
-        try await repo.updateEmail(id: id, email: newEmail)
-        let user = try repo.getAuthenticatedUser(id: id)
-        XCTAssertNil(user)
-    }
-
-    func testUpdateEmailWithInvalidNewEmail() async throws {
-        let id = "auth001"
+    func testUpdateEmailWithInvalidNewEmail() async {
         let newEmail = "coach1"
+        let email = "coach1@example.com"
+        let pwd = "alicesmith"
 
-        // Make sure user exists before reseting password
-        let tmpUser = try repo.getAuthenticatedUser(id: id)
-        XCTAssertNotNil(tmpUser)
-        XCTAssertEqual(tmpUser?.id, id)
-        XCTAssertNotEqual(tmpUser?.email, newEmail)
+        // Change the email address
+        do {
+            // Sign in user first
+            let user = try await manager.signInUser(email: email, password: pwd)
+            XCTAssertEqual(user.email, email)
+            
+            // Try to update invalid email - should fail
+            try await manager.updateEmail(email: newEmail)
+            XCTFail("Expected error not thrown")
+        } catch AuthError.invalidEmail {
+            // Error catch
+            print("AuthError.invalidEmail error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testUpdateEmailWithInvalidCredentials() async {
+        let newEmail = "coach1@coach.com"
         
         // Change the email address
-        try await repo.updateEmail(id: id, email: newEmail)
-        let user = try repo.getAuthenticatedUser(id: id)
-        XCTAssertNotNil(user)
-        XCTAssertEqual(user?.id, id)
-        XCTAssertNotEqual(user?.email, newEmail)
-        XCTAssertEqual(user?.email, tmpUser?.email)
+        do {
+            try await manager.updateEmail(email: newEmail)
+            XCTFail("Expected error not thrown")
+        } catch AuthError.noAuthenticatedUser {
+            // Error catch
+            print("AuthError.userNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 }

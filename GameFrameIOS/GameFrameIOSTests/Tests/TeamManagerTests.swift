@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class TeamManagerTests: XCTestCase {
     var manager: TeamManager!
@@ -251,10 +251,7 @@ final class TeamManagerTests: XCTestCase {
         // Remove a coach from the team
         try await manager.removeCoachFromTeam(id: teamDocId, coachId: coachId)
         let updatedTeam = try await manager.getTeamWithDocId(docId: teamDocId)
-        
-//        // Make sure the team is not left with no coach
-//        XCTAssertFalse(updatedTeam.coaches.isEmpty)
-        
+                
         XCTAssertNotNil(updatedTeam)
         XCTAssertEqual(updatedTeam.id, teamDocId)
         XCTAssertEqual(updatedTeam.coaches.count, 0, "Coach count should be equal to 0")
@@ -266,8 +263,15 @@ final class TeamManagerTests: XCTestCase {
         let teamId = "team_1"
         
         // Make sure the new team does not exists prior to adding it
-        let teamBeforeAdding = try await manager.getTeam(teamId: teamId)
-        XCTAssertNil(teamBeforeAdding)
+        do {
+            _ = try await manager.getTeam(teamId: teamId)
+            XCTFail("Expected error not thrown")
+        } catch TeamError.teamNotFound {
+            // Error catched
+            print("TeamError.teamNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
 
         // Adding a new team
         let teamDTO = TeamDTO(
@@ -345,17 +349,31 @@ final class TeamManagerTests: XCTestCase {
 
         // Delete the team
         try await manager.deleteTeam(id: teamDocId)
-        let teamAfterDeletion = try await manager.getTeam(teamId: teamId)
-        
-        XCTAssertNil(teamAfterDeletion, "Team should not exist")
+        do {
+            _ = try await manager.getTeam(teamId: teamId)
+            XCTFail("Expected error not thrown")
+        } catch TeamError.teamNotFound {
+            // Error catched
+            print("TeamError.teamNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     // MARK: Negative Testing
     
-    func testGetInvalidTeam() async throws {
+    func testGetInvalidTeam() async {
         let teamId = "team_123"
-        let team = try await manager.getTeam(teamId: teamId)
-        XCTAssertNil(team, "Team should not exist")
+        
+        do {
+            _ = try await manager.getTeam(teamId: teamId)
+            XCTFail("Expected error not thrown")
+        } catch TeamError.teamNotFound {
+            // Error catched
+            print("TeamError.teamNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testGetAllTeamsWithInvalidTeam() async throws {
@@ -372,8 +390,16 @@ final class TeamManagerTests: XCTestCase {
 
     func testGetTeamWithInvalidAccessCode() async throws {
         let accessCode = "accesscode_123"
-        let teamWithAccessCode = try await manager.getTeamWithAccessCode(accessCode: accessCode)
-        XCTAssertNil(teamWithAccessCode, "Team should be nil")
+
+        do {
+            _ = try await manager.getTeamWithAccessCode(accessCode: accessCode)
+            XCTFail("Expected error not thrown")
+        } catch TeamError.invalidAccessCode {
+            // Error catched
+            print("TeamError.invalidAccessCode error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testRemoveInvalidPlayerFromTeam() async throws {
@@ -402,23 +428,25 @@ final class TeamManagerTests: XCTestCase {
     func negTestAddSameCoachToTeam() async throws {
         let teamDocId = "uidT001"
         let coachId = "uid001"
-        
-        // Make sure the coach is already on the team
-        let team = try await manager.getTeamWithDocId(docId: teamDocId)
-        XCTAssertNotNil(team)
-        XCTAssertEqual(team.id, teamDocId)
-        XCTAssertTrue(team.coaches.contains(coachId))
-        
+                
         // Add the coach to the team again
-        try await manager.addCoachToTeam(id: teamDocId, coachId: coachId)
-        let updatedTeam = try await manager.getTeamWithDocId(docId: teamDocId)
-        
-        XCTAssertNotNil(updatedTeam)
-        XCTAssertEqual(updatedTeam.id, teamDocId)
-        XCTAssertEqual(updatedTeam.coaches.count, 1, "Coach count should be equal to 1")
+        do {
+            let team = try await manager.getTeamWithDocId(docId: teamDocId)
+            XCTAssertNotNil(team)
+            XCTAssertEqual(team.id, teamDocId)
+            XCTAssertTrue(team.coaches.contains(coachId))
+
+           try await manager.addCoachToTeam(id: teamDocId, coachId: coachId)
+            XCTFail("Expected error not thrown")
+        } catch TeamError.coachAlreadyInTeam {
+            // Error catched
+            print("TeamError.coachAlreadyInTeam error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
-    func negtestAddSameInviteToTeam() async throws {
+    func testAddSameInviteToTeam() async throws {
         let teamDocId = "uidT003"
         let inviteDocId = "uidI001"
         
@@ -429,21 +457,30 @@ final class TeamManagerTests: XCTestCase {
         XCTAssertTrue(team.invites?.contains(inviteDocId) ?? false)
         
         // Add the invite to the team again
-        try await manager.addInviteToTeam(id: teamDocId, inviteDocId: inviteDocId)
-        let updatedTeam = try await manager.getTeamWithDocId(docId: teamDocId)
-        
-        XCTAssertNotNil(updatedTeam)
-        XCTAssertEqual(updatedTeam.id, teamDocId)
-        XCTAssertEqual(updatedTeam.invites?.count, team.invites?.count, "Invite count should be equal to 2")
-        XCTAssertTrue(updatedTeam.invites?.contains(inviteDocId) ?? false, "Invite ID should be present in the team roster")
+        do {
+           try await manager.addInviteToTeam(id: teamDocId, inviteDocId: inviteDocId)
+            XCTFail("Expected error not thrown")
+        } catch TeamError.inviteAlreadySent {
+            // Error catched
+            print("TeamError.inviteAlreadySent error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     func testGetInviteDocIdOfInvalidPlayerAndTeam() async throws {
         let teamDocId = "uidT003"
         let playerId = "uidI009"
-        
-        let inviteDocId = try await manager.getInviteDocIdOfPlayerAndTeam(teamDocId: teamDocId, playerDocId: playerId)
-        XCTAssertNil(inviteDocId, "Invite for this player should not exist")
+                
+        do {
+           let _ = try await manager.getInviteDocIdOfPlayerAndTeam(teamDocId: teamDocId, playerDocId: playerId)
+            XCTFail("Expected error not thrown")
+        } catch TeamError.inviteNotFound {
+            // Error catched
+            print("TeamError.inviteNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testRemoveInvalidInviteFromTeam() async throws {
@@ -451,12 +488,14 @@ final class TeamManagerTests: XCTestCase {
         let inviteId = "uidI009"
         
         // Remove invite from the team
-        try await manager.removeInviteFromTeam(id: teamDocId, inviteDocId: inviteId)
-        let updatedTeam = try await manager.getTeamWithDocId(docId: teamDocId)
-        
-        XCTAssertNotNil(updatedTeam)
-        XCTAssertEqual(updatedTeam.id, teamDocId)
-        XCTAssertEqual(updatedTeam.invites?.count, 2, "Invite count should be equal to 1")
-        XCTAssertFalse(updatedTeam.invites?.contains(inviteId) ?? true, "Invite ID should not be present in the team roster")
+        do {
+           try await manager.removeInviteFromTeam(id: teamDocId, inviteDocId: inviteId)
+            XCTFail("Expected error not thrown")
+        } catch TeamError.inviteNotFound {
+            // Error catched
+            print("TeamError.inviteAlreadySent error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 }

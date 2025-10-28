@@ -7,16 +7,18 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestorePlayerRepository: PlayerRepository {
-    var playerCollection = Firestore.firestore().collection("players") // user collection
+public final class FirestorePlayerRepository: PlayerRepository {
+    
+    public var playerCollection = Firestore.firestore().collection("players") // user collection
     
     /**
      Returns a reference to a specific player document by ID.
      - Parameter id: The unique player document ID.
      - Returns: A `DocumentReference` to the player's Firestore document.
      */
-    func playerDocument(id: String) -> DocumentReference {
+    public func playerDocument(id: String) -> DocumentReference {
         playerCollection.document(id)
     }
     
@@ -27,7 +29,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Returns: The newly created player's document ID.
      - Throws: An error if creating the player document fails.
      */
-    func createNewPlayer(playerDTO: PlayerDTO) async throws -> String {
+    public func createNewPlayer(playerDTO: PlayerDTO) async throws -> String {
         let playerDocument = playerCollection.document()
         let documentId = playerDocument.documentID // get the document id
         
@@ -44,7 +46,7 @@ final class FirestorePlayerRepository: PlayerRepository {
       - Returns: A `DBPlayer` object containing player data, or `nil` if not found.
       - Throws: An error if fetching the player document fails.
       */
-    func getPlayer(playerId: String) async throws -> DBPlayer? {
+    public func getPlayer(playerId: String) async throws -> DBPlayer? {
         let query = try await playerCollection.whereField("player_id", isEqualTo: playerId).getDocuments()
         guard let doc = query.documents.first else { return nil }
         return try doc.data(as: DBPlayer.self)
@@ -58,7 +60,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Returns: A `DBPlayer` object containing player data, or `nil` if not found.
      - Throws: An error if fetching the player document fails.
      */
-    func findPlayerWithId(id: String) async throws -> DBPlayer? {
+    public func findPlayerWithId(id: String) async throws -> DBPlayer? {
         return try await playerDocument(id: id).getDocument(as: DBPlayer.self)
     }
     
@@ -69,7 +71,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter name: The new guardian's name to update in the player document.
      - Throws: An error if updating the document fails.
      */
-    func updateGuardianName(id: String, name: String) async throws {
+    public func updateGuardianName(id: String, name: String) async throws {
         let data: [String: Any] = [
             DBPlayer.CodingKeys.guardianName.rawValue: name
         ]
@@ -84,7 +86,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter id: The unique player document ID.
      - Throws: An error if updating the document fails.
      */
-    func removeGuardianInfo(id: String) async throws {
+    public func removeGuardianInfo(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianName.rawValue: nil,
             DBPlayer.CodingKeys.guardianEmail.rawValue: nil,
@@ -102,7 +104,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter teamId: The team ID to add to the player's list of enrolled teams.
      - Throws: An error if updating the document fails.
      */
-    func addTeamToPlayer(id: String, teamId: String) async throws {
+    public func addTeamToPlayer(id: String, teamId: String) async throws {
         let data: [String: Any] = [
             DBPlayer.CodingKeys.teamsEnrolled.rawValue: FieldValue.arrayUnion([teamId])
         ]
@@ -117,7 +119,7 @@ final class FirestorePlayerRepository: PlayerRepository {
     - Parameter teamId: The team ID to remove from the player's list of enrolled teams.
     - Throws: An error if updating the document fails.
     */
-    func removeTeamFromPlayer(id: String, teamId: String) async throws {
+    public func removeTeamFromPlayer(id: String, teamId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
             DBPlayer.CodingKeys.teamsEnrolled.rawValue: FieldValue.arrayRemove([teamId])
@@ -134,9 +136,8 @@ final class FirestorePlayerRepository: PlayerRepository {
     - Parameter teamId: The team ID to remove from the player's list of enrolled teams.
     - Throws: An error if updating the document fails.
     */
-    func removeTeamFromPlayerWithTeamDocId(id: String, teamDocId: String) async throws {
-        let teamManager = TeamManager()
-        let team = try await teamManager.getTeamWithDocId(docId: teamDocId)
+    public func removeTeamFromPlayerWithTeamDocId(id: String, teamDocId: String) async throws {
+        let team = try await FirestoreTeamRepository().getTeamWithDocId(docId: teamDocId)
                 
         // find the team to remove
         let data: [String: Any] = [
@@ -153,7 +154,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter id: The unique player document ID.
      - Throws: An error if updating the document fails.
      */
-    func removeGuardianInfoName(id: String) async throws {
+    public func removeGuardianInfoName(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianName.rawValue: nil
         ]
@@ -168,7 +169,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter id: The unique player document ID.
      - Throws: An error if updating the document fails.
      */
-    func removeGuardianInfoEmail(id: String) async throws {
+    public func removeGuardianInfoEmail(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianEmail.rawValue: nil
         ]
@@ -183,7 +184,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter id: The unique player document ID.
      - Throws: An error if updating the document fails.
      */
-    func removeGuardianInfoPhone(id: String) async throws {
+    public func removeGuardianInfoPhone(id: String) async throws {
         let data: [String:Any?] = [
             DBPlayer.CodingKeys.guardianPhone.rawValue: nil
         ]
@@ -198,7 +199,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter player: A `DBPlayer` object containing updated player information.
      - Throws: An error if updating the document fails.
      */
-    func updatePlayerInfo(player: DBPlayer) async throws {
+    public func updatePlayerInfo(player: DBPlayer) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.jerseyNum.rawValue: player.jerseyNum,
             DBPlayer.CodingKeys.nickName.rawValue: player.nickName ?? "",
@@ -221,7 +222,7 @@ final class FirestorePlayerRepository: PlayerRepository {
     ///   - guardianPhone: Optional updated guardian's phone number.
     ///   - gender: Optional updated gender.
     /// - Throws: Rethrows any errors that occur during the Firestore update operation.
-    func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
+    public func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
         var data: [String: Any] = [:]
         if let jersey = jersey {
             data[DBPlayer.CodingKeys.jerseyNum.rawValue] = jersey
@@ -266,7 +267,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter nickname: The new nickname for the player.
      - Throws: An error if updating the document fails.
      */
-    func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
+    public func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.jerseyNum.rawValue: jersey,
             DBPlayer.CodingKeys.nickName.rawValue: nickname,
@@ -284,7 +285,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter playerId: The new player ID.
      - Throws: An error if updating the document fails.
      */
-    func updatePlayerId(id: String, playerId: String) async throws {
+    public func updatePlayerId(id: String, playerId: String) async throws {
         let data: [String:Any] = [
             DBPlayer.CodingKeys.playerId.rawValue: playerId,
         ]
@@ -299,7 +300,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Parameter playerId: The new player ID.
      - Throws: An error if updating the document fails.
      */
-    func getTeamsEnrolled(playerId: String) async throws -> [GetTeam] {
+    public func getTeamsEnrolled(playerId: String) async throws -> [GetTeam] {
         let teamRepo = FirestoreTeamRepository()
         guard let player = try await getPlayer(playerId: playerId),
                   let teamIds = player.teamsEnrolled,
@@ -332,7 +333,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Returns: An array of `DBTeam` objects representing the full team data.
      - Throws: An error if fetching the player's document or teams fails.
      */
-    func getAllTeamsEnrolled(playerId: String) async throws -> [DBTeam]? {
+    public func getAllTeamsEnrolled(playerId: String) async throws -> [DBTeam]? {
         let teamRepo = FirestoreTeamRepository()
         guard let player = try await getPlayer(playerId: playerId),
                   let teamIds = player.teamsEnrolled,
@@ -365,7 +366,7 @@ final class FirestorePlayerRepository: PlayerRepository {
      - Returns: A boolean indicating whether the player is enrolled in the team.
      - Throws: An error if fetching the player's document fails.
      */
-    func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
+    public func isPlayerEnrolledToTeam(playerId: String, teamId: String) async throws -> Bool {
         let player = try await getPlayer(playerId: playerId)!
         print("player info: \(player)")
         if let teamsEnrolled = player.teamsEnrolled {

@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class CommentManagerTests: XCTestCase {
     var manager: CommentManager!
@@ -45,24 +45,11 @@ final class CommentManagerTests: XCTestCase {
     
     func testGetComment() async throws {
         let teamDocId = "test"
-        
-        let sampleComments: [DBComment] = TestDataLoader.load("TestComments", as: [DBComment].self)
-        guard let sampleComment = sampleComments.first else { return }
-
-        let dto = CommentDTO(
-            keyMomentId: sampleComment.keyMomentId,
-            gameId: sampleComment.gameId,
-            transcriptId: sampleComment.transcriptId,
-            uploadedBy: sampleComment.uploadedBy,
-            comment: sampleComment.comment,
-            createdAt: sampleComment.createdAt
-        )
-
-        let id = try await localRepo.addNewCommentReturningId(teamDocId: teamDocId, commentDTO: dto)
-
-        let c = try await manager.getComment(teamId: teamDocId, commentDocId: id)
+        let commentId = "C003"
+                
+        let c = try await manager.getComment(teamId: teamDocId, commentDocId: commentId)
         XCTAssertNotNil(c)
-        XCTAssertEqual(c?.comment, sampleComment.comment)
+        XCTAssertEqual(c?.commentId, commentId)
     }
 
     func testFilterByKeyMoment() async throws {
@@ -130,8 +117,6 @@ final class CommentManagerTests: XCTestCase {
         XCTAssertEqual(tr?.first?.commentId, comment1_id)
     }
 
-
-
     func testRemoveComment() async throws {
         let teamDocId = "test"
         
@@ -159,6 +144,4 @@ final class CommentManagerTests: XCTestCase {
         let all = try await manager.getAllComments(teamId: teamDocId) ?? []
         XCTAssertFalse(all.contains { $0.commentId == id })
     }
-
-    
 }

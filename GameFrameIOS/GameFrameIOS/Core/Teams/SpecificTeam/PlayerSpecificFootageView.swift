@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import GameFrameIOSShared
 
 /**
  This view is responsible for displaying detailed footage and related information for a specific game within a team. It is designed for players to view their individual game footage, transcripts, and key moments.
@@ -33,6 +34,7 @@ struct PlayerSpecificFootageView: View {
     
     /// A view model for managing and fetching the transcripts and key moments of the game.
     @StateObject private var transcriptModel = TranscriptModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Holds the start time of the game, used to calculate the timestamp for each key moment or transcript.
     @State private var gameStartTime: Date?
@@ -258,6 +260,10 @@ struct PlayerSpecificFootageView: View {
         }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)
+        }
+        .onAppear {
+            transcriptModel.setDependencies(dependencies)
+            fgVideoRecordingModel.setDependencies(dependencies)
         }
     }
     

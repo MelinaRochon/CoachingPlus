@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  This structure displays filtering options for the transcriptions shown.

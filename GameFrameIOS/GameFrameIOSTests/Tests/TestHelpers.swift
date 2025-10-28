@@ -6,6 +6,7 @@
 //
 
 @testable import GameFrameIOS
+import GameFrameIOSShared
 
 /// Creates a new coach in the local repository for testing purposes.
 /// This helper function is used to simplify setup within multiple test cases.

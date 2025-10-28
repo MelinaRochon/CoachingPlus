@@ -6,7 +6,8 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
+
 
 final class FullGameVideoRecordingTests: XCTestCase {
     var manager: FullGameVideoRecordingManager!

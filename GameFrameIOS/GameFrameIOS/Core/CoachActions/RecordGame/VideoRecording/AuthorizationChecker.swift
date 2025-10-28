@@ -69,6 +69,7 @@ struct VideoRecordingView: View {
 
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     var body: some View {
         NavigationView {
@@ -121,6 +122,10 @@ struct VideoRecordingView: View {
                     print("error")
                 }
             }
+            .onAppear {
+                fgVideoRecordingModel.setDependencies(dependencies)
+                audioRecordingModel.setDependencies(dependencies)
+            }
         }.navigationBarBackButtonHidden(true)
     }
     
@@ -153,7 +158,6 @@ struct VideoPlayerView: View {
 
     var body: some View {
         FullscreenVideoPlayer(player: AVPlayer(url: url))
-//        VideoPlayer(player: AVPlayer(url: url))
     }
 }
 

@@ -6,13 +6,15 @@
 //
 
 import Foundation
-
-
+import GameFrameIOSShared
 /**
  ViewModel responsible for managing authentication-related data and operations.
  */
 @MainActor
 final class AuthenticationModel: ObservableObject {
+    
+    /// Holds the app’s shared dependency container, used to access services and repositories.
+    private var dependencies: DependencyContainer?
     
     // MARK: - Authentication Information
     /// User's email for authentication.
@@ -52,6 +54,17 @@ final class AuthenticationModel: ObservableObject {
     /// Controls the visibility of an alert when the team access code is invalid.
     @Published var showInvalidCodeAlert: Bool = false
     
+    // MARK: - Dependency Injection
+    
+    /// Injects the provided `DependencyContainer` into the current context.
+    ///
+    /// This allows the view, view model, or controller to access shared
+    /// dependencies such as managers or repositories from a central container.
+    /// Useful for testing, environment configuration (e.g., local vs. Firestore),
+    /// or replacing dependencies at runtime.
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+    }
     
     // MARK: - Authentication Functions
     
@@ -68,14 +81,18 @@ final class AuthenticationModel: ObservableObject {
             return "Unknown"
         }
     }
-    
+        
     
     /// Handles user sign-in by validating credentials and using the authentication manager.
     /// This function will sign in a user using their email and password, and handle errors if the sign-in fails.
     /// - Throws: An error if the sign-in attempt fails (e.g., incorrect credentials or network issues).
     func signIn() async throws {
+        guard let repo = dependencies?.authenticationManager else {
+            print("⚠️ Dependencies not set")
+            return
+        }
         // Attempt to sign in using Firebase Authentication.
-        try await AuthenticationManager.shared.signInUser(email: email, password: password)
+        try await repo.signInUser(email: email, password: password)
     }
     
 
@@ -85,86 +102,84 @@ final class AuthenticationModel: ObservableObject {
     /// - Parameter userType: The type of user being created, either "Coach" or "Player".
     /// - Throws: An error if the sign-up fails (e.g., email already in use or issues with team validation).
     func signUp(userType: UserType) async throws {
-        let userManager = UserManager()
-        let teamManager = TeamManager()
-        let coachManager = CoachManager()
-        let inviteManager = InviteManager()
-        let playerManager = PlayerManager()
-        let playerTeamInfoManager = PlayerTeamInfoManager()
         
-        let verifyUser =  try await verifyEmailAddress()
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            throw NSError(domain: "AuthenticationModel", code: 1001, userInfo: [NSLocalizedDescriptionKey : "Dependencies not set"])
+        }
+        
+        let verifyUser = try await verifyEmailAddress()
         if let verifyUser = verifyUser {
             if verifyUser.userId != nil {
                 print("User already exists with this email. Abort")
-                return
+                NSError(domain: "AuthenticationModel", code: 1001, userInfo: [NSLocalizedDescriptionKey : "user already exists"])
             }
         }
-        
-        // Create a new user in Firebase Authentication.
-        let authDataResult = try await AuthenticationManager.shared.createUser(email: email, password: password)
+
+        let authDataResult = try await repo.authenticationManager.createUser(email: email, password: password)
         
         // Create a new DTO
         let user = UserDTO(userId: authDataResult.uid, email: authDataResult.email, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
-        try await userManager.createNewUser(userDTO: user)
+        try await repo.userManager.createNewUser(userDTO: user)
         
         // Handle user creation based on type (Player or Coach).
         if (userType == .player) {
             // Verify if the team access code entered is valid
-            guard let team = try await teamManager.getTeamWithAccessCode(accessCode: teamAccessCode) else {
+            guard let team = try await repo.teamManager.getTeamWithAccessCode(accessCode: teamAccessCode) else {
                 print("Error. Not a valid team access code. ")
                 return
             }
-            
-            guard let invite = try await inviteManager.getInviteByEmailAndTeamId(email: email, teamId: teamId) else {
+
+            guard let invite = try await repo.inviteManager.getInviteByEmailAndTeamId(email: email, teamId: teamId) else {
                 print("Invite for this player does not exists. Creating a new user.")
                 
                 // new user. Create a user and player, and add the playerId in the team
                 let user = UserDTO(userId: authDataResult.uid, email: email, userType: .player, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
-                let userDocId = try await userManager.createNewUser(userDTO: user)
+                let userDocId = try await repo.userManager.createNewUser(userDTO: user)
                 print("UserManager created at user doc: \(userDocId)")
                 
                 // create a new player,
                 let player = PlayerDTO(playerId: authDataResult.uid, jerseyNum: 0, nickName: nil, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: nil, guardianEmail: nil, guardianPhone: nil)
-                let playerDocId = try await playerManager.createNewPlayer(playerDTO: player)
+                let playerDocId = try await repo.playerManager.createNewPlayer(playerDTO: player)
                 print("Player doc id was created! \(playerDocId)")
                 
                 let subdocId = team.teamId // <- we store per-team info using team.teamId as the subdoc id
 
                 let dto = PlayerTeamInfoDTO(id: subdocId, playerId: playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil) // nil => server time
-                _ = try await playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
+                _ = try await repo.playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
 
                 // Add player to team
-                try await teamManager.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
+                try await repo.teamManager.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
                 return  // TODO: Might need to delete the existing user from the database otherwise, will never be able to create an account with that email
             }
             
             // update the user document
             print("update user")
-            try await userManager.updateUserDTO(id: invite.userDocId, email: email, userTpe: userType, firstName: firstName, lastName: lastName, dob: dateOfBirth, phone: phone, country: country, userId: authDataResult.uid)
+            try await repo.userManager.updateUserDTO(id: invite.userDocId, email: email, userTpe: userType, firstName: firstName, lastName: lastName, dob: dateOfBirth, phone: phone, country: country, userId: authDataResult.uid)
             
             // update the player document
             print("update player")
-            try await playerManager.updatePlayerId(id: invite.playerDocId, playerId: authDataResult.uid)
+            try await repo.playerManager.updatePlayerId(id: invite.playerDocId, playerId: authDataResult.uid)
             
             // Create playerTeamInfo under players/{playerDocId}/playerTeamInfo/{team.teamId}
             let subdocId = team.teamId
             let dto = PlayerTeamInfoDTO(id: subdocId, playerId: invite.playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil)
-            _ = try await playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: invite.playerDocId, playerTeamInfoDTO: dto)
+            _ = try await repo.playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: invite.playerDocId, playerTeamInfoDTO: dto)
 
             // Look for the correct team
-            guard let team = try await teamManager.getTeam(teamId: invite.teamId) else {
+            guard let team = try await repo.teamManager.getTeam(teamId: invite.teamId) else {
                 print("Team looking for does not exist. Abort")
                 return
             }
             // Add user in the players array
-            try await teamManager.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
+            try await repo.teamManager.addPlayerToTeam(id: team.id, playerId: authDataResult.uid)
             
             // update the status of the player
             // Set to accepted
-            try await inviteManager.updateInviteStatus(id: invite.id, newStatus: "Accepted")
+            try await repo.inviteManager.updateInviteStatus(id: invite.id, newStatus: "Accepted")
         } else {
             // Create a new coach entry in the database.
-            try await coachManager.addCoach(coachId: authDataResult.uid)
+            try await repo.coachManager.addCoach(coachId: authDataResult.uid)
         }
     }
     
@@ -174,8 +189,7 @@ final class AuthenticationModel: ObservableObject {
     /// - Returns: A `DBTeam` object if the access code is valid, otherwise throws a `TeamValidationError`.
     /// - Throws: A `TeamValidationError` if the access code is invalid.
     func validateTeamAccessCode() async throws -> DBTeam {
-        let teamManager = TeamManager()
-        guard let team = try await teamManager.getTeamWithAccessCode(accessCode: teamAccessCode) else {
+        guard let team = try await dependencies?.teamManager.getTeamWithAccessCode(accessCode: teamAccessCode) else {
             print("Invalid access code")
             throw TeamValidationError.invalidAccessCode
         }
@@ -190,9 +204,8 @@ final class AuthenticationModel: ObservableObject {
     /// - Returns: A `DBUser` object if the email exists, otherwise `nil`.
     /// - Throws: An error if the query to check the email fails.
     func verifyEmailAddress() async throws -> DBUser? {
-        let userManager = UserManager()
         // verify the email address.
-        guard let user = try await userManager.getUserWithEmail(email: email) else {
+        guard let user = try await dependencies?.userManager.getUserWithEmail(email: email) else {
             print("User does not exist")
             return nil
         }

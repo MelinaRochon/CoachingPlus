@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import GameFrameIOSShared
 
 /** This file defines the `FGVideoRecordingModel` class, which manages the data and logic
   for handling video recordings related to a full game. It is an `ObservableObject` that
@@ -26,6 +27,9 @@ import SwiftUI
 @MainActor
 final class FGVideoRecordingModel: ObservableObject {
     
+    /// Holds the app’s shared dependency container, used to access services and repositories.
+    private var dependencies: DependencyContainer?
+
     // MARK: - Published Properties
        
     /// URL of the video file.
@@ -40,6 +44,19 @@ final class FGVideoRecordingModel: ObservableObject {
     /// ID of the associated game for the video recording.
     @Published var gameId: String = ""
 
+    // MARK: - Dependency Injection
+    
+    /// Injects the provided `DependencyContainer` into the current context.
+    ///
+    /// This allows the view, view model, or controller to access shared
+    /// dependencies such as managers or repositories from a central container.
+    /// Useful for testing, environment configuration (e.g., local vs. Firestore),
+    /// or replacing dependencies at runtime.
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+    }
+
+    
     // MARK: - Methods
         
     /// Test function to log current video recording details.
@@ -66,14 +83,18 @@ final class FGVideoRecordingModel: ObservableObject {
     /// let success = try await createFGRecording(teamId: "123")
     /// ```
     func createFGRecording(teamId: String, gameId: String) async throws -> String? {
-        let gameManager = GameManager()
         do {
+            guard let repo = dependencies else {
+                print("⚠️ Dependencies not set")
+                return nil
+            }
+
             // Retrieve the authenticated user's coach ID.
-            let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+            let authUser = try repo.authenticationManager.getAuthenticatedUser()
             let coachId = authUser.uid
 
             // Get the game Id
-            guard let game = try await gameManager.getGame(gameId: gameId, teamId: teamId) else {
+            guard let game = try await repo.gameManager.getGame(gameId: gameId, teamId: teamId) else {
                 return nil
             }
             
@@ -88,8 +109,7 @@ final class FGVideoRecordingModel: ObservableObject {
             )
 
             // Upload the new video recording to the server.
-            let manager = FullGameVideoRecordingManager()
-            let fgRecordingId = try await manager.addFullGameVideoRecording(fullGameVideoRecordingDTO: newFGVideoRecording)
+            let fgRecordingId = try await repo.fullGameRecordingManager.addFullGameVideoRecording(fullGameVideoRecordingDTO: newFGVideoRecording)
             return fgRecordingId
         } catch {
             // Handle any errors that occur during the process.
@@ -116,7 +136,6 @@ final class FGVideoRecordingModel: ObservableObject {
     ///         instead of using a completion handler.
     func updateFGRecording(endTime: Date, fgRecordingId: String, gameId: String, teamId: String, localFile: URL) async throws {
         do {
-            let teamManager = TeamManager()
             let path = "full_game/\(teamId)/\(gameId).mov"
             
             // Upload video to storage
@@ -130,14 +149,13 @@ final class FGVideoRecordingModel: ObservableObject {
                 }
             }
             
-            guard let team = try await teamManager.getTeam(teamId: teamId) else {
+            guard let team = try await dependencies?.teamManager.getTeam(teamId: teamId) else {
                 print("Unable to find team. Abort")
                 return
             }
             
             // Update full game document
-            let manager = FullGameVideoRecordingManager()
-            try await manager.updateFullGameVideoRecording(fullGameId: fgRecordingId, teamDocId: team.id, endTime: endTime, path: path)
+            try await dependencies?.fullGameRecordingManager.updateFullGameVideoRecording(fullGameId: fgRecordingId, teamDocId: team.id, endTime: endTime, path: path)
         } catch {
             print(error.localizedDescription)
             return
@@ -160,8 +178,7 @@ final class FGVideoRecordingModel: ObservableObject {
     ///           so callers will usually not see thrown errors unless you refactor it.
     func getFGRecordingVideoUrl(teamDocId: String, gameId: String) async throws -> String? {
         do {
-            let manager = FullGameVideoRecordingManager()
-            guard let fullGame = try await manager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
+            guard let fullGame = try await dependencies?.fullGameRecordingManager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId) else {
                 print("Unable to get full game video recording document. Aborting")
                 return nil
             }

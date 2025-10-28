@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Firebase
+import GameFrameIOSShared
 
 /**
  `CoachAddingGameView` is a SwiftUI view that allows soccer coaches to create a new game event.
@@ -34,7 +35,8 @@ struct CoachAddingGameView: View {
 
     /// ViewModel for managing the data related to adding a new game
     @StateObject private var gameModel = GameModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// Stores the title or name of the game (e.g., match name or event title).
     @State private var title = ""
     
@@ -229,6 +231,9 @@ struct CoachAddingGameView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .navigationTitle(Text("New Game"))
+            .onAppear {
+                gameModel.setDependencies(dependencies)
+            }
         }
     }
     

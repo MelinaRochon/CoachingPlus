@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameFrameIOSShared
 
 
 /// Groups an array of `DBGame` objects into weekly sections, labeling each group as

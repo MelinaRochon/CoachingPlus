@@ -7,8 +7,9 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRepository {
+public final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRepository {
     
     /**
      * Returns a reference to a specific full game video recording document in Firestore.
@@ -17,7 +18,7 @@ final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRep
      *   - fgDocId: The document ID of the full game video recording.
      * - Returns: A `DocumentReference` pointing to the specified full game video recording document in Firestore.
      */
-    func fullGameVideoRecordingDocument(teamDocId: String, fgDocId: String) -> DocumentReference {
+    public func fullGameVideoRecordingDocument(teamDocId: String, fgDocId: String) -> DocumentReference {
         return fullGameVideoRecordingCollection(teamDocId: teamDocId).document(fgDocId)
     }
     
@@ -28,14 +29,14 @@ final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRep
      *   - teamDocId: The document ID of the team to which the video recordings belong.
      * - Returns: A `CollectionReference` to the team's full game video recording collection in Firestore.
      */
-    func fullGameVideoRecordingCollection(teamDocId: String) -> CollectionReference {
+    public func fullGameVideoRecordingCollection(teamDocId: String) -> CollectionReference {
         let teamRepo = FirestoreTeamRepository() // direct repo
         return teamRepo.teamCollection().document(teamDocId).collection("fg_video_recording")
     }
     
     
     /// Fetches a full game video recording document by its ID
-    func getFullGameVideo(teamDocId: String, fullGameId: String) async throws -> DBFullGameVideoRecording? {
+    public func getFullGameVideo(teamDocId: String, fullGameId: String) async throws -> DBFullGameVideoRecording? {
         // Retrieve the document from Firestore and decode it into DBFullGameVideoRecording
         return try await fullGameVideoRecordingDocument(teamDocId: teamDocId, fgDocId: fullGameId).getDocument(as: DBFullGameVideoRecording.self)
     }
@@ -44,14 +45,13 @@ final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRep
     // MARK: - Public Methods
     
     /// Creates and saves a new full game video recording in Firestore
-    func addFullGameVideoRecording(fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws -> String? {
+    public func addFullGameVideoRecording(fullGameVideoRecordingDTO: FullGameVideoRecordingDTO) async throws -> String? {
         do {
-            let teamManager = TeamManager()
             // Log the recording we are about to send
             print("Sending new full game recording to Firestore: \(fullGameVideoRecordingDTO)")
             
             // Fetch the team document ID from TeamManager using the teamId
-            guard let teamDocId = try await teamManager.getTeam(teamId: fullGameVideoRecordingDTO.teamId)?.id else {
+            guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: fullGameVideoRecordingDTO.teamId)?.id else {
                 print("Could not find team id. Aborting")
                 return nil
             }
@@ -77,7 +77,7 @@ final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRep
     
     
     /// Updates an existing full game video recording with new data
-    func updateFullGameVideoRecording(fullGameId: String, teamDocId: String, endTime: Date, path: String) async throws {
+    public func updateFullGameVideoRecording(fullGameId: String, teamDocId: String, endTime: Date, path: String) async throws {
         // Ensure the full game video recording exists before updating
         guard let fullGame = try await getFullGameVideo(teamDocId: teamDocId, fullGameId: fullGameId) else {
             print("Could not find full game video recording document. Aborting")
@@ -96,7 +96,7 @@ final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecordingRep
     
     
     /// Fetches a full game video recording using the game ID instead of the recording ID
-    func getFullGameVideoWithGameId(teamDocId: String, gameId: String) async throws -> DBFullGameVideoRecording? {
+    public func getFullGameVideoWithGameId(teamDocId: String, gameId: String) async throws -> DBFullGameVideoRecording? {
         // Query the collection for documents matching the game_id field
         let query = try await fullGameVideoRecordingCollection(teamDocId: teamDocId).whereField("game_id", isEqualTo: gameId).getDocuments()
         

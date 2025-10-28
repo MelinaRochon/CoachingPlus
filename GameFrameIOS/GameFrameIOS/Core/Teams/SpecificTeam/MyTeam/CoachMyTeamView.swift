@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  This structure provides the view where coaches can see the footage (games) and players related to a specific team.
@@ -42,7 +43,8 @@ struct CoachMyTeamView: View {
     @StateObject private var playerModel = PlayerModel()
     
     @StateObject private var teamModel = TeamModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// The team whose settings are being viewed and modified.
     @State var selectedTeam: DBTeam
     
@@ -132,6 +134,8 @@ struct CoachMyTeamView: View {
         .navigationTitle(Text(selectedTeam.teamNickname))
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
+            teamModel.setDependencies(dependencies)
+            gameModel.setDependencies(dependencies)
             refreshData() // Refresh data when the view appears
         }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
@@ -223,11 +227,10 @@ struct CoachMyTeamView: View {
     private func refreshData() {
         Task {
             do {
-                let teamManager = TeamManager()
                 // Load games and players associated with the team
                 try await gameModel.getAllGames(teamId: selectedTeam.teamId)
                 self.groupedGames = groupGamesByWeek(gameModel.games)
-                self.selectedTeam = try await teamManager.getTeam(teamId: selectedTeam.teamId)!
+                self.selectedTeam = try await dependencies.teamManager.getTeam(teamId: selectedTeam.teamId)!
                 guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TODO: - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team

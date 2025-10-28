@@ -7,8 +7,9 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestoreUserRepository: UserRepository {
+public final class FirestoreUserRepository: UserRepository {
     
     /// Reference to the users collection in Firestore.
     private let userCollection = Firestore.firestore().collection("users")
@@ -17,15 +18,8 @@ final class FirestoreUserRepository: UserRepository {
     private func userDocument(id: String) -> DocumentReference {
         userCollection.document(id)
     }
-            
-    func getUserType() async throws -> UserType {
-        // Get the currently authenticated user
-        let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-        // Fetch their DBUser object and return the userType
-        return try await getUser(userId: authUser.uid)!.userType
-    }
     
-    func createNewUser(userDTO: UserDTO) async throws -> String {
+    public func createNewUser(userDTO: UserDTO) async throws -> String {
         // Create a new Firestore document with a generated ID
         let userDocument = userCollection.document()
         let documentId = userDocument.documentID
@@ -39,7 +33,7 @@ final class FirestoreUserRepository: UserRepository {
         return documentId
     }
         
-    func getUser(userId: String) async throws -> DBUser? {
+    public func getUser(userId: String) async throws -> DBUser? {
         // Query Firestore for the user with a specific `user_id` field
         let snapshot = try await userCollection.whereField("user_id", isEqualTo: userId).getDocuments()
         
@@ -48,12 +42,12 @@ final class FirestoreUserRepository: UserRepository {
         return try doc.data(as: DBUser.self)
     }
     
-    func getUserWithDocId(id: String) async throws -> DBUser? {
+    public func getUserWithDocId(id: String) async throws -> DBUser? {
         // Directly fetch a user document by its document ID
         return try await userDocument(id: id).getDocument(as: DBUser.self)
     }
 
-    func getUserWithEmail(email: String) async throws -> DBUser? {
+    public func getUserWithEmail(email: String) async throws -> DBUser? {
         // Query Firestore for a user with the given email
         let snapshot = try await userCollection.whereField("email", isEqualTo: email).getDocuments()
         
@@ -61,7 +55,7 @@ final class FirestoreUserRepository: UserRepository {
         return try doc.data(as: DBUser.self)
     }
     
-    func updateCoachProfile(user: DBUser) async throws {
+    public func updateCoachProfile(user: DBUser) async throws {
         // Prepare the fields we want to update
         let data: [String: Any] = [
             DBUser.CodingKeys.phone.rawValue: user.phone,
@@ -72,7 +66,7 @@ final class FirestoreUserRepository: UserRepository {
         try await userDocument(id: user.id).updateData(data as [AnyHashable : Any])
     }
     
-    func updateCoachSettings(id: String, phone: String?, dateOfBirth: Date?, firstName: String?, lastName: String?, membershipDetails: String?) async throws {
+    public func updateCoachSettings(id: String, phone: String?, dateOfBirth: Date?, firstName: String?, lastName: String?, membershipDetails: String?) async throws {
         var data: [String: Any] = [:]
         
         // Add only the non-nil values to the update dictionary
@@ -101,12 +95,12 @@ final class FirestoreUserRepository: UserRepository {
         try await userDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    func findUserWithId(id: String) async throws -> DBUser? {
+    public func findUserWithId(id: String) async throws -> DBUser? {
         // Fetch user document by document ID
         return try await userDocument(id: id).getDocument(as: DBUser.self)
     }
     
-    func updateUserDTO(id: String, email: String, userTpe: UserType, firstName: String, lastName: String, dob: Date, phone: String?, country: String?, userId: String) async throws {
+    public func updateUserDTO(id: String, email: String, userTpe: UserType, firstName: String, lastName: String, dob: Date, phone: String?, country: String?, userId: String) async throws {
         // Build dictionary with all new values
         let data: [String: Any] = [
             DBUser.CodingKeys.userId.rawValue: userId,
@@ -123,7 +117,7 @@ final class FirestoreUserRepository: UserRepository {
         try await userDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    func updateUserDOB(id: String, dob: Date) async throws {
+    public func updateUserDOB(id: String, dob: Date) async throws {
         // Update only the date of birth field
         let data: [String: Any] = [
             DBUser.CodingKeys.dateOfBirth.rawValue: dob,
@@ -132,7 +126,7 @@ final class FirestoreUserRepository: UserRepository {
         try await userDocument(id: id).updateData(data as [AnyHashable : Any])
     }
     
-    func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
+    public func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
         var data: [String: Any] = [:]
         
         // Add only provided fields to update

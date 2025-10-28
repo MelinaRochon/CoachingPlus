@@ -35,6 +35,7 @@ struct AudioRecordingView: View {
     // AudioRecordingModel that manages key moments and transcripts
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var gameModel = GameModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     // The start time of the recording
     @State private var recordingStartTime: Date?
@@ -51,7 +52,6 @@ struct AudioRecordingView: View {
     
     // Timer and speech recognition states
     @State var timer = ScrumTimer()
-//    @Binding var errorWrapper: ErrorWrapper?
     
     @State private var errorWrapper: ErrorWrapper?
 
@@ -68,11 +68,6 @@ struct AudioRecordingView: View {
     
     @State private var gameStartTime: Date = Date()
     
-//    init(teamId: String, errorWrapper: ErrorWrapper?, showLandingPageView: Binding<Bool>) {
-//        self.teamId = teamId
-//        self.errorWrapper = errorWrapper
-//        self._showLandingPageView = showLandingPageView
-//    }
     // MARK: - Body
     
     var body: some View {
@@ -187,6 +182,10 @@ struct AudioRecordingView: View {
                 } catch {
                     print("Error when loading the audio recording transcripts. Error: \(error)")
                 }
+            }
+            .onAppear {
+                gameModel.setDependencies(dependencies)
+                audioRecordingModel.setDependencies(dependencies)
             }
         }.navigationBarBackButtonHidden(true)
     }

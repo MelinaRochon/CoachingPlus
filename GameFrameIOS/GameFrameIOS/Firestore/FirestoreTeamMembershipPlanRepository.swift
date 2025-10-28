@@ -7,8 +7,9 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestoreTeamMembershipPlanRepository: TeamMembershipPlanRepository {
+public final class FirestoreTeamMembershipPlanRepository: TeamMembershipPlanRepository {
     
     /// Returns a reference to the Firestore collection for membership plans of a specific team.
     /// - Parameter teamId: The ID of the team.
@@ -22,7 +23,7 @@ final class FirestoreTeamMembershipPlanRepository: TeamMembershipPlanRepository 
     /// - Parameter teamId: The ID of the team.
     /// - Returns: An array of `TeamMembershipPlan` objects.
     /// - Throws: An error if the database query fails.
-    func getAllMembershipPlans(teamId: String) async throws -> [DBTeamMembershipPlan] {
+    public func getAllMembershipPlans(teamId: String) async throws -> [DBTeamMembershipPlan] {
         let snapshot = try await membershipPlanCollection(teamId: teamId).getDocuments()
         return snapshot.documents.compactMap { try? $0.data(as: DBTeamMembershipPlan.self) }
     }
@@ -34,7 +35,7 @@ final class FirestoreTeamMembershipPlanRepository: TeamMembershipPlanRepository 
     ///   - planId: The ID of the membership plan.
     /// - Returns: A `TeamMembershipPlan` object if found, otherwise `nil`.
     /// - Throws: An error if the database query fails.
-    func getMembershipPlan(teamId: String, planId: String) async throws -> DBTeamMembershipPlan? {
+    public func getMembershipPlan(teamId: String, planId: String) async throws -> DBTeamMembershipPlan? {
         let document = try await membershipPlanCollection(teamId: teamId).document(planId).getDocument()
         return try? document.data(as: DBTeamMembershipPlan.self)
     }
@@ -48,7 +49,7 @@ final class FirestoreTeamMembershipPlanRepository: TeamMembershipPlanRepository 
     ///   - benefits: A list of benefits included in the plan.
     ///   - durationInMonths: The duration of the plan in months.
     /// - Throws: An error if the operation fails.
-    func addMembershipPlan(teamId: String, name: String, price: Double, benefits: [String], durationInMonths: Int) async throws {
+    public func addMembershipPlan(teamId: String, name: String, price: Double, benefits: [String], durationInMonths: Int) async throws {
         let planDocument = membershipPlanCollection(teamId: teamId).document()
         let newPlan = DBTeamMembershipPlan(planId: planDocument.documentID, teamId: teamId, name: name, price: price, benefits: benefits, durationInMonths: durationInMonths)
         try planDocument.setData(from: newPlan, merge: false)
@@ -64,7 +65,7 @@ final class FirestoreTeamMembershipPlanRepository: TeamMembershipPlanRepository 
     ///   - benefits: (Optional) Updated list of benefits.
     ///   - durationInMonths: (Optional) Updated duration of the plan in months.
     /// - Throws: An error if the update fails.
-    func updateMembershipPlan(teamId: String, planId: String, name: String? = nil, price: Double? = nil, benefits: [String]? = nil, durationInMonths: Int? = nil) async throws {
+    public func updateMembershipPlan(teamId: String, planId: String, name: String? = nil, price: Double? = nil, benefits: [String]? = nil, durationInMonths: Int? = nil) async throws {
         var updatedData: [String: Any] = [:]
         
         if let name = name { updatedData["name"] = name }
@@ -81,7 +82,7 @@ final class FirestoreTeamMembershipPlanRepository: TeamMembershipPlanRepository 
     ///   - teamId: The ID of the team.
     ///   - planId: The ID of the membership plan to delete.
     /// - Throws: An error if the deletion fails.
-    func removeMembershipPlan(teamId: String, planId: String) async throws {
+    public func removeMembershipPlan(teamId: String, planId: String) async throws {
         try await membershipPlanCollection(teamId: teamId).document(planId).delete()
     }
 }

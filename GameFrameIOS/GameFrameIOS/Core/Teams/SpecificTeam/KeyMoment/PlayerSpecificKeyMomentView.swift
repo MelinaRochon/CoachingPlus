@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import GameFrameIOSShared
 
 /// A view that displays a specific key moment for a player, including video playback, transcript, and feedback.
 ///
@@ -42,6 +43,7 @@ struct PlayerSpecificKeyMomentView: View {
     @StateObject private var transcriptModel = TranscriptModel()
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// List of players associated with feedback for this key moment.
     @State private var feedbackFor: [PlayerNameAndPhoto] = []
@@ -204,6 +206,12 @@ struct PlayerSpecificKeyMomentView: View {
         }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)
+        }
+        .onAppear {
+            transcriptModel.setDependencies(dependencies)
+            fgVideoRecordingModel.setDependencies(dependencies)
+            audioRecordingModel.setDependencies(dependencies)
+            commentViewModel.setDependencies(dependencies)
         }
     }
     

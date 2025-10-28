@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /// A view that displays all saved transcripts in a list format.
 struct SearchTranscriptView: View {

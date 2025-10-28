@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameFrameIOSShared
 
 /// **UserModel** manages user-related operations in the app.
 ///
@@ -18,14 +19,33 @@ import Foundation
 @MainActor
 final class UserModel: ObservableObject {
     
+    /// Holds the app’s shared dependency container, used to access services and repositories.
+    private var dependencies: DependencyContainer?
+
+    // MARK: - Dependency Injection
+    
+    /// Injects the provided `DependencyContainer` into the current context.
+    ///
+    /// This allows the view, view model, or controller to access shared
+    /// dependencies such as managers or repositories from a central container.
+    /// Useful for testing, environment configuration (e.g., local vs. Firestore),
+    /// or replacing dependencies at runtime.
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+    }
+
     /// Creates a new user in the database.
     ///
     /// - Parameter userDTO: A `UserDTO` object containing user details.
     /// - Returns: A string representing the newly created user's ID.
     /// - Throws: An error if the user creation process fails.
     func addUser(userDTO: UserDTO) async throws -> String {
-        let userManager = UserManager()
-        return try await userManager.createNewUser(userDTO: userDTO)
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            throw NSError(domain: "UserModel", code: 1, userInfo: nil)
+        }
+
+        return try await repo.userManager.createNewUser(userDTO: userDTO)
     }
     
     
@@ -34,22 +54,17 @@ final class UserModel: ObservableObject {
     /// - Returns: A `DBUser` object representing the authenticated user, or `nil` if not found.
     /// - Throws: An error if authentication fails.
     func getUser() async throws -> DBUser? {
-        let userManager = UserManager()
-        let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            return nil
+        }
+
+        let authUser = try repo.authenticationManager.getAuthenticatedUser()
         
-        return try await userManager.getUser(userId: authUser.uid)
+        return try await repo.userManager.getUser(userId: authUser.uid)
     }
     
-    
-    /// Retrieves the user type (e.g., "Coach" or "Player").
-    ///
-    /// - Returns: A `String` representing the user's role.
-    /// - Throws: An error if the user data is unavailable.
-    func getUserType() async throws -> UserType {
-        return try await getUser()!.userType
-    }
-    
-    
+        
     /// Updates the settings of a specific user by delegating the task to the `UserManager`.
     /// - Parameters:
     ///   - id: The unique identifier of the user whose settings need to be updated.
@@ -59,8 +74,6 @@ final class UserModel: ObservableObject {
     ///   - phone: Optional updated phone number for the user.
     /// - Throws: An error if the update operation fails.
     func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
-        let userManager = UserManager()
-        try await userManager.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
+        try await dependencies?.userManager.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
     }
-    
 }

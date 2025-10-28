@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameFrameIOSShared
 
 /**
   This file defines the `CoachProfileViewModel`, an observable object that manages the coach's
@@ -31,11 +32,25 @@ import Foundation
 @MainActor
 final class CoachProfileViewModel: ObservableObject {
     
+    /// Holds the app’s shared dependency container, used to access services and repositories.
+    private var dependencies: DependencyContainer?
+
     /// Published state variables to store user and player information
     @Published private(set) var user: DBUser? = nil // Holds the authenticated coach's user profile data
     @Published private(set) var player: DBPlayer? = nil // Holds the player's profile data (if relevant)
 
+    // MARK: - Dependency Injection
     
+    /// Injects the provided `DependencyContainer` into the current context.
+    ///
+    /// This allows the view, view model, or controller to access shared
+    /// dependencies such as managers or repositories from a central container.
+    /// Useful for testing, environment configuration (e.g., local vs. Firestore),
+    /// or replacing dependencies at runtime.
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+    }
+
     /**
      Logs out the current user.
      
@@ -43,7 +58,12 @@ final class CoachProfileViewModel: ObservableObject {
      It ensures that the user’s session is ended and they are signed out of the system.
      */
     func logOut() throws {
-        try AuthenticationManager.shared.signOut()
+        guard let repo = dependencies?.authenticationManager else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+
+        try repo.signOut()
     }
     
     
@@ -54,10 +74,15 @@ final class CoachProfileViewModel: ObservableObject {
      `AuthenticationManager` to send a password reset email to the user. This allows the coach to reset their password.
      */
     func resetPassword() async throws {
-        let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+        guard let repo = dependencies?.authenticationManager else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+
+        let authUser = try repo.getAuthenticatedUser()
         
         // Make sure the DISPLAY_NAME of the app on firebase to the public is set properly
-        try await AuthenticationManager.shared.resetPassword(email: authUser.email) // TO DO - NEED TO VERIFY USER GETS EMAIL
+        try await repo.resetPassword(email: authUser.email) // TO DO - NEED TO VERIFY USER GETS EMAIL
     }
     
     
@@ -69,11 +94,15 @@ final class CoachProfileViewModel: ObservableObject {
      `UserManager.shared.getUser()` method. The user data is stored in the `user` property.
      */
     func loadCurrentUser() async throws {
-        let userManager = UserManager()
-        let authDataResult = try AuthenticationManager.shared.getAuthenticatedUser() // get user profile
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+
+        let authDataResult = try repo.authenticationManager.getAuthenticatedUser() // get user profile
         
         print("This is from the loadCurrentUser function: userid = \(authDataResult.uid)")
-        self.user = try await userManager.getUser(userId: authDataResult.uid)
+        self.user = try await repo.userManager.getUser(userId: authDataResult.uid)
     }
     
     
@@ -85,14 +114,11 @@ final class CoachProfileViewModel: ObservableObject {
      fetched data is assigned to the `user` and `player` properties, respectively.
      */
     func loadPlayer(userDocId: String, playerDocId: String) async throws {
-        let userManager = UserManager()
-        let playerManager = PlayerManager()
-        
         // Get the user information from the player's id
-        self.user = try await userManager.findUserWithId(id: userDocId)
+        self.user = try await dependencies?.userManager.findUserWithId(id: userDocId)
         
         // Get the player's information
-        self.player = try await playerManager.findPlayerWithId(id: playerDocId)
+        self.player = try await dependencies?.playerManager.findPlayerWithId(id: playerDocId)
     }
     
     
@@ -106,11 +132,9 @@ final class CoachProfileViewModel: ObservableObject {
      */
     func updatePlayerInformation(jersey: Int, nickname: String) {
         guard let player else { return }
-        let playerManager = PlayerManager()
-    
         Task {
             // Updating the player information on the database
-            try await playerManager.updatePlayerJerseyAndNickname(playerDocId: player.id, jersey: jersey, nickname: nickname)
+            try await dependencies?.playerManager.updatePlayerJerseyAndNickname(playerDocId: player.id, jersey: jersey, nickname: nickname)
         }
     }
     
@@ -131,12 +155,11 @@ final class CoachProfileViewModel: ObservableObject {
         user.phone = phone
         user.dateOfBirth = dateOfBirth
         
-        let userManager = UserManager()
         Task {
             // Call UserManager to update the coach's profile
-            try await userManager.updateCoachProfile(user: user)
+            try await dependencies?.userManager.updateCoachProfile(user: user)
             // Refresh the user object after updating
-            self.user = try await userManager.getUser(userId: userId)
+            self.user = try await dependencies?.userManager.getUser(userId: userId)
         }
     }
     
@@ -163,32 +186,34 @@ final class CoachProfileViewModel: ObservableObject {
             user.lastName = lastName ?? ""
 
         }
-        let userManager = UserManager()
+
         Task {
             // Call UserManager to update the coach's profile
-            try await userManager.updateCoachSettings(id: user.id, phone: phone, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, membershipDetails: membershipDetails)
+            try await dependencies?.userManager.updateCoachSettings(id: user.id, phone: phone, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, membershipDetails: membershipDetails)
             // Refresh the user object after updating
-            self.user = try await userManager.getUser(userId: userId)
+            self.user = try await dependencies?.userManager.getUser(userId: userId)
         }
     }
 
     
     /// Remove a player from the database
     func removePlayer(teamDocId: String) async throws {
-        let teamManager = TeamManager()
-        let playerManager = PlayerManager()
         // TODO: Remove a player from db cannot be done.
         guard let player else { return }
+        
+        guard let repo = dependencies else {
+            throw NSError(domain: "CoachProfileViewModel", code: 1001, userInfo: [NSLocalizedDescriptionKey : "Dependencies not set"])
+        }
         
         // Remove the player from the team
         
         // Remove from invites, if player id is found in array
-        var inviteDocId = try await teamManager.getInviteDocIdOfPlayerAndTeam(teamDocId: teamDocId, playerDocId: player.id)
+        let inviteDocId = try await repo.teamManager.getInviteDocIdOfPlayerAndTeam(teamDocId: teamDocId, playerDocId: player.id)
         print("the invite doc id is \(inviteDocId ?? "DOES NOT exexist. player was not added by the coach")")
         if inviteDocId != nil {
             // Remove the invite id from the invites array
             print("removing player's invite from the teamP: \(teamDocId)")
-            try await teamManager.removeInviteFromTeam(id: teamDocId, inviteDocId: inviteDocId!)
+            try await repo.teamManager.removeInviteFromTeam(id: teamDocId, inviteDocId: inviteDocId!)
         } else {
             print("player not in invite array... no need to remove")
         }
@@ -196,24 +221,29 @@ final class CoachProfileViewModel: ObservableObject {
         // Remove from accepted, if player is found in array
         if let playerId = player.playerId {
             print("player id exists. chek if player is assigned to a team ({playersz})")
-            let playerIsOnTeam = try await teamManager.isPlayerOnTeam(id: teamDocId, playerId: playerId)
+            let playerIsOnTeam = try await repo.teamManager.isPlayerOnTeam(id: teamDocId, playerId: playerId)
             print("is player set on a team: (\(playerIsOnTeam))")
             if playerIsOnTeam {
                 print("removing p0layer from the team")
-                try await teamManager.removePlayerFromTeam(id: teamDocId, playerId: playerId)
+                try await repo.teamManager.removePlayerFromTeam(id: teamDocId, playerId: playerId)
             } else {
                 print("player nhot on the team/. . . no need to remove from the player array (in teams)")
             }
         }
         
         // Remove team id player was enrolled in players team_enrolled array
-        try await playerManager.removeTeamFromPlayerWithTeamDocId(id: player.id, teamDocId: teamDocId)
+        try await repo.playerManager.removeTeamFromPlayerWithTeamDocId(id: player.id, teamDocId: teamDocId)
     }
     
     
     func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
-        let userManager = UserManager()
-        try await userManager.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
+        try await dependencies?.userManager.updateUserSettings(
+            id: id,
+            dateOfBirth: dateOfBirth,
+            firstName: firstName,
+            lastName: lastName,
+            phone: phone
+        )
     }
     
     /// Updates the settings for the currently loaded player.
@@ -226,7 +256,6 @@ final class CoachProfileViewModel: ObservableObject {
     ///   - guardianPhone: Optional updated guardian's phone number.
     ///   - gender: Optional updated gender of the player.
     func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) {
-        let playerManager = PlayerManager()
         guard var player else { return }
         
         player.jerseyNum = jersey ?? player.jerseyNum
@@ -238,9 +267,17 @@ final class CoachProfileViewModel: ObservableObject {
         
         Task {
             // Update the player's information in the database
-            try await playerManager.updatePlayerSettings(id: id, jersey: jersey, nickname: nickname, guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone, gender: gender)
+            try await dependencies?.playerManager.updatePlayerSettings(
+                id: id,
+                jersey: jersey,
+                nickname: nickname,
+                guardianName: guardianName,
+                guardianEmail: guardianEmail,
+                guardianPhone: guardianPhone,
+                gender: gender
+            )
             
-            self.player = try await playerManager.getPlayer(playerId: player.playerId!)
+            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
         }
     }
 }

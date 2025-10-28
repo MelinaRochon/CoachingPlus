@@ -6,8 +6,8 @@
 //
 
 import Foundation
-
 import SwiftUI
+import GameFrameIOSShared
 
 /***
  A view that allows a coach to configure recording settings before starting a session.
@@ -33,6 +33,7 @@ struct CoachRecordingConfigView: View {
 
     /// ViewModel to manage the list of teams
     @StateObject private var teamModel = TeamModel() // Fetches the list of teams
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// State variables for managing user selections and app state
     /// This variable stores the ID of the team the user selects. It's optional to account for the case when no team is selected.
@@ -158,6 +159,7 @@ struct CoachRecordingConfigView: View {
             }
             .onAppear {
                 loadTeams()
+                teamModel.setDependencies(dependencies)
             }
         }
     }

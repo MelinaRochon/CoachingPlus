@@ -21,6 +21,9 @@ struct PlayerSignUpView: View {
     /// Binding to control the visibility of the sign-in view in the parent view.
     @Binding var showSignInView: Bool
     
+    // Detect if the app is running in UI test mode
+    private let isUITest = ProcessInfo.processInfo.arguments.contains("UI_TEST_MODE")
+
     // MARK: - View
 
     var body: some View {
@@ -34,10 +37,12 @@ struct PlayerSignUpView: View {
                     // Custom text field for the player's first name
                     CustomUIFields.customTextField("First Name", text: $viewModel.firstName)
                         .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("page.signup.player.firstName")
                     
                     // Custom text field for the player's last name
                     CustomUIFields.customTextField("Last Name", text: $viewModel.lastName)
                         .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("page.signup.player.lastName")
 
                     // Custom date picker for selecting the player's date of birth
                     HStack {
@@ -61,6 +66,7 @@ struct PlayerSignUpView: View {
                             // Formats the phone number when it changes
                             viewModel.phone = formatPhoneNumber(newVal)
                         }
+                        .accessibilityIdentifier("page.signup.player.phone")
                     
                     // Country picker with a list of countries
                     HStack {
@@ -71,6 +77,7 @@ struct PlayerSignUpView: View {
                                 Text(c).tag(c)
                             }
                         }
+                        .accessibilityIdentifier("page.signup.player.country")
                     }
                     .frame(height: 45)
                     .pickerStyle(.automatic)
@@ -84,7 +91,19 @@ struct PlayerSignUpView: View {
                     CustomUIFields.disabledCustomTextField("Email", text: $viewModel.email)
 
                     // Custom password field for the user to set their password
-                    CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
+                    // Password Field with Eye Toggle
+                    Group {
+                        if isUITest {
+                            CustomUIFields.customTextField("Password", text: $viewModel.password)
+                                .accessibilityIdentifier("page.signup.player.password")
+                                .textInputAutocapitalization(.never)
+                                .disableAutocorrection(true)
+                        } else {
+                            CustomUIFields.customPasswordField("Password", text: $viewModel.password, showPassword: $showPassword)
+                                .accessibilityIdentifier("page.signup.player.password")
+                        }
+                    }
+
                 }
                 .padding(.horizontal)
                 
@@ -110,6 +129,7 @@ struct PlayerSignUpView: View {
                 }
                 .disabled(!signUpIsValid)
                 .opacity(signUpIsValid ? 1.0 : 0.5)
+                .accessibilityIdentifier("page.signup.player.signUpBtn")
             }
         }
     }
@@ -136,7 +156,3 @@ extension PlayerSignUpView: AuthenticationSignUpProtocol {
     }
 }
 
-
-#Preview {
-    PlayerCreateAccountView(showSignInView: .constant(false), viewModel: AuthenticationModel())
-}

@@ -27,6 +27,7 @@ struct LoginChoiceView: View {
                         Text("Log in as a..") // Title prompting user to choose role
                             .font(.title3)
                             .fontWeight(.bold)
+                            .accessibilityIdentifier("loginChoicePage.title")
                         
                         // Horizontal stack with buttons to choose "Coach" or "Player"
                         HStack(spacing: 10) {
@@ -39,7 +40,7 @@ struct LoginChoiceView: View {
                                     .background(Color.black)
                                     .foregroundColor(.white)
                                     .clipShape(Capsule())
-                                    .accessibilityIdentifier("loginAsCoachButton")
+                                    .accessibilityIdentifier("loginChoicePage.login.coach.btn")
                             }
                             
                             // Navigation link for "Player" selection
@@ -51,7 +52,7 @@ struct LoginChoiceView: View {
                                     .background(Color.black)
                                     .foregroundColor(.white)
                                     .clipShape(Capsule())
-                                    .accessibilityIdentifier("loginAsPlayerButton")
+                                    .accessibilityIdentifier("loginChoicePage.login.player.btn")
                             }
                         }
                     }

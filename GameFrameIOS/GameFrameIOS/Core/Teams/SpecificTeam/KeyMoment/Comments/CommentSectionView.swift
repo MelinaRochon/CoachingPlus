@@ -32,6 +32,7 @@ struct CommentSectionView: View {
     var keyMomentId: String
     var gameId: String
     var transcriptId: String
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -107,6 +108,9 @@ struct CommentSectionView: View {
         }
         .task {
             await viewModel.loadCommentsForTranscript(teamDocId: teamDocId, transcriptId: transcriptId)
+        }
+        .onAppear {
+            viewModel.setDependencies(dependencies)
         }
     }
 }

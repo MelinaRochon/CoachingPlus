@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 
 /// A view displaying the details of a specific game, including its schedule, duration, location, and settings.
@@ -43,7 +44,8 @@ struct GameDetailsView: View {
     @State private var isEditing: Bool = false
     
     @State private var gameModel = GameModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     @State private var removeGame: Bool = false
     @Binding var dismissOnRemove: Bool
 
@@ -187,6 +189,9 @@ struct GameDetailsView: View {
             // Set the recording reminder flag.
             self.recordReminder = selectedGame.recordingReminder
             gameName = selectedGame.title
+        }
+        .onAppear {
+            gameModel.setDependencies(dependencies)
         }
     }
     

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  `CoachAllTranscriptsView` is a SwiftUI view that presents the details of all transcripts for a scheduled game.
@@ -30,6 +31,7 @@ struct CoachAllTranscriptsView: View {
     @State private var transcripts: [keyMomentTranscript]?
     
     @StateObject private var transcriptModel = TranscriptModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Indicates whether the transcripts should be sorted by time (duration).
     /// - If `true`, transcripts are sorted by their `frameStart` time (chronological order).
@@ -172,6 +174,9 @@ struct CoachAllTranscriptsView: View {
                     // sort by alphabetical order
                     filteredTranscripts = filteredTranscripts.sorted(by: { $0.transcript < $1.transcript })
                 }
+            }
+            .onAppear {
+                transcriptModel.setDependencies(dependencies)
             }
         }.task {
             do {

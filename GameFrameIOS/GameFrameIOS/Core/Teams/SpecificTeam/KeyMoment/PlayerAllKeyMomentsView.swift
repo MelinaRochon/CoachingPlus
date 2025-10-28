@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import GameFrameIOSShared
 
 /// A view that displays all key moments recorded for a game, allowing players to browse and filter them.
 ///
@@ -37,7 +38,8 @@ struct PlayerAllKeyMomentsView: View {
     @State private var filteredKeyMoments: [keyMomentTranscript] = []
     
     @StateObject private var transcriptModel = TranscriptModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     
     var body: some View {
         NavigationStack {
@@ -110,6 +112,9 @@ struct PlayerAllKeyMomentsView: View {
                 } catch {
                     print("Error. Aborting...")
                 }
+            }
+            .onAppear {
+                transcriptModel.setDependencies(dependencies)
             }
             // Show filters
             //            .sheet(isPresented: $showFilterSelector, content: {

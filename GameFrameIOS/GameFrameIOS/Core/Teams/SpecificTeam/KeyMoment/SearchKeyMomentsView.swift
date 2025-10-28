@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import GameFrameIOSShared
 
 /// A view that displays a searchable list of key moments for a given game.
 ///

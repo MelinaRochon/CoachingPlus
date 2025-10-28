@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /// A SwiftUI view that presents filtering and settings options for game and player visibility.
 /// It allows toggling between upcoming and past games, and selecting a player filter option.

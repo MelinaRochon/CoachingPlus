@@ -7,8 +7,9 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestoreKeyMomentRepository: KeyMomentRepository {
+public final class FirestoreKeyMomentRepository: KeyMomentRepository {
     /**
      Returns a reference to a specific key moment document within the Firestore collection.
      - Parameters:
@@ -17,7 +18,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
         - keyMomentDocId: The unique document ID for the key moment in the game’s collection.
      - Returns: A `DocumentReference` to the key moment document.
      */
-    func keyMomentDocument(teamDocId: String, gameDocId: String, keyMomentDocId: String) -> DocumentReference {
+    public func keyMomentDocument(teamDocId: String, gameDocId: String, keyMomentDocId: String) -> DocumentReference {
         return keyMomentCollection(teamDocId: teamDocId, gameDocId: gameDocId).document(keyMomentDocId)
     }
     
@@ -29,7 +30,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
         - gameDocId: The unique document ID for the game in the team’s collection.
      - Returns: A `CollectionReference` pointing to the key moments sub-collection in Firestore.
      */
-    func keyMomentCollection(teamDocId: String, gameDocId: String) -> CollectionReference {
+    public func keyMomentCollection(teamDocId: String, gameDocId: String) -> CollectionReference {
         let gameRepo = FirestoreGameRepository()
         return gameRepo.gameCollection(teamDocId: teamDocId).document(gameDocId).collection("key_moments")
     }
@@ -44,10 +45,9 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
      - Returns: An optional `DBKeyMoment` object that represents the key moment document, or `nil` if not found.
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing team, game, or key moment document).
      */
-    func getKeyMoment(teamId: String, gameId: String, keyMomentDocId: String) async throws -> DBKeyMoment? {
-        let teamManager = TeamManager()
+    public func getKeyMoment(teamId: String, gameId: String, keyMomentDocId: String) async throws -> DBKeyMoment? {
         // Make sure the game document can be found under the team id given
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("getKeyMoment: Could not find team id. Aborting")
             return nil
         }
@@ -67,7 +67,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
     /// - Throws: Rethrows any error that occurs while fetching key moments
     ///   or updating a key moment’s feedback field in Firestore.
     /// - Returns: Nothing. The function is `async` and `throws` but has no return value.
-    func assignPlayerToKeyMomentsForEntireTeam(teamDocId: String, gameId: String, playersCount: Int, playerId: String) async throws {
+    public func assignPlayerToKeyMomentsForEntireTeam(teamDocId: String, gameId: String, playersCount: Int, playerId: String) async throws {
         guard let keyMoments = try await getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
             print("No key moments found")
             return
@@ -93,7 +93,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
      - Returns: An optional `DBKeyMoment` object representing the key moment document, or `nil` if not found.
      - Throws: Errors may be thrown if Firestore operations fail.
      */
-    func getKeyMomentWithDocId(teamDocId: String, gameDocId: String, keyMomentDocId: String) async throws -> DBKeyMoment? {
+    public func getKeyMomentWithDocId(teamDocId: String, gameDocId: String, keyMomentDocId: String) async throws -> DBKeyMoment? {
         return try await keyMomentDocument(teamDocId: teamDocId, gameDocId: gameDocId, keyMomentDocId: keyMomentDocId).getDocument(as: DBKeyMoment.self)
     }
 
@@ -108,7 +108,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
     /// - Throws: Rethrows any errors encountered while fetching the key moment from the database.
     /// - Note: This function performs an asynchronous fetch for the key moment using `getKeyMoment`.
     ///         If no key moment is found, it prints a debug message and returns `nil`.
-    func getAudioUrl(teamDocId: String, gameDocId: String, keyMomentId: String) async throws -> String? {
+    public func getAudioUrl(teamDocId: String, gameDocId: String, keyMomentId: String) async throws -> String? {
         guard let keyMoment = try await getKeyMoment(teamId: teamDocId, gameId: gameDocId, keyMomentDocId: keyMomentId) else {
             print("No key moment found. returning")
             return nil
@@ -125,10 +125,9 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
      - Returns: An optional array of `DBKeyMoment` objects representing all key moments in the game, or `nil` if no key moments are found.
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing team or game document).
      */
-    func getAllKeyMoments(teamId: String, gameId: String) async throws -> [DBKeyMoment]? {
-        let teamManager = TeamManager()
+    public func getAllKeyMoments(teamId: String, gameId: String) async throws -> [DBKeyMoment]? {
         // Make sure the game document can be found under the team id given
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("getAllKeyMoments: Could not find team id. Aborting")
             return nil
         }
@@ -149,7 +148,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
      - Returns: An optional array of `DBKeyMoment` objects representing all key moments in the game, or `nil` if no key moments are found.
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing team or game document).
      */
-    func getAllKeyMomentsWithTeamDocId(teamDocId: String, gameId: String) async throws -> [DBKeyMoment]? {
+    public func getAllKeyMomentsWithTeamDocId(teamDocId: String, gameId: String) async throws -> [DBKeyMoment]? {
         
         // Get all documents in the key moment collection
         let snapshot = try await keyMomentCollection(teamDocId: teamDocId, gameDocId: gameId).getDocuments()
@@ -167,10 +166,9 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
      - Returns: The document ID of the newly created key moment document, or `nil` if the key moment could not be added.
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing team document or database write failure).
      */
-    func addNewKeyMoment(teamId: String, keyMomentDTO: KeyMomentDTO) async throws -> String? {
-        let teamManager = TeamManager()
+    public func addNewKeyMoment(teamId: String, keyMomentDTO: KeyMomentDTO) async throws -> String? {
         // Make sure the collection path can be found
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("addNewKeyMoment: Could not find team id. Aborting")
             return nil
         }
@@ -197,10 +195,9 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
      - Returns: This function does not return any value.
      - Throws: Errors may be thrown if Firestore operations fail (e.g., missing documents or deletion failure).
      */
-    func removeKeyMoment(teamId: String, gameId: String, keyMomentId: String) async throws {
-        let teamManager = TeamManager()
+    public func removeKeyMoment(teamId: String, gameId: String, keyMomentId: String) async throws {
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("removeKeyMoment: Could not find team id. Aborting")
             return
         }
@@ -218,7 +215,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
     ///   - newPlayerId: The ID of the player to be added to the `feedbackFor` array field.
     /// - Throws: Rethrows any error that occurs while updating the Firestore document.
     /// - Returns: Nothing. The function is `async` and `throws` but has no return value.
-    func addPlayerToFeedbackFor(teamDocId: String, gameId: String, keyMomentId: String, newPlayerId: String) async throws {
+    public func addPlayerToFeedbackFor(teamDocId: String, gameId: String, keyMomentId: String, newPlayerId: String) async throws {
         let data: [String: Any] = [
             DBKeyMoment.CodingKeys.feedbackFor.rawValue: FieldValue.arrayUnion([newPlayerId])
         ]
@@ -237,7 +234,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
     /// - Note: This function fetches all documents in the key moments collection for the specified game
     ///         and deletes them one by one. If the collection is large, consider using batch deletes
     ///         or pagination to avoid performance issues.
-    func deleteAllKeyMoments(teamDocId: String, gameId: String) async throws {
+    public func deleteAllKeyMoments(teamDocId: String, gameId: String) async throws {
         let collectionRef = keyMomentCollection(teamDocId: teamDocId, gameDocId: gameId)
         let snapshot = try await collectionRef.getDocuments()
         
@@ -257,7 +254,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
     ///   - feedbackFor: List of players to save as feedback recipients.
     ///
     /// - Throws: If fetching the transcript or updating Firestore fails.
-    func updateFeedbackFor(
+    public func updateFeedbackFor(
         transcriptId: String,
         gameId: String,
         teamId: String,
@@ -265,7 +262,7 @@ final class FirestoreKeyMomentRepository: KeyMomentRepository {
         feedbackFor: [PlayerNameAndPhoto]
     ) async throws {
         let keyMomentRepo = FirestoreKeyMomentRepository()
-        let transcriptManager = TranscriptManager()
+        let transcriptManager = FirestoreTranscriptRepository()
         
         let feedbackData = feedbackFor.map { $0.playerId }
         

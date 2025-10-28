@@ -7,24 +7,24 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestoreGameRepository: GameRepository {
+public final class FirestoreGameRepository: GameRepository {
     
     /// Returns a reference to a specific game document within a team’s "games" collection.
-    func gameDocument(teamDocId: String, gameId: String) -> DocumentReference {
+    public func gameDocument(teamDocId: String, gameId: String) -> DocumentReference {
         return gameCollection(teamDocId: teamDocId).document(gameId)
     }
       
     /// Returns a reference to the "games" collection for the specified team.
-    func gameCollection(teamDocId: String) -> CollectionReference {
+    public func gameCollection(teamDocId: String) -> CollectionReference {
         let teamRepo = FirestoreTeamRepository()
         return teamRepo.teamCollection().document(teamDocId).collection("games")
     }
     
     
-    func getGame(gameId: String, teamId: String) async throws -> DBGame? {
-        let teamManager = TeamManager()
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+    public func getGame(gameId: String, teamId: String) async throws -> DBGame? {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("Could not find team id. Aborting")
             return nil
         }
@@ -32,14 +32,14 @@ final class FirestoreGameRepository: GameRepository {
     }
     
     
-    func getGameWithDocId(gameDocId: String, teamDocId: String) async throws -> DBGame? {
+    public func getGameWithDocId(gameDocId: String, teamDocId: String) async throws -> DBGame? {
         return try await gameDocument(teamDocId: teamDocId, gameId: gameDocId).getDocument(as: DBGame.self)
     }
     
 
-    func deleteAllGames(teamDocId: String) async throws {
-        let keyMomentManager = KeyMomentManager()
-        let transcriptManager = TranscriptManager()
+    public func deleteAllGames(teamDocId: String) async throws {
+        let keyMomentManager = LocalKeyMomentRepository()
+        let transcriptManager = LocalTranscriptRepository()
         
         let collectionRef = gameCollection(teamDocId: teamDocId)
         let snapshot = try await collectionRef.getDocuments()
@@ -56,9 +56,8 @@ final class FirestoreGameRepository: GameRepository {
     }
     
 
-    func getAllGames(teamId: String) async throws -> [DBGame]? {
-        let teamManager = TeamManager()
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+    public func getAllGames(teamId: String) async throws -> [DBGame]? {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("Could not find team id. Aborting")
             return nil
         }
@@ -71,9 +70,8 @@ final class FirestoreGameRepository: GameRepository {
     }
                 
     
-    func addNewGame(gameDTO: GameDTO) async throws {
-        let teamManager = TeamManager()
-        guard let teamDocId = try await teamManager.getTeam(teamId: gameDTO.teamId)?.id else {
+    public func addNewGame(gameDTO: GameDTO) async throws {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: gameDTO.teamId)?.id else {
             print("Could not find team id. Aborting")
             return
         }
@@ -88,9 +86,8 @@ final class FirestoreGameRepository: GameRepository {
     }
     
     
-    func addNewUnkownGame(teamId: String) async throws -> String? {
-        let teamManager = TeamManager()
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+    public func addNewUnkownGame(teamId: String) async throws -> String? {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("Could not find team doc id. Aborting")
             return nil
         }
@@ -109,7 +106,7 @@ final class FirestoreGameRepository: GameRepository {
     }
     
     
-    func updateGameDurationUsingTeamDocId(gameId: String, teamDocId: String, duration: Int) async throws {
+    public func updateGameDurationUsingTeamDocId(gameId: String, teamDocId: String, duration: Int) async throws {
         let data: [String:Any] = [
             DBGame.CodingKeys.duration.rawValue: duration
         ]
@@ -118,7 +115,7 @@ final class FirestoreGameRepository: GameRepository {
     }
     
     
-    func updateGameTitle(gameId: String, teamDocId: String, title: String) async throws {
+    public func updateGameTitle(gameId: String, teamDocId: String, title: String) async throws {
         let data: [String:Any] = [
             DBGame.CodingKeys.title.rawValue: title
         ]
@@ -126,7 +123,7 @@ final class FirestoreGameRepository: GameRepository {
     }
     
     
-    func updateScheduledGameSettings(
+    public func updateScheduledGameSettings(
         id: String,
         teamDocId: String,
         title: String?,
@@ -182,7 +179,7 @@ final class FirestoreGameRepository: GameRepository {
     }
     
     
-    func deleteGame(gameId: String, teamDocId: String) async throws {
+    public func deleteGame(gameId: String, teamDocId: String) async throws {
         try await gameDocument(teamDocId: teamDocId, gameId: gameId).delete()
     }
 }

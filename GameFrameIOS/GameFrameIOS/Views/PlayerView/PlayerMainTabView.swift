@@ -12,7 +12,7 @@ import SwiftUI
   - Custom tab bar with icons and labels, which dynamically changes based on the selected tab.
 */
 struct PlayerMainTabView: View {
-    @State private var selectedTab: Int = 0 // Track selected tab
+    @State private var selectedTab: Int = 3 // Track selected tab
     @Binding var showLandingPageView: Bool
     
     init(showLandingPageView: Binding<Bool>) {
@@ -28,7 +28,7 @@ struct PlayerMainTabView: View {
                 case 0: PlayerHomePageView()
                 case 1: PlayerNotificationView()
                 case 2: PlayerAllTeamsView()
-                case 3: PlayerProfileView(showLandingPageView: $showLandingPageView)                    
+                case 3: PlayerProfileView(showLandingPageView: $showLandingPageView)
                 default: PlayerHomePageView()
                 }
             }.edgesIgnoringSafeArea(.bottom) // Ensures full-screen usage

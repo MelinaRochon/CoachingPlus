@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import GameFrameIOSShared
 
 final class LaunchPageUITests: XCTestCase {
 
@@ -76,7 +77,7 @@ final class LaunchPageUITests: XCTestCase {
         // Make sure the description showed on the screen matches the free plan
         XCTAssertEqual(
             app.staticTexts["pricing.selectedPlan.label"].label,
-            PricingPlanTestUI.free.description
+            PricingPlan.free.description
         )
     }
     
@@ -97,7 +98,7 @@ final class LaunchPageUITests: XCTestCase {
         // Make sure the description showed on the screen matches the plus plan
         XCTAssertEqual(
             app.staticTexts["pricing.selectedPlan.label"].label,
-            PricingPlanTestUI.plus.description
+            PricingPlan.plus.description
         )
     }
     
@@ -118,7 +119,7 @@ final class LaunchPageUITests: XCTestCase {
         // Make sure the description showed on the screen matches the premium plan
         XCTAssertEqual(
             app.staticTexts["pricing.selectedPlan.label"].label,
-            PricingPlanTestUI.premium.description
+            PricingPlan.premium.description
         )
     }
 }

@@ -6,20 +6,7 @@
 //
 
 import Foundation
-
-/// A structure representing a player's basic information, including their ID, name, and photo URL.
-struct PlayerNameAndPhoto {
-    
-    /// The unique identifier of the player.
-    let playerId: String
-    
-    /// The full name of the player.
-    let name: String
-    
-    /// An optional URL pointing to the player's profile photo.
-    let photoURL: URL?
-}
-
+import GameFrameIOSShared
 
 /// **User_Status** represents a player's status within a team.
 ///
@@ -51,7 +38,21 @@ final class PlayerModel: ObservableObject {
     /// Stores the list of players along with their invitation status.
     @Published var players: [User_Status] = []
     
+    /// Holds the app’s shared dependency container, used to access services and repositories.
+    private var dependencies: DependencyContainer?
+
+    // MARK: - Dependency Injection
     
+    /// Injects the provided `DependencyContainer` into the current context.
+    ///
+    /// This allows the view, view model, or controller to access shared
+    /// dependencies such as managers or repositories from a central container.
+    /// Useful for testing, environment configuration (e.g., local vs. Firestore),
+    /// or replacing dependencies at runtime.
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+    }
+
     /// Fetches all players associated with a team, including both accepted players and pending invites.
     ///
     /// - Parameters:
@@ -61,14 +62,11 @@ final class PlayerModel: ObservableObject {
     func getAllPlayers(invites: [String], players: [String]) async throws {
         // Temporary array to store player details before updating the `players` state variable.
         var tmpArrayPlayer: [User_Status] = []
-        let userManager = UserManager()
-        let playerManager = PlayerManager()
-        let inviteManager = InviteManager()
         
         // Process pending invites and retrieve user details.
         for inviteDocId in invites {
             // Fetch the invite information.
-            guard let invite = try await inviteManager.getInvite(id: inviteDocId) else {
+            guard let invite = try await dependencies?.inviteManager.getInvite(id: inviteDocId) else {
                 print("Could not find the invite's info.. Aborting")
                 return
             }
@@ -77,7 +75,7 @@ final class PlayerModel: ObservableObject {
             if invite.status == "Pending" {
                 print("We are here. with \(inviteDocId)")
                 // get the user info
-                guard let user = try await userManager.getUserWithDocId(id: invite.userDocId) else {
+                guard let user = try await dependencies?.userManager.getUserWithDocId(id: invite.userDocId) else {
                     print("Could not find the user's info.. Aborting")
                     return
                 }
@@ -90,12 +88,12 @@ final class PlayerModel: ObservableObject {
         
         // Process accepted players and retrieve their details.
         for playerId in players {
-            guard let user = try await userManager.getUser(userId: playerId) else {
+            guard let user = try await dependencies?.userManager.getUser(userId: playerId) else {
                 print("Could not find the user's info.. Aborting")
                 return
             }
             
-            guard let player = try await playerManager.getPlayer(playerId: playerId) else {
+            guard let player = try await dependencies?.playerManager.getPlayer(playerId: playerId) else {
                 print("Could not find the player's info.. Aborting")
                 return
             }
@@ -122,13 +120,12 @@ final class PlayerModel: ObservableObject {
     /// - Returns: An optional array of full player names (`[String]?`). Returns `nil` if a user cannot be found.
     /// - Throws: An error if the `getUser` call fails.
     func getAllPlayersNames(players: [String]) async throws -> [(String, String)]? {
-        let userManager = UserManager()
         var tmpPlayersNames: [(String, String)] = [("0", "All")]
         
         // Process each player ID and retrieve their corresponding user data.
         for playerId in players {
             // Attempt to get user data from UserManager.
-            guard let user = try await userManager.getUser(userId: playerId) else {
+            guard let user = try await dependencies?.userManager.getUser(userId: playerId) else {
                 print("Could not find the user's info.. Aborting")
                 return nil // Return nil if any player info is missing.
             }
@@ -150,11 +147,10 @@ final class PlayerModel: ObservableObject {
     /// - Returns: An array of tuples `(id, name, photoUrl)`.
     /// - Throws: If fetching user data fails.
     func getAllPlayersNamesAndUrl(players: [String]) async throws -> [(String, String, URL?)] {
-        let userManager = UserManager()
         var results: [(String, String, URL?)] = [] ; //[("0", "All", nil)]
         
         for playerId in players {
-            guard let user = try await userManager.getUser(userId: playerId) else {
+            guard let user = try await dependencies?.userManager.getUser(userId: playerId) else {
                 print("getAllPlayersNamesAndUrl : Could not find user \(playerId)")
                 continue
             }
@@ -175,7 +171,10 @@ final class PlayerModel: ObservableObject {
     /// - Returns: The unique document ID of the newly created player.
     /// - Throws: An error if the operation fails.
     func addPlayer(playerDTO: PlayerDTO) async throws -> String {
-        return try await PlayerManager().createNewPlayer(playerDTO: playerDTO)
+        guard let repo = dependencies?.playerManager else {
+            throw NSError(domain: "addPlayer", code: 0, userInfo: nil)
+        }
+        return try await repo.createNewPlayer(playerDTO: playerDTO)
     }
     
     
@@ -187,9 +186,8 @@ final class PlayerModel: ObservableObject {
     /// - Returns: `true` if the operation succeeds, `false` otherwise.
     func addPlayerToTeam(teamDocId: String, inviteDocId: String) async throws -> Bool {
         do {
-            let teamManager = TeamManager()
             // Add the player's invite to the team document in the database.
-            try await teamManager.addInviteToTeam(id: teamDocId, inviteDocId: inviteDocId)
+            try await dependencies?.teamManager.addInviteToTeam(id: teamDocId, inviteDocId: inviteDocId)
             return true
         } catch {
             print("Failed to add player to the team.. \(error.localizedDescription)")

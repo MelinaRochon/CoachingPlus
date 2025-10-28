@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class UserManagerTests: XCTestCase {
     var manager: UserManager!
@@ -28,8 +28,15 @@ final class UserManagerTests: XCTestCase {
         let userId = "user_123"
         
         // Make sure user to be addded is not already a user
-        let tmpUser = try await manager.getUser(userId: userId)
-        XCTAssertNil(tmpUser)
+        do {
+            let _ = try await manager.getUser(userId: userId)
+            XCTFail("Expected error not thrown")
+        } catch UserError.userNotFound {
+            // Error catch
+            print("UserError.userNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
         
         // Add a new user
         let userDTO = UserDTO(
@@ -54,7 +61,7 @@ final class UserManagerTests: XCTestCase {
         XCTAssertEqual(tmpUser?.userId, userId)
         
         // Get the user type
-        let userType = try await manager.getUserType()
+        let userType = tmpUser?.userType
         
         XCTAssertEqual(userType, UserType.coach, "User type should match \(userType)")
     }
@@ -287,19 +294,58 @@ final class UserManagerTests: XCTestCase {
     func testGetInvalidUser() async throws {
         // Get unvalid user
         let userId = "user_123"
-        let invalidUser = try await manager.getUser(userId: userId)
         
-        XCTAssertNil(invalidUser, "User should be nil")
+        do {
+            let _ = try await manager.getUser(userId: userId)
+            XCTFail("Expected error not thrown")
+        } catch UserError.userNotFound {
+            // Error catch
+            print("UserError.userNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     func testGetUserWithInvalidDocId() async throws {
         // Try to get a user document with invalid user id
         let invalidUserId = "user_123"
-        let user = try await manager.getUserWithDocId(id: invalidUserId)
-        XCTAssertNil(user, "User should be nil")
+
+        do {
+            let _ = try await manager.getUserWithDocId(id: invalidUserId)
+            XCTFail("Expected error not thrown")
+        } catch UserError.userNotFound {
+            // Error catch
+            print("UserError.userNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testGetUserWithInvalidEmail() async throws {
+        let userId = "uid001"
+        let invalidEmail = "notvalidemail"
+        
+        // Make sure the user exists
+        let user = try await manager.getUser(userId: userId)
+        XCTAssertNotNil(user)
+        XCTAssertEqual(user?.userId, userId)
+        
+        // Make sure the user does not have the same email configured
+        XCTAssertNotEqual(user?.email, invalidEmail)
+
+        // Try to get the user with an invalid email address
+        do {
+            let _ = try await manager.getUserWithEmail(email: invalidEmail)
+            XCTFail("Expected error not thrown")
+        } catch UserError.userInvalidEmail {
+            // Error catch
+            print("UserError.userInvalidEmail error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testGetUserWithEmailNotAssociatedToUser() async throws {
         let userId = "uid001"
         let invalidEmail = "notvalidemail@gmail.com"
         
@@ -312,14 +358,29 @@ final class UserManagerTests: XCTestCase {
         XCTAssertNotEqual(user?.email, invalidEmail)
 
         // Try to get the user with an invalid email address
-        let invalidUser = try await manager.getUserWithEmail(email: invalidEmail)
-        XCTAssertNil(invalidUser, "User should be nil")
+        do {
+            let _ = try await manager.getUserWithEmail(email: invalidEmail)
+            XCTFail("Expected error not thrown")
+        } catch UserError.userNotFound {
+            // Error catch
+            print("UserError.userNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     
     func testFindUserWithInvalidId() async throws {
         let userDocId = "uu010"
-        let user = try await manager.getUserWithDocId(id: userDocId)
-        XCTAssertNil(user)
+        
+        do {
+            let _ = try await manager.getUserWithDocId(id: userDocId)
+            XCTFail("Expected error not thrown")
+        } catch UserError.userNotFound {
+            // Error catch
+            print("UserError.userNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 }

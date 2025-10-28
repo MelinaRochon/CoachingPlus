@@ -10,6 +10,7 @@
 
 import Foundation
 import AVFoundation
+import GameFrameIOSShared
 
 /// Converts a time interval (in seconds) into a formatted string (HH:MM:SS).
 /// - Parameter duration: The time interval in seconds.

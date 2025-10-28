@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class PlayerManagerTests: XCTestCase {
     var manager: PlayerManager!
@@ -27,9 +27,15 @@ final class PlayerManagerTests: XCTestCase {
     func testAddPlayer() async throws {
         let playerId = "player_123"
         
-        // Make sure the new player to be added does not exist
-        let tmpPlayer = try await manager.getPlayer(playerId: playerId)
-        XCTAssertNil(tmpPlayer, "Player should not exist before being added")
+        do {
+            // Make sure the new player to be added does not exist
+            _ = try await manager.getPlayer(playerId: playerId)
+        } catch PlayerError.playerNotFound {
+            // Error catched
+            print("AuthError.noAuthenticatedUser error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
         
         // Add a new player
         let playerDTO = PlayerDTO(
@@ -173,7 +179,7 @@ final class PlayerManagerTests: XCTestCase {
         // Load teams from JSON test file
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
         guard let sampleTeam = sampleTeams.first(where: { $0.teamId == player?.teamsEnrolled?.first }) else { return }
-        guard let jsonTeam = try await createTeamForJSON(for: TeamManager(), team: sampleTeam) else {
+        guard let jsonTeam = try await createTeamForJSON(for: TeamManager(repo: LocalTeamRepository()), team: sampleTeam) else {
             XCTFail("Team should exist")
             return
         }
@@ -384,7 +390,7 @@ final class PlayerManagerTests: XCTestCase {
         // Load teams from JSON test file
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
         guard let sampleTeam = sampleTeams.first(where: { $0.teamId == player?.teamsEnrolled?.first }) else { return }
-        guard try await createTeamForJSON(for: TeamManager(), team: sampleTeam) != nil else {
+        guard try await createTeamForJSON(for: TeamManager(repo: LocalTeamRepository()), team: sampleTeam) != nil else {
             XCTFail("Team should exist")
             return
         }
@@ -411,7 +417,7 @@ final class PlayerManagerTests: XCTestCase {
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
         let enrolledTeams = sampleTeams.filter { $0.players!.contains(playerId) }
         
-        let teamManager = TeamManager()
+        let teamManager = TeamManager(repo: LocalTeamRepository())
         for team in enrolledTeams {
             try await createTeamForJSON(for: teamManager, team: team)
         }
@@ -446,8 +452,30 @@ final class PlayerManagerTests: XCTestCase {
     
     func testFindPlayerWithInvalidId() async throws {
         let invalidPlayerId = "player_123"
-        let player = try await manager.findPlayerWithId(id: invalidPlayerId)
-        XCTAssertNil(player, "Player added should be nil")
+        
+        do {
+            // Make sure the new player to be added does not exist
+            _ = try await manager.findPlayerWithId(id: invalidPlayerId)
+        } catch PlayerError.playerNotFound {
+            // Error catched
+            print("AuthError.noAuthenticatedUser error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testGetPlayerWithInvalidPlayerId() async {
+        let invalidPlayerId = "player123"
+        
+        do {
+            // Make sure the new player to be added does not exist
+            _ = try await manager.getPlayer(playerId: invalidPlayerId)
+        } catch PlayerError.playerNotFound {
+            // Error catched
+            print("AuthError.noAuthenticatedUser error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
             
     func testRemoveInvalidTeamFromPlayer() async throws {

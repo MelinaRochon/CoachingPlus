@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  `SelectedScheduledGameView` is a SwiftUI view that displays detailed information about a scheduled game.
@@ -42,6 +43,7 @@ struct SelectedScheduledGameView: View {
     
     /// View model responsible for handling game operations.
     @StateObject private var gameModel = GameModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Stores the game duration in hours.
     @State private var hours: Int = 0
@@ -223,8 +225,6 @@ struct SelectedScheduledGameView: View {
                     }
                     
                 }
-//                .navigationTitle(Text("Editing Scheduled Game"))
-//                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     if userType == .coach {
                         ToolbarItem(placement: .topBarTrailing) {
@@ -277,6 +277,10 @@ struct SelectedScheduledGameView: View {
                             }
                         }
                     }
+                }
+                .onAppear {
+                    gameModel.setDependencies(dependencies)
+                    recordingViewModel.setDependencies(dependencies)
                 }
             }
             

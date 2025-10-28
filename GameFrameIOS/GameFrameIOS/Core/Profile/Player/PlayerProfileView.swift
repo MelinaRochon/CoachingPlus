@@ -57,6 +57,7 @@ struct PlayerProfileView: View {
     @State private var firstName: String = ""
     @State private var lastName: String = ""
     @State private var phone: String = ""
+    @EnvironmentObject private var dependencies: DependencyContainer
 
         
     /// Initializer to bind the showLandingPageView state
@@ -337,7 +338,12 @@ struct PlayerProfileView: View {
                     }
                 }
             }
+            .onAppear {
+                userModel.setDependencies(dependencies)
+                viewModel.setDependencies(dependencies)
+            }
         }
+        .accessibilityIdentifier("page.player.profile")
     }
     
     

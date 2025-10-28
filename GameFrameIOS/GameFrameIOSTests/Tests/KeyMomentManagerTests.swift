@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class KeyMomentManagerTests: XCTestCase {
     var manager: KeyMomentManager!

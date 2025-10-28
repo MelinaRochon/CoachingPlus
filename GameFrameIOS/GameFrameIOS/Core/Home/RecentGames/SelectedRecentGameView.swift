@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /** This file defines the `SelectedRecentGameView` view, which displays detailed information
   about a selected recent game, such as the game title, team name, and start time.
@@ -20,6 +21,7 @@ struct SelectedRecentGameView: View {
 
     /// View model responsible for handling video recording logic
     @StateObject private var recordingViewModel = FGVideoRecordingModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Stores the currently selected game (if any)
     @State var selectedGame: HomeGameDTO?
@@ -121,6 +123,9 @@ struct SelectedRecentGameView: View {
                 }
             
                 Spacer()
+            }
+            .onAppear {
+                recordingViewModel.setDependencies(dependencies)
             }
             
         }

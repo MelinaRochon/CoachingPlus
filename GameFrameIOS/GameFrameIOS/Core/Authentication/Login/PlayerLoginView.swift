@@ -23,6 +23,8 @@ struct PlayerLoginView: View {
 
     /// ViewModel responsible for handling authentication logic.
     @StateObject private var authModel = AuthenticationModel()
+    
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Binding to track whether the sign-in view should be displayed.
     @Binding var showSignInView: Bool
@@ -38,7 +40,7 @@ struct PlayerLoginView: View {
 
     /// Controls whether the user should be redirected to the sign-up screen due to login failure.
     @State private var errorGoToSignUp: Bool = false
-
+    
     // MARK: - View
 
     var body: some View {
@@ -69,15 +71,15 @@ struct PlayerLoginView: View {
                             .autocapitalization(.none)
                             .autocorrectionDisabled(true)
                             .keyboardType(.emailAddress) // Shows email-specific keyboard
+                            .accessibilityIdentifier("page.player.login.emailField")
 
                         // Password Field with Eye Toggle
                         CustomUIFields.customPasswordField("Password", text: $authModel.password, showPassword: $showPassword)
+                            .accessibilityIdentifier("page.player.login.passwordField")
                     }
                     .padding(.horizontal)
                     
                     Button {
-                        print("Create account tapped")
-                        
                         Task {
                             do {
                                 guard try await authModel.verifyEmailAddress() != nil else {
@@ -98,6 +100,7 @@ struct PlayerLoginView: View {
                     }
                     .disabled(!loginIsValid)
                     .opacity(loginIsValid ? 1.0 : 0.5)
+                    .accessibilityIdentifier("page.player.login.signInBtn")
                 }
             }
             .alert("Invalid credentials. Please try again.", isPresented: $showErrorMessage) {
@@ -125,10 +128,14 @@ struct PlayerLoginView: View {
                 Text("No account was found with this email. Please consider creating a new account.")
             }
             .navigationDestination(isPresented: $errorGoToSignUp) {
-                PlayerCreateAccountView(showSignInView: $showSignInView, viewModel: AuthenticationModel())
+                PlayerCreateAccountView(showSignInView: $showSignInView, viewModel: authModel)
+            }
+            .onAppear {
+                authModel.setDependencies(dependencies)
             }
         }
-    }    
+        .accessibilityIdentifier("page.player.login")
+    }
 }
 
 

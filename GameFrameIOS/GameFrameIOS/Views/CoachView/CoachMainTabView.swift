@@ -57,6 +57,7 @@ struct CoachMainTabView: View {
                     tabBarItem(image: "tshirt", filledImage: "tshirt.fill", label: "Teams", tabIndex: 2)
                     Spacer()
                     tabBarItem(image: "person", filledImage: "person.fill", label: "Profile", tabIndex: 3)
+                        .accessibilityIdentifier("navBar.tab.profile")
                     Spacer()
                 }
                 .frame(height: 75)

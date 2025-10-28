@@ -31,7 +31,8 @@ struct CoachHomePageView: View {
 
     /// ViewModel responsible for loading game data.
     @StateObject private var gameModel = GameModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// Indicates whether recent games are available.
     @State private var recentGamesFound: Bool = false
     
@@ -58,15 +59,6 @@ struct CoachHomePageView: View {
     var body: some View {
         NavigationStack {
             Divider()
-            
-            //            Picker("Type of selection", selection: $selectedTab) {
-            //                Label(Tab.scheduled.rawValue, systemImage: Tab.scheduled.iconName).tag(Tab.scheduled)
-            //                Label(Tab.recent.rawValue, systemImage: Tab.recent.iconName).tag(Tab.recent)
-            //            }
-            //            .pickerStyle(.segmented)
-            //            .padding(.leading)
-            //            .padding(.trailing)
-            
             ScrollView {
                 ScrollViewReader { proxy in
                     VStack {
@@ -148,6 +140,7 @@ struct CoachHomePageView: View {
                         DispatchQueue.main.async {
                             proxy.scrollTo(0, anchor: .top) // Scroll to top when view appears
                         }
+                        gameModel.setDependencies(dependencies)
                     }
                 }
             }

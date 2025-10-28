@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 
 /// `CoachAllTeamsView` is a SwiftUI view that displays a list of all teams that a coach manages. It allows the coach to:
@@ -31,6 +32,7 @@ struct CoachAllTeamsView: View {
     
     // A view model for managing and loading teams data.
     @StateObject private var teamModel = TeamModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     // Holds the list of teams that the coach is managing. This is fetched asynchronously.
     @State private var teams: [DBTeam]?
@@ -46,12 +48,6 @@ struct CoachAllTeamsView: View {
                 List {
                     Section(header: HStack {
                         Text("My Teams") // Section header text
-//                        Spacer() // Push the button to the right
-//                        Button{
-//                            showCreateTeam.toggle()
-//                        } label: {
-//                            Text("Add +")
-//                        }
                     }) {
                         if let teams = teams {
                             if !teams.isEmpty {
@@ -90,12 +86,13 @@ struct CoachAllTeamsView: View {
                     print("Error. Aborting... \(error)")
                 }
             }
-            
-        }
-            .sheet(isPresented: $showCreateTeam, onDismiss: refreshTeams) {
-                CoachCreateTeamView()
+            .onAppear {
+                teamModel.setDependencies(dependencies)
             }
-        
+        }
+        .sheet(isPresented: $showCreateTeam, onDismiss: refreshTeams) {
+            CoachCreateTeamView()
+        }
     }
     
     /// Function to refresh the list of teams after creating a new team

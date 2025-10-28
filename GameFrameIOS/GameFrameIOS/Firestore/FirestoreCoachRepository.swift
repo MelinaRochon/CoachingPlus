@@ -7,8 +7,10 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestoreCoachRepository: CoachRepository {
+public final class FirestoreCoachRepository: CoachRepository {
+    
     /// Firestore collection reference for "coaches" collection
     private let coachCollection = Firestore.firestore().collection("coaches")
 
@@ -23,7 +25,7 @@ final class FirestoreCoachRepository: CoachRepository {
     /// POST - Add a new coach to the Firestore database
     /// This function creates a new coach document in the "coaches" collection.
     /// - Parameter coachId: The unique coach ID to associate with the new coach.
-    func addCoach(coachId: String) async throws {
+    public func addCoach(coachId: String) async throws {
         let coachDoc = coachCollection.document()
         let documentId = coachDoc.documentID
         
@@ -36,7 +38,7 @@ final class FirestoreCoachRepository: CoachRepository {
     /// This function queries Firestore for a coach document using the coach's ID.
     /// - Parameter coachId: The unique coach ID to fetch the associated coach document.
     /// - Returns: The `QuerySnapshot` containing the coach document(s).
-    func getCoachDocumentWithCoachId(coachId: String) async throws -> QuerySnapshot {
+    public func getCoachDocumentWithCoachId(coachId: String) async throws -> QuerySnapshot {
         return try await coachCollection.whereField("coach_id", isEqualTo: coachId).getDocuments()
     }
     
@@ -45,7 +47,7 @@ final class FirestoreCoachRepository: CoachRepository {
     /// This function fetches a coach's data from the Firestore database and returns it as a `DBCoach` object.
     /// - Parameter coachId: The unique coach ID to fetch the associated coach data.
     /// - Returns: An optional `DBCoach` object containing the coach's data.
-    func getCoach(coachId: String) async throws -> DBCoach? {
+    public func getCoach(coachId: String) async throws -> DBCoach? {
         guard let doc = try await getCoachDocumentWithCoachId(coachId: coachId).documents.first else { return nil }
         return try doc.data(as: DBCoach.self)
     }
@@ -55,7 +57,7 @@ final class FirestoreCoachRepository: CoachRepository {
     /// This function updates the coach's `teamsCoaching` field to include a new team ID.
     /// - Parameter coachId: The unique coach ID to update.
     /// - Parameter teamId: The team ID to add to the `teamsCoaching` array.
-    func addTeamToCoach(coachId: String, teamId: String) async throws {
+    public func addTeamToCoach(coachId: String, teamId: String) async throws {
         let data: [String: Any] = [
             DBCoach.CodingKeys.teamsCoaching.rawValue: FieldValue.arrayUnion([teamId])
         ]
@@ -74,7 +76,7 @@ final class FirestoreCoachRepository: CoachRepository {
     /// This function removes a team ID from the coach's `teamsCoaching` field.
     /// - Parameter coachId: The unique coach ID to update.
     /// - Parameter teamId: The team ID to remove from the `teamsCoaching` array.
-    func removeTeamToCoach(coachId: String, teamId: String) async throws {
+    public func removeTeamToCoach(coachId: String, teamId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
             DBCoach.CodingKeys.teamsCoaching.rawValue: FieldValue.arrayRemove([teamId])
@@ -93,7 +95,7 @@ final class FirestoreCoachRepository: CoachRepository {
     /// This function retrieves the teams a coach is coaching by using their `teamsCoaching` array, which stores the team IDs.
     /// - Parameter coachId: The unique coach ID to retrieve their teams.
     /// - Returns: An optional array of `GetTeam` objects containing the team information.
-    func loadTeamsCoaching(coachId: String) async throws -> [GetTeam]? {
+    public func loadTeamsCoaching(coachId: String) async throws -> [GetTeam]? {
         let teamRepo = FirestoreTeamRepository()
         let coach = try await getCoach(coachId: coachId)!
         if let teamsCoaching = coach.teamsCoaching {
@@ -109,13 +111,10 @@ final class FirestoreCoachRepository: CoachRepository {
                         teams.append(teamObject)
                     }
                 }
-                
                 return teams
             }
         }
-        
         return nil
-        
     }
     
 
@@ -123,7 +122,7 @@ final class FirestoreCoachRepository: CoachRepository {
     /// This function fetches the full `DBTeam` objects for all teams the coach is coaching.
     /// - Parameter coachId: The unique coach ID to retrieve their teams.
     /// - Returns: An optional array of `DBTeam` objects.
-    func loadAllTeamsCoaching(coachId: String) async throws -> [DBTeam]? {
+    public func loadAllTeamsCoaching(coachId: String) async throws -> [DBTeam]? {
         let teamRepo = FirestoreTeamRepository()
         let coach = try await getCoach(coachId: coachId)!
         if let teamsCoaching = coach.teamsCoaching {
@@ -138,13 +137,9 @@ final class FirestoreCoachRepository: CoachRepository {
                         teams.append(team)
                     }
                 }
-                
                 return teams
             }
         }
-        
         return nil
-        
     }
-
 }

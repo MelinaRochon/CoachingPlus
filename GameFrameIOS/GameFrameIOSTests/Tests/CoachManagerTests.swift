@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class CoachManagerTests: XCTestCase {
     var manager: CoachManager! // system under test
@@ -27,11 +27,17 @@ final class CoachManagerTests: XCTestCase {
     /// Tests that adding a new coach successfully stores it in the local repository.
     func testAddNewCoach() async throws {
         let coachId = "coach_123"
-        
-        // Make sure the new coach to be added does not exist
-        let tmpCoach = try await manager.getCoach(coachId: coachId)
-        XCTAssertNil(tmpCoach, "Coach should not exist before being added")
-        
+        do {
+            // Make sure the new coach to be added does not exist
+            _ = try await manager.getCoach(coachId: coachId)
+            XCTFail("Expected error not thrown")
+        } catch CoachError.coachNotFound {
+            // Error catch
+            print("CoachError.coachNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+            
         // Add a new coach
         let coach = try await createCoach(for: manager, coachId: coachId)
         XCTAssertNotNil(coach)
@@ -118,7 +124,7 @@ final class CoachManagerTests: XCTestCase {
         // Add each team to the coach
         for team in sampleTeams {
             if team.coaches.contains(coachId) {
-                try await TeamManager().createNewTeam(
+                try await LocalTeamRepository().createNewTeam(
                     coachId: coachId,
                     teamDTO: TeamDTO(
                         teamId: team.teamId,
@@ -164,7 +170,7 @@ final class CoachManagerTests: XCTestCase {
         XCTAssertTrue(sampleTeams.count == 3)
 
         // Add each team to the coach
-        let teamManager = TeamManager()
+        let teamManager = LocalTeamRepository()
         for team in sampleTeams {
             if team.coaches.contains(coachId) {
                 try await teamManager.createNewTeam(
@@ -201,10 +207,49 @@ final class CoachManagerTests: XCTestCase {
     // MARK: Negative Testing
     
     /// Tests that getting a coach can be successfully performed.
-    func testGetInvalidCoach() async throws {
+    func testGetInvalidCoach() async {
         // Get the coach object
         let invalidCoachId = "invalid_coach_id"
-        let coach = try await manager.getCoach(coachId: invalidCoachId)
-        XCTAssertNil(coach, "Coach should not exist because of the invalid coach ID")
+        do {
+            _ = try await manager.getCoach(coachId: invalidCoachId)
+            XCTFail("Expected error not thrown")
+        } catch CoachError.coachNotFound {
+            // Error catch
+            print("CoachError.coachNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testAddTeamToNotExistentCoach() async {
+        // Get the coach object
+        let invalidCoachId = "invalid_coach_id"
+        let teamId = "team1"
+        
+        do {
+            try await manager.addTeamToCoach(coachId: invalidCoachId, teamId: teamId)
+            XCTFail("Expected error not thrown")
+        } catch CoachError.coachNotFound {
+            // Error catch
+            print("CoachError.coachNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testRemoveTeamToNotExistentCoach() async {
+        // Get the coach object
+        let invalidCoachId = "invalid_coach_id"
+        let teamId = "team1"
+        
+        do {
+            try await manager.removeTeamToCoach(coachId: invalidCoachId, teamId: teamId)
+            XCTFail("Expected error not thrown")
+        } catch CoachError.coachNotFound {
+            // Error catch
+            print("CoachError.coachNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 }

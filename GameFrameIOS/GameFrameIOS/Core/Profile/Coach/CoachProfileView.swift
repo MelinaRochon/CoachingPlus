@@ -55,7 +55,8 @@ import SwiftUI
      /// An instance of the `CoachProfileViewModel` that is used to manage data fetching and updating for the coach's profile.
      /// This view model will handle tasks like loading user data, updating the user's information, and logging out.
      @StateObject private var viewModel = CoachProfileViewModel()
-     
+     @EnvironmentObject private var dependencies: DependencyContainer
+
      /// A binding to a parent view's state that controls whether the landing page should be shown.
      /// When the coach logs out or other relevant events occur, this binding is set to `true` to navigate the user to the landing page view.
      @Binding var showLandingPageView: Bool
@@ -254,6 +255,9 @@ import SwiftUI
                          dob = user.dateOfBirth ?? Date()
                      }
                  }
+                 .onAppear {
+                     viewModel.setDependencies(dependencies)
+                 }
                  
              }
              .toolbar {
@@ -279,7 +283,7 @@ import SwiftUI
                  }
              }
          }
-         
+         .accessibilityIdentifier("page.coach.profile")
      }
      
      

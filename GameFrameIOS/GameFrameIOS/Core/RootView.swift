@@ -15,15 +15,16 @@ struct RootView: View {
     /// State variable to track if the user is signed in or not.
     /// If true, show the sign-in page (landing page). If false, show the home page.
     @State private var showSignInView: Bool = false
+    @EnvironmentObject private var dependencies: DependencyContainer
         
     // MARK: - View
 
     var body: some View {
         ZStack {
             if !showSignInView {
-                    // Passing the binding to control the sign-in view display
-                    UserTypeRootView(showSignInView: $showSignInView)
-                .tint(.red)
+                // Passing the binding to control the sign-in view display
+                UserTypeRootView(showSignInView: $showSignInView, container: dependencies)
+                    .tint(.red)
             }
         }
         .onAppear {
@@ -32,7 +33,7 @@ struct RootView: View {
                 // For UI testing, always start with reset_data
                 self.showSignInView = true
             } else {
-                let authUser = try? AuthenticationManager.shared.getAuthenticatedUser()
+                let authUser = try? dependencies.authenticationManager.getAuthenticatedUser()
                 // Set the sign-in view state based on user authentication status
                 self.showSignInView = authUser == nil
             }

@@ -46,7 +46,8 @@ struct PlayerHomePageView: View {
     
     /// ViewModel responsible for loading game data.
     @StateObject private var gameModel = GameModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// Indicates whether recent games are available.
     @State private var recentGamesFound: Bool = false
     
@@ -149,6 +150,7 @@ struct PlayerHomePageView: View {
                         DispatchQueue.main.async {
                             proxy.scrollTo(0, anchor: .top) // Scroll to top when view appears
                         }
+                        gameModel.setDependencies(dependencies)
                     }
                 }
             }
@@ -234,7 +236,6 @@ extension UINavigationBarAppearance {
             largeTitleTextAttributes = [.foregroundColor: titleColor]
             titleTextAttributes = [.foregroundColor: titleColor]
         }
-//        backgroundColor = background
         UINavigationBar.appearance().scrollEdgeAppearance = self
         UINavigationBar.appearance().standardAppearance = self
         UINavigationBar.appearance().tintColor = UIColor.red

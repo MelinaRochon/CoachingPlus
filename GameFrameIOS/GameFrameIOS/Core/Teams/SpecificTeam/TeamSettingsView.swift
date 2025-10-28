@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+import GameFrameIOSShared
 
 /// A view that allows a coach to manage and review the settings of a specific team.
 ///
@@ -45,7 +45,8 @@ struct TeamSettingsView: View {
     
     /// Observable object that manages team data operations.
     @StateObject private var teamModel = TeamModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     @State private var removeTeam: Bool = false
     @Binding var dismissOnRemove: Bool
     
@@ -136,6 +137,9 @@ struct TeamSettingsView: View {
                         }
                     }
                 }
+            }
+            .onAppear {
+                teamModel.setDependencies(dependencies)
             }
         }
     }

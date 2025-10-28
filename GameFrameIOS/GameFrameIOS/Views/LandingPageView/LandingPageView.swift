@@ -19,7 +19,7 @@ struct LandingPageView: View {
     
     /// Binding variable to control navigation to the Sign In view
     @Binding var showSignInView: Bool
-    
+        
     var body: some View {
         ZStack(alignment: .top) {
         NavigationView {
@@ -103,6 +103,7 @@ struct LandingPageView: View {
                                     .background(Color.black)
                                     .foregroundColor(.white)
                                     .clipShape(Capsule())
+                                    .accessibilityIdentifier("page.landing.signup.coach")
                             }
                             
                             NavigationLink(destination: PlayerCreateAccountView(showSignInView: $showSignInView, viewModel: AuthenticationModel())) {
@@ -113,6 +114,7 @@ struct LandingPageView: View {
                                     .background(Color.black)
                                     .foregroundColor(.white)
                                     .clipShape(Capsule())
+                                    .accessibilityIdentifier("page.landing.signup.player")
                             }
                         }
                     }

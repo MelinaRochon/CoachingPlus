@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /// `PlayerAllTranscriptsView` displays a list of all transcripts for a specific game.
 /// Players can search, filter, and view detailed transcripts related to their team and game.
@@ -56,6 +57,7 @@ struct PlayerAllTranscriptsView: View {
     
     /// A view model for managing and fetching the transcripts and key moments of the game.
     @StateObject private var transcriptModel = TranscriptModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     
     var body: some View {
@@ -181,6 +183,7 @@ struct PlayerAllTranscriptsView: View {
                         print("Error. Aborting...")
                     }
                 }
+                transcriptModel.setDependencies(dependencies)
             }
         }
     }

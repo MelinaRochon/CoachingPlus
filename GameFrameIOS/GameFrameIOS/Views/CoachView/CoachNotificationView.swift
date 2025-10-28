@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /***
  This structure is the recent activity view. All the recent acitivities made in the app (all types of notifications) will be shown here.

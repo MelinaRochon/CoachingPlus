@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**  This SwiftUI view represents the pricing page of the app. It displays various subscription
   plans for the users to choose from. The user can view different pricing tiers for the app,

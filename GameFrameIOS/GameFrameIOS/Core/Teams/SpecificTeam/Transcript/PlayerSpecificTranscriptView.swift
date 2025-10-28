@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /// `PlayerSpecificTranscriptView` displays a detailed view of a single transcript for a player.
 /// It includes transcript details, feedback information, and a comment section.
@@ -13,7 +14,8 @@ struct PlayerSpecificTranscriptView: View {
     
     /// Handles transcript-related data operations.
     @StateObject private var transcriptModel = TranscriptModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// Manages the comment section.
     @StateObject private var commentViewModel = CommentSectionViewModel()
 
@@ -156,6 +158,10 @@ struct PlayerSpecificTranscriptView: View {
                 } catch {
                     print("Error when fetching specific footage info: \(error)")
                 }
+            }
+            .onAppear {
+                transcriptModel.setDependencies(dependencies)
+                commentViewModel.setDependencies(dependencies)
             }
         }
     }

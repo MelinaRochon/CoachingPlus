@@ -8,6 +8,7 @@
 import SwiftUI
 import AVKit
 import AVFoundation
+import GameFrameIOSShared
 
 /// **Displays details of a specific key moment in a game.**
 ///
@@ -38,6 +39,8 @@ struct CoachSpecificKeyMomentView: View {
     @StateObject private var transcriptModel = TranscriptModel()
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
+    
+    @EnvironmentObject private var dependencies: DependencyContainer
     
     /// The game associated with the key moment.
     @State var game: DBGame
@@ -216,6 +219,12 @@ struct CoachSpecificKeyMomentView: View {
         }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)
+        }
+        .onAppear {
+            transcriptModel.setDependencies(dependencies)
+            fgVideoRecordingModel.setDependencies(dependencies)
+            audioRecordingModel.setDependencies(dependencies)
+            commentViewModel.setDependencies(dependencies)
         }
     }
         

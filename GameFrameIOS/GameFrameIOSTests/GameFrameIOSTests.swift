@@ -17,8 +17,8 @@
 //}
 
 import Testing
-@testable import GameFrameIOS
 import Foundation
+@testable import GameFrameIOSShared
 
 struct GameFrameIOSTests {
     

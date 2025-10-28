@@ -7,8 +7,9 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestoreInviteRepository: InviteRepository {
+public final class FirestoreInviteRepository: InviteRepository {
     
     /** The Firestore collection that stores invite documents */
     private let inviteCollection = Firestore.firestore().collection("invites") // invites collection
@@ -34,7 +35,7 @@ final class FirestoreInviteRepository: InviteRepository {
         A string representing the document ID of the newly created invite.
      - Throws: An error if the invite creation fails.
      */
-    func createNewInvite(inviteDTO: InviteDTO) async throws -> String {
+    public func createNewInvite(inviteDTO: InviteDTO) async throws -> String {
         let inviteDocument = inviteCollection.document()
         let documentId = inviteDocument.documentID // get the document id
         
@@ -55,7 +56,7 @@ final class FirestoreInviteRepository: InviteRepository {
         An optional `DBInvite` object if found, otherwise `nil`.
      - Throws: An error if the retrieval process fails.
      */
-    func getInviteByEmailAndTeamId(email: String, teamId: String) async throws -> DBInvite? {
+    public func getInviteByEmailAndTeamId(email: String, teamId: String) async throws -> DBInvite? {
         let query = try await inviteCollection.whereField("email", isEqualTo: email).whereField("team_id", isEqualTo: teamId).getDocuments()
        
         guard let doc = query.documents.first else { return nil }
@@ -72,7 +73,7 @@ final class FirestoreInviteRepository: InviteRepository {
         An optional `DBInvite` object if found, otherwise `nil`.
      - Throws: An error if the retrieval process fails.
      */
-    func getInviteByPlayerDocIdAndTeamId(playerDocId: String, teamDocId: String) async throws -> DBInvite? {
+    public func getInviteByPlayerDocIdAndTeamId(playerDocId: String, teamDocId: String) async throws -> DBInvite? {
         let query = try await inviteCollection
             .whereField("player_doc_id", isEqualTo: playerDocId)
             .whereField("team_id", isEqualTo: teamDocId)
@@ -91,7 +92,7 @@ final class FirestoreInviteRepository: InviteRepository {
         An optional `DBInvite` object if found, otherwise `nil`.
      - Throws: An error if the retrieval process fails.
      */
-    func getInvite(id: String) async throws -> DBInvite? {
+    public func getInvite(id: String) async throws -> DBInvite? {
         return try await inviteDocument(id: id).getDocument(as: DBInvite.self);
     }
     
@@ -103,7 +104,7 @@ final class FirestoreInviteRepository: InviteRepository {
         - newStatus: The new status to set for the invite.
      - Throws: An error if the update process fails.
      */
-    func updateInviteStatus(id: String, newStatus: String) async throws {
+    public func updateInviteStatus(id: String, newStatus: String) async throws {
         let data: [String: Any] = [
             DBInvite.CodingKeys.status.rawValue: newStatus
         ]
@@ -118,7 +119,7 @@ final class FirestoreInviteRepository: InviteRepository {
     /// - Parameters:
     ///    - id: The ID of the invite to delete
     ///  - Throws: An error if the delete process fails
-    func deleteInvite(id: String) async throws {
+    public func deleteInvite(id: String) async throws {
         try await inviteDocument(id: id).delete()
     }
 }

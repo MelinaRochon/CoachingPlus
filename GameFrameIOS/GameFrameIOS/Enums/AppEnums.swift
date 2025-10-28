@@ -7,56 +7,7 @@
 
 import Foundation
 
-// MARK: - File description
-
-/**
- This file contains the definitions of various enums used throughout the GameFrame iOS application. These enums help standardize different user types, status types, and error states used in the system.
-
- **Enum Descriptions:**
-
- 1. **UserType**:
- 2. **StatusEnum**:
- 3. **TeamValidationError**:
-*/
-
 // MARK: - Enums
-
-/// **UserType**: Enum representing different user types in the system.
-/// - This enum represents the different types of users in the system. The two possible values are:
-/// - `coach`: Refers to a user who is a coach.
-/// - `player`: Refers to a user who is a player.
-/// - This enum can be used for distinguishing between different user roles in the authentication system, access control, and content customization.
-enum UserType: String, Codable {
-    case coach = "Coach"
-    case player = "Player"
-    case unknown = "Unknown"
-    
-    var displayName: String {
-        return self.rawValue
-    }
-    
-    // Custom init to handle Firestore strings
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let rawValue = try container.decode(String.self)
-        
-        switch rawValue {
-        case "Coach": self = .coach
-        case "Player": self = .player
-        default: self = .unknown
-        }
-    }
-    
-    // Custom encoder to match Firestore values
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .coach: try container.encode("Coach")
-        case .player: try container.encode("Player")
-        case .unknown: try container.encode("Unknown")
-        }
-    }
-}
 
 /// **StatusEnum**: Enum representing different status types in the system when creating an `Invite`.
 /// - This enum defines the possible statuses for an `Invite`. An `Invite` might represent an invitation sent to a user (player/coach) to join a team or other system-specific event.
@@ -107,25 +58,4 @@ enum TranscriptTypeEnum {
     case transcript
     case keyMoment
     case fullGame
-}
-
-enum PricingPlan: String, CaseIterable {
-    case free = "Free"
-    case plus = "Plus"
-    case premium = "Premium"
-    
-    public var description: String {
-        switch self {
-        case .free:
-            return "Limited features, no cost!"
-        case .plus:
-            return "More features for personal use!"
-        case .premium:
-            return "Best for teams and professionals!"
-        }
-    }
-    
-    public var accessibilityId: String {
-        "pricing.plan.\(self.rawValue.lowercased()).btn"
-    }
 }

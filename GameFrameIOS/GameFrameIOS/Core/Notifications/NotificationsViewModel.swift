@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import GameFrameIOSShared
 
 @MainActor
 final class NotificationsViewModel: ObservableObject {
@@ -25,7 +26,8 @@ final class NotificationsViewModel: ObservableObject {
     init(
         loadTeamsOwnedByCoach: @escaping (_ coachId: String) async throws -> [DBTeam] = { coachId in
             // Default: call your concrete manager directly
-            try await TeamManager().getTeamsWithCoach(coachId: coachId)
+            // TODO: Cate! Will cause error if do UI testing for notifications! Change this!
+            try await TeamManager(repo: FirestoreTeamRepository()).getTeamsWithCoach(coachId: coachId)
         },
         fetchRecentCommentsForTeams: @escaping (_ teamDocIds: [String], _ since: Date) async throws -> [DBComment] = { teamDocIds, since in
             // Default: use the Firestore repository directly

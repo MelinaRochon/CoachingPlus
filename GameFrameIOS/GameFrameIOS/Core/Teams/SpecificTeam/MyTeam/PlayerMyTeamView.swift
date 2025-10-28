@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  This view is responsible for displaying the details of the selected team, including all recorded game footage and players related to that team.
@@ -36,7 +37,8 @@ struct PlayerMyTeamView: View {
     
     /// View model responsible for managing game-related data.
     @StateObject private var gameModel = GameModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// View model responsible for managing player-related data.
     @StateObject private var playerModel = PlayerModel()
     
@@ -67,105 +69,107 @@ struct PlayerMyTeamView: View {
 
 
     var body: some View {
-//        NavigationStack {
-            VStack {
-                Divider()
-                List {
+        VStack {
+            Divider()
+            List {
+                
+                if let groupedGames = groupedGames {
+                    GroupedGamesList(
+                        groupedGames: groupedGames,
+                        selectedTeam: selectedTeam,
+                        showUpcomingGames: showUpcomingGames,
+                        showRecentGames: showRecentGames,
+                        userType: .player
+                    )
+                } else {
+                    Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .listStyle(PlainListStyle()) // Optional: Make the list style more simple
+        }
+        .navigationTitle(Text(selectedTeam.teamNickname))
+        .navigationBarTitleDisplayMode(.large)
+        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+            Color.clear.frame(height: 75)
+        }
+        .onAppear {
+            refreshData() // Refresh data when the view appears
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack {
+                    Button(action: {
+                        isTeamSettingsEnabled.toggle() // Toggle team settings visibility
+                    }) {
+                        Label("Settings", systemImage: "gear")
+                    }.tint(.red)
                     
-                    if let groupedGames = groupedGames {
-                        GroupedGamesList(
-                            groupedGames: groupedGames,
-                            selectedTeam: selectedTeam,
-                            showUpcomingGames: showUpcomingGames,
-                            showRecentGames: showRecentGames,
-                            userType: .player
-                        )
-                    } else {
-                        Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
+                    Button(action: {
+                        showPlayersSheet.toggle()
+                    }) {
+                        Label("Players", systemImage: "person.2.circle")
+                    }.tint(.red)
+                    
+                    Button(action: {
+                        isGamesSettingsEnabled.toggle()
+                    }) {
+                        Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
                     }
-                }
-                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-            }
-            .navigationTitle(Text(selectedTeam.teamNickname))
-            .navigationBarTitleDisplayMode(.large)
-            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
-                Color.clear.frame(height: 75)
-            }
-            .onAppear {
-                refreshData() // Refresh data when the view appears
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack {
-                        Button(action: {
-                            isTeamSettingsEnabled.toggle() // Toggle team settings visibility
-                        }) {
-                            Label("Settings", systemImage: "gear")
-                        }.tint(.red)
-                        
-                        Button(action: {
-                            showPlayersSheet.toggle()
-                        }) {
-                            Label("Players", systemImage: "person.2.circle")
-                        }.tint(.red)
-                        
-                        Button(action: {
-                            isGamesSettingsEnabled.toggle()
-                        }) {
-                            Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
-                        }
-                        .tint(.red)
-                    }
+                    .tint(.red)
                 }
             }
-            .sheet(isPresented: $isTeamSettingsEnabled) {
-                // Sheet to modify team settings
-                TeamSettingsView(userType: .player, team: selectedTeam, dismissOnRemove: .constant(false))
-            }
-            .sheet(isPresented: $isGamesSettingsEnabled) {
-                NavigationStack {
-                    TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: .player)
-                        .presentationDetents([.height(300)])
-                        .toolbar {
-                            ToolbarItem {
-                                Button (action: {
-                                    isGamesSettingsEnabled = false // Close the filter options
-                                }) {
-                                    Text("Done")
-                                }
-                            }
-                        }
-                        .navigationTitle("Filtering Options")
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-            }
-            .sheet(isPresented: $showPlayersSheet) {
-                NavigationStack {
-                    List {
-                        Section() {
-                            if !playerModel.players.isEmpty {
-                                ForEach(playerModel.players, id: \.playerDocId) { player in
-                                    CustomUIFields.imageLabel(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
-                                }
-                            } else {
-                                Text("No players found.").font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                    .navigationTitle("Roster")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .listStyle(.plain)
+        }
+        .sheet(isPresented: $isTeamSettingsEnabled) {
+            // Sheet to modify team settings
+            TeamSettingsView(userType: .player, team: selectedTeam, dismissOnRemove: .constant(false))
+        }
+        .sheet(isPresented: $isGamesSettingsEnabled) {
+            NavigationStack {
+                TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: .player)
+                    .presentationDetents([.height(300)])
                     .toolbar {
                         ToolbarItem {
                             Button (action: {
-                                showPlayersSheet = false // Close the filter options
+                                isGamesSettingsEnabled = false // Close the filter options
                             }) {
                                 Text("Done")
                             }
                         }
                     }
+                    .navigationTitle("Filtering Options")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+        .sheet(isPresented: $showPlayersSheet) {
+            NavigationStack {
+                List {
+                    Section() {
+                        if !playerModel.players.isEmpty {
+                            ForEach(playerModel.players, id: \.playerDocId) { player in
+                                CustomUIFields.imageLabel(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
+                            }
+                        } else {
+                            Text("No players found.").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .navigationTitle("Roster")
+                .navigationBarTitleDisplayMode(.inline)
+                .listStyle(.plain)
+                .toolbar {
+                    ToolbarItem {
+                        Button (action: {
+                            showPlayersSheet = false // Close the filter options
+                        }) {
+                            Text("Done")
+                        }
+                    }
                 }
             }
+        }
+        .onAppear {
+            gameModel.setDependencies(dependencies)
+        }
     }
     
     
@@ -173,13 +177,12 @@ struct PlayerMyTeamView: View {
     
     /// Function to refresh team data and load games and players
     private func refreshData() {
-        let teamManager = TeamManager()
         Task {
             do {
                 // Load games and players associated with the team
                 try await gameModel.getAllGames(teamId: selectedTeam.teamId)
                 self.groupedGames = groupGamesByWeek(gameModel.games)
-                self.selectedTeam = try await teamManager.getTeam(teamId: selectedTeam.teamId)!
+                self.selectedTeam = try await dependencies.teamManager.getTeam(teamId: selectedTeam.teamId)!
                 guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TODO: - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team

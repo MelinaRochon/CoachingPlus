@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import GameFrameIOSShared
 
 /// **TranscriptModel** is responsible for handling transcript and key moment retrieval for a game.
 ///
@@ -20,14 +20,35 @@ import Foundation
 @MainActor
 final class TranscriptModel: ObservableObject {
     
+    /// Holds the app’s shared dependency container, used to access services and repositories.
+    private var dependencies: DependencyContainer?
+
+    // MARK: - Dependency Injection
+    
+    /// Injects the provided `DependencyContainer` into the current context.
+    ///
+    /// This allows the view, view model, or controller to access shared
+    /// dependencies such as managers or repositories from a central container.
+    /// Useful for testing, environment configuration (e.g., local vs. Firestore),
+    /// or replacing dependencies at runtime.
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+    }
+
+    
     /// Retrieves the authenticated user from the database.
     ///
     /// - Returns: A `DBUser` object representing the authenticated user, or `nil` if not found.
     /// - Throws: An error if authentication fails.
+    /// - Throws: An error if authentication fails.
     func getUser() async throws -> DBUser? {
-        let userManager = UserManager()
-        let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
-        return try await userManager.getUser(userId: authUser.uid)
+        guard let repo = dependencies else {
+            print("Dependencies not set")
+            return nil
+        }
+
+        let authUser = try repo.authenticationManager.getAuthenticatedUser()
+        return try await repo.userManager.getUser(userId: authUser.uid)
     }
     
     /// Retrieves all transcripts and key moments for a specific game.
@@ -41,10 +62,8 @@ final class TranscriptModel: ObservableObject {
     /// - Throws: An error if the retrieval process fails.
     func getAllTranscripts(gameId: String, teamDocId: String) async throws -> [keyMomentTranscript]? {
         do {
-            let keyMomentManager = KeyMomentManager()
-            let transcriptManager = TranscriptManager()
             // Retrieve all transcripts associated with the game.
-            guard let transcripts = try await transcriptManager.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
+            guard let transcripts = try await dependencies?.transcriptManager.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
                 return nil
             }
@@ -56,7 +75,7 @@ final class TranscriptModel: ObservableObject {
             }
             
             // Retrieve all key moments
-            guard let keyMoment = try await keyMomentManager.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
+            guard let keyMoment = try await dependencies?.keyMomentManager.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
                 print("No key moment found. Aborting..")
                 return nil
             }
@@ -133,11 +152,8 @@ final class TranscriptModel: ObservableObject {
     /// - Throws: An error if the retrieval process fails.
     func getAllTranscriptsAndKeyMoments(gameId: String, teamDocId: String) async throws -> ([keyMomentTranscript]?, [keyMomentTranscript]?) {
         do {
-            let keyMomentManager = KeyMomentManager()
-            let transcriptManager = TranscriptManager()
-            
             // Retrieve all transcripts associated with the game.
-            guard let transcripts = try await transcriptManager.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
+            guard let transcripts = try await dependencies?.transcriptManager.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
                 return (nil, nil)
             }
@@ -148,7 +164,7 @@ final class TranscriptModel: ObservableObject {
                 return (nil, nil)
             }
             
-            guard let keyMoments = try await keyMomentManager.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
+            guard let keyMoments = try await dependencies?.keyMomentManager.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
                 print("No key moment found. Aborting..")
                 return (nil, nil)
             }
@@ -172,8 +188,7 @@ final class TranscriptModel: ObservableObject {
             var allKeyMoments: [keyMomentTranscript] = []
 
             // If full game recording can be found
-            let manager = FullGameVideoRecordingManager()
-            let fullGame = try await manager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
+            let fullGame = try await dependencies?.fullGameRecordingManager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
             // TODO: Shouldn't be an error here if we can't find a full game recording. However, it should be
 
             for transcript in transcripts {
@@ -293,11 +308,8 @@ final class TranscriptModel: ObservableObject {
     /// - Throws: An error if the retrieval process fails.
     func getPreviewTranscriptsAndKeyMoments(gameId: String, teamDocId: String) async throws -> ([keyMomentTranscript]?, [keyMomentTranscript]?) {
         do {
-            let keyMomentManager = KeyMomentManager()
-            let transcriptManager = TranscriptManager()
-            
             // Retrieve the first three transcripts associated with the game.
-            guard let transcripts = try await transcriptManager.getTranscriptsPreviewWithDocId(teamDocId: teamDocId, gameId: gameId) else {
+            guard let transcripts = try await dependencies?.transcriptManager.getTranscriptsPreviewWithDocId(teamDocId: teamDocId, gameId: gameId) else {
                 print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
                 return (nil, nil)
             }
@@ -308,7 +320,7 @@ final class TranscriptModel: ObservableObject {
                 return (nil, nil)
             }
             
-            guard let keyMoments = try await keyMomentManager.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
+            guard let keyMoments = try await dependencies?.keyMomentManager.getAllKeyMomentsWithTeamDocId(teamDocId: teamDocId, gameId: gameId) else {
                 print("No key moment found. Aborting..")
                 return (nil, nil)
             }
@@ -332,8 +344,7 @@ final class TranscriptModel: ObservableObject {
             var allKeyMoments: [keyMomentTranscript] = []
 
             // If full game recording can be found
-            let manager = FullGameVideoRecordingManager()
-            let fullGame = try await manager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
+            let fullGame = try await dependencies?.fullGameRecordingManager.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
             // TODO: Shouldn't be an error here if we can't find a full game recording. However, it should be
 
             for transcript in transcripts {
@@ -443,16 +454,14 @@ final class TranscriptModel: ObservableObject {
     /// - Returns: A `PlayerTranscriptInfo` object containing the player's details, or `nil` if not found.
     /// - Throws: An error if retrieval fails.
     func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
-        let userManager = UserManager()
-        let playerManager = PlayerManager()
         // Retrieve user information.
-        guard let user = try await userManager.getUser(userId: playerId) else {
+        guard let user = try await dependencies?.userManager.getUser(userId: playerId) else {
             print("no user found. abort")
             return nil
         }
         
         // Retrieve player-specific information.
-        guard let player = try await playerManager.getPlayer(playerId: playerId) else {
+        guard let player = try await dependencies?.playerManager.getPlayer(playerId: playerId) else {
             print("no player found. abprt")
             return nil
         }
@@ -465,7 +474,7 @@ final class TranscriptModel: ObservableObject {
     
     
     func getAudioFileUrl(keyMomentId: String, gameId: String, teamId: String) async throws -> String? {
-        guard let keyMomentAudioURL = try await KeyMomentManager().getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentId)?.audioUrl else {
+        guard let keyMomentAudioURL = try await dependencies?.keyMomentManager.getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentId)?.audioUrl else {
             return nil
         }
         
@@ -479,10 +488,9 @@ final class TranscriptModel: ObservableObject {
     /// - Returns: An array of `PlayerNameAndPhoto` objects containing player names and profile pictures.
     /// - Throws: An error if retrieval fails.
     func getFeebackFor(feedbackFor: [String]) async throws -> [PlayerNameAndPhoto] {
-        let userManager = UserManager()
         var results: [PlayerNameAndPhoto] = []
         for id in feedbackFor {
-            if let user = try await userManager.getUser(userId: id) {
+            if let user = try await dependencies?.userManager.getUser(userId: id) {
                 print("player: \(user.firstName) \(user.lastName)")
                 results.append(
                     PlayerNameAndPhoto(playerId: id, name: user.firstName + " " + user.lastName, photoURL: nil)
@@ -513,7 +521,7 @@ final class TranscriptModel: ObservableObject {
         transcript: String?
     ) async throws {
         if let feedbackFor = feedbackFor {
-            try await KeyMomentManager().updateFeedbackFor(
+            try await dependencies?.keyMomentManager.updateFeedbackFor(
                 transcriptId: transcriptId,
                 gameId: gameId,
                 teamId: teamId,
@@ -523,7 +531,7 @@ final class TranscriptModel: ObservableObject {
         }
         
         if let transcript = transcript {
-            try await TranscriptManager().updateTranscript(teamDocId: teamDocId, gameId: gameId, transcriptId: transcriptId, transcript: transcript)
+            try await dependencies?.transcriptManager.updateTranscript(teamDocId: teamDocId, gameId: gameId, transcriptId: transcriptId, transcript: transcript)
         }
     }
     
@@ -537,16 +545,14 @@ final class TranscriptModel: ObservableObject {
     ///   - keyMomentId: The unique identifier of the key moment associated with the transcript.
     /// - Throws: Propagates any errors thrown by `TranscriptManager` or `KeyMomentManager` during deletion.
     func removeTranscript(gameId: String, teamId: String, transcriptId: String, keyMomentId: String) async throws {
-        let keyMomentManager = KeyMomentManager()
-        let transcriptManager = TranscriptManager()
         // Remove transcript first
-        try await transcriptManager.removeTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
+        try await dependencies?.transcriptManager.removeTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
         
         // Get the audio url before deleting the key moment document
-        let audioUrl = try await keyMomentManager.getAudioUrl(teamDocId: teamId, gameDocId: gameId, keyMomentId: keyMomentId)
+        let audioUrl = try await dependencies?.keyMomentManager.getAudioUrl(teamDocId: teamId, gameDocId: gameId, keyMomentId: keyMomentId)
         
         // Remove key moment
-        try await keyMomentManager.removeKeyMoment(teamId: teamId, gameId: gameId, keyMomentId: keyMomentId)
+        try await dependencies?.keyMomentManager.removeKeyMoment(teamId: teamId, gameId: gameId, keyMomentId: keyMomentId)
 
         guard audioUrl != nil else { return }
         print("audioUrl: \(audioUrl! ?? "nil")")

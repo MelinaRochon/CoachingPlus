@@ -62,7 +62,8 @@ struct CoachPlayerProfileView: View {
     @StateObject private var profileModel = CoachProfileViewModel()
     @StateObject private var playerModel = PlayerProfileModel()
     @StateObject private var userModel = UserModel()
-     
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     @State private var dob: Date = Date()
     @State private var gender: String = ""
      
@@ -183,10 +184,6 @@ struct CoachPlayerProfileView: View {
                 }
             }
             .alert("Removing Player", isPresented: $removePlayer) {
-//                Button("Cancel") {
-//                    // Nothing...
-//                }
-                
                 Button(role: .destructive) {
                     
                 } label: {
@@ -245,6 +242,11 @@ struct CoachPlayerProfileView: View {
                     }
                 }
             }
+            .onAppear {
+                profileModel.setDependencies(dependencies)
+                userModel.setDependencies(dependencies)
+                playerModel.setDependencies(dependencies)
+            }
         }
     }
      
@@ -255,7 +257,8 @@ struct CoachPlayerProfileView: View {
 struct CoachEditPlayerProfileView: View {
     
     @ObservedObject var profileModel: CoachProfileViewModel
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// Player document ID - used to fetch data for a specific player.
     @State var playerDocId: String
     
@@ -353,12 +356,6 @@ struct CoachEditPlayerProfileView: View {
                                     Text("Gender").foregroundStyle(.secondary)
                                     Spacer()
                                     Text(gender).foregroundStyle(.secondary)
-                                    //                                        CustomPicker(
-                                    //                                            title: "",
-                                    //                                            options: AppData.genderOptions,
-                                    //                                            displayText: { $0 },
-                                    //                                            selectedOption: $gender
-                                    //                                        ).frame(height: 20)
                                 }
                                 
                                 HStack {
@@ -466,6 +463,9 @@ struct CoachEditPlayerProfileView: View {
                         Text("Save")
                     }
                 }
+            }
+            .onAppear {
+                profileModel.setDependencies(dependencies)
             }
         }
         .ignoresSafeArea()

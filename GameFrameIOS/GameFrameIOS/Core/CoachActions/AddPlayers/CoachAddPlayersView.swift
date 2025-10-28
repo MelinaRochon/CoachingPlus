@@ -6,13 +6,7 @@
 //
 
 import SwiftUI
-
-struct GetTeam: Equatable {
-    var teamId: String
-    var name: String
-    var nickname: String
-}
-
+import GameFrameIOSShared
 
 /**
  This file contains the `CoachAddPlayersView` structure, which provides a form for coaches to add a new player to a team.
@@ -39,6 +33,8 @@ struct CoachAddPlayersView: View {
 
     /// A state object to handle user authentication and related login/logout functionality.
     @StateObject private var authenticationModel = AuthenticationModel()
+    
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Environment value used to dismiss the current view and go back to the previous screen, such as the "Create Team" view.
     @Environment(\.dismiss) var dismiss
@@ -74,13 +70,13 @@ struct CoachAddPlayersView: View {
     @State private var showErrorAlert: Bool = false
     
     @State var team: DBTeam
-    
+        
     // MARK: - View
 
     var body: some View {
         NavigationView {
             VStack {
-                NavigationLink(destination: tmpCoachAddPlayerView( team: team)) {
+                NavigationLink(destination: tmpCoachAddPlayerView(team: team)) {
                     Text("Tmp coach add player view")
                 }
                 Form {
@@ -142,7 +138,7 @@ struct CoachAddPlayersView: View {
                                 
                                 // Create a new player
                                 let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                let playerDocId = try await PlayerManager().createNewPlayer(playerDTO: player)
+                                let playerDocId = try await dependencies.playerManager.createNewPlayer(playerDTO: player)
                                 
                                 // Create a new invite
                                 let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)
@@ -171,6 +167,11 @@ struct CoachAddPlayersView: View {
                     Text("OK")
                 }
             }
+            .onAppear {
+                authenticationModel.setDependencies(dependencies)
+                userModel.setDependencies(dependencies)
+                inviteModel.setDependencies(dependencies)
+            }
         }
     }
 }
@@ -191,12 +192,6 @@ extension CoachAddPlayersView: PlayerProtocol {
     }
 }
 
-
-#Preview {
-    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
-
-    CoachAddPlayersView(team: team)
-}
 
 
 extension tmpCoachAddPlayerView: PlayerProtocol {
@@ -224,6 +219,8 @@ struct tmpCoachAddPlayerView: View {
 
     /// A state object to handle user authentication and related login/logout functionality.
     @StateObject private var authenticationModel = AuthenticationModel()
+
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Environment value used to dismiss the current view and go back to the previous screen, such as the "Create Team" view.
     @Environment(\.dismiss) var dismiss
@@ -261,6 +258,7 @@ struct tmpCoachAddPlayerView: View {
     @State var team: DBTeam
     
     @State private var playerExists: Bool = false
+    
     
     var body: some View {
         NavigationView {
@@ -307,7 +305,7 @@ struct tmpCoachAddPlayerView: View {
                                 
                                 // Create a new player
                                 let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                let playerDocId = try await PlayerManager().createNewPlayer(playerDTO: player)
+                                let playerDocId = try await dependencies.playerManager.createNewPlayer(playerDTO: player)
                                 
                                 // Create a new invite
                                 let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)
@@ -383,7 +381,7 @@ struct tmpCoachAddPlayerView: View {
                                 
                                 // Create a new player
                                 let player = PlayerDTO(playerId: nil, jerseyNum: jersey, gender: team.gender, profilePicture: nil, teamsEnrolled: [team.teamId], guardianName: guardianName, guardianEmail: guardianEmail, guardianPhone: guardianPhone)
-                                let playerDocId = try await PlayerManager().createNewPlayer(playerDTO: player)
+                                let playerDocId = try await dependencies.playerManager.createNewPlayer(playerDTO: player)
                                 
                                 // Create a new invite
                                 let invite = InviteDTO(userDocId: userDocId, playerDocId: playerDocId, email: email, status: "Pending", dateAccepted: nil, teamId: team.teamId)
@@ -411,6 +409,11 @@ struct tmpCoachAddPlayerView: View {
                 } label: {
                     Text("OK")
                 }
+            }
+            .onAppear {
+                authenticationModel.setDependencies(dependencies)
+                userModel.setDependencies(dependencies)
+                inviteModel.setDependencies(dependencies)
             }
         }
     }

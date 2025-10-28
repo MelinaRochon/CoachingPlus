@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameFrameIOSShared
 
 /**
  A Data Transfer Object (DTO) used to represent a home game, containing details about the game and the associated team.

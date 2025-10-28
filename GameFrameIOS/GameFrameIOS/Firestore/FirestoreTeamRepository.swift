@@ -7,10 +7,11 @@
 
 import Foundation
 import FirebaseFirestore
+import GameFrameIOSShared
 
-final class FirestoreTeamRepository: TeamRepository {
+public final class FirestoreTeamRepository: TeamRepository {
     
-    func teamCollection() -> CollectionReference {
+    public func teamCollection() -> CollectionReference {
         return Firestore.firestore().collection("teams")
     }
 
@@ -25,7 +26,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// Retrieves a team by its team ID.
     /// - Parameter teamId: The system-assigned team ID.
     /// - Returns: A `DBTeam` instance if found, otherwise `nil`.
-    func getTeam(teamId: String) async throws -> DBTeam? {
+    public func getTeam(teamId: String) async throws -> DBTeam? {
         let snapshot = try await teamCollection().whereField("team_id", isEqualTo: teamId).getDocuments()
 
         //try await teamDocument(teamId: teamId).getDocument(as: DBTeam.self)
@@ -37,7 +38,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// Retrieves all teams by its team ID.
     /// - Parameter teamId: The system-assigned team ID.
     /// - Returns: A `DBTeam` instance if found, otherwise `nil`.
-    func getAllTeams(teamIds: [String]) async throws -> [DBTeam] {
+    public func getAllTeams(teamIds: [String]) async throws -> [DBTeam] {
         guard !teamIds.isEmpty else { return [] }
         let snapshot = try await teamCollection().whereField("team_id", isEqualTo: teamIds).getDocuments()
 
@@ -49,7 +50,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// Retrieves a team by its Firestore document ID.
     /// - Parameter docId: Firestore document ID of the team.
     /// - Returns: A `DBTeam` instance.
-    func getTeamWithDocId(docId: String) async throws -> DBTeam {
+    public func getTeamWithDocId(docId: String) async throws -> DBTeam {
         try await teamDocument(id: docId).getDocument(as: DBTeam.self)
     }
     
@@ -58,7 +59,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///   - accessCpde: Team access code.
     ///   - Returns: A `DBTeam` instance, if found, otherwise `nil`
-    func getTeamWithAccessCode(accessCode: String) async throws -> DBTeam? {
+    public func getTeamWithAccessCode(accessCode: String) async throws -> DBTeam? {
         print("acees_code givenn is: [\(accessCode)]")
         
         let snapshot = try await teamCollection().whereField("access_code", isEqualTo: accessCode).getDocuments()
@@ -70,7 +71,7 @@ final class FirestoreTeamRepository: TeamRepository {
     }
 
 
-    func getTeamsWithCoach(coachId: String) async throws -> [DBTeam] {
+    public func getTeamsWithCoach(coachId: String) async throws -> [DBTeam] {
         let snapshot = try await teamCollection()
                 .whereField("coach_id", isEqualTo: coachId)
                 .getDocuments()
@@ -81,7 +82,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// Retrieves a team name by its team ID.
     /// - Parameter teamId: The system-assigned team ID.
     /// - Returns: A `String` with the team name,.
-    func getTeamName(teamId: String) async throws -> String {
+    public func getTeamName(teamId: String) async throws -> String {
         let team = try await getTeam(teamId: teamId)!
         return team.name
     }
@@ -90,7 +91,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///   - id: Firestore document ID of the team.
     ///   - playerId: ID of the player to be added.
-    func addPlayerToTeam(id: String, playerId: String) async throws {
+    public func addPlayerToTeam(id: String, playerId: String) async throws {
         let data: [String: Any] = [
             DBTeam.CodingKeys.players.rawValue: FieldValue.arrayUnion([playerId])
         ]
@@ -107,7 +108,7 @@ final class FirestoreTeamRepository: TeamRepository {
     ///   - playerId: The unique identifier of the player to check.
     /// - Returns: `true` if the player is on the team, otherwise `false`.
     /// - Throws: An error if the team could not be fetched from the database.
-    func isPlayerOnTeam(id: String, playerId: String) async throws -> Bool {
+    public func isPlayerOnTeam(id: String, playerId: String) async throws -> Bool {
         let team = try await getTeamWithDocId(docId: id)
         if let players = team.players {
             return players.contains(playerId)
@@ -126,7 +127,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Returns: The number of players in the team's roster, or:
     ///   - `nil` if no team with the given ID exists,
     ///   - `0` if the team exists but has no roster.
-    func getTeamRosterLength(teamId: String) async throws -> Int? {
+    public func getTeamRosterLength(teamId: String) async throws -> Int? {
         guard let team = try await getTeam(teamId: teamId) else {
             print("No team found with this team id")
             return nil
@@ -144,7 +145,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///   - id: Firestore document ID of the team.
     ///   - playerId: ID of the player to be removed.
-    func removePlayerFromTeam(id: String, playerId: String) async throws {
+    public func removePlayerFromTeam(id: String, playerId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
             DBTeam.CodingKeys.players.rawValue: FieldValue.arrayRemove([playerId])
@@ -158,7 +159,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///   - id: Firestore document ID of the team.
     ///   - coachId: ID of the coach to be added.
-    func addCoachToTeam(id: String, coachId: String) async throws {
+    public func addCoachToTeam(id: String, coachId: String) async throws {
         let data: [String: Any] = [
             DBTeam.CodingKeys.coaches.rawValue: FieldValue.arrayUnion([coachId])
         ]
@@ -172,7 +173,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///   - id: Firestore document ID of the team.
     ///   - inviteDocId: Firestore document ID of the invite.
-    func addInviteToTeam(id: String, inviteDocId: String) async throws {
+    public func addInviteToTeam(id: String, inviteDocId: String) async throws {
         let data: [String: Any] = [
             DBTeam.CodingKeys.invites.rawValue: FieldValue.arrayUnion([inviteDocId])
         ]
@@ -183,8 +184,8 @@ final class FirestoreTeamRepository: TeamRepository {
         print("Updated the team doc: \(id) by adding a new invite: \(inviteDocId)")
     }
     
-    func getInviteDocIdOfPlayerAndTeam(teamDocId: String, playerDocId: String) async throws -> String? {
-        guard let invite = try await InviteManager().getInviteByPlayerDocIdAndTeamId(playerDocId: playerDocId, teamDocId: teamDocId) else {
+    public func getInviteDocIdOfPlayerAndTeam(teamDocId: String, playerDocId: String) async throws -> String? {
+        guard let invite = try await FirestoreInviteRepository().getInviteByPlayerDocIdAndTeamId(playerDocId: playerDocId, teamDocId: teamDocId) else {
             print("Invite does not exists")
             return nil
         }
@@ -197,7 +198,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///   - id: Firestore document ID of the team.
     ///   - inviteDocId: Firestore document ID of the invite.
-    func removeInviteFromTeam(id: String, inviteDocId: String) async throws {
+    public func removeInviteFromTeam(id: String, inviteDocId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
             DBTeam.CodingKeys.invites.rawValue: FieldValue.arrayRemove([inviteDocId])
@@ -212,7 +213,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///   - id: Firestore document ID of the team.
     ///   - coachId: ID of the coach to be removed.
-    func removeCoachFromTeam(id: String, coachId: String) async throws {
+    public func removeCoachFromTeam(id: String, coachId: String) async throws {
         // find the team to remove
         let data: [String: Any] = [
             DBTeam.CodingKeys.coaches.rawValue: FieldValue.arrayRemove([coachId])
@@ -227,11 +228,11 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///   - coachId: The ID of the coach creating the team.
     ///   - teamDTO: The data transfer object containing team details.
-    func createNewTeam(coachId: String, teamDTO: TeamDTO) async throws {
+    public func createNewTeam(coachId: String, teamDTO: TeamDTO) async throws {
         do {
             print("Sending team to Firestore: \(teamDTO)")
             // verifie coach valide
-            let userManager = UserManager()
+            let userManager = FirestoreUserRepository()
             let coach = try await userManager.getUser(userId: coachId)
             let teamDocument = teamCollection().document()
             let documentId = teamDocument.documentID // get the document id
@@ -241,7 +242,7 @@ final class FirestoreTeamRepository: TeamRepository {
             try teamDocument.setData(from: team, merge: false)
             
             // Add the team in the coach's document
-            try await CoachManager().addTeamToCoach(coachId: coachId, teamId: teamDTO.teamId)
+            try await FirestoreCoachRepository().addTeamToCoach(coachId: coachId, teamId: teamDTO.teamId)
         } catch let error as NSError {
             print("Error creating team: \(error.localizedDescription)")
             throw error
@@ -252,7 +253,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// Checks whether a team exists in the database.
     /// - Parameter teamId: The team ID to check.
     /// - Returns: `true` if the team exists, otherwise `false`.
-    func doesTeamExist(teamId: String) async throws -> Bool {
+    public func doesTeamExist(teamId: String) async throws -> Bool {
         let snapshot = try await teamCollection().whereField("team_id", isEqualTo: teamId)
             .limit(to: 1) // Limit to 1 for efficiency
             .getDocuments()
@@ -262,7 +263,7 @@ final class FirestoreTeamRepository: TeamRepository {
     
     /// Generates a unique 8-character access code for a team.
     /// - Returns: A unique alphanumeric access code.
-    func generateUniqueTeamAccessCode() async throws -> String {
+    public func generateUniqueTeamAccessCode() async throws -> String {
         let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
         func generateCode() -> String {
@@ -295,7 +296,7 @@ final class FirestoreTeamRepository: TeamRepository {
     ///   - gender: Optional new gender value for the team. If `nil`, the gender field will not be updated.
     ///
     /// - Throws: Rethrows any errors from Firestore’s `updateData` call.
-    func updateTeamSettings(id: String, name: String?, nickname: String?, ageGrp: String?, gender: String?) async throws {
+    public func updateTeamSettings(id: String, name: String?, nickname: String?, ageGrp: String?, gender: String?) async throws {
         var data: [String: Any] = [:]
         if let name = name {
             data[DBTeam.CodingKeys.name.rawValue] = name
@@ -329,7 +330,7 @@ final class FirestoreTeamRepository: TeamRepository {
     /// - Parameters:
     ///    - id: The ID of the team to delete
     ///  - Throws: An error if the delete process fails
-    func deleteTeam(id: String) async throws {
+    public func deleteTeam(id: String) async throws {
         try await teamDocument(id: id).delete()
     }
 

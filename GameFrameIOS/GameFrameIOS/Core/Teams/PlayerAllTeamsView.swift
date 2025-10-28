@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-//import FirebaseFirestore
+import GameFrameIOSShared
 
 /// `PlayerAllTeamsView` is a SwiftUI view that displays a list of teams a player is associated with.
 /// This view also provides functionality for the player to enter a "group code" to join a new team.
@@ -37,6 +37,8 @@ struct PlayerAllTeamsView: View {
     /// A state object that holds the team model, which handles team-related data and logic
     /// This object is used to fetch the list of teams, validate access codes, and add the player to a team.
     @StateObject private var teamModel = TeamModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     @StateObject private var playerTeamInfoModel = PlayerTeamInfoModel()
 
     /// Holds the list of teams that the player is currently part of
@@ -139,7 +141,11 @@ struct PlayerAllTeamsView: View {
                                                 throw NSError(domain: "JoinTeam", code: 1,
                                                               userInfo: [NSLocalizedDescriptionKey: "Missing team id"])
                                             }
-                                            let auth = try AuthenticationManager.shared.getAuthenticatedUser()
+                                            let auth = try dependencies.authenticationManager.getAuthenticatedUser()
+                                            if auth.uid == "" {
+                                                print("TODO: Show error")
+                                                return
+                                            }
 
                                             // Build the DTO
                                                 let dto = PlayerTeamInfoDTO(
@@ -186,6 +192,11 @@ struct PlayerAllTeamsView: View {
             }
             .transaction { $0.animation = nil }
             .navigationTitle(Text("Teams"))
+            .onAppear {
+                teamModel.setDependencies(dependencies)
+                playerTeamInfoModel.setDependencies(dependencies)
+                playerTeamInfoModel.setDependencies(dependencies)
+            }
         }
         .task {
             do {

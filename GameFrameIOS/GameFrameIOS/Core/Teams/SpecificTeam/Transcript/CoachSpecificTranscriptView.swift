@@ -8,6 +8,7 @@
 import SwiftUI
 import UIKit
 import CoreTransferable
+import GameFrameIOSShared
 
 /// `CoachSpecificTranscriptView` displays details for a specific transcript from a game.
 /// It shows game information, transcript text, associated players, and comments.
@@ -21,7 +22,8 @@ struct CoachSpecificTranscriptView: View {
     
     /// View model responsible for handling transcript-related operations.
     @StateObject private var transcriptModel = TranscriptModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// The game associated with the transcript.
     @State var game: DBGame
     
@@ -231,6 +233,10 @@ struct CoachSpecificTranscriptView: View {
                     }
                 }
             }
+            .onAppear {
+                transcriptModel.setDependencies(dependencies)
+                commentViewModel.setDependencies(dependencies)
+            }
         }
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -347,7 +353,8 @@ struct FeedbackForView: View {
     
     /// Transcript model used for fetching and updating transcript data.
     @StateObject private var transcriptModel = TranscriptModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
     
@@ -396,6 +403,9 @@ struct FeedbackForView: View {
             }) {
                 Text("Delete")
             }
+        }
+        .onAppear {
+            transcriptModel.setDependencies(dependencies)
         }
     }
 }

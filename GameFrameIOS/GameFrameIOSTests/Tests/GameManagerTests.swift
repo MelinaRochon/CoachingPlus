@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class GameManagerTests: XCTestCase {
     var manager: GameManager!
@@ -46,7 +46,7 @@ final class GameManagerTests: XCTestCase {
         // Load teams from JSON file
         let sampleTeams: [DBTeam] = TestDataLoader.load("TestTeams", as: [DBTeam].self)
         guard let sampleTeam = sampleTeams.first else { return }
-        guard let team = try await createTeamForJSON(for: TeamManager(), team: sampleTeam) else {
+        guard let team = try await createTeamForJSON(for: TeamManager(repo: LocalTeamRepository()), team: sampleTeam) else {
             XCTFail("Team should exist")
             return
         }
@@ -184,26 +184,96 @@ final class GameManagerTests: XCTestCase {
         
         // Delete the game
         try await manager.deleteGame(gameId: gameId, teamDocId: teamDocId)
-        let game = try await manager.getGameWithDocId(gameDocId: gameId, teamDocId: teamDocId)
-        
-        XCTAssertNil(game, "Game should not exist")
+        do {
+            _ = try await manager.getGameWithDocId(gameDocId: gameId, teamDocId: teamDocId)
+            XCTFail("Expected error not thrown")
+        } catch GameError.gameNotFound {
+            // Error catch
+            print("GameError.gameNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     // MARK: Negative Testing
     
-    func testGetInvalidGame() async throws {
+    func testGetInvalidGame() async {
         let gameId = "G040"
         let teamId = "team1"
-        let game = try await manager.getGame(gameId: gameId, teamId: teamId)
-        
-        XCTAssertNil(game, "Game should not exist")
+
+        do {
+            _ = try await manager.getGame(gameId: gameId, teamId: teamId)
+            XCTFail("Expected error not thrown")
+        } catch GameError.gameNotFound {
+            // Error catch
+            print("GameError.gameNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testGetGameWithInvalidDocId() async throws {
         let gameDocId = "G040"
         let teamDocId = "team1"
-        let game = try await manager.getGameWithDocId(gameDocId: gameDocId, teamDocId: teamDocId)
-        
-        XCTAssertNil(game, "Game should not exist")
+
+        do {
+            _ = try await manager.getGameWithDocId(gameDocId: gameDocId, teamDocId: teamDocId)
+            XCTFail("Expected error not thrown")
+        } catch GameError.gameNotFound {
+            // Error catch
+            print("GameError.gameNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testUpdateGameDurationUsingTeamDocIdWithInvalidGameId() async  {
+        let gameId = "G040"
+        let teamDocId = "uidT001"
+        let duration = 100
+                
+        do {
+            // Update the invalid game duration
+            try await manager.updateGameDurationUsingTeamDocId(gameId: gameId, teamDocId: teamDocId, duration: duration)
+            XCTFail("Expected error not thrown")
+        } catch GameError.gameNotFound {
+            // Error catch
+            print("GameError.gameNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testUpdateGameTitleWithInvalidGameId() async {
+        let gameId = "G040"
+        let teamDocId = "uidT001"
+        let tile = "Canada vs USA"
+                
+        do {
+            // Update the invalid game title
+            try await manager.updateGameTitle(gameId: gameId, teamDocId: teamDocId, title: tile)
+            XCTFail("Expected error not thrown")
+        } catch GameError.gameNotFound {
+            // Error catch
+            print("GameError.gameNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testDeleteGameThatDoesNotExist() async {
+        let gameId = "G040"
+        let teamDocId = "uidT001"
+            
+        do {
+            // Try deleting the game that does not exist
+            try await manager.deleteGame(gameId: gameId, teamDocId: teamDocId)
+            XCTFail("Expected error not thrown")
+        } catch GameError.gameNotFound {
+            // Error catch
+            print("GameError.gameNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 }

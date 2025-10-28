@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import GameFrameIOS
+@testable import GameFrameIOSShared
 
 final class TranscriptManagerTests: XCTestCase {
     var manager: TranscriptManager!
@@ -101,9 +101,15 @@ final class TranscriptManagerTests: XCTestCase {
         
         // Removing transcript
         try await manager.removeTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
-        let transcript = try await manager.getTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
-        
-        XCTAssertNil(transcript, "Transcript should not exist")
+        do {
+            _ = try await manager.getTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
+            XCTFail("Expected error not thrown")
+        } catch TranscriptError.transcriptNotFound {
+            // Error catch
+            print("TranscriptError.transcriptNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testDeleteAllTranscripts() async throws {
@@ -119,13 +125,16 @@ final class TranscriptManagerTests: XCTestCase {
         
         // Delete all transcripts
         try await manager.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
-        let transcripts = try await manager.getAllTranscripts(teamId: teamId, gameId: gameId)
-        
-        XCTAssertNotNil(transcripts)
-        XCTAssertTrue(
-            transcripts?.isEmpty ?? false,
-            "All transcripts should not exist"
-        )
+        do {
+            _ = try await manager.getAllTranscripts(teamId: teamId, gameId: gameId)
+
+            XCTFail("Expected error not thrown")
+        } catch TranscriptError.transcriptNotFound {
+            // Error catch
+            print("TranscriptError.transcriptNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testUpdateTranscript() async throws {
@@ -162,28 +171,76 @@ final class TranscriptManagerTests: XCTestCase {
         let teamId = "team1"
         let gameId = "GAME_1"
         let transcriptId = "Tid_1"
-        let transcript = try await manager.getTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
-        XCTAssertNil(transcript, "Transcript should not exist")
+        
+        do {
+            _ = try await manager.getTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
+            XCTFail("Expected error not thrown")
+        } catch TranscriptError.transcriptNotFound {
+            // Error catch
+            print("TranscriptError.transcriptNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testGetAllInvalidTranscripts() async throws {
         let teamId = "team1"
         let gameId = "GAME_1"
-        let transcripts = try await manager.getAllTranscripts(teamId: teamId, gameId: gameId)
-        XCTAssertTrue(transcripts?.isEmpty ?? false, "Transcript should not exist")
+        
+        do {
+            _ = try await manager.getAllTranscripts(teamId: teamId, gameId: gameId)
+            XCTFail("Expected error not thrown")
+        } catch TranscriptError.transcriptNotFound {
+            // Error catch
+            print("TranscriptError.transcriptNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testGetInvalidTranscriptsPreviewWithDocId() async throws {
         let teamDocId = "uidT001"
         let gameId = "GAME_1"
-        let transcripts = try await manager.getTranscriptsPreviewWithDocId(teamDocId: teamDocId, gameId: gameId)
-        XCTAssertTrue(transcripts?.isEmpty ?? false, "Transcript should not exist")
+        
+        do {
+            _ = try await manager.getTranscriptsPreviewWithDocId(teamDocId: teamDocId, gameId: gameId)
+            XCTFail("Expected error not thrown")
+        } catch TranscriptError.transcriptNotFound {
+            // Error catch
+            print("TranscriptError.transcriptNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func testGetAllInvalidTranscriptsWithDocId() async throws {
         let teamDocId = "uidT001"
         let gameId = "GAME_1"
-        let transcripts = try await manager.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId)
-        XCTAssertTrue(transcripts?.isEmpty ?? false, "Transcript should not exist")
+        
+        do {
+            _ = try await manager.getAllTranscriptsWithDocId(teamDocId: teamDocId, gameDocId: gameId)
+            XCTFail("Expected error not thrown")
+        } catch TranscriptError.transcriptNotFound {
+            // Error catch
+            print("TranscriptError.transcriptNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func testRemoveNotExistentTranscript() async {
+        let teamId = "invaliduidT001"
+        let gameId = "GAME_1"
+        let transcriptId = "invalidT1"
+        
+        do {
+            _ = try await manager.removeTranscript(teamId: teamId, gameId: gameId, transcriptId: transcriptId)
+            XCTFail("Expected error not thrown")
+        } catch TranscriptError.transcriptNotFound {
+            // Error catch
+            print("TranscriptError.transcriptNotFound error catched.")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 }

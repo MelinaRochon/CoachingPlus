@@ -32,6 +32,7 @@ struct CoachFullGameTranscriptView: View {
     
     /// Model responsible for managing full-game video recording retrieval from Firestore/Storage.
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     var body: some View {
         ZStack {
@@ -92,6 +93,9 @@ struct CoachFullGameTranscriptView: View {
                 print("unable to get full game transcript: \(error)")
                 
             }
+        }
+        .onAppear {
+            fgVideoRecordingModel.setDependencies(dependencies)
         }
     }
 }

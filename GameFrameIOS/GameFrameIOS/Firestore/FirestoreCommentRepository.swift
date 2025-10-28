@@ -8,8 +8,9 @@
 import Foundation
 import FirebaseFirestore
 import Combine
+import GameFrameIOSShared
 
-final class FirestoreCommentRepository: CommentRepository {
+public final class FirestoreCommentRepository: CommentRepository {
     
     /**
      * Returns a reference to a specific comment document in the Firestore database
@@ -18,7 +19,7 @@ final class FirestoreCommentRepository: CommentRepository {
      *   - commentDocId: The document ID of the comment
      * - Returns: A `DocumentReference` pointing to the specific comment document
      */
-    func commentDocument(teamDocId: String, commentDocId: String) -> DocumentReference {
+    public func commentDocument(teamDocId: String, commentDocId: String) -> DocumentReference {
         return commentCollection(teamDocId: teamDocId).document(commentDocId)
     }
 
@@ -29,7 +30,7 @@ final class FirestoreCommentRepository: CommentRepository {
      *   - teamDocId: The document ID of the team
      * - Returns: A `CollectionReference` to the team's comments collection in Firestore
      */
-    func commentCollection(teamDocId: String) -> CollectionReference {
+    public func commentCollection(teamDocId: String) -> CollectionReference {
         let teamRepo = FirestoreTeamRepository()
         return teamRepo.teamCollection().document(teamDocId).collection("comments")
     }
@@ -45,10 +46,9 @@ final class FirestoreCommentRepository: CommentRepository {
      * - Returns: The `DBComment` object containing the comment's data, or `nil` if not found
      * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comment
      */
-    func getComment(teamId: String, commentDocId: String) async throws -> DBComment? {
-        let teamManager = TeamManager()
+    public func getComment(teamId: String, commentDocId: String) async throws -> DBComment? {
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("getComment: Could not find team id. Aborting")
             return nil
         }
@@ -65,10 +65,9 @@ final class FirestoreCommentRepository: CommentRepository {
      * - Returns: An array of `DBComment` objects containing all comments for the team, or `nil` if no comments are found
      * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comments
      */
-    func getAllComments(teamId: String) async throws -> [DBComment]? {
-        let teamManager = TeamManager()
+    public func getAllComments(teamId: String) async throws -> [DBComment]? {
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("getAllComments: Could not find team id. Aborting")
             return nil
         }
@@ -89,10 +88,9 @@ final class FirestoreCommentRepository: CommentRepository {
      * - Returns: An array of `DBComment` objects that are associated with the specified key moment, or `nil` if none are found
      * - Throws: Throws an error if the team document cannot be found or there is an issue fetching the comments
      */
-    func getAllCommentsForSpecificKeyMomentId(teamId: String, keyMomentId: String) async throws -> [DBComment]? {
-        let teamManager = TeamManager()
+    public func getAllCommentsForSpecificKeyMomentId(teamId: String, keyMomentId: String) async throws -> [DBComment]? {
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("getAllCommentsForSpecificKeyMomentId: Could not find team id. Aborting")
             return nil
         }
@@ -113,7 +111,7 @@ final class FirestoreCommentRepository: CommentRepository {
      * - Returns: An array of `DBComment` objects that are associated with the specified transcript, or `nil` if none are found
      * - Throws: Throws an error if there is an issue fetching the comments
      */
-    func getAllCommentsForSpecificTranscriptId(teamDocId: String, transcriptId: String) async throws -> [DBComment]? {
+    public func getAllCommentsForSpecificTranscriptId(teamDocId: String, transcriptId: String) async throws -> [DBComment]? {
         
         let query = try await commentCollection(teamDocId: teamDocId).whereField("transcript_id", isEqualTo: transcriptId).getDocuments()
         
@@ -130,11 +128,10 @@ final class FirestoreCommentRepository: CommentRepository {
      *   - commentDTO: The `CommentDTO` object containing the comment data to be added
      * - Throws: Throws an error if there is an issue adding the comment to Firestore
      */
-    func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
-        let teamManager = TeamManager()
+    public func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
 
         // Make sure the team document can be found with the team id given
-        let teamDocId = try await teamManager.getTeamWithDocId(docId: teamDocId).id
+        let teamDocId = try await FirestoreTeamRepository().getTeamWithDocId(docId: teamDocId).id
 
         let commentDocument = commentCollection(teamDocId: teamDocId).document()
         let documentId = commentDocument.documentID // get the document ID
@@ -155,10 +152,9 @@ final class FirestoreCommentRepository: CommentRepository {
      *   - commentId: The ID of the comment to be removed
      * - Throws: Throws an error if there is an issue deleting the comment
      */
-    func removeComment(teamId: String, commentId: String) async throws {
-        let teamManager = TeamManager()
+    public func removeComment(teamId: String, commentId: String) async throws {
         // Make sure the team document can be found with the team id given
-        guard let teamDocId = try await teamManager.getTeam(teamId: teamId)?.id else {
+        guard let teamDocId = try await FirestoreTeamRepository().getTeam(teamId: teamId)?.id else {
             print("removeComment: Could not find team id. Aborting")
             return
         }

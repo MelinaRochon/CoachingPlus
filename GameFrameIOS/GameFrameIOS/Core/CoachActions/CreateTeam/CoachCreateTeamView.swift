@@ -8,6 +8,7 @@
 import SwiftUI
 import SFSymbolsPicker
 import SwiftData
+import GameFrameIOSShared
 
 /**
  `CoachCreateTeamView.swift` provides an interface for coaches to create a new team.
@@ -45,7 +46,8 @@ struct CoachCreateTeamView: View {
     
     /// ViewModel to manage team creation and interactions with the database.
     @StateObject private var viewModel = TeamModel()
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     /// Predefined list of sports available for selection.
     let sportOptions = ["Soccer", "Hockey", "Basketball"]
 
@@ -210,6 +212,9 @@ struct CoachCreateTeamView: View {
             }
             .navigationTitle(Text("Creating a New Team"))
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                viewModel.setDependencies(dependencies)
+            }
         }
         // Disables the back button when this view is presented as a sheet
         .navigationBarBackButtonHidden(true)

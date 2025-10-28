@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import FirebaseAuth
+import GameFrameIOSShared
 
 /// View that serves as the root screen after sign-in, directing users to either the coach or player main screen based on their user type.
 struct UserTypeRootView: View {
@@ -18,9 +18,16 @@ struct UserTypeRootView: View {
     
     /// State variable that stores the user type (e.g., "Coach" or "Player").
     @State private var userType: UserType = .unknown // = ""
+    @EnvironmentObject var dependencies: DependencyContainer
+    @StateObject private var userManager: UserManager
 
     /// Currently signed-in Firebase user id (UID). Needed by CoachMainTabView.
-//    @State private var coachId: String?
+    @State private var uidAuthUser: String?
+
+    init(showSignInView: Binding<Bool>, container: DependencyContainer) {
+        self._showSignInView = showSignInView
+        self._userManager = StateObject(wrappedValue: UserManager(repo: container.userRepository))
+    }
 
     // MARK: - View
 
@@ -31,10 +38,11 @@ struct UserTypeRootView: View {
             // If userType is empty or loading, no screen is shown.
             if userType == .coach {
                 // Display the main tab view for the Coach if the user is identified as a Coach.
-                if let uid = Auth.auth().currentUser?.uid {
+                if let uid = uidAuthUser {
                     CoachMainTabView(showLandingPageView: $showSignInView, coachId: uid)
                 } else {
                     CustomUIFields.loadingSpinner("Loading coach…")
+                        .accessibilityIdentifier("userTypeRoot.loadingCoach.spinner")
                 }
             } else if (userType == .player) {
                 // Display the main tab view for the Player if the user is identified as a Player.
@@ -50,12 +58,22 @@ struct UserTypeRootView: View {
             // It makes an asynchronous call to fetch the user type from the UserManager.
             Task {
                 do {
-                    let userManager = UserManager()
                     // Attempt to fetch the user type asynchronously using UserManager.
-                    let type = try await userManager.getUserType() // get user type
+                    let authUser = try dependencies.authenticationManager.getAuthenticatedUser()
+                    if authUser.uid == "" {
+                        self.userType = .unknown
+                        // TODO: Show error
+                        return
+                    }
+                    self.uidAuthUser = authUser.uid
+                    guard let type = try await dependencies.userManager.getUser(userId: authUser.uid) else {
+                        self.userType = .unknown
+                        // TODO: Show error
+                        return
+                    } // get user type
                     
                     // Update the userType state with the fetched type (either "Coach" or "Player").
-                    self.userType = type
+                    self.userType = type.userType
                 } catch {
                     // Handle any error that may occur when fetching the user type.
                     print(error)
@@ -63,8 +81,4 @@ struct UserTypeRootView: View {
             }
         }
     }
-}
-
-#Preview {
-    UserTypeRootView(showSignInView: .constant(false))
 }

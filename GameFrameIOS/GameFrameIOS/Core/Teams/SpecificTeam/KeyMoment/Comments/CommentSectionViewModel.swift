@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameFrameIOSShared
 
 /**
  `CommentSectionViewModel` is a view model that handles the logic for managing comments in the `CommentSectionView`.
@@ -13,12 +14,28 @@ import Foundation
  */
 @MainActor
 final class CommentSectionViewModel: ObservableObject {
+    
+    /// Holds the app’s shared dependency container, used to access services and repositories.
+    private var dependencies: DependencyContainer?
+
     /**
      A published property that holds the list of comments for a specific key moment or transcript.
      This will automatically update the view when the comments are loaded or modified.
      */
     @Published var comments: [DBComment] = []
         
+    // MARK: - Dependency Injection
+    
+    /// Injects the provided `DependencyContainer` into the current context.
+    ///
+    /// This allows the view, view model, or controller to access shared
+    /// dependencies such as managers or repositories from a central container.
+    /// Useful for testing, environment configuration (e.g., local vs. Firestore),
+    /// or replacing dependencies at runtime.
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+    }
+
     /**
      Fetches all comments for a given key moment.
      - Parameters:
@@ -27,13 +44,12 @@ final class CommentSectionViewModel: ObservableObject {
      This function interacts with the `CommentManager` to retrieve the comments from Firestore and updates the `comments` property.
      */
     func loadCommentsForKeyMoment(teamId: String, keyMomentId: String) async {
-        let commentManager = CommentManager()
         guard !teamId.isEmpty, !keyMomentId.isEmpty else {
             print("Invalid teamId or keyMomentId")
             return
         }
         do {
-            if let fetchedComments = try await commentManager.getAllCommentsForSpecificKeyMomentId(teamId: teamId, keyMomentId: keyMomentId) {
+            if let fetchedComments = try await dependencies?.commentManager.getAllCommentsForSpecificKeyMomentId(teamId: teamId, keyMomentId: keyMomentId) {
                 self.comments = fetchedComments.sorted { $0.createdAt > $1.createdAt } // Order by newest first
                 print("Loaded \(self.comments.count) comments")
             } else {
@@ -54,19 +70,16 @@ final class CommentSectionViewModel: ObservableObject {
      It also replaces the `uploadedBy` field with the user's full name.
      */
     func loadCommentsForTranscript(teamDocId: String, transcriptId: String) async {
-        let commentManager = CommentManager()
         guard !teamDocId.isEmpty, !transcriptId.isEmpty else {
             print("Invalid teamId or transcriptId")
             return
         }
             
         do {
-            if let fetchedComments = try await commentManager.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: transcriptId) {
-                let userManager = UserManager()
-                
+            if let fetchedComments = try await dependencies?.commentManager.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: transcriptId) {
                 var updatedComments: [DBComment] = []
                 for comment in fetchedComments {
-                    if let user = try? await userManager.getUser(userId: comment.uploadedBy) {
+                    if let user = try? await dependencies?.userManager.getUser(userId: comment.uploadedBy) {
                         let updatedComment = DBComment(
                             commentId: comment.commentId,
                             keyMomentId: comment.keyMomentId,
@@ -106,7 +119,6 @@ final class CommentSectionViewModel: ObservableObject {
      This function creates a new `CommentDTO` object and adds it to Firestore. After adding, it reloads the comments for the given transcript.
      */
     func addComment(teamDocId: String, keyMomentId: String, gameId: String, transcriptId: String, text: String) async {
-        let commentManager = CommentManager()
         do {
             print("In CommentSectionViewModel, teamId: \(teamDocId)")
             guard !teamDocId.isEmpty, !keyMomentId.isEmpty, !text.isEmpty else {
@@ -114,7 +126,12 @@ final class CommentSectionViewModel: ObservableObject {
                 return
             }
             
-            let authUser = try AuthenticationManager.shared.getAuthenticatedUser()
+            guard let repo = dependencies?.authenticationManager else {
+                print("⚠️ Dependencies not set")
+                return
+            }
+
+            let authUser = try repo.getAuthenticatedUser()
             let newComment = CommentDTO(
                 keyMomentId: keyMomentId,
                 gameId: gameId,
@@ -124,7 +141,7 @@ final class CommentSectionViewModel: ObservableObject {
                 createdAt: Date()
             )
             print("trying to add comment: \(text)")
-            try await commentManager.addNewComment(teamDocId: teamDocId, commentDTO: newComment)
+            try await dependencies?.commentManager.addNewComment(teamDocId: teamDocId, commentDTO: newComment)
             print("success!")
             
             // Refresh comments after adding
@@ -134,13 +151,4 @@ final class CommentSectionViewModel: ObservableObject {
             print("Error adding comment: \(error)")
         }
     }
-    
-//    func getCommentCreatedAt(commentId: String, teamId: String?, gameId: String?) async throws -> Date? {
-//        
-//    }
-    
-//    func streamComments(forTeamIds: [String]) -> AnyPublisher<[CommentDTO], Error>{
-//        
-//    }
-    
 }

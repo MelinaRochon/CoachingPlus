@@ -1,4 +1,5 @@
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  This view handles the player's account creation process. It is the first screen shown when a new player wants to sign up.
@@ -40,6 +41,8 @@ struct PlayerCreateAccountView: View {
     /// ViewModel handling authentication logic.
     @StateObject var viewModel: AuthenticationModel
     
+    @EnvironmentObject var dependencies: DependencyContainer
+    
     /// State to track whether the user should navigate to the sign-up page.
     @State private var navigateToSignUp = false
     
@@ -66,6 +69,7 @@ struct PlayerCreateAccountView: View {
                 VStack(spacing: 5) {
                     Text("Hey Champ!")
                         .font(.title3).bold()
+                        .accessibilityIdentifier("page.signup.player.title")
                     HStack {
                         Text("I already have an account!")
                             .foregroundColor(.gray)
@@ -84,6 +88,7 @@ struct PlayerCreateAccountView: View {
                             TextField("Team Access Code", text: $viewModel.teamAccessCode)
                                 .autocapitalization(.none)
                                 .autocorrectionDisabled(true)
+                                .accessibilityIdentifier("page.signup.player.teamAccessCode")
                             Button(action: {
                                 print("Show help for Team Access Code")
                             }) {
@@ -100,6 +105,7 @@ struct PlayerCreateAccountView: View {
                             .autocapitalization(.none)
                             .autocorrectionDisabled(true)
                             .keyboardType(.emailAddress) // Shows email-specific keyboard
+                            .accessibilityIdentifier("page.signup.player.email")
                     }
                     .padding(.horizontal)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -129,6 +135,7 @@ struct PlayerCreateAccountView: View {
                     }
                     .disabled(!signUpWithAccessCodeValid)
                     .opacity(signUpWithAccessCodeValid ? 1.0 : 0.5)
+                    .accessibilityIdentifier("page.signup.player.continueBtn")
                     
                     .alert("Invalid Access Code", isPresented: $errorAccessCodeInvalid) {
                         Button(role: .cancel) {
@@ -164,6 +171,9 @@ struct PlayerCreateAccountView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            viewModel.setDependencies(dependencies)
+        }
     }
 }
 

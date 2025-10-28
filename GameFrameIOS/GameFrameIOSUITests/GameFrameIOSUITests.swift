@@ -26,8 +26,16 @@ final class GameFrameIOSUITests: XCTestCase {
     func testExample() throws {
         // UI tests must launch the application that they test.
         let app = XCUIApplication()
+        // Reset data to start fresh
+        app.launchArguments = ["UI_TESTING_MODE", "RESET_DATA"]
         app.launch()
 
+        let loginButton = app.buttons["loginButton"]
+        let loginAsCoachButton = app.buttons["loginAsCoachButton"]
+        
+        // Tap login
+        loginButton.tap()
+        loginAsCoachButton.tap()
         // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
 
