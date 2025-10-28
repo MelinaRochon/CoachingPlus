@@ -91,7 +91,51 @@ final class AuthenticationUITests: XCTestCase {
         let profilePage = app.otherElements["page.player.profile"]
         XCTAssertTrue(profilePage.exists, "Profile page did not load")
     }
+    
+    // Testing the logout as a coach
+    func testLogoutAsCoach() {
+        // Login
+        app.buttons["loginButton"].tap()
+        app.buttons["loginChoicePage.login.coach.btn"].tap()
+        
+        app.textFields["coachLoginPage.emailField"].tap()
+        app.textFields["coachLoginPage.emailField"].typeText("coach1@example.com")
+        app.secureTextFields["coachLoginPage.passwordField"].tap()
+        app.secureTextFields["coachLoginPage.passwordField"].typeText("alicesmith")
+        
+        app.buttons["coachLoginPage.signInButton"].tap()
+        let profilePage = app.otherElements["page.coach.profile"]
+        XCTAssertTrue(profilePage.exists, "Profile page did not load")
+        
+        sleep(3)
+        // Logout
+        app.buttons["page.profile.coach.logout"].tap()
+        XCTAssertTrue(app.otherElements["page.landing.view"].exists)
+    }
+    
+    // Testing the logout as a player
+    func testLogoutAsPlayer() {
+        // Login
+        app.buttons["loginButton"].tap()
+        app.buttons["loginChoicePage.login.player.btn"].tap()
+        
+        app.textFields["page.player.login.emailField"].tap()
+        app.textFields["page.player.login.emailField"].typeText("player1@example.com")
+        app.secureTextFields["page.player.login.passwordField"].tap()
+        app.secureTextFields["page.player.login.passwordField"].typeText("janedoe")
+        
+        app.buttons["page.player.login.signInBtn"].tap()
+        
+        // Make sure we see the profile page as the login should have worked
+        XCTAssertTrue(app.otherElements["page.player.profile"].exists, "Profile page did not load")
+        app.swipeUp()
 
+        sleep(3)
+        // Logout
+        app.buttons["page.profile.player.logout"].tap()
+        XCTAssertTrue(app.otherElements["page.landing.view"].exists)
+    }
+    
     // MARK: Negative Tests
     // Test invalid login as coach with invalid email
     func testLoginAsCoachWithInvalidEmail() throws {

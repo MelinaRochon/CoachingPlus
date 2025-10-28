@@ -138,6 +138,7 @@ struct LandingPageView: View {
             }
             }.frame(maxWidth: .infinity)
         }
+        .accessibilityIdentifier("page.landing.view")
     }
 }
 

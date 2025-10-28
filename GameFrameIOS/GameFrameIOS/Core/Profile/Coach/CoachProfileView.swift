@@ -233,6 +233,7 @@ import SwiftUI
                                              }
                                          }
                                      }
+                                     .accessibilityIdentifier("page.profile.coach.logout")
                                  }
                              }
                              

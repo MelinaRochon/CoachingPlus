@@ -287,7 +287,8 @@ struct PlayerProfileView: View {
                                         }
                                     } label: {
                                         Text("Log out")
-                                    }                                    
+                                    }
+                                    .accessibilityIdentifier("page.profile.player.logout")
                                 }
                             }
                         }
