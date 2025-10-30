@@ -59,6 +59,8 @@ struct PlayerMainTabView: View {
                 )
             }
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom) // tab stays at bottom
+
     }
     
     // Helper function for tab items (changes icon color and fill when selected)
