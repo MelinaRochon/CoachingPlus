@@ -7,6 +7,7 @@
 
 import Foundation
 import GameFrameIOSShared
+
 /**
  ViewModel responsible for managing authentication-related data and operations.
  */
@@ -112,22 +113,22 @@ final class AuthenticationModel: ObservableObject {
         if let verifyUser = verifyUser {
             if verifyUser.userId != nil {
                 print("User already exists with this email. Abort")
-                NSError(domain: "AuthenticationModel", code: 1001, userInfo: [NSLocalizedDescriptionKey : "user already exists"])
+                return
             }
         }
-
+        
+        print("Creating user - inside signUP")
+        if ProcessInfo.processInfo.arguments.contains("UI_TEST_MODE") {
+            NSLog("🧩 CoachCreateAccountView onAppear triggered")
+        }
         let authDataResult = try await repo.authenticationManager.createUser(email: email, password: password)
-        
-        // Create a new DTO
-        let user = UserDTO(userId: authDataResult.uid, email: authDataResult.email, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
-        try await repo.userManager.createNewUser(userDTO: user)
-        
+                
         // Handle user creation based on type (Player or Coach).
         if (userType == .player) {
             // Verify if the team access code entered is valid
             guard let team = try await repo.teamManager.getTeamWithAccessCode(accessCode: teamAccessCode) else {
                 print("Error. Not a valid team access code. ")
-                return
+                throw TeamError.invalidAccessCode
             }
 
             guard let invite = try await repo.inviteManager.getInviteByEmailAndTeamId(email: email, teamId: teamId) else {
@@ -145,7 +146,7 @@ final class AuthenticationModel: ObservableObject {
                 
                 let subdocId = team.teamId // <- we store per-team info using team.teamId as the subdoc id
 
-                let dto = PlayerTeamInfoDTO(id: subdocId, playerId: playerDocId, nickname: nil, jerseyNum: nil, joinedAt: nil) // nil => server time
+                let dto = PlayerTeamInfoDTO(id: subdocId, playerId: authDataResult.uid, nickname: nil, jerseyNum: nil, joinedAt: nil) // nil => server time
                 _ = try await repo.playerTeamInfoManager.createNewPlayerTeamInfo(playerDocId: playerDocId, playerTeamInfoDTO: dto)
 
                 // Add player to team
@@ -178,6 +179,11 @@ final class AuthenticationModel: ObservableObject {
             // Set to accepted
             try await repo.inviteManager.updateInviteStatus(id: invite.id, newStatus: "Accepted")
         } else {
+            
+            // Create a new DTO
+            let user = UserDTO(userId: authDataResult.uid, email: authDataResult.email, userType: userType, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, country: country)
+            try await repo.userManager.createNewUser(userDTO: user)
+
             // Create a new coach entry in the database.
             try await repo.coachManager.addCoach(coachId: authDataResult.uid)
         }

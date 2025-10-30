@@ -171,6 +171,7 @@ struct CoachAddPlayersView: View {
                 authenticationModel.setDependencies(dependencies)
                 userModel.setDependencies(dependencies)
                 inviteModel.setDependencies(dependencies)
+                playerModel.setDependencies(dependencies)
             }
         }
     }
@@ -414,6 +415,7 @@ struct tmpCoachAddPlayerView: View {
                 authenticationModel.setDependencies(dependencies)
                 userModel.setDependencies(dependencies)
                 inviteModel.setDependencies(dependencies)
+                playerModel.setDependencies(dependencies)
             }
         }
     }

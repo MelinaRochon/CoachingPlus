@@ -62,7 +62,7 @@ public final class LocalUserRepository: UserRepository {
             throw UserError.userInvalidEmail
         }
         guard let user = users.first(where: { $0.email == email }) else {
-            throw UserError.userNotFound
+            return nil
         }
         return user
 

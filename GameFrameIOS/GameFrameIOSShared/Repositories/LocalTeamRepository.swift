@@ -80,7 +80,7 @@ public final class LocalTeamRepository: TeamRepository {
     ///   - playerId: The ID of the player to add.
     public func addPlayerToTeam(id: String, playerId: String) async throws {
         // Try to find the index of the team with the given document ID
-        guard let index = teams.firstIndex(where: { $0.teamId == id }) else {
+        guard let index = teams.firstIndex(where: { $0.id == id }) else {
             print("Team not found with id: \(id)")
             throw TeamError.teamNotFound
         }

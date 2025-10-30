@@ -62,20 +62,19 @@ struct UserTypeRootView: View {
                     let authUser = try dependencies.authenticationManager.getAuthenticatedUser()
                     if authUser.uid == "" {
                         self.userType = .unknown
-                        // TODO: Show error
-                        return
+                        throw AuthError.noAuthenticatedUser
                     }
                     self.uidAuthUser = authUser.uid
                     guard let type = try await dependencies.userManager.getUser(userId: authUser.uid) else {
                         self.userType = .unknown
-                        // TODO: Show error
-                        return
+                        throw AuthError.noAuthenticatedUser
                     } // get user type
                     
                     // Update the userType state with the fetched type (either "Coach" or "Player").
                     self.userType = type.userType
                 } catch {
                     // Handle any error that may occur when fetching the user type.
+                    showSignInView = true
                     print(error)
                 }
             }

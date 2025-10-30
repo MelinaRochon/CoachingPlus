@@ -1,4 +1,5 @@
 import SwiftUI
+import GameFrameIOSShared
 
 /// A view for creating a new Coach account.
 ///
@@ -121,8 +122,9 @@ struct CoachCreateAccountView: View {
                         CustomUIFields.customTextField("Email", text: $viewModel.email)
                             .autocapitalization(.none)
                             .autocorrectionDisabled(true)
-                            .keyboardType(.emailAddress) // Shows email-specific keyboard
+                            .keyboardType(isUITest ? .default : .emailAddress) // Shows email-specific keyboard
                             .accessibilityIdentifier("page.signup.coach.email")
+                            .textContentType(isUITest ? .none : .emailAddress)
 
                         // Password Field with Eye Toggle
                         Group {
@@ -146,7 +148,7 @@ struct CoachCreateAccountView: View {
                             do {
                                 // Check if the email already exists
                                 guard try await viewModel.verifyEmailAddress() == nil else {
-                                    showErrorAlert.toggle()
+                                    showErrorAlert = true
                                     return
                                 }
                                 
@@ -158,6 +160,7 @@ struct CoachCreateAccountView: View {
                                 return
                             } catch {
                                 print(error) // Handle any errors
+                                showErrorAlert = true
                             }
                         }
                     } label: {
@@ -185,7 +188,6 @@ struct CoachCreateAccountView: View {
                 .navigationDestination(isPresented: $errorGoToLogin) {
                     CoachLoginView(showSignInView: $showSignInView)
                 }
-                .scrollContentBackground(.hidden)
             }
             .onAppear {
                 viewModel.setDependencies(dependencies)

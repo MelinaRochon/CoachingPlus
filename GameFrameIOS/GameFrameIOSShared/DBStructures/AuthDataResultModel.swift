@@ -44,4 +44,11 @@ public struct AuthPwd: Codable {
     public let authUserId: String
     public var password: String
     public var isSignedIn: Bool
+    
+    public init(id: String, authUserId: String, password: String, isSignedIn: Bool) {
+        self.id = id
+        self.authUserId = authUserId
+        self.password = password
+        self.isSignedIn = isSignedIn
+    }
 }

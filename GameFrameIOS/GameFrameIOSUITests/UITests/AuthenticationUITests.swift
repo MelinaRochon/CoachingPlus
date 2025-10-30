@@ -339,33 +339,40 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["page.signup.coach.title"].exists)
 
         // Sign up as a coach
+        let firstName = "Anna"
+        let lastName = "Brison"
         let firstNameField = app.textFields["page.signup.coach.firstName"]
         firstNameField.tap()
-        firstNameField.typeText("Anna")
+        firstNameField.typeText(firstName)
         
         let lastNameField = app.textFields["page.signup.coach.lastName"]
         lastNameField.tap()
-        lastNameField.typeText("Brison")
+        lastNameField.typeText(lastName)
 
         let phoneField = app.textFields["page.signup.coach.phone"]
         phoneField.tap()
         phoneField.typeText("9991234567")
 
-        app.swipeUp()
-
         let emailField = app.textFields["page.signup.coach.email"]
         emailField.tap()
         emailField.typeText("anna@hotmail.com")
-        
+        app.keyboards.buttons["return"].tap() // or "Done", depending on keyboard type
+
         let pwdField = app.textFields["page.signup.coach.password"]
+        XCTAssertTrue(pwdField.waitForExistence(timeout: 5))
         pwdField.tap()
         pwdField.typeText("annabrison")
+        app.keyboards.buttons["Return"].tap()
 
-        // Login
+        // Create account
         app.buttons["page.signup.coach.createAccountBtn"].tap()
-        sleep(3)
+        
         let profilePage = app.otherElements["page.coach.profile"]
         XCTAssertTrue(profilePage.exists, "Profile page did not load")
+        
+        sleep(2)
+        let name = "\(firstName) \(lastName)"
+        XCTAssertEqual(app.staticTexts["page.coach.profile.name"].label, name)
     }
     
     // Test sign up as player
@@ -388,14 +395,16 @@ final class AuthenticationUITests: XCTestCase {
         
         // Go to next step in sign up
         app.buttons["page.signup.player.continueBtn"].tap()
-                
+        
+        let firstName = "Hailey"
+        let lastName = "Jane"
         let firstNameField = app.textFields["page.signup.player.firstName"]
         firstNameField.tap()
-        firstNameField.typeText("Hailey")
+        firstNameField.typeText(firstName)
         
         let lastNameField = app.textFields["page.signup.player.lastName"]
         lastNameField.tap()
-        lastNameField.typeText("Dunphy")
+        lastNameField.typeText(lastName)
 
         let phoneField = app.textFields["page.signup.player.phone"]
         phoneField.tap()
@@ -403,13 +412,18 @@ final class AuthenticationUITests: XCTestCase {
             
         let pwdField = app.textFields["page.signup.player.password"]
         pwdField.tap()
-        pwdField.typeText("haileydunphy")
+        pwdField.typeText("haileyjane")
+        app.keyboards.buttons["Return"].tap()
         
         // Confirm sign up and go to profile page
         app.buttons["page.signup.player.signUpBtn"].tap()
-        sleep(3)
+
         let profilePage = app.otherElements["page.player.profile"]
         XCTAssertTrue(profilePage.exists, "Profile page did not load")
+        
+        sleep(2)
+        let name = "\(firstName) \(lastName)"
+        XCTAssertEqual(app.staticTexts["page.player.profile.name"].label, name)
     }
     
     // Sign up player with invalid access code
@@ -512,15 +526,15 @@ final class AuthenticationUITests: XCTestCase {
         phoneField.tap()
         phoneField.typeText("9991234567")
 
-        app.swipeUp()
-
         let emailField = app.textFields["page.signup.coach.email"]
         emailField.tap()
         emailField.typeText("coach1@example.com")
-        
+        app.keyboards.buttons["return"].tap() // or "Done", depending on keyboard type
+
         let pwdField = app.textFields["page.signup.coach.password"]
         pwdField.tap()
         pwdField.typeText("annabrison")
+        app.keyboards.buttons["return"].tap() // or "Done", depending on keyboard type
 
         // Login should fail as email already exists
         app.buttons["page.signup.coach.createAccountBtn"].tap()

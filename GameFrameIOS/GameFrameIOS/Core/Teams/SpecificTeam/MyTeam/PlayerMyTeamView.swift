@@ -92,9 +92,6 @@ struct PlayerMyTeamView: View {
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)
         }
-        .onAppear {
-            refreshData() // Refresh data when the view appears
-        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
@@ -169,6 +166,8 @@ struct PlayerMyTeamView: View {
         }
         .onAppear {
             gameModel.setDependencies(dependencies)
+            playerModel.setDependencies(dependencies)
+            refreshData() // Refresh data when the view appears
         }
     }
     

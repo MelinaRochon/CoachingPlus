@@ -356,17 +356,10 @@ final class UserManagerTests: XCTestCase {
         
         // Make sure the user does not have the same email configured
         XCTAssertNotEqual(user?.email, invalidEmail)
-
+        
         // Try to get the user with an invalid email address
-        do {
-            let _ = try await manager.getUserWithEmail(email: invalidEmail)
-            XCTFail("Expected error not thrown")
-        } catch UserError.userNotFound {
-            // Error catch
-            print("UserError.userNotFound error catched.")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        let invalidUser = try await manager.getUserWithEmail(email: invalidEmail)
+        XCTAssertNil(invalidUser)
     }
 
     

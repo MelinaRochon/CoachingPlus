@@ -121,10 +121,13 @@ import SwiftUI
                              
                              if !isEditing {
                                  Text("\(user.firstName) \(user.lastName)").font(.title)
+                                     .accessibilityIdentifier("page.coach.profile.name")
                                  Text(user.userType.displayName).font(.subheadline)
+                                     .accessibilityIdentifier("page.coach.profile.userType")
                                  Text(user.email).font(.subheadline)
                                      .foregroundStyle(.secondary)
                                      .padding(.bottom)
+                                     .accessibilityIdentifier("page.coach.profile.email")
                              }
                          }
                          .frame(maxWidth: .infinity) // Ensures full width for better alignment
@@ -137,11 +140,13 @@ import SwiftUI
                                      HStack {
                                          Text("First Name")
                                          TextField("First Name", text: $firstName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                                             .accessibilityIdentifier("page.coach.profile.firstName.edit")
                                      }
                                      HStack {
                                          Text("Last Name").foregroundStyle(.primary)
                                          Spacer()
                                          TextField("Last Name", text: $lastName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                                             .accessibilityIdentifier("page.coach.profile.lastName.edit")
                                      }
                                      
                                      HStack {
@@ -160,6 +165,7 @@ import SwiftUI
                                              Text("\(dateOfBirth.formatted(.dateTime.year().month(.twoDigits).day()))")
                                                  .foregroundStyle(.secondary)
                                                  .multilineTextAlignment(.trailing)
+                                                 .accessibilityIdentifier("page.coach.profile.dob")
                                          } else {
                                              Text("N/A").foregroundStyle(.secondary)
                                                  .multilineTextAlignment(.trailing)
@@ -187,6 +193,7 @@ import SwiftUI
                                          .onChange(of: phone) { newVal in
                                              phone = formatPhoneNumber(newVal)
                                          }
+                                         .accessibilityIdentifier("page.coach.profile.phone")
                                  }
                              }
                              
@@ -198,6 +205,7 @@ import SwiftUI
                                          Text(country)
                                              .foregroundStyle(.secondary)
                                              .multilineTextAlignment(.trailing)
+                                             .accessibilityIdentifier("page.coach.profile.country")
                                      }
                                  }
                              }
@@ -267,11 +275,13 @@ import SwiftUI
                          Button(action: editInfo) {
                              Text("Edit")
                          }
+                         .accessibilityIdentifier("page.coach.profile.edit")
                          
                      } else {
                          Button(action: saveInfo) {
                              Text("Save")
                          }
+                         .accessibilityIdentifier("page.coach.profile.save")
                      }
                  }
                  
@@ -280,6 +290,7 @@ import SwiftUI
                          Button(action: cancelInfo) {
                              Text("Cancel")
                          }
+                         .accessibilityIdentifier("page.coach.profile.cancel")
                      }
                  }
              }

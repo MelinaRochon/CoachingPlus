@@ -136,6 +136,7 @@ struct CoachMyTeamView: View {
         .onAppear {
             teamModel.setDependencies(dependencies)
             gameModel.setDependencies(dependencies)
+            playerModel.setDependencies(dependencies)
             refreshData() // Refresh data when the view appears
         }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
@@ -242,7 +243,7 @@ struct CoachMyTeamView: View {
                     // TODO: Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
                     return
                 }
-                
+
                 try await playerModel.getAllPlayers(invites: tmpInvites, players: tmpPlayers)
             } catch {
                 // Print error message if data fetching fails

@@ -84,7 +84,8 @@ struct PlayerProfileView: View {
                             // The player is not editing its profile
                             if !isEditing {
                                 Text("\(firstName) \(lastName)").font(.title)
-                                    Text("# \((jersey == -1) ? "TBD" : String(jersey))").font(.subheadline)
+                                    .accessibilityIdentifier("page.player.profile.name")
+                                Text("# \((jersey == -1) ? "TBD" : String(jersey))").font(.subheadline)
                                 Text(user.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
                             }
                             

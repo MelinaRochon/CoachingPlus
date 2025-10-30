@@ -105,7 +105,7 @@ public final class FirestoreUserRepository: UserRepository {
         let data: [String: Any] = [
             DBUser.CodingKeys.userId.rawValue: userId,
             DBUser.CodingKeys.email.rawValue: email,
-            DBUser.CodingKeys.userType.rawValue: userTpe,
+            DBUser.CodingKeys.userType.rawValue: userTpe.rawValue,
             DBUser.CodingKeys.firstName.rawValue: firstName,
             DBUser.CodingKeys.lastName.rawValue: lastName,
             DBUser.CodingKeys.dateOfBirth.rawValue: dob,

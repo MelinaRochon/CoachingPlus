@@ -44,7 +44,7 @@ public final class DependencyContainer: ObservableObject {
             commentManager = CommentManager(repo: LocalCommentRepository())
         }
         else {
-            print("Using Firestore Repositories (Firebase disabled)")
+            print("Using Firestore Repositories (Firebase enabled)")
             authenticationManager = AuthenticationManager(repo: FirestoreAuthenticationRepository())
             userManager = UserManager(repo: FirestoreUserRepository())
             userRepository = FirestoreUserRepository()

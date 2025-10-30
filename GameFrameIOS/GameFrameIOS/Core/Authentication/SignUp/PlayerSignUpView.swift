@@ -5,6 +5,7 @@
 //  Created by Mélina Rochon on 2025-03-12.
 //
 import SwiftUI
+import GameFrameIOSShared
 
 /// This struct defines the view for player sign-up, where the user provides their information to create an account.
 /// The `PlayerSignUpView` struct is a SwiftUI view responsible for displaying the player's sign-up form.
@@ -14,6 +15,7 @@ struct PlayerSignUpView: View {
 
     /// The view model (AuthenticationModel) is observed and passed from the parent view to manage the player's authentication data.
     @ObservedObject var viewModel: AuthenticationModel
+    @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Local state to toggle password visibility in the password field.
     @State private var showPassword: Bool = false
@@ -23,6 +25,13 @@ struct PlayerSignUpView: View {
     
     // Detect if the app is running in UI test mode
     private let isUITest = ProcessInfo.processInfo.arguments.contains("UI_TEST_MODE")
+    
+    /// A boolean to control whether the error alert is shown.
+    @State private var invalidAccessCodeAlert: Bool = false
+    @State private var teamNotFoundAlert: Bool = false
+    @State private var playerAlreadyOnTeamAlert: Bool = false
+    @State private var errorGoToLandingPage: Bool = false
+
 
     // MARK: - View
 
@@ -117,6 +126,12 @@ struct PlayerSignUpView: View {
                             // If successful, hide the sign-in view
                             showSignInView = false
                             return
+                        } catch TeamError.invalidAccessCode {
+                            invalidAccessCodeAlert = true
+                        } catch TeamError.teamNotFound {
+                            teamNotFoundAlert = true
+                        } catch TeamError.playerAlreadyInTeam {
+                            playerAlreadyOnTeamAlert = true
                         } catch {
                             // Print error if the sign-up fails
                             print(error)
@@ -130,6 +145,32 @@ struct PlayerSignUpView: View {
                 .disabled(!signUpIsValid)
                 .opacity(signUpIsValid ? 1.0 : 0.5)
                 .accessibilityIdentifier("page.signup.player.signUpBtn")
+            }
+            .alert("Invalid Access Code", isPresented: $invalidAccessCodeAlert){
+                Button("OK") {
+                    viewModel.resetAccountFields()
+                    errorGoToLandingPage = true
+                }
+            } message: {
+                Text("Invalid team access code entered.")
+            }
+            .alert("Team Not found", isPresented: $teamNotFoundAlert){
+                Button("OK") {
+                    viewModel.resetAccountFields()
+                    errorGoToLandingPage = true
+                }
+            }
+            .alert("Player already part of team", isPresented: $playerAlreadyOnTeamAlert){
+                Button("OK") {
+                    viewModel.resetAccountFields()
+                    errorGoToLandingPage = true
+                }
+            }
+            .navigationDestination(isPresented: $errorGoToLandingPage) {
+                LandingPageView(showSignInView: $showSignInView)
+            }
+            .onAppear {
+                viewModel.setDependencies(dependencies)
             }
         }
     }

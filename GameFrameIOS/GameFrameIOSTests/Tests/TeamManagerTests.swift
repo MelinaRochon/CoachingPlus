@@ -76,15 +76,17 @@ final class TeamManagerTests: XCTestCase {
         let playerIdToAdd = "uid005"
         
         // Make sure team exists before adding a player to the team
-        let team = try await manager.getTeam(teamId: teamId)
-        XCTAssertNotNil(team)
-        XCTAssertEqual(team?.teamId, teamId)
+        guard let team = try await manager.getTeam(teamId: teamId) else {
+            XCTFail()
+            return
+        }
+        XCTAssertEqual(team.teamId, teamId)
         
         // Make sure player is not already in players
-        XCTAssertFalse(team?.players?.contains(playerIdToAdd) ?? true)
+        XCTAssertFalse(team.players?.contains(playerIdToAdd) ?? true)
         
         // Add a player to the team
-        try await manager.addPlayerToTeam(id: teamId, playerId: playerIdToAdd)
+        try await manager.addPlayerToTeam(id: team.id, playerId: playerIdToAdd)
         let updatedTeam = try await manager.getTeam(teamId: teamId)
         
         XCTAssertNotNil(updatedTeam)
