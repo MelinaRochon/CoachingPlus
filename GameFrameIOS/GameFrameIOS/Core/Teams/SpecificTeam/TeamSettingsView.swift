@@ -135,6 +135,7 @@ struct TeamSettingsView: View {
                         } label : {
                             Text("Save")
                         }
+                        .disabled(!saveTeamIfValid)
                     }
                 }
             }
@@ -337,4 +338,13 @@ struct TeamSettingsView: View {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
 
     TeamSettingsView(userType: .coach, team: team, dismissOnRemove: .constant(false))
+}
+
+extension TeamSettingsView {
+    var saveTeamIfValid: Bool {
+        return (name != team.name && !name.isEmpty && name != "")
+        || (nickname != team.teamNickname && !nickname.isEmpty && nickname != "")
+        || (team.ageGrp != ageGroup)
+        || (team.gender != gender)
+    }
 }

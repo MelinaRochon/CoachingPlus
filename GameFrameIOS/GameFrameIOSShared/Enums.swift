@@ -52,4 +52,5 @@ public enum TranscriptError: Error {
 public enum UserError: Error {
     case userNotFound
     case userInvalidEmail
+    case invalidUserName
 }

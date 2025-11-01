@@ -91,8 +91,12 @@ public final class LocalUserRepository: UserRepository {
         guard let index = users.firstIndex(where: { $0.id == id }) else {
             throw UserError.userNotFound
         }
-        users[index].phone = phone
-        users[index].dateOfBirth = dateOfBirth
+        if let phone = phone {
+            users[index].phone = phone
+        }
+        if let dateOfBirth = dateOfBirth {
+            users[index].dateOfBirth = dateOfBirth
+        }
         if let firstName = firstName {
             users[index].firstName = firstName
         }

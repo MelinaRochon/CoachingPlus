@@ -277,7 +277,9 @@ final class CoachProfileViewModel: ObservableObject {
                 gender: gender
             )
             
-            self.player = try await dependencies?.playerManager.getPlayer(playerId: player.playerId!)
+            // Find player with id, instead of player_id in case the player is still on pending invite
+            // Otherwise, would cause the app to crash if player_id is not set yet
+            self.player = try await dependencies?.playerManager.findPlayerWithId(id: player.id)
         }
     }
 }

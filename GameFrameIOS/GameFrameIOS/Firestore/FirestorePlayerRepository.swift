@@ -248,6 +248,8 @@ public final class FirestorePlayerRepository: PlayerRepository {
             data[DBPlayer.CodingKeys.gender.rawValue] = gender
         }
         
+        print("data is \(data) in updateUserSettings")
+        
         // Only update if data is not empty
         guard !data.isEmpty else {
             print("No changes to update in updatePlayerInfo")

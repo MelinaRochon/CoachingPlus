@@ -289,6 +289,8 @@ public final class LocalTeamRepository: TeamRepository {
         // Append the new team to the local teams array
         teams.append(newTeam)
         
+        try await LocalCoachRepository().addTeamToCoach(coachId: coachId, teamId: teamDTO.teamId)
+        
         print("✅ Created new team '\(teamDTO.name)' with ID: \(newTeamId)")
 
     }

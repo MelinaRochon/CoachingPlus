@@ -45,7 +45,8 @@ struct CoachCreateTeamView: View {
     @Environment(\.dismiss) var dismiss
     
     /// ViewModel to manage team creation and interactions with the database.
-    @StateObject private var viewModel = TeamModel()
+    @StateObject private var teamModel = TeamModel()
+
     @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Predefined list of sports available for selection.
@@ -96,9 +97,11 @@ struct CoachCreateTeamView: View {
                         
                         // Section for basic team details (name and nickname)
                         TextField("Team Name", text: $name).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                            .accessibilityIdentifier("page.coach.team.create.name")
                         
                         // Nickname field with truncation logic if the length exceeds 10 characters
                         TextField("Nickname", text: $nickname).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                            .accessibilityIdentifier("page.coach.team.create.nickname")
                             .onChange(of: nickname) { name in
                             if name.count > 10 {
                                 nickname = String(name.prefix(10)) // Truncate nickname to 10 characters
@@ -115,6 +118,7 @@ struct CoachCreateTeamView: View {
                             displayText: { $0 },
                             selectedOption: $sport
                         ).disabled(true) // TODO: Make it multisport
+                            .accessibilityIdentifier("page.coach.team.create.sport")
                         
                         CustomPicker(
                             title: "Gender",
@@ -122,6 +126,7 @@ struct CoachCreateTeamView: View {
                             displayText: { $0 },
                             selectedOption: $gender
                         )
+                        .accessibilityIdentifier("page.coach.team.create.gender")
                         
                         CustomPicker(
                             title: "Age group",
@@ -129,6 +134,7 @@ struct CoachCreateTeamView: View {
                             displayText: { $0 },
                             selectedOption: $ageGrp
                         )
+                        .accessibilityIdentifier("page.coach.team.create.ageGrp")
                     }
                     
                     // Section for optional details like team logo and color
@@ -157,6 +163,7 @@ struct CoachCreateTeamView: View {
                     }) {
                         Text("Cancel")
                     }
+                    .accessibilityIdentifier("page.coach.team.create.cancel")
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) { // Done button to submit the form
@@ -166,10 +173,10 @@ struct CoachCreateTeamView: View {
                         Task{
                             do {
                                 // Retrieve the authenticated coach's user information
-                                let authUser = try await viewModel.getAuthUser()
+                                let authUser = try await teamModel.getAuthUser()
                                 
                                 // Generate a unique access code for the team (if applicable)
-                                let uniqueAccessCode = try await viewModel.generateAccessCode()
+                                let uniqueAccessCode = try await teamModel.generateAccessCode()
                                 
                                 // Create a new team object with the provided details
                                 let newTeam = TeamDTO(
@@ -188,7 +195,7 @@ struct CoachCreateTeamView: View {
                                 )
                                 
                                 // Attempt to create the team in the database
-                                let canWeDismiss = try await viewModel.createTeam(teamDTO: newTeam, coachId: authUser.uid)
+                                let canWeDismiss = try await teamModel.createTeam(teamDTO: newTeam, coachId: authUser.uid)
                                 
                                 // If successful, dismiss the form and return to the previous screen
                                 if (canWeDismiss) {
@@ -204,6 +211,7 @@ struct CoachCreateTeamView: View {
                         Text("Create").foregroundStyle(addTeamIsValid ? .red : .gray)
                     }
                     .disabled(!addTeamIsValid)
+                    .accessibilityIdentifier("page.coach.team.create.btn")
                 }
             }
             // Alert for error messages
@@ -213,9 +221,11 @@ struct CoachCreateTeamView: View {
             .navigationTitle(Text("Creating a New Team"))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                viewModel.setDependencies(dependencies)
+                teamModel.setDependencies(dependencies)
             }
+            .accessibilityIdentifier("page.coach.team.create")
         }
+        .accessibilityIdentifier("page.coach.team.create")
         // Disables the back button when this view is presented as a sheet
         .navigationBarBackButtonHidden(true)
     }
@@ -249,7 +259,7 @@ extension CoachCreateTeamView: TeamProtocol {
 }
 
 
-#Preview {
-    CoachCreateTeamView()
-}
+//#Preview {
+//    CoachCreateTeamView()
+//}
 

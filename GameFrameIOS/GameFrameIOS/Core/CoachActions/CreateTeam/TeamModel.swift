@@ -113,10 +113,7 @@ final class TeamModel: ObservableObject {
         if (userType == .coach) {
             // Load all teams that the coach is managing.
             let tmpTeams = try await repo.coachManager.loadAllTeamsCoaching(coachId: authUser.uid)
-            if tmpTeams != nil {
                 return tmpTeams
-            }
-            return nil
         } else if (userType == .player) {
             // Load all teams that the player is enrolled in.
             return try await repo.playerManager.getAllTeamsEnrolled(playerId: authUser.uid)

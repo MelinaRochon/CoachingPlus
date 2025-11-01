@@ -110,7 +110,6 @@ func filterTranscripts(_ transcripts: [keyMomentTranscript], _ game: DBGame, wit
 ///    Input: "1-234-567-890"
 ///    Output: "(123)-456-7890"
 /// ```
-
 func formatPhoneNumber(_ number: String) -> String {
     // Keep only digits
     let digits = number.filter { $0.isNumber }
@@ -130,6 +129,19 @@ func formatPhoneNumber(_ number: String) -> String {
     return result
 }
 
+func isValidPhoneNumber(_ number: String) -> Bool {
+    if number.isEmpty {
+        return true
+    }
+    let pattern = #"^\(\d{3}\)-\d{3}-\d{4}$"#
+    return number.range(of: pattern, options: .regularExpression) != nil
+}
+
+
+func isValidEmail(_ email: String) -> Bool {
+    let emailRegex = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+    return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: email)
+}
 
 /// A helper function to format the provided start time into a readable string.
 /// If the `startTime` is nil, it uses the current date and time as the default value.

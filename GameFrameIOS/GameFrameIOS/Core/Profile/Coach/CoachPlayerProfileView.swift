@@ -64,7 +64,8 @@ struct CoachPlayerProfileView: View {
     @StateObject private var userModel = UserModel()
     @EnvironmentObject private var dependencies: DependencyContainer
 
-    @State private var dob: Date = Date()
+    @State private var dob: Date?
+
     @State private var gender: String = ""
      
     @State private var firstName: String = ""
@@ -103,52 +104,42 @@ struct CoachPlayerProfileView: View {
                     // Player information
                     List {
                         Section {
-                            if let player = profileModel.player {
+                            if let dateOfBirth = user.dateOfBirth {
                                 HStack {
                                     Text("Date of birth")
                                     Spacer()
-                                    if user.dateOfBirth != nil {
-                                        Text("\(dob.formatted(.dateTime.year().month(.twoDigits).day()))")
-                                            .foregroundStyle(.secondary)
-                                            .multilineTextAlignment(.trailing)
-                                    } else {
-                                        Text("N/A").foregroundStyle(.secondary)
-                                            .multilineTextAlignment(.trailing)
-                                    }
+                                    Text(dateOfBirth, formatter: {
+                                        let f = DateFormatter()
+                                        f.dateFormat = "MMM dd, yyyy"
+                                        return f
+                                    }())
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.trailing)
                                 }
+                            }
+                            if !phone.isEmpty {
                                 
                                 HStack {
                                     Text("Phone").foregroundStyle(.primary)
                                     Spacer()
-                                    TextField("(XXX)-XXX-XXXX", text: $phone).disabled(!isEditing)
-                                        .foregroundStyle(isEditing ? .primary : .secondary)
-                                        .multilineTextAlignment(.trailing)
-                                        .autocapitalization(.none)
-                                        .autocorrectionDisabled(true)
-                                        .keyboardType(.phonePad)
-                                        .onChange(of: phone) { newVal in
-                                            phone = formatPhoneNumber(newVal)
-                                        }
+                                    Text(phone).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
                                 }
                             }
                         }
                         
                         Section {
-                            if let player = profileModel.player {
-                                HStack {
-                                    Text("Nickname")
-                                    Spacer()
-                                    TextField("Nickname", text: $nickname).multilineTextAlignment(.trailing).disabled(!isEditing).foregroundStyle(isEditing ? .primary : .secondary)
-                                }
-                                
-                                HStack {
-                                    Text("Gender").foregroundStyle(!isEditing ? .primary : .secondary)
-                                    Spacer()
-                                    Text(gender).foregroundStyle(.secondary)
-                                }
+                            HStack {
+                                Text("Nickname")
+                                Spacer()
+                                TextField("Nickname", text: $nickname).multilineTextAlignment(.trailing).foregroundStyle(.secondary)
+                            }
+                            
+                            HStack {
+                                Text("Gender").foregroundStyle(.secondary)
+                                Spacer()
+                                Text(gender).foregroundStyle(.secondary)
                             }
                         }
-                        
                         
                         if ((guardianName != "") || (guardianEmail != "") || (guardianPhone != "")) {
                             Section (header: Text("Guardian Information")) {
@@ -194,7 +185,24 @@ struct CoachPlayerProfileView: View {
             }
             
             .fullScreenCover(isPresented: $isEditing) {
-                CoachEditPlayerProfileView(profileModel: profileModel, playerDocId: playerDocId, userDocId: userDocId, dob: $dob, gender: $gender, firstName: $firstName, lastName: $lastName, phone: $phone, guardianName: $guardianName, guardianEmail: $guardianEmail, guardianPhone: $guardianPhone, isEditing: $isEditing, teamDocId: teamDocId, dismissOnRemove: $dismissOnRemove)
+                CoachEditPlayerProfileView(
+                    profileModel: profileModel,
+                    playerDocId: playerDocId,
+                    userDocId: userDocId,
+                    dob: $dob,
+                    gender: $gender,
+                    firstName: $firstName,
+                    lastName: $lastName,
+                    phone: $phone,
+                    guardianName: $guardianName,
+                    guardianEmail: $guardianEmail,
+                    guardianPhone: $guardianPhone,
+                    jerseyNum: $jerseyNum,
+                    nickname: $nickname,
+                    isEditing: $isEditing,
+                    teamDocId: teamDocId,
+                    dismissOnRemove: $dismissOnRemove
+                )
             }
             .onChange(of: dismissOnRemove) { newValue in
                 Task {
@@ -220,7 +228,7 @@ struct CoachPlayerProfileView: View {
                     if let user = profileModel.user {
                         firstName = user.firstName
                         lastName = user.lastName
-                        dob = user.dateOfBirth ?? Date()
+                        dob = user.dateOfBirth
                         phone = user.phone ?? ""
                     }
 
@@ -265,7 +273,7 @@ struct CoachEditPlayerProfileView: View {
     /// User document ID - used to fetch data for the associated user (coach).
     @State var userDocId: String
     
-    @Binding var dob: Date
+    @Binding var dob: Date?
     @Binding var gender: String
      
     @Binding var firstName: String
@@ -275,10 +283,11 @@ struct CoachEditPlayerProfileView: View {
     @Binding var guardianName: String // Guardian's name
     @Binding var guardianEmail: String // Guardian's email
     @Binding var guardianPhone: String // Guardian's phone number
-    
+    @Binding var jerseyNum: Int // Guardian's phone number
+
     /// Player profile details such as nickname and jersey number.
-    @State var nickname: String = "" // Nickname of the player
-    @State var jerseyNum: Int = 0 // Jersey number of the player
+    @Binding var nickname: String // Nickname of the player
+    @State private var todayDate: Date = Date()
     
     /// State variable to track whether the profile is being edited.
     @Binding var isEditing: Bool
@@ -298,78 +307,78 @@ struct CoachEditPlayerProfileView: View {
                 if let user = profileModel.user {
                     List {
                         Section {
-                            if let player = profileModel.player {
-                                HStack {
-                                    Text("First Name").foregroundStyle(.primary)
-                                    Spacer()
-                                    TextField("First Name", text: $firstName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
-                                }
-                                HStack {
-                                    Text("Last Name").foregroundStyle(.primary)
-                                    Spacer()
-                                    TextField("Last Name", text: $lastName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
-                                }
-                                HStack {
-                                    Text("Email").foregroundStyle(.secondary)
-                                    Spacer()
-                                    Text(user.email).foregroundStyle(.secondary).disabled(true).multilineTextAlignment(.trailing)
-                                }
-                                
-                                HStack {
-                                    Text("Date of birth")
-                                    Spacer()
-                                    DatePicker(
-                                        "",
-                                        selection: $dob,
-                                        in: ...Date(),
-                                        displayedComponents: .date
-                                    )
-                                    .labelsHidden()
-                                    .frame(height: 20)
-                                }
-                                
-                                HStack {
-                                    Text("Phone").foregroundStyle(.primary)
-                                    Spacer()
-                                    TextField("(XXX)-XXX-XXXX", text: $phone)
-                                        .foregroundStyle(.primary)
-                                        .multilineTextAlignment(.trailing)
-                                        .autocapitalization(.none)
-                                        .autocorrectionDisabled(true)
-                                        .keyboardType(.phonePad)
-                                        .onChange(of: phone) { newVal in
-                                            phone = formatPhoneNumber(newVal)
-                                        }
-                                }
+                            HStack {
+                                Text("First Name").foregroundStyle(.primary)
+                                Spacer()
+                                TextField("First Name", text: $firstName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                            }
+                            HStack {
+                                Text("Last Name").foregroundStyle(.primary)
+                                Spacer()
+                                TextField("Last Name", text: $lastName).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                            }
+                            HStack {
+                                Text("Email").foregroundStyle(.secondary)
+                                Spacer()
+                                Text(user.email).foregroundStyle(.secondary).disabled(true).multilineTextAlignment(.trailing)
+                            }
+                            
+                            HStack {
+                                Text("Date of birth")
+                                Spacer()
+                                DatePicker(
+                                    "",
+                                    selection: Binding(
+                                        get: { dob ?? todayDate },
+                                        set: { dob = $0 }
+                                    ),
+                                    in: ...todayDate,
+                                    displayedComponents: .date
+                                )
+                                .labelsHidden()
+                                .frame(height: 20)
+                            }
+                            
+                            HStack {
+                                Text("Phone").foregroundStyle(.primary)
+                                Spacer()
+                                TextField("(XXX)-XXX-XXXX", text: $phone)
+                                    .foregroundStyle(.primary)
+                                    .multilineTextAlignment(.trailing)
+                                    .autocapitalization(.none)
+                                    .autocorrectionDisabled(true)
+                                    .keyboardType(.phonePad)
+                                    .onChange(of: phone) { newVal in
+                                        phone = formatPhoneNumber(newVal)
+                                    }
                             }
                         }
                         
                         Section {
-                            if let player = profileModel.player {
-                                HStack {
-                                    Text("Nickname")
-                                    Spacer()
-                                    TextField("Nickname", text: $nickname).multilineTextAlignment(.trailing).foregroundStyle(.primary)
-                                }
-                                
-                                HStack {
-                                    Text("Gender").foregroundStyle(.secondary)
-                                    Spacer()
-                                    Text(gender).foregroundStyle(.secondary)
-                                }
-                                
-                                HStack {
-                                    Text("Jersey #").foregroundStyle(.primary)
-                                    Spacer()
-                                    TextField("Jersey #", text: Binding(get: { String(jerseyNum)}, set: { val in
-                                        // Convert String back to Int and update the player model
-                                        if let newInt = Int(val) {
-                                            jerseyNum = newInt
-                                        }
-                                    }))
-                                    .multilineTextAlignment(.trailing)
-                                    .foregroundStyle(.primary)
-                                }
+                            HStack {
+                                Text("Nickname")
+                                Spacer()
+                                TextField("Nickname", text: $nickname).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                            }
+                            
+                            HStack {
+                                Text("Gender").foregroundStyle(.secondary)
+                                Spacer()
+                                Text(gender).foregroundStyle(.secondary)
+                            }
+                            
+                            HStack {
+                                Text("Jersey #").foregroundStyle(.primary)
+                                Spacer()
+                                TextField("0", text: Binding(get: { String(jerseyNum)}, set: { val in
+                                    // Convert String back to Int and update the player model
+                                    if let newInt = Int(val) {
+                                        jerseyNum = newInt
+                                    }
+                                }))
+                                .multilineTextAlignment(.trailing)
+                                .foregroundStyle(.primary)
+                                .keyboardType(.numberPad)
                             }
                         }
                         
@@ -383,13 +392,26 @@ struct CoachEditPlayerProfileView: View {
                             HStack {
                                 Text("Email")
                                 Spacer()
-                                TextField("Email", text: $guardianEmail).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                                TextField("Email", text: $guardianEmail)
+                                    .multilineTextAlignment(.trailing)
+                                    .foregroundStyle(.primary)
+                                    .autocorrectionDisabled()
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
                             }
                             
                             HStack {
                                 Text("Phone")
                                 Spacer()
-                                TextField("Phone", text: $guardianPhone).multilineTextAlignment(.trailing).foregroundStyle(.primary)
+                                TextField("(XXX)-XXX-XXXX", text: $guardianPhone)
+                                    .foregroundStyle(.primary)
+                                    .multilineTextAlignment(.trailing)
+                                    .autocapitalization(.none)
+                                    .autocorrectionDisabled(true)
+                                    .keyboardType(.phonePad)
+                                    .onChange(of: guardianPhone) { newVal in
+                                        guardianPhone = formatPhoneNumber(newVal)
+                                    }
                             }
                         }
                         
@@ -436,7 +458,7 @@ struct CoachEditPlayerProfileView: View {
                                 if let user = profileModel.user {
                                     firstName = user.firstName
                                     lastName = user.lastName
-                                    dob = user.dateOfBirth ?? Date()
+                                    dob = user.dateOfBirth
                                     phone = user.phone ?? ""
                                 }
                                 
@@ -462,6 +484,7 @@ struct CoachEditPlayerProfileView: View {
                     } label : {
                         Text("Save")
                     }
+                    .disabled(!saveProfileIsValid)
                 }
             }
             .onAppear {
@@ -493,6 +516,7 @@ struct CoachEditPlayerProfileView: View {
                     playerGuardianName = nil
                 }
                 
+                print("guardianEmail == \(guardianEmail)")
                 if guardianEmail == player.guardianEmail {
                     playerGuardianEmail = nil
                 }
@@ -505,7 +529,15 @@ struct CoachEditPlayerProfileView: View {
                     playerGender = nil
                 }
   
-                profileModel.updatePlayerSettings(id: player.id, jersey: playerJersey, nickname: playerNickname, guardianName: playerGuardianName, guardianEmail: playerGuardianEmail, guardianPhone: playerGuardianPhone, gender: playerGender)
+                profileModel.updatePlayerSettings(
+                    id: player.id,
+                    jersey: playerJersey,
+                    nickname: playerNickname,
+                    guardianName: playerGuardianName,
+                    guardianEmail: playerGuardianEmail,
+                    guardianPhone: playerGuardianPhone,
+                    gender: playerGender
+                )
             }
         }
     }
@@ -531,10 +563,15 @@ struct CoachEditPlayerProfileView: View {
                         user.lastName = lastName
                     }
                     
-                    if dob == user.dateOfBirth {
-                        userDateOfBirth = nil
+                    if let newDOB = dob {
+                        if Calendar.current.isDateInToday(newDOB) || newDOB == user.dateOfBirth {
+                            userDateOfBirth = nil
+                            dob = user.dateOfBirth
+                        } else {
+                            user.dateOfBirth = newDOB
+                        }
                     } else {
-                        user.dateOfBirth = dob
+                        userDateOfBirth = nil
                     }
                     
                     if phone == user.phone {
@@ -543,7 +580,13 @@ struct CoachEditPlayerProfileView: View {
                         user.phone = phone
                     }
                     
-                    try await profileModel.updateUserSettings(id: user.id, dateOfBirth: userDateOfBirth, firstName: userFirstName, lastName: userLastName, phone: userPhone)
+                    try await profileModel.updateUserSettings(
+                        id: user.id,
+                        dateOfBirth: userDateOfBirth,
+                        firstName: userFirstName,
+                        lastName: userLastName,
+                        phone: userPhone
+                    )
                 }
             } catch {
                 print(error.localizedDescription)
@@ -554,4 +597,28 @@ struct CoachEditPlayerProfileView: View {
 
 #Preview {
     CoachPlayerProfileView(playerDocId: "", userDocId: "", teamDocId: "")
+}
+
+
+extension CoachEditPlayerProfileView: UserEditProfileProtocol {
+    var saveProfileIsValid: Bool {
+        var isDobToday: Bool = true
+        if let dob = dob, !Calendar.current.isDateInToday(dob) {
+            isDobToday = false
+        }
+        
+        if let user = profileModel.user, let player = profileModel.player {
+            return (user.firstName != firstName || user.lastName != lastName)
+            && (!firstName.isEmpty && firstName != "")
+            && (!lastName.isEmpty && lastName != "")
+            || (user.dateOfBirth != dob && dob != nil && isDobToday != true)
+            || (user.phone != phone && ((user.phone?.isEmpty) != nil)  && isValidPhoneNumber(phone))
+            || (player.guardianName != guardianName && ((player.guardianName?.isEmpty) != nil))
+            || (player.guardianPhone != guardianPhone && ((player.guardianPhone?.isEmpty) != nil) && isValidPhoneNumber(guardianPhone))
+            || (player.guardianEmail != guardianEmail && ((player.guardianEmail?.isEmpty) != nil) && isValidEmail(guardianEmail))
+            || (player.jerseyNum != jerseyNum)
+            || (player.nickName != nickname && ((player.nickName?.isEmpty) != nil))
+        }
+        return false
+    }
 }

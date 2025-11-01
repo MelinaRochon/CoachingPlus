@@ -48,6 +48,7 @@ struct CoachAllTeamsView: View {
                 List {
                     Section(header: HStack {
                         Text("My Teams") // Section header text
+                            .accessibilityIdentifier("page.coach.teams.title")
                     }) {
                         if let teams = teams {
                             if !teams.isEmpty {
@@ -76,6 +77,7 @@ struct CoachAllTeamsView: View {
                     } label: {
                         Label("Add Team", systemImage: "plus")
                     }
+                    .accessibilityIdentifier("page.coach.teams.add")
                 }
             }
             .task {
@@ -91,8 +93,11 @@ struct CoachAllTeamsView: View {
             }
         }
         .sheet(isPresented: $showCreateTeam, onDismiss: refreshTeams) {
+//            CoachCreateTeamView(teamModel: teamModel)
             CoachCreateTeamView()
+
         }
+        .accessibilityIdentifier("page.coach.teams")
     }
     
     /// Function to refresh the list of teams after creating a new team

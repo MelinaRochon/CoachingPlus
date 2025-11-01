@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+import GameFrameIOSShared
 
 /***
  * This structure represents the coach's profile page.
@@ -83,7 +83,9 @@ import SwiftUI
      @State private var firstName: String = ""
      @State private var lastName: String = ""
 
-     
+     @State private var invalidUserNameAlert: Bool = false
+     @State private var errorWhenEditing: Bool = false
+
      /// State for selecting a country
      @State private var selectedCountry = "Canada"
      
@@ -267,7 +269,20 @@ import SwiftUI
                  .onAppear {
                      viewModel.setDependencies(dependencies)
                  }
-                 
+                 .alert("Invalid Name Entered", isPresented: $invalidUserNameAlert){
+                     Button("OK") {
+                         resetData()
+                     }
+                 } message: {
+                     Text("Could not complete action as an invalid name was entered.")
+                 }
+                 .alert("Error Occured", isPresented: $errorWhenEditing){
+                     Button("OK") {
+                         resetData()
+                     }
+                 } message: {
+                     Text("An error occured when trying to save the user's information. Please try again later.")
+                 }
              }
              .toolbar {
                  ToolbarItem(placement: .navigationBarTrailing) {
@@ -281,6 +296,7 @@ import SwiftUI
                          Button(action: saveInfo) {
                              Text("Save")
                          }
+                         .disabled(!saveProfileIsValid)
                          .accessibilityIdentifier("page.coach.profile.save")
                      }
                  }
@@ -318,6 +334,11 @@ import SwiftUI
          }
          
          // Remove unsaved data
+         resetData()
+     }
+     
+     private func resetData() {
+         // Remove unsaved data
          if let user = viewModel.user {
              if let userPhone = user.phone {
                  phone = userPhone
@@ -338,29 +359,40 @@ import SwiftUI
      
      private func savingPlayerInformation() {
          Task {
-             if let user = viewModel.user {
-                 var userFirstName: String? = firstName
-                 var userLastName: String? = lastName
-                 var userDateOfBirth: Date? = dob
-                 var userphone: String? = phone
-                 
-                 if firstName == user.firstName {
-                     userFirstName = nil
+             do {
+                 if let user = viewModel.user {
+                     if firstName.isEmpty || firstName == "" || lastName.isEmpty || lastName == "" {
+                         throw UserError.invalidUserName
+                     }
+                     
+                     var userFirstName: String? = firstName
+                     var userLastName: String? = lastName
+                     var userDateOfBirth: Date? = dob
+                     var userphone: String? = phone
+                     
+                     if firstName == user.firstName || firstName.isEmpty || firstName == ""  {
+                         userFirstName = nil
+                     }
+                     
+                     if lastName == user.lastName || lastName.isEmpty || lastName == "" {
+                         userLastName = nil
+                     }
+                     
+                     if dob == user.dateOfBirth {
+                         userDateOfBirth = nil
+                     }
+                     
+                     if phone == user.phone {
+                         userphone = nil
+                     }
+                     
+                     viewModel.updateCoachSettings(phone: userphone, dateOfBirth: userDateOfBirth, firstName: userFirstName, lastName: userLastName, membershipDetails: "Free")
                  }
-                 
-                 if lastName == user.lastName {
-                     userLastName = nil
-                 }
-                 
-                 if dob == user.dateOfBirth {
-                     userDateOfBirth = nil
-                 }
-                 
-                 if phone == user.phone {
-                     userphone = nil
-                 }
-                 
-                 viewModel.updateCoachSettings(phone: userphone, dateOfBirth: userDateOfBirth, firstName: userFirstName, lastName: userLastName, membershipDetails: "Free")
+             } catch UserError.invalidUserName {
+                 invalidUserNameAlert = true
+             } catch {
+                 errorWhenEditing = true
+                 print(error)
              }
          }
      }
@@ -369,4 +401,25 @@ import SwiftUI
 
 #Preview {
     CoachProfileView(showLandingPageView: .constant(false))
+}
+
+
+extension CoachProfileView: UserEditProfileProtocol {
+    var saveProfileIsValid: Bool {
+        if let user = viewModel.user {
+            return !firstName.isEmpty
+            && firstName != ""
+            && !lastName.isEmpty
+            && lastName != ""
+            && (user.firstName != firstName
+            || user.lastName != lastName)
+            || (user.dateOfBirth != dob)
+            || user.phone != phone
+            || user.country != selectedCountry
+        }
+        return !firstName.isEmpty
+        && firstName != ""
+        && !lastName.isEmpty
+        && lastName != ""
+    }
 }
