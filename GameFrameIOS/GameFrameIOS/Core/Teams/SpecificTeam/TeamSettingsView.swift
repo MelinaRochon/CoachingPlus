@@ -41,7 +41,7 @@ struct TeamSettingsView: View {
     @State private var ageGroup: String = "None"
     
     /// Holds the team’s **gender** while editing.
-    @State private var gender: String = "Mixed"
+    @State private var gender: String = "Select"
     
     /// Observable object that manages team data operations.
     @StateObject private var teamModel = TeamModel()

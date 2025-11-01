@@ -106,7 +106,7 @@ struct CoachPlayerProfileView: View {
                         Section {
                             if let dateOfBirth = user.dateOfBirth {
                                 HStack {
-                                    Text("Date of birth")
+                                    Text("Date of birth").foregroundStyle(.secondary)
                                     Spacer()
                                     Text(dateOfBirth, formatter: {
                                         let f = DateFormatter()
@@ -120,7 +120,7 @@ struct CoachPlayerProfileView: View {
                             if !phone.isEmpty {
                                 
                                 HStack {
-                                    Text("Phone").foregroundStyle(.primary)
+                                    Text("Phone").foregroundStyle(.secondary)
                                     Spacer()
                                     Text(phone).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
                                 }
@@ -129,7 +129,7 @@ struct CoachPlayerProfileView: View {
                         
                         Section {
                             HStack {
-                                Text("Nickname")
+                                Text("Nickname").foregroundStyle(.secondary)
                                 Spacer()
                                 TextField("Nickname", text: $nickname).multilineTextAlignment(.trailing).foregroundStyle(.secondary)
                             }
@@ -145,7 +145,7 @@ struct CoachPlayerProfileView: View {
                             Section (header: Text("Guardian Information")) {
                                 if guardianName != "" {
                                     HStack {
-                                        Text("Name")
+                                        Text("Name").foregroundStyle(.secondary)
                                         Spacer()
                                         
                                         Text(guardianName).foregroundStyle(.secondary)
@@ -154,7 +154,7 @@ struct CoachPlayerProfileView: View {
                                 
                                 if guardianEmail != "" {
                                     HStack {
-                                        Text("Email")
+                                        Text("Email").foregroundStyle(.secondary)
                                         Spacer()
                                         Text(guardianEmail).foregroundStyle(.secondary)
                                     }
@@ -162,7 +162,7 @@ struct CoachPlayerProfileView: View {
                                 
                                 if guardianPhone != "" {
                                     HStack {
-                                        Text("Phone")
+                                        Text("Phone").foregroundStyle(.secondary)
                                         Spacer()
                                         Text(guardianPhone).foregroundStyle(.secondary)
                                     }
@@ -613,9 +613,9 @@ extension CoachEditPlayerProfileView: UserEditProfileProtocol {
             && (!lastName.isEmpty && lastName != "")
             || (user.dateOfBirth != dob && dob != nil && isDobToday != true)
             || (user.phone != phone && ((user.phone?.isEmpty) != nil)  && isValidPhoneNumber(phone))
-            || (player.guardianName != guardianName && ((player.guardianName?.isEmpty) != nil))
-            || (player.guardianPhone != guardianPhone && ((player.guardianPhone?.isEmpty) != nil) && isValidPhoneNumber(guardianPhone))
-            || (player.guardianEmail != guardianEmail && ((player.guardianEmail?.isEmpty) != nil) && isValidEmail(guardianEmail))
+            || (player.guardianName != guardianName && (guardianName != "" || ((player.guardianName?.isEmpty) != nil)))
+            || (player.guardianPhone != guardianPhone && ((guardianPhone != "" || (player.guardianPhone?.isEmpty) != nil)) && isValidPhoneNumber(guardianPhone))
+            || (player.guardianEmail != guardianEmail && ((guardianEmail != "" || (player.guardianEmail?.isEmpty) != nil)) && isValidEmail(guardianEmail))
             || (player.jerseyNum != jerseyNum)
             || (player.nickName != nickname && ((player.nickName?.isEmpty) != nil))
         }

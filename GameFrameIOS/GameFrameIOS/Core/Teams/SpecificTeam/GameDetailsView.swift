@@ -170,6 +170,7 @@ struct GameDetailsView: View {
                         } label: {
                             Text("Save").font(.subheadline)
                         }
+                        .disabled(!saveGameSettingsIfValid)
                     } else {
                         Button {
                             dismiss()
@@ -236,7 +237,7 @@ struct GameDetailsView: View {
                 HStack {
                     Text("Game Title")
                     Spacer()
-                    TextField("Game Title", text: $gameName)
+                    TextField("Title", text: $gameName)
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.trailing)
                 }
@@ -344,4 +345,11 @@ struct GameDetailsView: View {
     
     
     GameDetailsView(selectedGame: game, team: team, userType: .player, dismissOnRemove: .constant(false))
+}
+
+extension GameDetailsView: GameSaveSettingsProtocol {
+    var saveGameSettingsIfValid: Bool {
+        return gameName != "" && !gameName.isEmpty
+        && gameName != selectedGame.title
+    }
 }

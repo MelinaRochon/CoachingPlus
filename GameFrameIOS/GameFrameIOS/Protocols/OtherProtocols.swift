@@ -15,3 +15,7 @@ protocol UserEditProfileProtocol {
 protocol TeamSaveProtocol {
     var saveTeamIfValid: Bool { get }
 }
+
+protocol GameSaveSettingsProtocol {
+    var saveGameSettingsIfValid: Bool { get }
+}

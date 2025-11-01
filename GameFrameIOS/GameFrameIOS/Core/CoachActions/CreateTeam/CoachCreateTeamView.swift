@@ -70,7 +70,7 @@ struct CoachCreateTeamView: View {
     @State private var colourHex: String = "#0000FF"
 
     /// The selected gender classification for the team (default is "Mixed").
-    @State private var gender = "Mixed"
+    @State private var gender = "Select"
 
     /// The selected age group for the team (default is "None").
     @State private var ageGrp = "None"
@@ -122,7 +122,7 @@ struct CoachCreateTeamView: View {
                         
                         CustomPicker(
                             title: "Gender",
-                            options: AppData.genderOptions,
+                            options: AppData.teamGenderOptions,
                             displayText: { $0 },
                             selectedOption: $gender
                         )
@@ -252,7 +252,7 @@ extension CoachCreateTeamView: TeamProtocol {
         return !name.isEmpty
         && !nickname.isEmpty && nickname.count < 11 // cannot exceed 10 characters
         && !sport.isEmpty
-        && !gender.isEmpty
+        && !gender.isEmpty && gender != "Select"
         && !ageGrp.isEmpty
         && !colourHex.isEmpty
     }

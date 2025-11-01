@@ -42,6 +42,19 @@ struct CoachSpecificTranscriptView: View {
     /// Stores all players mapped into a feedback structure with selection state.
     @State private var playersFeedback: [PlayerFeedback] = []
     
+    @State private var originalTranscriptText: String = ""
+    @State private var originalSelectedPlayers: [String] = []
+
+    private var hasChanges: Bool {
+        let currentSelectedPlayers = playersFeedback.filter { $0.isSelected }.map { $0.id }
+        let samePlayers = Set(currentSelectedPlayers) == Set(originalSelectedPlayers)
+        let sameTranscript = feedbackTranscript == originalTranscriptText
+        
+        return !(samePlayers && sameTranscript)
+    }
+    @State private var isInitialLoadComplete = false
+
+
     /// Whether the associated audio file has been downloaded and is available for playback.
     @State private var audioFileRetrieved: Bool = false
 
@@ -200,6 +213,7 @@ struct CoachSpecificTranscriptView: View {
                                 ToolbarItem(placement: .topBarLeading) {
                                     Button(action: {
                                         resetData()
+                                        isInitialLoadComplete = false
                                         isEditing = false // Dismiss the full-screen cover
                                     }) {
                                         Text("Cancel")
@@ -209,15 +223,19 @@ struct CoachSpecificTranscriptView: View {
                                 ToolbarItem(placement: .topBarTrailing) {
                                     Button(action: {
                                         saveData()
+                                        isInitialLoadComplete = false
                                         isEditing = false // Dismiss the full-screen cover
                                     }) {
                                         Text("Save")
                                     }
+                                    .disabled(!hasChanges || !isInitialLoadComplete)
                                 }
                             }
                             .task {
                                 do {
+
                                     if let allPlayers = team.players {
+                                        print("getting all players = \(allPlayers)")
                                         let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
                                         // Map to include selection state
                                         playersFeedback = players.map { (id, name, photoUrl) in
@@ -226,6 +244,10 @@ struct CoachSpecificTranscriptView: View {
                                         }
                                     }
                                     
+                                    originalTranscriptText = feedbackTranscript
+                                    originalSelectedPlayers = feedbackFor.map { $0.playerId }
+                                    isInitialLoadComplete = true
+
                                 } catch {
                                     print("Error when fetching specific footage info: \(error)")
                                 }
@@ -236,6 +258,7 @@ struct CoachSpecificTranscriptView: View {
             .onAppear {
                 transcriptModel.setDependencies(dependencies)
                 commentViewModel.setDependencies(dependencies)
+                playerModel.setDependencies(dependencies)
             }
         }
         .toolbar {
