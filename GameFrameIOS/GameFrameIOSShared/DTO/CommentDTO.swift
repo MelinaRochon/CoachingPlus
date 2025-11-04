@@ -42,12 +42,15 @@ public struct CommentDTO {
     /// This is important for tracking the timeline of the comment and could be useful for sorting, filtering, or displaying comments chronologically.
     public let createdAt: Date
     
-    public init(keyMomentId: String, gameId: String, transcriptId: String, uploadedBy: String, comment: String, createdAt: Date) {
+    public let parentCommentId: String?
+    
+    public init(keyMomentId: String, gameId: String, transcriptId: String, uploadedBy: String, comment: String, createdAt: Date, parentCommentId: String? = nil) {
         self.keyMomentId = keyMomentId
         self.gameId = gameId
         self.transcriptId = transcriptId
         self.uploadedBy = uploadedBy
         self.comment = comment
         self.createdAt = createdAt
+        self.parentCommentId = parentCommentId
     }
 }

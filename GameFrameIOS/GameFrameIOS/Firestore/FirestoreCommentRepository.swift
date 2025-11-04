@@ -121,6 +121,16 @@ public final class FirestoreCommentRepository: CommentRepository {
     }
     
     
+    /// Fetch only replies to a given parent comment.
+    public func getReplies(teamDocId: String, parentCommentId: String) async throws -> [DBComment]? {
+        let query = try await commentCollection(teamDocId: teamDocId)
+            .whereField("parent_comment_id", isEqualTo: parentCommentId)
+            .order(by: "created_at", descending: false)
+            .getDocuments()
+        return query.documents.compactMap { try? $0.data(as: DBComment.self) }
+    }
+    
+    
     /**
      * Adds a new comment to the Firestore database
      * - Parameters:

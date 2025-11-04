@@ -87,7 +87,8 @@ final class CommentSectionViewModel: ObservableObject {
                             transcriptId: comment.transcriptId,
                             uploadedBy: "\(user.firstName) \(user.lastName)", // Replace userId with full name
                             comment: comment.comment,
-                            createdAt: comment.createdAt
+                            createdAt: comment.createdAt,
+                            parentCommentId: comment.parentCommentId
                         )
                         updatedComments.append(updatedComment)
                     } else {
@@ -118,7 +119,7 @@ final class CommentSectionViewModel: ObservableObject {
      
      This function creates a new `CommentDTO` object and adds it to Firestore. After adding, it reloads the comments for the given transcript.
      */
-    func addComment(teamDocId: String, keyMomentId: String, gameId: String, transcriptId: String, text: String) async {
+    func addComment(teamDocId: String, keyMomentId: String, gameId: String, transcriptId: String, text: String, parentCommentId: String? = nil) async {
         do {
             print("In CommentSectionViewModel, teamId: \(teamDocId)")
             guard !teamDocId.isEmpty, !keyMomentId.isEmpty, !text.isEmpty else {
@@ -138,7 +139,8 @@ final class CommentSectionViewModel: ObservableObject {
                 transcriptId: transcriptId,
                 uploadedBy: authUser.uid ?? "Unknown User",
                 comment: text,
-                createdAt: Date()
+                createdAt: Date(),
+                parentCommentId: parentCommentId
             )
             print("trying to add comment: \(text)")
             try await dependencies?.commentManager.addNewComment(teamDocId: teamDocId, commentDTO: newComment)

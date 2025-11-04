@@ -16,9 +16,10 @@ public struct DBComment: Codable {
     public let uploadedBy: String
     public let comment: String
     public let createdAt: Date
+    public let parentCommentId: String?
     
     // Initializer for creating a comment with all fields
-    public init(commentId: String, keyMomentId: String, gameId: String, transcriptId: String, uploadedBy: String, comment: String, createdAt: Date) {
+    public init(commentId: String, keyMomentId: String, gameId: String, transcriptId: String, uploadedBy: String, comment: String, createdAt: Date, parentCommentId: String?) {
         self.commentId = commentId
         self.keyMomentId = keyMomentId
         self.gameId = gameId
@@ -26,6 +27,7 @@ public struct DBComment: Codable {
         self.uploadedBy = uploadedBy
         self.comment = comment
         self.createdAt = createdAt
+        self.parentCommentId = parentCommentId
     }
     
     // Initializer using a CommentDTO object
@@ -37,6 +39,7 @@ public struct DBComment: Codable {
         self.uploadedBy = commentDTO.uploadedBy
         self.comment = commentDTO.comment
         self.createdAt = commentDTO.createdAt
+        self.parentCommentId =  commentDTO.parentCommentId
     }
     
     // Enum for coding keys used in encoding and decoding
@@ -48,6 +51,7 @@ public struct DBComment: Codable {
         case uploadedBy = "uploaded_by"
         case comment = "comment"
         case createdAt = "created_at"
+        case parentCommentId = "parent_comment_id"
     }
 
     // Decode the comment data from a decoder
@@ -60,6 +64,7 @@ public struct DBComment: Codable {
         self.uploadedBy = try container.decode(String.self, forKey: .uploadedBy)
         self.comment = try container.decode(String.self, forKey: .comment)
         self.createdAt = try container.decode(Date.self, forKey: .createdAt)
+        self.parentCommentId = try container.decode(String?.self, forKey: .parentCommentId)
     }
      
     // Encode the comment data to an encoder
@@ -72,5 +77,6 @@ public struct DBComment: Codable {
         try container.encode(self.uploadedBy, forKey: .uploadedBy)
         try container.encode(self.comment, forKey: .comment)
         try container.encode(self.createdAt, forKey: .createdAt)
+        try container.encode(self.parentCommentId, forKey: .parentCommentId)
     }
 }
