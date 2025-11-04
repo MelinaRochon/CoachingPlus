@@ -43,6 +43,9 @@ struct CoachSpecificKeyMomentView: View {
     /// View model responsible for fetching player information.
     @StateObject private var playerModel = PlayerModel()
 
+    /// Whether the associated audio file has been downloaded and is available for playback.
+    @State private var audioFileRetrieved: Bool = false
+
     @EnvironmentObject private var dependencies: DependencyContainer
     
     /// The game associated with the key moment.
@@ -165,7 +168,7 @@ struct CoachSpecificKeyMomentView: View {
                                     }
                                     
                                     VStack (alignment: .leading) {
-                                        Slider(value: $progress, in: startDuration...totalDuration, onEditingChanged: { editing in
+                                        DelimitedSlider(value: $progress, range: startDuration...totalDuration, delimiter: getKeyMomentStartTime()) { editing in
                                             if !editing {
                                                 print("not editing")
                                                 let targetTime = CMTime(seconds: progress, preferredTimescale: 600)
@@ -175,9 +178,10 @@ struct CoachSpecificKeyMomentView: View {
                                             } else {
                                                 isSeeking = true
                                             }
-                                        })
+                                        }
                                         .tint(.gray) // Change color if needed
                                         .frame(height: 20) // Adjust slider height
+                                        .padding(.leading, 5)
                                         
                                         // Time Labels (Start Time & Remaining Time)
                                         HStack {
@@ -191,13 +195,6 @@ struct CoachSpecificKeyMomentView: View {
                                 }
                             }
                             .padding(.horizontal).padding(.bottom)
-                        } else {
-                            VStack (alignment: .center) {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 340, height: 180)
-                                    .cornerRadius(10).padding(.bottom, 5)
-                            }
                         }
                     }
                     
@@ -389,25 +386,89 @@ struct CoachSpecificKeyMomentView: View {
     /// - Gets video URL from Firebase and sets up the player
     private func loadVideoAndFeedback() async {
         do {
+            // Load the audio URL from Firebase
+            let audioURL = try await transcriptModel.getAudioFileUrl(
+                keyMomentId: specificKeyMoment.keyMomentId,
+                gameId: game.gameId,
+                teamId: team.teamId
+            )
             
-            if let gameStartTime = game.startTime {
-                startDuration = specificKeyMoment.frameStart.timeIntervalSince(gameStartTime)
-                totalDuration = specificKeyMoment.frameEnd.timeIntervalSince(gameStartTime)
+            if let url = audioURL {
+                // Fetch audio file from db
+                let audioDownloadUrl = try await StorageManager.shared.getAudioURL(path: url).downloadURL()
+                let playerItem = try await createCombinedPlayerItem(videoURL: videoUrl, audioURL: audioDownloadUrl)
+                self.player = AVPlayer(playerItem: playerItem)
             }
-            
 //            let feedback = specificKeyMoment.feedbackFor ?? []
 //            
 //            // Load feedback list
 //            let fbFor: [String] = feedback.map { $0.playerId }
 //            feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
-            
-            self.player = AVPlayer(url: videoUrl)
         } catch {
             print("❌ Error loading key moment: \(error)")
         }
     }
     
-    
+    private func createCombinedPlayerItem(videoURL: URL, audioURL: URL?) async throws -> AVPlayerItem {
+        // Load assets
+        let videoAsset = AVURLAsset(url: videoURL)
+        var audioAsset: AVURLAsset?
+
+        if let audioURL = audioURL {
+            audioAsset = AVURLAsset(url: audioURL)
+        }
+
+        // Composition to mix both
+        let mixComposition = AVMutableComposition()
+        
+        // Convert the time to CMTime
+        let videoDuration = videoAsset.duration.seconds
+        
+        guard let gameStart = game.startTime else { throw NSError(domain: "", code: 0, userInfo: nil) }
+        let keyStart = getKeyMomentTimeInSeconds(start: gameStart, end: specificKeyMoment.frameStart)
+        let keyEnd = getKeyMomentTimeInSeconds(start: gameStart, end: specificKeyMoment.frameEnd)
+                
+        let timeBeforeFeedback = Double(game.timeBeforeFeedback)
+        let timeAferFeedback = Double(game.timeAfterFeedback)
+
+        // Extend ±10 seconds, but clamp to valid bounds
+        let extendedStart = max(0.0, keyStart - timeBeforeFeedback)
+        let extendedEnd = min(videoDuration, keyEnd + timeAferFeedback)
+        let extendedDuration = max(0.001, extendedEnd - extendedStart)
+        
+        startDuration = 0 // extendedStart
+        totalDuration = extendedDuration
+        
+        let startTime = CMTime(seconds: extendedStart, preferredTimescale: 600)
+        let trimmedDuration = CMTime(seconds: extendedDuration, preferredTimescale: 600)
+
+        // Add video track
+        if let videoTrack = try await videoAsset.loadTracks(withMediaType: .video).first {
+            let videoCompositionTrack = mixComposition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
+            try videoCompositionTrack?.insertTimeRange(
+                CMTimeRange(start: startTime, duration: trimmedDuration),
+                of: videoTrack,
+                at: .zero
+            )
+        }
+        
+        // Calculate when the audio should begin *within* the new video range
+        let audioOffset = keyStart - extendedStart
+
+        // Add audio track (if available)
+        if let audioAsset = audioAsset,
+           let audioTrack = try await audioAsset.loadTracks(withMediaType: .audio).first {
+            let audioCompositionTrack = mixComposition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+            try audioCompositionTrack?.insertTimeRange(
+                CMTimeRange(start: .zero, duration: audioAsset.duration),
+                of: audioTrack,
+                at: CMTime(seconds: audioOffset, preferredTimescale: 600)
+            )
+        }
+
+        return AVPlayerItem(asset: mixComposition)
+    }
+
     /// **Creates a custom-styled text field for user comments.**
     ///
     /// - Parameters:
@@ -445,7 +506,8 @@ struct CoachSpecificKeyMomentView: View {
     /// Restarts playback from the beginning of the key moment.
     private func restart() {
         player!.pause()
-        seek(to: startDuration)
+        seek(to: 0)
+
         isPlaying = false
     }
     
@@ -474,14 +536,11 @@ struct CoachSpecificKeyMomentView: View {
     /// - Seeks the player to the start time.
     /// - Pauses and resets playback when the end time is reached.
     private func playTrimmedSegment(player: AVPlayer) {
-        guard let gameStart = game.startTime else { return }
-        
-        let startTime = getKeyMomentTimeInSeconds(start: gameStart, end: specificKeyMoment.frameStart)
-        let endTime   = getKeyMomentTimeInSeconds(start: gameStart, end: specificKeyMoment.frameEnd)
-        
-        let start = CMTime(seconds: startTime, preferredTimescale: 600)
-        let end   = CMTime(seconds: endTime, preferredTimescale: 600)
-        
+        let start = CMTime(seconds: 0, preferredTimescale: 600)
+        let end   = CMTime(seconds: totalDuration, preferredTimescale: 600)
+
+        print("Playing trimmed segment from \(start.seconds)s to \(end.seconds)s")
+
         // Seek to start
         player.seek(to: start, toleranceBefore: .zero, toleranceAfter: .zero)
         
@@ -492,18 +551,40 @@ struct CoachSpecificKeyMomentView: View {
             player.seek(to: start, toleranceBefore: .zero, toleranceAfter: .zero)
             isPlaying.toggle()
         }
+
     }
     
     
     /// Goes to the start of the key moment.
     /// - Seeks the player to the start time.
     private func goToStartOfKeyMoment(player: AVPlayer) {
-        guard let gameStart = game.startTime else { return }
+        let startTime = Double(game.timeBeforeFeedback)
+        let start = CMTime(seconds: startTime, preferredTimescale: 600)
+        player.seek(to: start, toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+    
+    private func getKeyMomentStartTime() -> Double {
+        let start = Double(game.timeBeforeFeedback)
+        return start
+    }
+    
+    private func getKeyMomentEndTime() -> Double {
+        let end = totalDuration - Double(game.timeAfterFeedback)
+        return end
+    }
+    
+    private func getStartTimeOfKeyMoment() -> CMTime? {
+        guard let gameStart = game.startTime else { return nil }
         let startTime = getKeyMomentTimeInSeconds(start: gameStart, end: specificKeyMoment.frameStart)
         let start = CMTime(seconds: startTime, preferredTimescale: 600)
-        
-        // Seek to start
-        player.seek(to: start, toleranceBefore: .zero, toleranceAfter: .zero)
+        return start
+    }
+    
+    private func getEndTimeOfKeyMoment() -> CMTime? {
+        guard let gameStart = game.startTime else { return nil }
+        let endTime = getKeyMomentTimeInSeconds(start: gameStart, end: specificKeyMoment.frameEnd)
+        let end = CMTime(seconds: endTime, preferredTimescale: 600)
+        return end
     }
     
     
