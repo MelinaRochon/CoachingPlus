@@ -164,10 +164,14 @@ import GameFrameIOSShared
                                      Spacer()
                                      if !isEditing {
                                          if let dateOfBirth = user.dateOfBirth {
-                                             Text("\(dateOfBirth.formatted(.dateTime.year().month(.twoDigits).day()))")
-                                                 .foregroundStyle(.secondary)
-                                                 .multilineTextAlignment(.trailing)
-                                                 .accessibilityIdentifier("page.coach.profile.dob")
+                                             Text(dateOfBirth, formatter: {
+                                                 let f = DateFormatter()
+                                                 f.dateFormat = "MMM dd, yyyy"
+                                                 return f
+                                             }())
+                                             .foregroundStyle(.secondary)
+                                             .multilineTextAlignment(.trailing)
+                                             .accessibilityIdentifier("page.coach.profile.dob")
                                          } else {
                                              Text("N/A").foregroundStyle(.secondary)
                                                  .multilineTextAlignment(.trailing)
