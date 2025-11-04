@@ -65,7 +65,7 @@ struct CoachFullGameTranscriptView: View {
                 CustomUIFields.loadingSpinner("Loading full game...") //.frame(alignment: .center)
             }
         }
-        .navigationTitle("Full Game Transcript")
+        .navigationTitle("Full Game Recording")
         .navigationBarTitleDisplayMode(.inline)
         .task {
             do {

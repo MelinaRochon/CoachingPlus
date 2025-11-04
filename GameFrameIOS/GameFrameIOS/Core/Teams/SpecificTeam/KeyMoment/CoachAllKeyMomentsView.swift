@@ -50,7 +50,7 @@ struct CoachAllKeyMomentsView: View {
                             SearchKeyMomentsView(
                                 game: game,
                                 team: team,
-                                keyMoments: recordings,
+                                keyMoments: filteredKeyMoments,
                                 userType: .coach,
                                 prefix: nil,
                                 destinationBuilder: { recording in
@@ -103,16 +103,6 @@ struct CoachAllKeyMomentsView: View {
                     }
                 }
             }
-            .task {
-                do {
-                    let tmpKeyMoments = try await transcriptModel.getAllTranscripts(gameId: game.gameId, teamDocId: team.id)
-                    self.keyMoments = tmpKeyMoments
-                    self.filteredKeyMoments = keyMoments ?? []
-                                
-                } catch {
-                    print("Error. Aborting...")
-                }
-            }
             .onAppear {
                 transcriptModel.setDependencies(dependencies)
             }
@@ -136,6 +126,20 @@ struct CoachAllKeyMomentsView: View {
 //                        .navigationBarTitleDisplayMode(.inline)
 //                }
 //            })
+        }
+        .task {
+            do {
+                // Reset the key moments to nil so we always fetch, in case a key moment was deleted
+                self.keyMoments = nil
+                self.filteredKeyMoments = []
+                
+                // Get all key moments
+                let tmpKeyMoments = try await transcriptModel.getAllTranscripts(gameId: game.gameId, teamDocId: team.id)
+                self.keyMoments = tmpKeyMoments
+                self.filteredKeyMoments = keyMoments ?? []
+            } catch {
+                print("Error. Aborting...")
+            }
         }
     }
     

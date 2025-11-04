@@ -106,7 +106,7 @@ struct CoachSpecificFootageView: View {
                     // Full game transcript section
                     VStack(alignment: .leading, spacing: 0) {
                         NavigationLink(destination: CoachFullGameTranscriptView(teamDocId: team.id, gameId: game.gameId, recordStartTime: game.startTime, gameTitle: game.title)) {
-                            Text("Full Game Transcript")
+                            Text("Full Game Recording")
                                 .font(.headline)
                                 .foregroundColor(.black)
                             Spacer()

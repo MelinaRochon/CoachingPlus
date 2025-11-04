@@ -410,13 +410,13 @@ struct FeedbackForView: View {
                         confirmationShow = true
                         
                     }) {
-                        Text("Delete Transcript")
+                        Text("Delete")
                     }
                 }
             }
         }
         .confirmationDialog(
-            "Are you sure you want to delete this transcript?",
+            "Are you sure you want to delete this feedback? This will remove the transcript and its associated key moment. This action cannot be undone.",
             isPresented: $confirmationShow,
             titleVisibility: .visible
         ) {

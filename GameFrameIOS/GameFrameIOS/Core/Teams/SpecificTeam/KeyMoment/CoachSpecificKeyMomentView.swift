@@ -40,6 +40,9 @@ struct CoachSpecificKeyMomentView: View {
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
     
+    /// View model responsible for fetching player information.
+    @StateObject private var playerModel = PlayerModel()
+
     @EnvironmentObject private var dependencies: DependencyContainer
     
     /// The game associated with the key moment.
@@ -65,169 +68,320 @@ struct CoachSpecificKeyMomentView: View {
     
     @State var videoUrl: URL
 
+    /// State variable to track whether the edit mode is active.
+    @State private var isEditing: Bool = false
+    @State private var dismissOnRemove: Bool = false
+    
+    @State private var originalTranscriptText: String = ""
+    @State private var originalSelectedPlayers: [String] = []
 
+    private var hasChanges: Bool {
+        let currentSelectedPlayers = playersFeedback.filter { $0.isSelected }.map { $0.id }
+        let samePlayers = Set(currentSelectedPlayers) == Set(originalSelectedPlayers)
+        let sameTranscript = feedbackKeyMoment == originalTranscriptText
+        
+        return !(samePlayers && sameTranscript)
+    }
+    @State private var isInitialLoadComplete = false
+
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
+
+    /// Stores the editable transcript text when in edit mode.
+    @State private var feedbackKeyMoment: String = ""
+    
+    /// Stores all players mapped into a feedback structure with selection state.
+    @State private var playersFeedback: [PlayerFeedback] = []
+
+    
     var body: some View {
-        ScrollView {
-            VStack {
-                VStack (alignment: .leading) {
-                    HStack(spacing: 0) {
-                        Text(game.title).font(.title2)
-                        Spacer()
-                    }
-                    HStack {
-                        Text("Key moment #\(specificKeyMoment.id+1)").font(.headline)
-                        Spacer()
-                    }.padding(.bottom, -2)
-                    HStack (spacing: 0){
-                        VStack(alignment: .leading) {
-                            Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))
-                            if let startTime = game.startTime {
-                                Text(startTime.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
+        NavigationView {
+            ScrollView {
+                VStack {
+                    VStack (alignment: .leading) {
+                        HStack(spacing: 0) {
+                            Text(game.title).font(.title2)
+                            Spacer()
+                        }
+                        HStack {
+                            Text("Key moment #\(specificKeyMoment.id+1)").font(.headline)
+                            Spacer()
+                        }.padding(.bottom, -2)
+                        HStack (spacing: 0){
+                            VStack(alignment: .leading) {
+                                Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))
+                                if let startTime = game.startTime {
+                                    Text(startTime.formatted(.dateTime.year().month().day().hour().minute())).font(.subheadline).foregroundStyle(.secondary)
+                                }
                             }
+                            Spacer()
                         }
                         Spacer()
-                    }
-                    Spacer()
-                }.padding(.leading).padding(.trailing)
-                Divider()
-                
-                // Key moment Video Frame
-                VStack (alignment: .leading){
-            
-                    if let player = player {
-                        VStack (alignment: .leading) {
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    goToStartOfKeyMoment(player: player)
-                                }) {
-                                    Text("Go To Key Moment").font(.caption2).bold().padding(.horizontal, 8).padding(.vertical, 5)
-                                } .background(.red)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    .padding(.top, 0)
-                                    .foregroundColor(.white)
-                            }
-
-                            // Video player
-                            AVPlayerWithoutControls(player: player)
-                                .aspectRatio(16/9, contentMode: .fit)
-                                .frame(maxWidth: .infinity)
-                                .onAppear {
-                                    playTrimmedSegment(player: player)
-                                    setupPlayer(to: player)
-                                }
-                            
-                            HStack {
-                                VStack(alignment: .leading) {
+                    }.padding(.leading).padding(.trailing)
+                    Divider()
+                    
+                    // Key moment Video Frame
+                    VStack (alignment: .leading){
+                        
+                        if let player = player {
+                            VStack (alignment: .leading) {
+                                HStack {
+                                    Spacer()
                                     Button(action: {
-                                        if isPlaying {
-                                            player.pause()
-                                        } else {
-                                            player.play()
-                                        }
-                                        isPlaying.toggle()
+                                        goToStartOfKeyMoment(player: player)
                                     }) {
-                                        Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                            .resizable()
-                                            .frame(width: 40, height: 40)
-                                            .foregroundColor(.red)
-                                    }
-                                    Text("").font(.caption)
+                                        Text("Go To Key Moment").font(.caption2).bold().padding(.horizontal, 8).padding(.vertical, 5)
+                                    } .background(.red)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        .padding(.top, 0)
+                                        .foregroundColor(.white)
                                 }
                                 
-                                VStack (alignment: .leading) {
-                                    Slider(value: $progress, in: startDuration...totalDuration, onEditingChanged: { editing in
-                                        if !editing {
-                                            print("not editing")
-                                            let targetTime = CMTime(seconds: progress, preferredTimescale: 600)
-                                            player.seek(to: targetTime) { _ in
-                                                isSeeking = false
+                                // Video player
+                                AVPlayerWithoutControls(player: player)
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .frame(maxWidth: .infinity)
+                                    .onAppear {
+                                        playTrimmedSegment(player: player)
+                                        setupPlayer(to: player)
+                                    }
+                                
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Button(action: {
+                                            if isPlaying {
+                                                player.pause()
+                                            } else {
+                                                player.play()
                                             }
-                                        } else {
-                                            isSeeking = true
+                                            isPlaying.toggle()
+                                        }) {
+                                            Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                                .resizable()
+                                                .frame(width: 40, height: 40)
+                                                .foregroundColor(.red)
                                         }
-                                    })
-                                    .tint(.gray) // Change color if needed
-                                    .frame(height: 20) // Adjust slider height
+                                        Text("").font(.caption)
+                                    }
                                     
-                                    // Time Labels (Start Time & Remaining Time)
-                                    HStack {
-                                        Text(formatTime(progress)) // Current time
-                                            .font(.caption)
-                                        Spacer()
-                                        Text("-\(formatTime(totalDuration - progress))") // Remaining time
-                                            .font(.caption)
+                                    VStack (alignment: .leading) {
+                                        Slider(value: $progress, in: startDuration...totalDuration, onEditingChanged: { editing in
+                                            if !editing {
+                                                print("not editing")
+                                                let targetTime = CMTime(seconds: progress, preferredTimescale: 600)
+                                                player.seek(to: targetTime) { _ in
+                                                    isSeeking = false
+                                                }
+                                            } else {
+                                                isSeeking = true
+                                            }
+                                        })
+                                        .tint(.gray) // Change color if needed
+                                        .frame(height: 20) // Adjust slider height
+                                        
+                                        // Time Labels (Start Time & Remaining Time)
+                                        HStack {
+                                            Text(formatTime(progress)) // Current time
+                                                .font(.caption)
+                                            Spacer()
+                                            Text("-\(formatTime(totalDuration - progress))") // Remaining time
+                                                .font(.caption)
+                                        }
                                     }
                                 }
                             }
+                            .padding(.horizontal).padding(.bottom)
+                        } else {
+                            VStack (alignment: .center) {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 340, height: 180)
+                                    .cornerRadius(10).padding(.bottom, 5)
+                            }
                         }
-                        .padding(.horizontal).padding(.bottom)
-                    } else {
-                        VStack (alignment: .center) {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 340, height: 180)
-                                .cornerRadius(10).padding(.bottom, 5)
+                    }
+                    
+                    // Transcription section
+                    VStack(alignment: .leading) {
+                        Text("Transcription")
+                            .font(.headline)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                            .padding(.bottom, 2)
+                        Text(specificKeyMoment.transcript)
+                            .font(.caption)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                    }.padding(.bottom, 5)
+                    
+                    // Feedback for Section
+                    VStack(alignment: .leading) {
+                        Text("Feedback For")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        HStack {
+                            Text(feedbackFor.map { $0.name }.joined(separator: ", "))
+                                .font(.caption)
+                                .padding(.top, 2)
                         }
+                        .multilineTextAlignment(.leading)
+                    }.padding(.horizontal).padding(.vertical, 10)
+                    
+                    Divider()
+                    
+                    // Integrated CommentSectionView
+                    CommentSectionView(
+                        viewModel: commentViewModel,
+                        teamDocId: team.id,
+                        keyMomentId: String(specificKeyMoment.id),
+                        gameId: game.gameId,
+                        transcriptId: String(specificKeyMoment.transcript)
+                    )
+                }
+            }
+            .onChange(of: dismissOnRemove) { newValue in
+                // Remove transcript from database
+                Task {
+                    do {
+                        try await transcriptModel.removeTranscript(gameId: game.gameId, teamId: team.teamId, transcriptId: specificKeyMoment.transcriptId, keyMomentId: specificKeyMoment.keyMomentId)
+                        dismiss()
+                    } catch {
+                        print(error.localizedDescription)
                     }
                 }
-                
-                // Transcription section
-                VStack(alignment: .leading) {
-                    Text("Transcription")
-                        .font(.headline)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                        .padding(.bottom, 2)
-                    Text(specificKeyMoment.transcript)
-                        .font(.caption)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                }.padding(.bottom, 5)
-                
-                // Feedback for Section
-                VStack(alignment: .leading) {
-                    Text("Feedback For")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    HStack {
-                        Text(feedbackFor.map { $0.name }.joined(separator: ", "))
-                            .font(.caption)
-                            .padding(.top, 2)
+            }
+            .sheet(isPresented: $isEditing) {
+                NavigationView {
+                    FeedbackForView(dismissOnRemove: $dismissOnRemove, allPlayers: team.players, feedbackTranscript: $feedbackKeyMoment, playersFeedback: $playersFeedback)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button(action: {
+                                    resetData()
+                                    isInitialLoadComplete = false
+                                    isEditing = false // Dismiss the full-screen cover
+                                }) {
+                                    Text("Cancel")
+                                }
+                            }
+                            
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button(action: {
+                                    saveData()
+                                    isInitialLoadComplete = false
+                                    isEditing = false // Dismiss the full-screen cover
+                                }) {
+                                    Text("Save")
+                                }
+                                .disabled(!hasChanges || !isInitialLoadComplete)
+                            }
+                        }
+                        .task {
+                            do {
+                                
+                                if let allPlayers = team.players {
+                                    print("getting all players = \(allPlayers)")
+                                    let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
+                                    // Map to include selection state
+                                    playersFeedback = players.map { (id, name, photoUrl) in
+                                        let isSelected = feedbackFor.contains { $0.playerId == id }
+                                        return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
+                                    }
+                                }
+                                
+                                originalTranscriptText = feedbackKeyMoment
+                                originalSelectedPlayers = feedbackFor.map { $0.playerId }
+                                isInitialLoadComplete = true
+                                
+                            } catch {
+                                print("Error when fetching specific footage info: \(error)")
+                            }
+                        }
+                }
+            }
+            .onAppear {
+                playerModel.setDependencies(dependencies)
+                transcriptModel.setDependencies(dependencies)
+                fgVideoRecordingModel.setDependencies(dependencies)
+                audioRecordingModel.setDependencies(dependencies)
+                commentViewModel.setDependencies(dependencies)
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                if !isEditing {
+                    Button {
+                        withAnimation {
+                            isEditing.toggle()
+                        }
+                    } label: {
+                        Text("Edit")
                     }
-                    .multilineTextAlignment(.leading)
-                }.padding(.horizontal).padding(.vertical, 10)
-                
-                Divider()
-                
-                // Integrated CommentSectionView
-                CommentSectionView(
-                    viewModel: commentViewModel,
-                    teamDocId: team.id,
-                    keyMomentId: String(specificKeyMoment.id),
-                    gameId: game.gameId,
-                    transcriptId: String(specificKeyMoment.transcript)
-                )
+                    .frame(width: 40)
+                    .foregroundColor(.red)
+                }
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .task {
             await loadVideoAndFeedback()
+            do {
+                print("CoachSpecificTranscript, teamDocId: \(team.id)")
+                
+                    if !isEditing
+                    {
+                        let feedback = specificKeyMoment.feedbackFor ?? []
+                        
+                        // Add a new key moment to the database
+                        let fbFor: [String] = feedback.map { $0.playerId }
+                        feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
+                        feedbackKeyMoment = specificKeyMoment.transcript
+                    }
+            } catch {
+                print("Error when fetching specific footage info: \(error)")
+            }
         }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)
         }
-        .onAppear {
-            transcriptModel.setDependencies(dependencies)
-            fgVideoRecordingModel.setDependencies(dependencies)
-            audioRecordingModel.setDependencies(dependencies)
-            commentViewModel.setDependencies(dependencies)
-        }
     }
         
+    ///
+    /// - Updates `feedbackFor` with the players that were selected in the UI.
+    /// - Persists transcript text and feedbackFor players to the database.
+    /// - Updates the local transcript state with the edited values.
+    ///
+    /// Errors are caught and logged if saving fails.
+    private func saveData() {
+        Task {
+            do {
+                feedbackFor = playersFeedback
+                    .filter { $0.isSelected }
+                    .map { PlayerNameAndPhoto(playerId: $0.id, name: $0.name, photoURL: $0.photoUrl) }
+                
+                try await transcriptModel.updateTranscriptInfo(teamDocId: team.id, teamId: team.teamId, gameId: game.gameId, transcriptId: specificKeyMoment.transcriptId, feedbackFor: feedbackFor, transcript: feedbackKeyMoment)
+                
+                
+                playersFeedback = []
+                specificKeyMoment.transcript = feedbackKeyMoment
+                
+            } catch {
+                // Print error message if saving data fails
+                print("Error occurred when saving the transcript data: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    /// Resets the feedback transcript text field to the original transcript content.
+    ///
+    /// - If `transcript` exists, it restores `feedbackTranscript` with its value.
+    /// - If `transcript` is `nil`, it resets to an empty string.
+    private func resetData() {
+        feedbackKeyMoment = specificKeyMoment.transcript
+    }
+
     
     /// Loads video and feedback for the key moment:
     /// - Computes start/end times
@@ -241,11 +395,11 @@ struct CoachSpecificKeyMomentView: View {
                 totalDuration = specificKeyMoment.frameEnd.timeIntervalSince(gameStartTime)
             }
             
-            let feedback = specificKeyMoment.feedbackFor ?? []
-            
-            // Load feedback list
-            let fbFor: [String] = feedback.map { $0.playerId }
-            feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
+//            let feedback = specificKeyMoment.feedbackFor ?? []
+//            
+//            // Load feedback list
+//            let fbFor: [String] = feedback.map { $0.playerId }
+//            feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
             
             self.player = AVPlayer(url: videoUrl)
         } catch {
