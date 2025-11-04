@@ -186,10 +186,9 @@ extension CoachAddPlayersView: PlayerProtocol {
     /// A computed property that checks if the player's data is valid for adding to the team.
     /// The player's first name, last name, and email must not be empty, and the email must contain "@".
     var addPlayerToTeamIsValid: Bool {
-        return !firstName.isEmpty               // Ensure first name is not empty
-            && !lastName.isEmpty               // Ensure last name is not empty
-            && !email.isEmpty                 // Ensure email is not empty
-            && email.contains("@")            // Ensure email contains '@' symbol for basic validation
+        return !firstName.isEmpty && isValidName(firstName) // Ensure first name is not empty
+            && !lastName.isEmpty && isValidName(lastName)   // Ensure last name is not empty
+            && !email.isEmpty && isValidEmail(email)        // Check for a basic email format
     }
 }
 
@@ -199,10 +198,9 @@ extension tmpCoachAddPlayerView: PlayerProtocol {
     /// A computed property that checks if the player's data is valid for adding to the team.
     /// The player's first name, last name, and email must not be empty, and the email must contain "@".
     var addPlayerToTeamIsValid: Bool {
-        return !firstName.isEmpty               // Ensure first name is not empty
-            && !lastName.isEmpty               // Ensure last name is not empty
-            && !email.isEmpty                 // Ensure email is not empty
-            && email.contains("@")            // Ensure email contains '@' symbol for basic validation
+        return !firstName.isEmpty && isValidName(firstName) // Ensure first name is not empty
+            && !lastName.isEmpty && isValidName(lastName)   // Ensure last name is not empty
+            && !email.isEmpty && isValidEmail(email)        // Check for a basic email format
     }
 }
 

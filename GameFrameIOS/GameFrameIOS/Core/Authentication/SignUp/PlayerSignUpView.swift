@@ -56,7 +56,6 @@ struct PlayerSignUpView: View {
                     // Custom date picker for selecting the player's date of birth
                     HStack {
                         Text("Date of Birth")
-                            .foregroundColor(.gray)
                         Spacer()
                         DatePicker("", selection: $viewModel.dateOfBirth, displayedComponents: .date)
                             .labelsHidden()
@@ -80,8 +79,9 @@ struct PlayerSignUpView: View {
                     // Country picker with a list of countries
                     HStack {
                         Text("Country or region")
+                            .padding(.horizontal)
                         Spacer()
-                        Picker("Country", selection: $viewModel.country) {
+                        Picker("", selection: $viewModel.country) {
                             ForEach(AppData.countries, id: \.self) { c in
                                 Text(c).tag(c)
                             }
@@ -90,11 +90,10 @@ struct PlayerSignUpView: View {
                     }
                     .frame(height: 45)
                     .pickerStyle(.automatic)
-                    .padding(.horizontal)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.gray, lineWidth: 1)
-                    )
+                    )                    
         
                     // Disabled text field for displaying the email (cannot be edited)
                     CustomUIFields.disabledCustomTextField("Email", text: $viewModel.email)
@@ -183,12 +182,12 @@ struct PlayerSignUpView: View {
 extension PlayerSignUpView: AuthenticationSignUpProtocol {
     /// Computed property that checks if the sign-up form is valid (all fields must be filled correctly)
     var signUpIsValid: Bool {
-        return !viewModel.email.isEmpty
-        && viewModel.email.contains("@") // Email should be non-empty and contain "@"
-        && !viewModel.password.isEmpty
-        && viewModel.password.count > 5 // Password should be at least 6 characters long
-        && !viewModel.firstName.isEmpty
-        && !viewModel.lastName.isEmpty // First and Last names should be non-empty
+        return !viewModel.email.isEmpty && isValidEmail(viewModel.email) // Check for a basic email format
+        && viewModel.country != "Select"
+        && !viewModel.password.isEmpty && viewModel.password.count > 5 // Password should be at least 6 characters long
+        && !viewModel.firstName.isEmpty && isValidName(viewModel.firstName)
+        && isValidPhoneNumber(viewModel.phone)
+        && !viewModel.lastName.isEmpty && isValidName(viewModel.lastName)
     }
     
     /// Placeholder computed property for validating access code (not implemented in this case)

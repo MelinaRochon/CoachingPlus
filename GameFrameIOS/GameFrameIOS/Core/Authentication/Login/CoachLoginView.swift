@@ -149,7 +149,7 @@ extension CoachLoginView: AuthenticationLoginProtocol {
     // Computed property to validate login credentials
     var loginIsValid: Bool {
         return !authModel.email.isEmpty // Ensure email is not empty
-        && authModel.email.contains("@") // Check for a basic email format
+        && isValidEmail(authModel.email) // Check for a basic email format
         && !authModel.password.isEmpty // Ensure password is not empty
         && authModel.password.count > 5 // Enforce a minimum password length
     }

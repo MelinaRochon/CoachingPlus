@@ -411,10 +411,8 @@ import GameFrameIOSShared
 extension CoachProfileView: UserEditProfileProtocol {
     var saveProfileIsValid: Bool {
         if let user = viewModel.user {
-            return !firstName.isEmpty
-            && firstName != ""
-            && !lastName.isEmpty
-            && lastName != ""
+            return !firstName.isEmpty && isValidName(firstName)
+            && !lastName.isEmpty && isValidName(lastName)
             && (user.firstName != firstName
             || user.lastName != lastName)
             || (user.dateOfBirth != dob)

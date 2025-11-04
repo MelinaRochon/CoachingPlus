@@ -146,6 +146,13 @@ func isValidEmail(_ email: String) -> Bool {
     return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: email)
 }
 
+func isValidName(_ name: String) -> Bool {
+    // Remove leading/trailing spaces
+    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+    // Ensure it's not empty
+    return !trimmed.isEmpty
+}
+
 /// A helper function to format the provided start time into a readable string.
 /// If the `startTime` is nil, it uses the current date and time as the default value.
 ///

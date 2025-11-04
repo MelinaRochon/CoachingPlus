@@ -185,17 +185,15 @@ extension PlayerCreateAccountView: AuthenticationSignUpProtocol {
     /// Placeholder computed property for validating access code (not implemented in this case)
     var signUpWithAccessCodeValid: Bool {
         return !viewModel.email.isEmpty
-        && viewModel.email.contains("@")
+        && isValidEmail(viewModel.email) // Check for a basic email format
         && !viewModel.teamAccessCode.isEmpty
         
     }
     
     /// Computed property that checks if the sign-up form is valid (all fields must be filled correctly)
     var signUpIsValid: Bool {
-        return !viewModel.email.isEmpty
-        && viewModel.email.contains("@")
-        && !viewModel.password.isEmpty
-        && viewModel.password.count > 5
+        return !viewModel.email.isEmpty && isValidEmail(viewModel.email) // Check for a basic email format
+        && !viewModel.password.isEmpty && viewModel.password.count > 5
         && !viewModel.firstName.isEmpty
         && !viewModel.lastName.isEmpty
     }

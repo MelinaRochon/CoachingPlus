@@ -11,7 +11,7 @@ import Foundation
 struct AppData {
     
     /// A list of supported countries used in forms and selection fields.
-    static let countries = ["United States", "Canada", "United Kingdom", "Australia"]
+    static let countries = ["Select", "United States", "Canada", "United Kingdom", "Australia"]
     
     /// A list of available recording options
     static let recordingOptions = ["Video", "Audio Only"]

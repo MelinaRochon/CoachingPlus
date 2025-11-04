@@ -71,7 +71,7 @@ struct CoachCreateAccountView: View {
                         // Date Picker Styled Like Other Fields
                         HStack {
                             Text("Date of Birth")
-                                .foregroundColor(.gray)
+//                                .foregroundColor(.gray)
                             Spacer()
                             DatePicker(
                                 "",
@@ -102,17 +102,18 @@ struct CoachCreateAccountView: View {
                         // Country Picker
                         HStack {
                             Text("Country or region")
+                                .padding(.horizontal)
                             Spacer()
-                            Picker("Country", selection: $viewModel.country) {
+                            Picker("", selection: $viewModel.country) {
                                 ForEach(AppData.countries, id: \.self) { c in
                                     Text(c).tag(c)
                                 }
                             }
+                            .labelsHidden()
                             .accessibilityIdentifier("page.signup.coach.country")
                         }
                         .frame(height: 45)
                         .pickerStyle(.automatic)
-                        .padding(.horizontal)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.gray, lineWidth: 1)
@@ -196,7 +197,6 @@ struct CoachCreateAccountView: View {
     }    
 }
 
-
 // MARK: - SignUp Validation
 
 /// Conformance to AuthenticationSignUpProtocol for validation of sign-up fields.
@@ -207,12 +207,12 @@ extension CoachCreateAccountView: AuthenticationSignUpProtocol {
     
     var signUpIsValid: Bool {
         // Validation for required fields: Email, Password, First Name, Last Name
-        return !viewModel.email.isEmpty
-        && viewModel.email.contains("@")
-        && !viewModel.password.isEmpty
-        && viewModel.password.count > 5
-        && !viewModel.firstName.isEmpty
-        && !viewModel.lastName.isEmpty
+        return !viewModel.email.isEmpty && isValidEmail(viewModel.email) // Check for a basic email format
+        && viewModel.country != "Select"
+        && isValidPhoneNumber(viewModel.phone)
+        && !viewModel.password.isEmpty && viewModel.password.count > 5
+        && !viewModel.firstName.isEmpty && isValidName(viewModel.firstName)
+        && !viewModel.lastName.isEmpty && isValidName(viewModel.lastName)
     }
 }
 
@@ -225,4 +225,8 @@ extension View {
             self
         }
     }
+}
+
+#Preview {
+    CoachCreateAccountView(showSignInView: .constant(false))
 }

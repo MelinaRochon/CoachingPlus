@@ -609,8 +609,8 @@ extension CoachEditPlayerProfileView: UserEditProfileProtocol {
         
         if let user = profileModel.user, let player = profileModel.player {
             return (user.firstName != firstName || user.lastName != lastName)
-            && (!firstName.isEmpty && firstName != "")
-            && (!lastName.isEmpty && lastName != "")
+            && (!firstName.isEmpty && isValidName(firstName))
+            && (!lastName.isEmpty && isValidName(lastName))
             || (user.dateOfBirth != dob && dob != nil && isDobToday != true)
             || (user.phone != phone && ((user.phone?.isEmpty) != nil)  && isValidPhoneNumber(phone))
             || (player.guardianName != guardianName && (guardianName != "" || ((player.guardianName?.isEmpty) != nil)))

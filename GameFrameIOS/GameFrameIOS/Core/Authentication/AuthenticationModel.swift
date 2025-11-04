@@ -38,7 +38,7 @@ final class AuthenticationModel: ObservableObject {
     @Published var phone = ""
     
     /// User's country (default: Canada).
-    @Published var country = "Canada"
+    @Published var country = "Select"
     
     /// User's time zone.
     @Published var timeZone = ""

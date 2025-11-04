@@ -223,13 +223,6 @@ struct PlayerProfileView: View {
                                                 .disabled(!isEditing)
                                                 .multilineTextAlignment(.trailing)
                                                 .foregroundStyle(isEditing ? .primary : .secondary)
-                                        }.swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                            Button {
-                                                viewModel.removeGuardianEmail()
-                                                guardianEmail = ""
-                                            } label: {
-                                                Image(systemName: "trash")
-                                            }
                                         }
                                     }
                                     
@@ -247,14 +240,6 @@ struct PlayerProfileView: View {
                                                 .onChange(of: guardianPhone) { newVal in
                                                     guardianPhone = formatPhoneNumber(newVal)
                                                 }
-                                        }.swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                            Button {
-                                                viewModel.removeGuardianPhone()
-                                                guardianPhone = ""
-                                                
-                                            } label: {
-                                                Image(systemName: "trash")
-                                            }
                                         }
                                     }
                                 }
@@ -513,8 +498,8 @@ extension PlayerProfileView: UserEditProfileProtocol {
 
         if let user = viewModel.user, let player = viewModel.player {
             return (user.firstName != firstName || user.lastName != lastName)
-            && (!firstName.isEmpty && firstName != "")
-            && (!lastName.isEmpty && lastName != "")
+            && (!firstName.isEmpty && isValidName(firstName))
+            && (!lastName.isEmpty && isValidName(lastName))
             || (player.gender != gender && gender != "Select")
             || (user.dateOfBirth != dob && dob != nil && isDobToday != true)
             || (user.phone != phone && ((user.phone?.isEmpty) != nil)  && isValidPhoneNumber(phone))

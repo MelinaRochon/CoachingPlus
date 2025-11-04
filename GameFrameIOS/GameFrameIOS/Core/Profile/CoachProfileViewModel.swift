@@ -82,7 +82,7 @@ final class CoachProfileViewModel: ObservableObject {
         let authUser = try repo.getAuthenticatedUser()
         
         // Make sure the DISPLAY_NAME of the app on firebase to the public is set properly
-        try await repo.resetPassword(email: authUser.email) // TO DO - NEED TO VERIFY USER GETS EMAIL
+        try await repo.resetPassword(email: authUser.email) // TODO: NEED TO VERIFY USER GETS EMAIL
     }
     
     
