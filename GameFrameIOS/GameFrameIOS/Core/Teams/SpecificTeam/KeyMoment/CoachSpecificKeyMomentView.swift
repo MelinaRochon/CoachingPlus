@@ -305,6 +305,13 @@ struct CoachSpecificKeyMomentView: View {
             }
         }
         .onAppear {
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+                try AVAudioSession.sharedInstance().setActive(true)
+            } catch {
+                print("❌ Failed to configure AVAudioSession: \(error)")
+            }
+            
             playerModel.setDependencies(dependencies)
             transcriptModel.setDependencies(dependencies)
             fgVideoRecordingModel.setDependencies(dependencies)
@@ -440,7 +447,7 @@ struct CoachSpecificKeyMomentView: View {
         let extendedStart = max(0.0, keyStart - timeBeforeFeedback)
         let extendedEnd = min(videoDuration, keyEnd + timeAferFeedback)
         let extendedDuration = max(0.001, extendedEnd - extendedStart)
-        
+
         startDuration = 0 // extendedStart
         totalDuration = extendedDuration
         
@@ -459,13 +466,15 @@ struct CoachSpecificKeyMomentView: View {
         
         // Calculate when the audio should begin *within* the new video range
         let audioOffset = keyStart - extendedStart
-
+        let durationAudio = CMTime(seconds: (keyEnd - keyStart), preferredTimescale: 600)
+        
         // Add audio track (if available)
         if let audioAsset = audioAsset,
            let audioTrack = try await audioAsset.loadTracks(withMediaType: .audio).first {
             let audioCompositionTrack = mixComposition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
             try audioCompositionTrack?.insertTimeRange(
-                CMTimeRange(start: .zero, duration: audioAsset.duration),
+                CMTimeRange(start: .zero, duration: durationAudio),
+//                CMTimeRange(start: .zero, duration: audioAsset.duration),
                 of: audioTrack,
                 at: CMTime(seconds: audioOffset, preferredTimescale: 600)
             )
