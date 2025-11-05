@@ -13,7 +13,7 @@ struct DelimitedSlider: View {
     let delimiter: Double // e.g. key moment start in same range
     var width: CGFloat = 300
     var onEditingChanged: ((Bool) -> Void)? = nil  // <-- new
-    var thumbPadding: CGFloat = 10
+    var thumbPadding: CGFloat = 5
 
     var body: some View {
         GeometryReader { geo in
@@ -78,7 +78,7 @@ struct DelimitedSliderPreview: View {
             DelimitedSlider(
                 value: $progress,
                 range: 0...totalDuration,
-                delimiter: 10.0 // shows red line at 10s
+                delimiter: 0.0 // shows red line at 10s
             )
             .padding(.horizontal, 25)
             .padding(.vertical)

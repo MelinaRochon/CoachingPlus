@@ -125,7 +125,6 @@ struct CoachSpecificKeyMomentView: View {
                     
                     // Key moment Video Frame
                     VStack (alignment: .leading){
-                        
                         if let player = player {
                             VStack (alignment: .leading) {
                                 HStack {
@@ -195,116 +194,122 @@ struct CoachSpecificKeyMomentView: View {
                                 }
                             }
                             .padding(.horizontal).padding(.bottom)
+                        } else {
+                            HStack {
+                                Text("").padding(.vertical, 5)
+                            }
                         }
-                    }
-                    
-                    // Transcription section
-                    VStack(alignment: .leading) {
-                        Text("Transcription")
-                            .font(.headline)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
-                            .padding(.bottom, 2)
-                        Text(specificKeyMoment.transcript)
-                            .font(.caption)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
-                    }.padding(.bottom, 5)
-                    
-                    // Feedback for Section
-                    VStack(alignment: .leading) {
-                        Text("Feedback For")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        HStack {
-                            Text(feedbackFor.map { $0.name }.joined(separator: ", "))
+                        // Transcription section
+                        VStack(alignment: .leading) {
+                            Text("Transcription")
+                                .font(.headline)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal)
+                                .padding(.bottom, 2)
+                            Text(specificKeyMoment.transcript)
                                 .font(.caption)
-                                .padding(.top, 2)
-                        }
-                        .multilineTextAlignment(.leading)
-                    }.padding(.horizontal).padding(.vertical, 10)
-                    
-                    Divider()
-                    
-                    // Integrated CommentSectionView
-                    CommentSectionView(
-                        viewModel: commentViewModel,
-                        teamDocId: team.id,
-                        keyMomentId: String(specificKeyMoment.id),
-                        gameId: game.gameId,
-                        transcriptId: String(specificKeyMoment.transcript)
-                    )
-                }
-            }
-            .onChange(of: dismissOnRemove) { newValue in
-                // Remove transcript from database
-                Task {
-                    do {
-                        try await transcriptModel.removeTranscript(gameId: game.gameId, teamId: team.teamId, transcriptId: specificKeyMoment.transcriptId, keyMomentId: specificKeyMoment.keyMomentId)
-                        dismiss()
-                    } catch {
-                        print(error.localizedDescription)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal)
+                        }.padding(.bottom, 5)
+                        
+                        // Feedback for Section
+                        VStack(alignment: .leading) {
+                            Text("Feedback For")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            HStack {
+                                Text(feedbackFor.map { $0.name }.joined(separator: ", "))
+                                    .font(.caption)
+                                    .padding(.top, 2)
+                            }
+                            .multilineTextAlignment(.leading)
+                        }.padding(.horizontal).padding(.vertical, 10)
+                        
+                        Divider()
+                        
+                        // Integrated CommentSectionView
+                        CommentSectionView(
+                            viewModel: commentViewModel,
+                            teamDocId: team.id,
+                            keyMomentId: String(specificKeyMoment.id),
+                            gameId: game.gameId,
+                            transcriptId: String(specificKeyMoment.transcript)
+                        )
+                        
                     }
                 }
+                
             }
-            .sheet(isPresented: $isEditing) {
-                NavigationView {
-                    FeedbackForView(dismissOnRemove: $dismissOnRemove, allPlayers: team.players, feedbackTranscript: $feedbackKeyMoment, playersFeedback: $playersFeedback)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button(action: {
-                                    resetData()
-                                    isInitialLoadComplete = false
-                                    isEditing = false // Dismiss the full-screen cover
-                                }) {
-                                    Text("Cancel")
+        }
+        .onChange(of: dismissOnRemove) { newValue in
+            // Remove transcript from database
+            Task {
+                do {
+                    try await transcriptModel.removeTranscript(gameId: game.gameId, teamId: team.teamId, transcriptId: specificKeyMoment.transcriptId, keyMomentId: specificKeyMoment.keyMomentId)
+                    dismiss()
+                } catch {
+                    print(error.localizedDescription)
+                }
+            }
+        }
+        .sheet(isPresented: $isEditing) {
+            NavigationView {
+                FeedbackForView(dismissOnRemove: $dismissOnRemove, allPlayers: team.players, feedbackTranscript: $feedbackKeyMoment, playersFeedback: $playersFeedback)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button(action: {
+                                resetData()
+                                isInitialLoadComplete = false
+                                isEditing = false // Dismiss the full-screen cover
+                            }) {
+                                Text("Cancel")
+                            }
+                        }
+                        
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(action: {
+                                saveData()
+                                isInitialLoadComplete = false
+                                isEditing = false // Dismiss the full-screen cover
+                            }) {
+                                Text("Save")
+                            }
+                            .disabled(!hasChanges || !isInitialLoadComplete)
+                        }
+                    }
+                    .task {
+                        do {
+                            
+                            if let allPlayers = team.players {
+                                print("getting all players = \(allPlayers)")
+                                let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
+                                // Map to include selection state
+                                playersFeedback = players.map { (id, name, photoUrl) in
+                                    let isSelected = feedbackFor.contains { $0.playerId == id }
+                                    return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
                                 }
                             }
                             
-                            ToolbarItem(placement: .topBarTrailing) {
-                                Button(action: {
-                                    saveData()
-                                    isInitialLoadComplete = false
-                                    isEditing = false // Dismiss the full-screen cover
-                                }) {
-                                    Text("Save")
-                                }
-                                .disabled(!hasChanges || !isInitialLoadComplete)
-                            }
+                            originalTranscriptText = feedbackKeyMoment
+                            originalSelectedPlayers = feedbackFor.map { $0.playerId }
+                            isInitialLoadComplete = true
+                            
+                        } catch {
+                            print("Error when fetching specific footage info: \(error)")
                         }
-                        .task {
-                            do {
-                                
-                                if let allPlayers = team.players {
-                                    print("getting all players = \(allPlayers)")
-                                    let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
-                                    // Map to include selection state
-                                    playersFeedback = players.map { (id, name, photoUrl) in
-                                        let isSelected = feedbackFor.contains { $0.playerId == id }
-                                        return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
-                                    }
-                                }
-                                
-                                originalTranscriptText = feedbackKeyMoment
-                                originalSelectedPlayers = feedbackFor.map { $0.playerId }
-                                isInitialLoadComplete = true
-                                
-                            } catch {
-                                print("Error when fetching specific footage info: \(error)")
-                            }
-                        }
-                }
+                    }
             }
-            .onAppear {
-                playerModel.setDependencies(dependencies)
-                transcriptModel.setDependencies(dependencies)
-                fgVideoRecordingModel.setDependencies(dependencies)
-                audioRecordingModel.setDependencies(dependencies)
-                commentViewModel.setDependencies(dependencies)
-            }
+        }
+        .onAppear {
+            playerModel.setDependencies(dependencies)
+            transcriptModel.setDependencies(dependencies)
+            fgVideoRecordingModel.setDependencies(dependencies)
+            audioRecordingModel.setDependencies(dependencies)
+            commentViewModel.setDependencies(dependencies)
         }
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -558,14 +563,18 @@ struct CoachSpecificKeyMomentView: View {
     /// Goes to the start of the key moment.
     /// - Seeks the player to the start time.
     private func goToStartOfKeyMoment(player: AVPlayer) {
-        let startTime = Double(game.timeBeforeFeedback)
+        let startTime = getKeyMomentStartTime()
         let start = CMTime(seconds: startTime, preferredTimescale: 600)
         player.seek(to: start, toleranceBefore: .zero, toleranceAfter: .zero)
     }
     
     private func getKeyMomentStartTime() -> Double {
+        guard let gameStart = game.startTime else { return 0.0 }
+        let tmpKeyStart = getKeyMomentTimeInSeconds(start: gameStart, end: specificKeyMoment.frameStart)
+        let keyStart = tmpKeyStart >= 1 ? tmpKeyStart : 0.0
         let start = Double(game.timeBeforeFeedback)
-        return start
+        let keyMomentStart = min(keyStart, start)
+        return keyMomentStart
     }
     
     private func getKeyMomentEndTime() -> Double {
