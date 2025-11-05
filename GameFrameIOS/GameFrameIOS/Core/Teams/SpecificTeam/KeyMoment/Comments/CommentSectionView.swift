@@ -1,47 +1,34 @@
-//
-//  CommentSectionView.swift
-//  GameFrameIOS
-//
-//  Created by Caterina Bosi on 2025-03-26.
-//
-
 import SwiftUI
 import GameFrameIOSShared
 
-/**
- `CommentSectionView` is a SwiftUI view that displays the comments for a specific game transcript.
- It allows users to view existing comments, add new comments, and provides a user-friendly interface for interacting with the comments section.
- */
 struct CommentSectionView: View {
-    /**
-     The view model that handles the business logic for fetching and adding comments.
-     It is an `ObservedObject` because it needs to be updated whenever its state changes (e.g., when new comments are loaded or added).
-    */
     @ObservedObject var viewModel: CommentSectionViewModel
 
-    /**
-     A state variable to hold the text of the new comment as the user types it.
-     This is a two-way binding between the text field and the view model, allowing dynamic updates.
-    */
     @State private var newComment: String = ""
-    
     @State private var replyText: String = ""
-    @State private var replyingTo: DBComment? = nil // Track which comment you're replying to
-    
+    @State private var replyingToId: String? = nil   // which parent is being replied to
 
-    /**
-     The identifiers for the specific team, key moment, game, and transcript related to the comments.
-     These IDs are passed to the view to identify the context for which comments are being displayed and added.
-    */
     var teamDocId: String
     var keyMomentId: String
     var gameId: String
     var transcriptId: String
-    
-    let inputBarHeight: CGFloat = 64
-    let lift: CGFloat = 88
-    
+
     @EnvironmentObject private var dependencies: DependencyContainer
+
+    // MARK: - Thread helpers (keeps body simple)
+    private var roots: [DBComment] {
+        viewModel.comments.filter { ($0.parentCommentId?.isEmpty ?? true) }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+    private var repliesByParent: [String: [DBComment]] {
+        Dictionary(
+            grouping: viewModel.comments.compactMap { c in
+                guard let p = c.parentCommentId, !p.isEmpty else { return nil }
+                return c
+            },
+            by: { $0.parentCommentId! }
+        )
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -51,84 +38,49 @@ struct CommentSectionView: View {
                 .padding(.top)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 12) {
                     if viewModel.comments.isEmpty {
-                        Text("No comments yet. Be the first to comment!").font(.caption)
-                            .foregroundColor(.gray)
-                            .padding(.horizontal)
-                    }
-                    else {
-                        ForEach(viewModel.comments, id: \.commentId) { comment in
-                            HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: "person.circle.fill")
-                                    .resizable()
-                                    .frame(width: 30, height: 30)
-                                    .foregroundColor(.gray)
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        Text(comment.uploadedBy)
-                                            .font(.subheadline)
-                                            .bold()
-                                        
-                                        Spacer()
-                                        
-                                        Text(comment.createdAt.formatted(.dateTime.hour().minute()))
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    Text(comment.comment)
-                                        .font(.body)
-                                        .padding(10)
-                                        .background(Color(UIColor.systemGray6))
-                                        .cornerRadius(10)
+                        Text("No comments yet. Be the first to comment!")
+                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.top, 8)
+                    } else {
+                        ForEach(roots, id: \.commentId) { parent in
+                            CommentRow(comment: parent)
+
+                            Button("Reply") { replyingToId = parent.commentId }
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                                .buttonStyle(.plain)
+                                .padding(.leading, 44)
+
+                            // Inline reply composer for this parent
+                            if replyingToId == parent.commentId {
+                                replyComposer(parentId: parent.commentId)
+                                    .padding(.horizontal)
+                            }
+
+                            // Replies (indented)
+                            if let replies = repliesByParent[parent.commentId] {
+                                ForEach(replies.sorted { $0.createdAt < $1.createdAt }, id: \.commentId) { reply in
+                                    CommentRow(comment: reply)
+                                        .padding(.leading, 40)
                                 }
                             }
-                            .padding(.horizontal)
+
+                            Divider().padding(.leading, 16)
                         }
                     }
-                }
-            }
-            .frame(height: 180)
-            .safeAreaInset(edge: .bottom){
-                // Comment Input Section
-                Color.white.frame(height: 12)
-                HStack {
-                    TextField("Write a comment...", text: $newComment)
-                        .padding(10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color(.systemBackground))
-//                                .stroke(Color.gray, lineWidth: 1))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(Color(.separator), lineWidth: 1)
-                                )
-                        )
-                    
-                    Button(action: {
-                        Task {
-                            if !newComment.trimmingCharacters(in: .whitespaces).isEmpty {
-                                print("in CommentSectionView, teamId: \(teamDocId)")
-                                await viewModel.addComment(teamDocId: teamDocId, keyMomentId: keyMomentId, gameId: gameId, transcriptId: transcriptId, text: newComment)
-                                DispatchQueue.main.async {
-                                    newComment = "" // Clear input field safely
-                                }
-                            }
-                        }
-                    }) {
-                        Image(systemName: "paperplane.fill")
-                            .foregroundColor(newComment.isEmpty ? .gray : .red)
-                    }
-                    .disabled(newComment.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-                .padding(.horizontal)
-                .frame(maxWidth: .infinity)
-                .background(Color.white)
-                .zIndex(1)
+                }.padding(.horizontal)
+//                .padding(.bottom, 96) // space so last row isn't covered by input bar
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            inputBar
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+                .zIndex(1000)
+        } // main comment composer
         .task {
             await viewModel.loadCommentsForTranscript(teamDocId: teamDocId, transcriptId: transcriptId)
         }
@@ -136,14 +88,107 @@ struct CommentSectionView: View {
             viewModel.setDependencies(dependencies)
         }
     }
+
+    // MARK: - Inline reply composer
+    @ViewBuilder
+    private func replyComposer(parentId: String) -> some View {
+        HStack(spacing: 8) {
+            TextField("Write a reply…", text: $replyText)
+                .padding(10)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color(.systemBackground))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.separator), lineWidth: 1))
+                )
+            Button {
+                Task {
+                    let text = replyText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !text.isEmpty else { return }
+                    await viewModel.addReply(
+                        teamDocId: teamDocId,
+                        keyMomentId: keyMomentId,
+                        gameId: gameId,
+                        transcriptId: transcriptId,
+                        parentCommentId: parentId,
+                        text: text
+                    )
+                    replyText = ""
+                    replyingToId = nil
+                }
+            } label: {
+                Image(systemName: "paperplane.fill")
+                    .foregroundColor(replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .red)
+            }
+            .disabled(replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+    }
+
+    // MARK: - Bottom input bar (new top-level comment)
+    private var inputBar: some View {
+        VStack(spacing: 0) {
+            Color.white.frame(height: 12)
+            HStack(spacing: 8) {
+                TextField("Write a comment…", text: $newComment)
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(.systemBackground))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.separator), lineWidth: 1))
+                    )
+                Button {
+                    Task {
+                        let text = newComment.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !text.isEmpty else { return }
+                        await viewModel.addComment(
+                            teamDocId: teamDocId,
+                            keyMomentId: keyMomentId,
+                            gameId: gameId,
+                            transcriptId: transcriptId,
+                            text: text
+                        )
+                        newComment = ""
+                    }
+                } label: {
+                    Image(systemName: "paperplane.fill")
+                        .foregroundColor(newComment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .red)
+                }
+                .disabled(newComment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(Color.white)
+            .overlay(Divider(), alignment: .top)
+        }
+        .zIndex(1)
+    }
 }
 
-#Preview {
-    CommentSectionView(
-        viewModel: CommentSectionViewModel(),
-        teamDocId: "mockTeamId",
-        keyMomentId: "mockKeyMomentId",
-        gameId: "mockGameId",
-        transcriptId: "mockTranscriptId"
-    )
+// Small reusable row
+private struct CommentRow: View {
+    let comment: DBComment
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "person.circle.fill")
+                .resizable()
+                .frame(width: 30, height: 30)
+                .foregroundColor(.gray)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(comment.uploadedBy).font(.subheadline).bold()
+                    Spacer()
+                    Text(comment.createdAt.formatted(.dateTime.hour().minute()))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Text(comment.comment)
+                    .font(.body)
+                    .padding(10)
+                    .background(Color(UIColor.systemGray6))
+                    .cornerRadius(10)
+            }
+        }
+        .padding(.horizontal)
+    }
 }

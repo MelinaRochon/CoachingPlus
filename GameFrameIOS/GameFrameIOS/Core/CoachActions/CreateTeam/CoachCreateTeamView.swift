@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import SFSymbolsPicker
+//import SFSymbolsPicker
 import SwiftData
 import GameFrameIOSShared
 

@@ -153,4 +153,58 @@ final class CommentSectionViewModel: ObservableObject {
             print("Error adding comment: \(error)")
         }
     }
+
+    /**
+     Adds a reply to an existing comment in the Firestore database.
+
+     - Parameters:
+        - teamDocId: The identifier for the team document.
+        - keyMomentId: The identifier of the key moment related to the reply.
+        - gameId: The identifier of the game the reply pertains to.
+        - transcriptId: The identifier of the transcript the reply belongs to.
+        - parentCommentId: The identifier of the comment being replied to.
+        - text: The text content of the reply.
+
+     This function builds a `CommentDTO` with `parentCommentId` set to the target
+     comment, writes it to Firestore, and then reloads the comments for the given
+     transcript so the UI reflects the new reply. Input values are validated and the
+     operation is performed on the main actor to keep UI state in sync.
+    */
+    func addReply(
+        teamDocId: String,
+        keyMomentId: String,
+        gameId: String,
+        transcriptId: String,
+        parentCommentId: String,
+        text: String
+    ) async {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !teamDocId.isEmpty, !keyMomentId.isEmpty, !transcriptId.isEmpty,
+              !parentCommentId.isEmpty, !trimmed.isEmpty else {
+            print("Invalid input values, cannot add reply")
+            return
+        }
+        guard let auth = dependencies?.authenticationManager else {
+            print("Dependencies not set")
+            return
+        }
+        do {
+            let user = try auth.getAuthenticatedUser()
+            let dto = CommentDTO(
+                keyMomentId: keyMomentId,
+                gameId: gameId,
+                transcriptId: transcriptId,
+                uploadedBy: user.uid ?? "Unknown User",
+                comment: trimmed,
+                createdAt: Date(),
+                parentCommentId: parentCommentId
+            )
+            try await dependencies?.commentManager.addNewComment(teamDocId: teamDocId, commentDTO: dto)
+            await loadCommentsForTranscript(teamDocId: teamDocId, transcriptId: transcriptId)
+            print("Added reply to \(parentCommentId)")
+        } catch {
+            print("Error adding reply: \(error)")
+        }
+    }
+
 }
