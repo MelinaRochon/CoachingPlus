@@ -1,0 +1,122 @@
+[
+  {
+    "game_id": "G001",
+    "title": "Blue Comets vs Riverside Derby",
+    "duration": 3600,
+    "location": "Minto Place 407 Laurier Ave W, Ottawa ON K1R 7Y7, Canada",
+    "scheduled_time": 30,
+    "start_time": "2025-10-22T18:00:00Z",
+    "time_before_feedback": 10,
+    "time_after_feedback": 15,
+    "recording_reminder": true,
+    "team_id": "team1"
+  },
+  {
+    "game_id": "G002",
+    "title": "Aurora Cup Match vs Blue Comets",
+    "duration": 3600,
+    "location": "Aurora Field",
+    "scheduled_time": 15,
+    "start_time": "2025-10-25T20:30:00Z",
+    "time_before_feedback": 8,
+    "time_after_feedback": 12,
+    "recording_reminder": false,
+    "team_id": "team1"
+  },
+  {
+    "game_id": "G003",
+    "title": "Highland Friendly vs Blue Comets",
+    "duration": 3600,
+    "location": "Highland Park",
+    "scheduled_time": 60,
+    "start_time": "2025-10-29T14:00:00Z",
+    "time_before_feedback": 5,
+    "time_after_feedback": 10,
+    "recording_reminder": true,
+    "team_id": "team1"
+  },
+  {
+    "game_id": "G004",
+    "title": "Blue Comets Invitational vs Nova Strikers",
+    "duration": 3600,
+    "location": "Comet Arena",
+    "scheduled_time": 45,
+    "start_time": "2025-11-02T19:00:00Z",
+    "time_before_feedback": 15,
+    "time_after_feedback": 20,
+    "recording_reminder": true,
+    "team_id": "team2"
+  },
+  {
+    "game_id": "G005",
+    "title": "Crimson Valley Clash",
+    "duration": 3600,
+    "location": "Nova Strikers vs Valley Sports Complex",
+    "scheduled_time": 10,
+    "start_time": "2025-11-05T17:30:00Z",
+    "time_before_feedback": 5,
+    "time_after_feedback": 10,
+    "recording_reminder": false,
+    "team_id": "team2"
+  },
+  {
+    "game_id": "G006",
+    "title": "Lakeshore Cup Final",
+    "duration": 3600,
+    "location": "Lakeshore Arena",
+    "scheduled_time": 5,
+    "start_time": "2025-11-10T18:15:00Z",
+    "time_before_feedback": 15,
+    "time_after_feedback": 20,
+    "recording_reminder": true,
+    "team_id": "team3"
+  },
+  {
+    "game_id": "G007",
+    "title": "Northgate Tournament Opener",
+    "duration": 3600,
+    "location": "Northgate Stadium",
+    "scheduled_time": 60,
+    "start_time": "2025-11-12T13:00:00Z",
+    "time_before_feedback": 5,
+    "time_after_feedback": 20,
+    "recording_reminder": true,
+    "team_id": "team3"
+  },
+  {
+    "game_id": "G008",
+    "title": "Granite Cup Semi-Final",
+    "duration": 7200,
+    "location": "Granite Town Field",
+    "scheduled_time": 0,
+    "start_time": "2025-11-18T15:00:00Z",
+    "time_before_feedback": 10,
+    "time_after_feedback": 15,
+    "recording_reminder": false,
+    "team_id": "team3"
+  },
+  {
+    "game_id": "G009",
+    "title": "Portside Invitational",
+    "duration": 7200,
+    "location": null,
+    "scheduled_time": 0,
+    "start_time": "2025-11-22T16:00:00Z",
+    "time_before_feedback": 10,
+    "time_after_feedback": 10,
+    "recording_reminder": false,
+    "team_id": "team3"
+  },
+  {
+    "game_id": "G010",
+    "title": "Aurora Winter Challenge",
+    "duration": 7200,
+    "location": null,
+    "scheduled_time": 0,
+    "start_time": "2025-11-30T19:30:00Z",
+    "time_before_feedback": 20,
+    "time_after_feedback": 10,
+    "recording_reminder": false,
+    "team_id": "team3"
+  }
+]

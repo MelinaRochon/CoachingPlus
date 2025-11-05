@@ -1,0 +1,74 @@
+[
+    {
+        "id": "auth001",
+        "email": "coach1@example.com",
+        "password": "alicesmith",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth002",
+        "email": "coach2@example.com",
+        "password": "coach123",
+        "isSignedIn": true
+    },
+    {
+        "id": "auth003",
+        "email": "player1@example.com",
+        "password": "janedoe",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth004",
+        "email": "player2@example.com",
+        "password": "jillsmith",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth005",
+        "email": "player3@example.com",
+        "password": "christopheradams",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth006",
+        "email": "player4@example.com",
+        "password": "boblee",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth007",
+        "email": "player5@example.com",
+        "password": "patrickdupont",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth008",
+        "email": "player6@example.com",
+        "password": "masonwalker",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth009",
+        "email": "player7@example.com",
+        "password": "tylermitchell",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth010",
+        "email": "player8@example.com",
+        "password": "ethancarter",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth011",
+        "email": "playe98@example.com",
+        "password": "nathancole",
+        "isSignedIn": false
+    },
+    {
+        "id": "auth012",
+        "email": "player10@example.com",
+        "password": "andyjob",
+        "isSignedIn": false
+    },
+]

@@ -1,0 +1,62 @@
+[
+    {
+        "uid": "uid001",
+        "email": "coach1@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid002",
+        "email": "coach2@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid003",
+        "email": "player1@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid004",
+        "email": "player2@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid005",
+        "email": "player3@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid006",
+        "email": "player4@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid007",
+        "email": "player5@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid008",
+        "email": "player6@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid009",
+        "email": "player7@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid010",
+        "email": "player8@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid011",
+        "email": "playe98@example.com",
+        "photoUrl": null
+    },
+    {
+        "uid": "uid012",
+        "email": "player10@example.com",
+        "photoUrl": null
+    },
+]
