@@ -59,5 +59,6 @@ public protocol GameRepository {
     
     /// Deletes a specific game document from Firestore.
     func deleteGame(gameId: String, teamDocId: String) async throws
-
+    
+    func updateGameStartTimeUsingTeamDocId(gameId: String, teamDocId: String, startTime: Date) async throws
 }

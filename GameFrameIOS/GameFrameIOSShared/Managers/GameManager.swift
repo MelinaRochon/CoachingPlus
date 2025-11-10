@@ -129,6 +129,11 @@ public final class GameManager {
     }
     
     
+    public func updateGameStartTimeUsingTeamDocId(gameId: String, teamDocId: String, startTime: Date) async throws {
+        try await repo.updateGameStartTimeUsingTeamDocId(gameId: gameId, teamDocId: teamDocId, startTime: startTime)
+    }
+    
+    
     /// Updates the title of a specific game document in Firestore (or the data source).
     ///
     /// - Parameters:

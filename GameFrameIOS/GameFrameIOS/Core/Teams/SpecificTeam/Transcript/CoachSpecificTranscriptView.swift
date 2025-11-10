@@ -81,17 +81,7 @@ struct CoachSpecificTranscriptView: View {
                             Text(game.title).font(.title2)
                             Spacer()
                         }
-                        
-                        // Displays the transcript ID if available.
-                        if let transcript = transcript {
-                            HStack {
-                                Text("Transcript #\(transcript.id + 1)")
-                                    .font(.headline)
-                                Spacer()
-                            }
-                            .padding(.bottom, -2)
-                        }
-                        
+                                                
                         // Displays team name and transcript creation time.
                         HStack {
                             VStack(alignment: .leading) {

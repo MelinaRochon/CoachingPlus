@@ -360,4 +360,18 @@ final class AudioRecordingModel: ObservableObject {
         
         return playerObject
     }
+    
+    func updateGameStartTime(gameId: String, teamId: String, startTime: Date) async throws {
+        
+        guard let team = try await dependencies?.teamManager.getTeam(teamId: teamId) else {
+            print("Unable to find team. Abort")
+            return
+        }
+
+        try await dependencies?.gameManager.updateGameStartTimeUsingTeamDocId(
+            gameId: gameId,
+            teamDocId: team.id,
+            startTime: startTime
+        )
+    }
 }

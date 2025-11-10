@@ -16,8 +16,7 @@ struct VideoRecordingView: View {
     @State private var videoURL: URL?
     
     /// Unique identifiers for the coach, game, team and full game video
-    let coachId: String
-    @State private var gameId: String = ""
+    @State var gameId: String
     @State var teamId: String = ""
     @State private var fullGameId: String?
 
@@ -48,6 +47,8 @@ struct VideoRecordingView: View {
     
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
+    
+    @State private var gameStartTime: Date?
 
     var body: some View {
         NavigationView {
@@ -116,16 +117,18 @@ struct VideoRecordingView: View {
                 // Create a full game recording
                 if !cameraPermissionAlert && !audioPermissionAlert {
                     do {
-                        // Load all recordings that are already there, if there are some
-                        // Start by creating a new game
-                        guard let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) else {
-                            print("Could not create an unknown game")
-                            // TODO: Manage this throw error
-                            return
+                        if self.gameId.isEmpty {
+                            // Load all recordings that are already there, if there are some
+                            // Start by creating a new game
+                            guard let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) else {
+                                print("Could not create an unknown game")
+                                // TODO: Manage this throw error
+                                return
+                            }
+                            self.gameId = gameDocId
                         }
-                        self.gameId = gameDocId
                         
-                        guard let fgRecordingId = try await fgVideoRecordingModel.createFGRecording(teamId: teamId, gameId: gameDocId) else {
+                        guard let fgRecordingId = try await fgVideoRecordingModel.createFGRecording(teamId: teamId, gameId: gameId) else {
                             // TODO: Do an error here if does not work
                             print("error. Could not get the recording id")
                             return
@@ -202,10 +205,9 @@ struct VideoRecordingView: View {
             if !gameId.isEmpty {
                 // Show the audio transcript view
                 AudioRecordingView(
-                    coachId: coachId,
-                    showLandingPageView: .constant(false),
                     gameId: gameId,
                     teamId: teamId,
+                    navigateToHome: .constant(false),
                     showNavigationUI: false
                 )
                 .padding(.top, 10)
@@ -282,8 +284,23 @@ struct VideoRecordingView: View {
             self.isRecording = false
         } else {
             self.isRecording = true
+
+            // Set the game start time
+            self.gameStartTime = Date()
+            updateGameStartTime()
         }
         camera.toggleRecording()
+    }
+    
+    private func updateGameStartTime() {
+        Task {
+            do {
+                try await fgVideoRecordingModel.updateGameStartTime(gameId: gameId, teamId: teamId, startTime: Date())
+            } catch {
+                print(error)
+                return
+            }
+        }
     }
     
     private func saveVideoRecording(videoURL: URL) {

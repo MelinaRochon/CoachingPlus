@@ -28,10 +28,6 @@ struct AudioRecordingView: View {
     
     // MARK: - ViewModel and State Variables
     
-    let coachId: String
-        
-    @Binding var showLandingPageView: Bool
-
     // AudioRecordingModel that manages key moments and transcripts
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var gameModel = GameModel()
@@ -48,7 +44,7 @@ struct AudioRecordingView: View {
     @State private var showStopRecordingAlert: Bool = false
     
     // Navigation state for transitioning back to the main page
-    @State private var navigateToHome = false
+    @Binding var navigateToHome: Bool
     
     // Timer and speech recognition states
     @State var timer = ScrumTimer()
@@ -66,53 +62,66 @@ struct AudioRecordingView: View {
     // Array to hold recorded audio file URLs
     @State var audios: [URL] = []
     
-    @State private var gameStartTime: Date = Date()
-    
+    @State private var gameStartTime: Date?
+    @State private var savingIsOn = false
+
     // MARK: - Body
-    
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
+
     let showNavigationUI: Bool
     
     var body: some View {
         Group {
             if showNavigationUI {
                 NavigationView {
-                    content
-                        .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                Button {
-                                    showStopRecordingAlert.toggle()
+                    ZStack {
+                        if savingIsOn {
+                            // Saving the game. Show progress view
+                            ProgressView("Saving game...")
+                                .foregroundStyle(.black)
+                        }
+                        content
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
+                                showStopRecordingAlert.toggle()
+                            } label: {
+                                Text("End Recording")
+                            }
+                            .alert("Are you sure you want to end this game?", isPresented: $showStopRecordingAlert) {
+                                Button(role: .cancel) {
+                                    // Handle the cancelation
                                 } label: {
-                                    Text("End Recording")
+                                    Text("Cancel")
                                 }
-                                .alert("Are you sure you want to stop recording?", isPresented: $showStopRecordingAlert) {
-                                    Button(role: .cancel) {
-                                        // Handle the cancelation
-                                    } label: {
-                                        Text("Cancel")
-                                    }
-                                    Button("End Recording") {
-                                        // Handle the end recording
-                                        // Update the game's duration, add the end time
-                                        // Let the user see a page after with the game's detail that he can edit?
-                                        Task {
-                                            do {
-                                                try await audioRecordingModel.endAudioRecordingGame(teamId: teamId, gameId: gameId)
-                                                // Go back to the main page
-                                                removeAllTempAudioFiles(count: self.audios.count)
-                                                navigateToHome = true
-                                                
-                                            } catch {
-                                                print("Error when ending recording. ")
-                                            }
+                                Button("End Game") {
+                                    // Handle the end recording
+                                    // Update the game's duration, add the end time
+                                    // Let the user see a page after with the game's detail that he can edit?
+                                    Task {
+                                        do {
+                                            savingIsOn.toggle()
+                                            
+                                            try await audioRecordingModel.endAudioRecordingGame(teamId: teamId, gameId: gameId)
+                                            // Go back to the main page
+                                            removeAllTempAudioFiles(count: self.audios.count)
+                                            
+                                            dismiss()
+                                            navigateToHome = true
+                                            
+                                        } catch {
+                                            print("Error when ending recording. ")
                                         }
                                     }
                                 }
                             }
                         }
-                    
+                    }
                 }.navigationBarBackButtonHidden(true)
             } else {
-                // ✅ Just the core content, no NavigationView or toolbar
+                // Just the core content, no NavigationView or toolbar
                 content
             }
         }
@@ -120,64 +129,75 @@ struct AudioRecordingView: View {
             Alert(title: Text("Error"), message: Text("Enable Access"))
         })
         .task {
-            do {
-                if self.gameId.isEmpty {
-                    // Create a new game
-                    let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) // gameDocId
-                    self.gameId = gameDocId ?? ""
-                }
-                
-                // Load the players of the team for the transcription
-                try await audioRecordingModel.loadPlayersForTranscription(teamId: teamId)
-                
-                if let players = audioRecordingModel.players {
-                    let playerNames = players.compactMap { player in
-                        [player.firstName, player.nickname].compactMap { $0 }
-                    }.flatMap { $0 } // flatten
-                    
-                    await speechRecognizer.updateContextualStrings(playerNames)
-                    print("Loaded player names into speech recognizer: \(playerNames)")
-                }
-                
-                // Get the game
-                let game = try await gameModel.getGame(teamId: teamId, gameId: gameId)
-                if game == nil {
-                    throw GameValidationError.invalidStartTime
-                }
-                self.gameStartTime = game!.startTime ?? Date()
-                
-                // Initialising the audio recorder
-                self.session = AVAudioSession.sharedInstance()
-                try self.session.setCategory(.playAndRecord, mode: .default)
-                
-                // requesting permission
-                // require microphone usage description
-                self.session.requestRecordPermission{ (status) in
-                    if !status {
-                        // error msg
-                        self.alert.toggle()
+            if !alert {
+                do {
+                    if self.gameId.isEmpty {
+                        // Create a new game
+                        let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId)
+                        self.gameId = gameDocId ?? ""
                     }
+                    
+                    // Load the players of the team for the transcription
+                    try await audioRecordingModel.loadPlayersForTranscription(teamId: teamId)
+                    
+                    if let players = audioRecordingModel.players {
+                        let playerNames = players.compactMap { player in
+                            [player.firstName, player.nickname].compactMap { $0 }
+                        }.flatMap { $0 } // flatten
+                        
+                        await speechRecognizer.updateContextualStrings(playerNames)
+                        print("Loaded player names into speech recognizer: \(playerNames)")
+                    }
+                    
+                    // Get the game
+                    let game = try await gameModel.getGame(teamId: teamId, gameId: gameId)
+                    if game == nil {
+                        throw GameValidationError.invalidStartTime
+                    }
+                    
+                    if showNavigationUI {
+                        self.gameStartTime = Date()
+                        // Update the game start time
+                        if let startTime = gameStartTime {
+                            try await audioRecordingModel.updateGameStartTime(gameId: gameId, teamId: teamId, startTime: startTime)
+                        }
+                    } else {
+                        self.gameStartTime = game?.startTime ?? Date()
+                    }
+                    
+                    // Initialising the audio recorder
+                    self.session = AVAudioSession.sharedInstance()
+                    try self.session.setCategory(.playAndRecord, mode: .default)
+                
+                } catch {
+                    print("Error when loading the audio recording transcripts. Error: \(error)")
                 }
-            } catch {
-                print("Error when loading the audio recording transcripts. Error: \(error)")
             }
         }
         .onAppear {
+            // Check for the microphone permission, otherwise show alert
+            requestMicrophonePermission { micGranted in
+                self.alert = !micGranted
+            }
+
             gameModel.setDependencies(dependencies)
             audioRecordingModel.setDependencies(dependencies)
         }
     }
 
-    @ViewBuilder
     private var content: some View {
-        AudioRecordingContentView(
-            audioRecordingModel: audioRecordingModel,
-            gameModel: gameModel,
-            isRecording: $isRecording,
-            audios: $audios,
-            gameStartTime: $gameStartTime
-        ) { isRecording in
-            handleRecordingStateChange(isRecording)
+        VStack {
+            if let startTime = gameStartTime {
+                AudioRecordingContentView(
+                    audioRecordingModel: audioRecordingModel,
+                    gameModel: gameModel,
+                    isRecording: $isRecording,
+                    audios: $audios,
+                    gameStartTime: startTime
+                ) { isRecording in
+                    handleRecordingStateChange(isRecording)
+                }
+            }
         }
     }
     
@@ -219,14 +239,10 @@ struct AudioRecordingView: View {
 
                             transcript = normalizeTranscript(transcript, roster: tmpFeedback)
                         }
-                        
-                        print("feedbackFor: \(feedbackFor)")
-                        
+                                                
                         // Cut the transcript to see if the name of the player is in the transcript
                         // See which player the transcript is associated to
                         try await audioRecordingModel.addRecording(recordingStart: startTime, recordingEnd: endTime, transcription: transcript, feedbackFor: feedbackFor, numAudioFiles: self.audios.count )
-                        
-                        print("AUDIO: \(self.audios)")
                     } catch {
                         errorWrapper = ErrorWrapper(error: error, guidance: "Error when saving the audio recording. Please try again later.")
                     }
@@ -478,7 +494,7 @@ extension String {
 
 
 #Preview {
-    AudioRecordingView(coachId: "", showLandingPageView: .constant(false), gameId: "", teamId: "", showNavigationUI: true)
+    AudioRecordingView(gameId: "", teamId: "", navigateToHome: .constant(false), showNavigationUI: true)
 }
 
 

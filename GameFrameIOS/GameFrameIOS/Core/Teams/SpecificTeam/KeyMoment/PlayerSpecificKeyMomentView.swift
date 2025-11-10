@@ -70,11 +70,6 @@ struct PlayerSpecificKeyMomentView: View {
                         Text(game.title).font(.title2)
                         Spacer()
                     }
-                    
-                    HStack {
-                        Text("Key moment #\(specificKeyMoment.id+1)").font(.headline)
-                        Spacer()
-                    }.padding(.bottom, -2)
                     HStack (spacing: 0){
                         VStack(alignment: .leading) {
                             Text(team.name).font(.subheadline).foregroundStyle(.black.opacity(0.9))

@@ -59,6 +59,7 @@ struct SelectedScheduledGameView: View {
 
     /// Controls navigation to the recording view.
     @State private var navigateToRecordingView = false
+    @State private var navigateToAudioRecordingView = false
 
     /// Defines how many minutes before a scheduled game a coach can start recording.
     @State private var minsToStartGame: Int = 10
@@ -109,7 +110,10 @@ struct SelectedScheduledGameView: View {
     @Environment(\.dismiss) var dismiss
     
     @State private var confirmationDeleteGame: Bool = false
-    
+        
+    /// To dismiss the view when a game is done saving
+    @State private var savedRecording: Bool = false
+
     // MARK: - View
 
     var body: some View {
@@ -197,85 +201,47 @@ struct SelectedScheduledGameView: View {
                 }
                 .fullScreenCover(isPresented: $isEditing) {
                     NavigationView {
-                        coachEditScheduledGame
-                            .toolbar {
-                                ToolbarItem(placement: .topBarLeading) {
-                                    Button {
-                                        resetValues()
-                                        location = convertToLocation(locationString: selectedGame.game.location)
-                                        gameLocation = getFinalLocation()
-                                        withAnimation {
-                                            isEditing = false
-                                        }
-                                    } label: {
-                                        Text("Cancel")
+                        EditScheduledGameView(
+                            onCancel: {
+                                resetValues()
+                                location = convertToLocation(locationString: selectedGame.game.location)
+                                gameLocation = getFinalLocation()
+                                withAnimation {
+                                    isEditing = false
+                                }
+                            },
+                            onSave: {
+                                savingScheduledGame()
+                                withAnimation {
+                                    isEditing = false
+                                }
+                            },
+                            onDeleteGame: {
+                                Task {
+                                    do {
+                                        isEditing.toggle()
+                                        try await gameModel.removeGame(
+                                            gameId: selectedGame.game.gameId,
+                                            teamDocId: selectedGame.team.id,
+                                            teamId: selectedGame.team.teamId
+                                        )
+                                        dismiss()
+                                    } catch {
+                                        print(error.localizedDescription)
                                     }
                                 }
-                                ToolbarItem(placement: .topBarTrailing) {
-                                    Button {
-                                        savingScheduledGame()
-                                        withAnimation {
-                                            isEditing = false
-                                        }
-                                    } label: {
-                                        Text("Save")
-                                    }
-                                }
-                            }
-                    }
-                    
-                }
-                .toolbar {
-                    if userType == .coach {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            if !isEditing {
-                                Button {
-                                    withAnimation {
-                                        isEditing = true
-                                    }
-                                } label: {
-                                    Text("Edit")
-                                }
-                            } else {
-                                Button {
-                                    savingScheduledGame()
-                                    withAnimation {
-                                        isEditing = false
-                                    }
-                                } label: {
-                                    Text("Save")
-                                }
-                            }
-                        }
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        if canStartRecording {
-                            Menu {
-                                ForEach(AppData.recordingHomePageOptions, id: \ .0) { option, icon in
-                                    Button(action: {
-                                        selectedRecordingType = option
-                                        if selectedRecordingType == "Video" {
-                                            startRecording()
-                                        }
-                                        navigateToRecordingView = true
-                                    }) {
-                                        Label(option, systemImage: icon)
-                                    }
-                                }
-                            } label: {
-                                HStack {
-                                    Text("Start").font(.subheadline)
-                                    Image(systemName: "waveform")
-                                        .resizable()
-                                        .frame(width: 15, height: 15)
-                                }
-                                .foregroundColor(.white)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background(Color.green)
-                                .cornerRadius(25)
-                            }
-                        }
+                            },
+                            selectedGame: selectedGame,
+                            location: $location,
+                            title: $title,
+                            startTime: $startTime,
+                            hours: $hours,
+                            minutes: $minutes,
+                            recordingReminder: $recordReminder,
+                            selectedTimeLabel: $selectedTimeLabel,
+                            feedbackBeforeTimeLabel: $feedbackBeforeTimeLabel,
+                            feedbackAfterTimeLabel: $feedbackAfterTimeLabel
+                        )
                     }
                 }
                 .onAppear {
@@ -283,19 +249,13 @@ struct SelectedScheduledGameView: View {
                     recordingViewModel.setDependencies(dependencies)
                 }
             }
-            
         }
         .task {
             do {
                 if let selectedGame = selectedGame {
                     // Check if game starts within the next 10 minutes or is ongoing
-                    if let startTime = selectedGame.game.startTime {
-                        let currentTime = Date()
-                        let timeDifference = startTime.timeIntervalSince(currentTime)
-                        let gameEndTime = startTime.addingTimeInterval(TimeInterval(selectedGame.game.duration))
-                        self.canStartRecording = (Int(timeDifference) <= minsToStartGame*60 && timeDifference >= 0) || (currentTime <= gameEndTime && currentTime >= startTime)
-                        print(canStartRecording)
-                    }
+                    updateCanStartRecording(gameStartTime: selectedGame.game.startTime, gameDuration: selectedGame.game.duration)
+                    
                     if location == nil {
                         location = convertToLocation(locationString: selectedGame.game.location)
                     }
@@ -306,133 +266,87 @@ struct SelectedScheduledGameView: View {
                 print("ERROR. \(error)")
             }
         }
-        .navigationDestination(isPresented: $navigateToRecordingView) {
-            CoachRecordingView().navigationBarBackButtonHidden(true)
-        }
-    }
-    
-    var coachEditScheduledGame: some View {
-        List {
-            if let selectedGame = selectedGame {
-                Section(header: Text("Game Details")) {
-                    
-                    HStack {
-                        Text("Title")
-                        Spacer()
-                        TextField("Title", text: $title).multilineTextAlignment(.trailing)
+        .toolbar(content: {
+            if userType == .coach {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if !isEditing {
+                        Button {
+                            withAnimation {
+                                isEditing = true
+                            }
+                        } label: {
+                            Text("Edit")
+                        }
                     }
-                    
-                    HStack {
-                        Text("Team Name")
-                        Spacer()
-                        Text(selectedGame.team.name).multilineTextAlignment(.trailing)
-                    }
-                    .foregroundStyle(.secondary)
-                    .disabled(true)
-                    
-                    HStack {
-                        Text("Location")
-                        NavigationLink(destination: LocationView(location: $location), label: {
-                            HStack {
-                                Spacer()
-                                if let location = location {
-                                    Text("\(location.title) \(location.subtitle)").multilineTextAlignment(.trailing)
-                                } else {
-                                    Text("Enter location").foregroundStyle(.secondary)
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    if canStartRecording {
+                        Menu {
+                            ForEach(AppData.recordingHomePageOptions, id: \ .0) { option, icon in
+                                Button(action: {
+                                    selectedRecordingType = option
+                                    if selectedRecordingType == "Video" {
+                                        navigateToRecordingView = true
+                                    } else {
+                                        navigateToAudioRecordingView = true
+                                    }
+                                }) {
+                                    Label(option, systemImage: icon)
                                 }
                             }
-                        }).isDetailLink(true)
-                    }
-                }
-                
-                // Section for scheduled time, including start time and duration
-                Section (header: Text("Scheduled Time")) {
-                    HStack {
-                        DatePicker("Start", selection: $startTime, in: Date()..., displayedComponents: [.date, .hourAndMinute])
-                    }
-                    HStack {
-                        Text("Duration")
-                        Spacer()
-                        // Picker for selecting the number of hours for game duration
-                        Picker("", selection: $hours){
-                            ForEach(0..<13, id: \.self) { i in
-                                Text("\(i)").tag(i)
+                        } label: {
+                            HStack {
+                                Text("Start").font(.subheadline)
+                                Image(systemName: "waveform")
+                                    .resizable()
+                                    .frame(width: 15, height: 15)
                             }
-                        }.pickerStyle(.wheel).frame(width: 60, height: 100)
-                            .clipped()
-                        Text("hours").bold()
-                        
-                        // Picker for selecting the number of minutes for game duration
-                        Picker("", selection: $minutes){
-                            ForEach(0..<60, id: \.self) { i in
-                                Text("\(i)").tag(i)
-                            }
-                        }.pickerStyle(.wheel).frame(width: 60, height: 100)
-                        Text("min").bold()
-                    }
-                }
-                
-                Section(header: Text("Feedback Settings")) {
-                    // CustomPicker for selecting feedback before the event
-                    CustomPicker(
-                        title: "Before Feedback",
-                        options: AppData.feedbackBeforeTimeOptions.map { $0.0 },
-                        displayText: { $0 },
-                        selectedOption: $feedbackBeforeTimeLabel
-                    )
-                    
-                    // CustomPicker for selecting feedback after the event
-                    CustomPicker(
-                        title: "After Feedback",
-                        options: AppData.feedbackAfterTimeOptions.map { $0.0 },
-                        displayText: { $0 },
-                        selectedOption: $feedbackAfterTimeLabel
-                    )
-                }
-                
-                // Section for reminder settings
-                Section(footer:
-                            Text("Will send recording reminder at the scheduled time.")
-                ){
-                    Toggle("Get Recording Reminder", isOn: $recordingReminder)
-                    if (recordingReminder == true) {
-                        // CustomPicker for selecting reminder time before the event
-                        CustomPicker(
-                            title: "Reminder",
-                            options: AppData.timeOptions.map { $0.0 },
-                            displayText: { $0 },
-                            selectedOption: $selectedTimeLabel
-                        )
-                    }
-                }
-                
-                Section {
-                    Button(role: .destructive, action: {
-                        confirmationDeleteGame.toggle()
-                    }) {
-                        Text("Delete scheduled game")
-                    }
-                }
-                .confirmationDialog(
-                    "Are you sure you want to delete this scheduled game?",
-                    isPresented: $confirmationDeleteGame,
-                    titleVisibility: .visible
-                ) {
-                    Button(role: .destructive, action: {
-                        Task {
-                            do {
-                                isEditing.toggle()
-                                try await gameModel.removeGame(gameId: selectedGame.game.gameId, teamDocId: selectedGame.team.id, teamId: selectedGame.team.teamId)
-                                dismiss()
-                            } catch {
-                                print(error.localizedDescription)
-                            }
+                            .foregroundColor(.white)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(Color.green)
+                            .cornerRadius(25)
                         }
-                    }) {
-                        Text("Delete")
                     }
                 }
             }
+        })
+        .fullScreenCover(isPresented: $navigateToRecordingView) {
+            if let game = selectedGame {
+                VideoRecordingView(
+                    gameId: game.game.gameId,
+                    teamId: game.team.teamId,
+                    savedRecording: $savedRecording
+                )
+            }
+        }
+        .fullScreenCover(isPresented: $navigateToAudioRecordingView) {
+            if let game = selectedGame {
+                AudioRecordingView(
+                    gameId: game.game.gameId,
+                    teamId: game.team.teamId,
+                    navigateToHome: $savedRecording,
+                    showNavigationUI: true
+                )
+            }
+        }
+        .onChange(of: savedRecording) {
+            // Video recording of game was saved and added to database
+            // Dismiss this view
+            dismiss()
+        }
+    }
+    
+    private func updateCanStartRecording(gameStartTime: Date?, gameDuration: Int?) {
+        if let duration = gameDuration, let startTime = gameStartTime {
+            // Check if game starts within the next 10 minutes or is ongoing
+            let currentTime = Date()
+            let timeDifference = startTime.timeIntervalSince(currentTime)
+            let gameEndTime = startTime.addingTimeInterval(TimeInterval(duration))
+            self.canStartRecording = (Int(timeDifference) <= minsToStartGame*60 && timeDifference >= 0) || (currentTime <= gameEndTime && currentTime >= startTime)
+            
+            print(canStartRecording)
         }
     }
     
@@ -533,6 +447,8 @@ struct SelectedScheduledGameView: View {
                         selectedGame.game.startTime = startTime
                     }
                     
+                    updateCanStartRecording(gameStartTime: gameStartTime, gameDuration: gameDuration)
+                    
                     if duration == selectedGame.game.duration {
                         gameDuration = nil
                     } else {
@@ -599,39 +515,7 @@ struct SelectedScheduledGameView: View {
             }
         }
     }
-    
-    /**
-     Function to start recording based on the selected game and recording type.
-     Ensures that a game is selected before proceeding and then creates a recording entry in the database.
-     */
-    private func startRecording() {
-        // Ensure there is a selected game before starting the recording
-        guard let selectedGame = selectedGame else {
-            print("ERROR: No selected game available")
-            return
-        }
         
-        // Extract game and team IDs from the selected game
-        let gameId = selectedGame.game.gameId
-        let teamId = selectedGame.team.teamId
-        
-        // Perform the recording operation asynchronously
-        Task {
-            do {
-                print("Starting \(selectedRecordingType) recording for Game ID: \(gameId), Team ID: \(teamId)")
-                // Assign the game ID to the recording view model
-                recordingViewModel.gameId = gameId
-                
-                // Attempt to create a recording entry in the database for the specified team
-                try await recordingViewModel.createFGRecording(teamId: teamId, gameId: gameId)
-                print("Recording successfully created in the database.")
-            } catch {
-                // Handle and log any errors that occur during recording creation
-                print("Error Creating Recording: \(error.localizedDescription)")
-            }
-        }
-    }
-    
     
     /// Returns the finalized location as a string, combining the title and subtitle of the location.
     ///
@@ -697,4 +581,166 @@ struct SelectedScheduledGameView: View {
     let game = HomeGameDTO(game: DBGame(gameId: "2oKD1iyUYXTFeWjelDz8", teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7"),
                            team: DBTeam(id: "6mpZlv7mGho5XaBN8Xcs", teamId: "E152008E-1833-4D1A-A7CF-4BB3229351B7", name: "Hornets", teamNickname: "HORNET", sport: "Soccer", gender: "Female", ageGrp: "U15", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"]))
     SelectedScheduledGameView(selectedGame: game)
+}
+
+
+
+struct EditScheduledGameView: View {
+    var onCancel: () -> Void
+    var onSave: () -> Void
+    var onDeleteGame: () -> Void
+    var selectedGame: HomeGameDTO
+    
+    @Binding var location: LocationResult?
+    @Binding var title: String
+    @Binding var startTime: Date
+    @Binding var hours: Int
+    @Binding var minutes: Int
+    @Binding var recordingReminder: Bool
+                    
+    @Binding var selectedTimeLabel: String
+    @Binding var feedbackBeforeTimeLabel: String
+    @Binding var feedbackAfterTimeLabel: String
+
+    @State private var confirmationDeleteGame: Bool = false
+
+    var body: some View {
+        coachEditScheduledGame
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel", action: onCancel)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Save", action: onSave)
+                }
+            }
+    }
+    
+    var coachEditScheduledGame: some View {
+        List {
+            Section(header: Text("Game Details")) {
+                
+                HStack {
+                    Text("Title")
+                    Spacer()
+                    TextField("Title", text: $title).multilineTextAlignment(.trailing)
+                }
+                
+                HStack {
+                    Text("Team Name")
+                    Spacer()
+                    Text(selectedGame.team.name).multilineTextAlignment(.trailing)
+                }
+                .foregroundStyle(.secondary)
+                .disabled(true)
+                
+                HStack {
+                    Text("Location")
+                    NavigationLink(destination: LocationView(location: $location), label: {
+                        HStack {
+                            Spacer()
+                            if let location = location {
+                                Text("\(location.title) \(location.subtitle)").multilineTextAlignment(.trailing)
+                            } else {
+                                Text("Enter location").foregroundStyle(.secondary)
+                            }
+                        }
+                    }).isDetailLink(true)
+                }
+            }
+            
+            // Section for scheduled time, including start time and duration
+            Section (header: Text("Scheduled Time")) {
+                HStack {
+                    DatePicker("Start", selection: $startTime, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                }
+                HStack {
+                    Text("Duration")
+                    Spacer()
+                    // Picker for selecting the number of hours for game duration
+                    Picker("", selection: $hours){
+                        ForEach(0..<13, id: \.self) { i in
+                            Text("\(i)").tag(i)
+                        }
+                    }.pickerStyle(.wheel).frame(width: 60, height: 100)
+                        .clipped()
+                    Text("hours").bold()
+                    
+                    // Picker for selecting the number of minutes for game duration
+                    Picker("", selection: $minutes){
+                        ForEach(0..<60, id: \.self) { i in
+                            Text("\(i)").tag(i)
+                        }
+                    }.pickerStyle(.wheel).frame(width: 60, height: 100)
+                    Text("min").bold()
+                }
+            }
+            
+            Section(header: Text("Feedback Settings")) {
+                // CustomPicker for selecting feedback before the event
+                CustomPicker(
+                    title: "Before Feedback",
+                    options: AppData.feedbackBeforeTimeOptions.map { $0.0 },
+                    displayText: { $0 },
+                    selectedOption: $feedbackBeforeTimeLabel
+                )
+                
+                // CustomPicker for selecting feedback after the event
+                CustomPicker(
+                    title: "After Feedback",
+                    options: AppData.feedbackAfterTimeOptions.map { $0.0 },
+                    displayText: { $0 },
+                    selectedOption: $feedbackAfterTimeLabel
+                )
+            }
+            
+            // Section for reminder settings
+            Section(footer:
+                        Text("Will send recording reminder at the scheduled time.")
+            ){
+                Toggle("Get Recording Reminder", isOn: $recordingReminder)
+                if (recordingReminder == true) {
+                    // CustomPicker for selecting reminder time before the event
+                    CustomPicker(
+                        title: "Reminder",
+                        options: AppData.timeOptions.map { $0.0 },
+                        displayText: { $0 },
+                        selectedOption: $selectedTimeLabel
+                    )
+                }
+            }
+            
+            Section {
+                Button(role: .destructive, action: {
+                    confirmationDeleteGame.toggle()
+                }) {
+                    Text("Delete scheduled game")
+                }
+            }
+            .confirmationDialog(
+                "Are you sure you want to delete this scheduled game?",
+                isPresented: $confirmationDeleteGame,
+                titleVisibility: .visible
+            ) {
+                //                    Button(role: .destructive, action: {
+//                                        Task {
+//                                            do {
+//                                                isEditing.toggle()
+//                                                try await gameModel.removeGame(gameId: selectedGame.game.gameId, teamDocId: selectedGame.team.id, teamId: selectedGame.team.teamId)
+//                                                dismiss()
+//                                            } catch {
+//                                                print(error.localizedDescription)
+//                                            }
+//                                        }
+                //                    }) {
+                //                        Text("Delete")
+                //                    }
+                Button(role: .destructive, action: onDeleteGame) {
+                    Text("Delete")
+                }
+                
+            }
+        }
+    }
+    
 }

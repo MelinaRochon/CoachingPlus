@@ -12,7 +12,7 @@ struct AudioRecordingContentView: View {
     @ObservedObject var gameModel: GameModel
     @Binding var isRecording: Bool
     @Binding var audios: [URL]
-    @Binding var gameStartTime: Date
+    @State var gameStartTime: Date
     var onRecordingStateChange: (Bool) -> Void
 
     var body: some View {

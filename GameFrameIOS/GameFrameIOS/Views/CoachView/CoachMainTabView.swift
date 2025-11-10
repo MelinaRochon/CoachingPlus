@@ -88,7 +88,7 @@ struct CoachMainTabView: View {
         }
         // Show CoachRecordingView when the plus button is clicked
         .fullScreenCover(isPresented: $showCoachRecordingConfig) {
-            CoachRecordingConfigView(coachId: coachId, showLandingPageView: $showLandingPageView)
+            CoachRecordingConfigView(showLandingPageView: $showLandingPageView)
         }.navigationBarBackButtonHidden(true) // Hides the back button
             .ignoresSafeArea(.keyboard, edges: .bottom) // tab stays at bottom
     }

@@ -24,8 +24,6 @@ struct CoachRecordingConfigView: View {
     
     // MARK: - State Properties
     
-    let coachId: String
-
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
 
@@ -102,10 +100,9 @@ struct CoachRecordingConfigView: View {
                     if let tid = selectedTeamId { // ✅ avoid force unwrap
                         NavigationLink(
                             destination: AudioRecordingView(
-                                coachId: coachId,
-                                showLandingPageView: $showLandingPageView,
                                 gameId: "",
                                 teamId: tid,
+                                navigateToHome: $savedRecording,
                                 showNavigationUI: true
                             )
                         ) {
@@ -122,10 +119,10 @@ struct CoachRecordingConfigView: View {
                         .disabled(true)
                     }
                 } else if (selectedRecordingTypeLabel == "Video") {
-                    if let tid = selectedTeamId { // ✅ avoid force unwrap
+                    if let tid = selectedTeamId {
                         NavigationLink(
                             destination: VideoRecordingView(
-                                coachId: coachId,
+                                gameId: "", // new game to be created
                                 teamId: tid,
                                 savedRecording: $savedRecording
                             )
@@ -201,5 +198,5 @@ struct CoachRecordingConfigView: View {
 }
 
 #Preview {
-    CoachRecordingConfigView(coachId: "preview-coach-id", showLandingPageView: .constant(false))
+    CoachRecordingConfigView(showLandingPageView: .constant(false))
 }

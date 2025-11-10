@@ -166,4 +166,12 @@ public final class LocalGameRepository: GameRepository {
         }
         games.remove(at: index)
     }
+    
+    public func updateGameStartTimeUsingTeamDocId(gameId: String, teamDocId: String, startTime: Date) async throws {
+        guard let index = games.firstIndex(where: { $0.gameId == gameId }) else {
+            throw GameError.gameNotFound
+        }
+        
+        games[index].startTime = startTime
+    }
 }

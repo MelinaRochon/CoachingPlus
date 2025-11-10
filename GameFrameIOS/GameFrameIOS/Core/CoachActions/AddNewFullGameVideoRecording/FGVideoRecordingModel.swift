@@ -154,6 +154,19 @@ final class FGVideoRecordingModel: ObservableObject {
                 path: path
             )
             
+            // Get game
+            guard let game = try await dependencies?.gameManager.getGame(gameId: gameId, teamId: teamId) else {
+                print("Unable to find game. Abort")
+                return
+            }
+                        
+            if let startTime = game.startTime {
+                // Get the duration of the game in seconds
+                let duration = endTime.timeIntervalSince(startTime)
+                let durationInSeconds = Int(duration)
+                try await dependencies?.gameManager.updateGameDurationUsingTeamDocId(gameId: gameId, teamDocId: team.id, duration: durationInSeconds)
+            }
+            
             // Safe to delete file now
             try FileManager.default.removeItem(at: localFile)
             print("🗑️ Deleted local file")
@@ -162,6 +175,20 @@ final class FGVideoRecordingModel: ObservableObject {
             print("Error in updateFGRecording: \(error.localizedDescription)")
             throw error
         }
+    }
+    
+    func updateGameStartTime(gameId: String, teamId: String, startTime: Date) async throws {
+        
+        guard let team = try await dependencies?.teamManager.getTeam(teamId: teamId) else {
+            print("Unable to find team. Abort")
+            return
+        }
+
+        try await dependencies?.gameManager.updateGameStartTimeUsingTeamDocId(
+            gameId: gameId,
+            teamDocId: team.id,
+            startTime: startTime
+        )
     }
     
     

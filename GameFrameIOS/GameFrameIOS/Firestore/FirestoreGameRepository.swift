@@ -182,4 +182,13 @@ public final class FirestoreGameRepository: GameRepository {
     public func deleteGame(gameId: String, teamDocId: String) async throws {
         try await gameDocument(teamDocId: teamDocId, gameId: gameId).delete()
     }
+    
+    
+    public func updateGameStartTimeUsingTeamDocId(gameId: String, teamDocId: String, startTime: Date) async throws {
+        let data: [String:Any] = [
+            DBGame.CodingKeys.startTime.rawValue: startTime
+        ]
+        // Update the scheduled game document
+        try await gameDocument(teamDocId: teamDocId, gameId: gameId).updateData(data as [AnyHashable : Any])
+    }
 }
