@@ -411,11 +411,6 @@ struct CoachSpecificKeyMomentView: View {
                 let playerItem = try await createCombinedPlayerItem(videoURL: videoUrl, audioURL: audioDownloadUrl)
                 self.player = AVPlayer(playerItem: playerItem)
             }
-//            let feedback = specificKeyMoment.feedbackFor ?? []
-//            
-//            // Load feedback list
-//            let fbFor: [String] = feedback.map { $0.playerId }
-//            feedbackFor = try await transcriptModel.getFeebackFor(feedbackFor: fbFor)
         } catch {
             print("❌ Error loading key moment: \(error)")
         }
@@ -462,6 +457,7 @@ struct CoachSpecificKeyMomentView: View {
                 of: videoTrack,
                 at: .zero
             )
+            videoCompositionTrack?.preferredTransform = try await videoTrack.load(.preferredTransform)
         }
         
         // Calculate when the audio should begin *within* the new video range
@@ -474,7 +470,6 @@ struct CoachSpecificKeyMomentView: View {
             let audioCompositionTrack = mixComposition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
             try audioCompositionTrack?.insertTimeRange(
                 CMTimeRange(start: .zero, duration: durationAudio),
-//                CMTimeRange(start: .zero, duration: audioAsset.duration),
                 of: audioTrack,
                 at: CMTime(seconds: audioOffset, preferredTimescale: 600)
             )

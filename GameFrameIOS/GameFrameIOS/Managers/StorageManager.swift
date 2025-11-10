@@ -174,4 +174,27 @@ final class StorageManager {
             }
         }
     }
+    
+    func uploadVideoFile(localFile: URL, path: String) async throws -> URL {
+        return try await withCheckedThrowingContinuation { continuation in
+            let storageRef = storage.child(path)
+            storageRef.putFile(from: localFile) { metadata, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                storageRef.downloadURL { url, error in
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                        return
+                    }
+                    guard let url else {
+                        continuation.resume(throwing: URLError(.badURL))
+                        return
+                    }
+                    continuation.resume(returning: url)
+                }
+            }
+        }
+    }
 }

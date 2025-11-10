@@ -54,6 +54,8 @@ struct CoachRecordingConfigView: View {
     /// This variable holds the list of teams the user is coaching. It's optional because it can be nil when no teams are fetched or assigned to the user.
     @State private var teamsCoaching: [DBTeam]?
     
+    /// To dismiss the view when a game is done saving
+    @State private var savedRecording: Bool = false
     
     // MARK: - View
 
@@ -102,7 +104,9 @@ struct CoachRecordingConfigView: View {
                             destination: AudioRecordingView(
                                 coachId: coachId,
                                 showLandingPageView: $showLandingPageView,
-                                teamId: tid
+                                gameId: "",
+                                teamId: tid,
+                                showNavigationUI: true
                             )
                         ) {
                             // Custom Styled 'Start Audio Recording' button
@@ -123,7 +127,7 @@ struct CoachRecordingConfigView: View {
                             destination: VideoRecordingView(
                                 coachId: coachId,
                                 teamId: tid,
-                                showLandingPageView: $showLandingPageView
+                                savedRecording: $savedRecording
                             )
                         ) {
                             CustomUIFields.styledHStack(content: {
@@ -160,6 +164,11 @@ struct CoachRecordingConfigView: View {
             .onAppear {
                 loadTeams()
                 teamModel.setDependencies(dependencies)
+            }
+            .onChange(of: savedRecording) {
+                // Video recording of game was saved and added to database
+                // Dismiss this view
+                dismiss()
             }
         }
     }

@@ -41,10 +41,10 @@ struct CoachFullGameTranscriptView: View {
                     let localAudioURL = FileManager.default
                         .urls(for: .documentDirectory, in: .userDomainMask)[0]
                         .appendingPathComponent("downloaded_video.mov")
-                    let ratio = videoAspectRatio(for: localAudioURL)
+
                     VideoPlayerView(url: localAudioURL)
-                        .aspectRatio(ratio, contentMode: .fit)
-                                .frame(maxWidth: .infinity)
+                        .aspectRatio(16/9, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
                         .onAppear {
                             AVAudioSession.sharedInstance().setPlaybackCategory()
                         }

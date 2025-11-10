@@ -113,7 +113,7 @@ final class FGVideoRecordingModel: ObservableObject {
             return fgRecordingId
         } catch {
             // Handle any errors that occur during the process.
-            print("Failed to create team: \(error.localizedDescription)")
+            print("Failed to create full game video recording: \(error.localizedDescription)")
             return nil
         }
     }
@@ -138,27 +138,29 @@ final class FGVideoRecordingModel: ObservableObject {
         do {
             let path = "full_game/\(teamId)/\(gameId).mov"
             
-            // Upload video to storage
-            StorageManager.shared.uploadVideoFile(localFile: localFile, path: path) { result in
-                switch result {
-                case .success(let downloadURL):
-                    print("Video uploaded! URL: \(downloadURL)")
-                    // Store this in Firestore
-                case .failure(let error):
-                    print("Error uploading audio: \(error.localizedDescription)")
-                }
-            }
+            // Wait for upload to complete
+            let downloadURL = try await StorageManager.shared.uploadVideoFile(localFile: localFile, path: path)
+            print("Video uploaded! URL: \(downloadURL)")
             
             guard let team = try await dependencies?.teamManager.getTeam(teamId: teamId) else {
                 print("Unable to find team. Abort")
                 return
             }
             
-            // Update full game document
-            try await dependencies?.fullGameRecordingManager.updateFullGameVideoRecording(fullGameId: fgRecordingId, teamDocId: team.id, endTime: endTime, path: path)
+            try await dependencies?.fullGameRecordingManager.updateFullGameVideoRecording(
+                fullGameId: fgRecordingId,
+                teamDocId: team.id,
+                endTime: endTime,
+                path: path
+            )
+            
+            // Safe to delete file now
+            try FileManager.default.removeItem(at: localFile)
+            print("🗑️ Deleted local file")
+            
         } catch {
-            print(error.localizedDescription)
-            return
+            print("Error in updateFGRecording: \(error.localizedDescription)")
+            throw error
         }
     }
     

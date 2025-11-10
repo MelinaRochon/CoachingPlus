@@ -34,24 +34,28 @@ struct RecordingButtonView: View {
 
     var body: some View {
         VStack(alignment: .center) {
-            
             ZStack {
                 // Outer Circle (Button Background)
-                Circle()
-                    .fill(Color.black.opacity(0.6))
-                    .frame(width: 75, height: 75)
                 ZStack {
                     // Inner Recording Shape (Morphing Circle/Square)
                     Circle()
-                        .fill(.white)
+                        .fill(Color.clear)
+                        .frame(width: 75, height: 75)
+                        .overlay(
+                            Circle().stroke(Color.black.opacity(0.8), lineWidth: 2)
+                        )
+                    Circle()
+                        .fill(Color.clear)
                         .frame(width: 70, height: 70)
+                        .overlay(
+                            Circle().stroke(Color.white, lineWidth: 2)
+                        )
                     ZStack {
                         RoundedRectangle(cornerRadius: isRecording ? 10 : 50)
                             .matchedGeometryEffect(id: "recordShape", in: animation)
                             .frame(width: isRecording ? 30 : 60, height: isRecording ? 30 : 60)
                             .foregroundColor(.red)
                     }
-                    .animation(.spring(response: 0.5, dampingFraction: 0.6), value: isRecording)
                 }
             }
             .scaleEffect(isRecording ? 1.1 : 1.0) // Pulsing effect

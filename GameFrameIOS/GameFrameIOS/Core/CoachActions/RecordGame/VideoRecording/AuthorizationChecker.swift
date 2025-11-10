@@ -8,171 +8,306 @@
 import SwiftUI
 import UIKit
 import AVFoundation
-
-struct VideoPickerView: UIViewControllerRepresentable {
-    @Environment(\.presentationMode) var presentationMode
-    @Binding var videoURL: URL?
-
-    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        let parent: VideoPickerView
-
-        init(_ parent: VideoPickerView) {
-            self.parent = parent
-        }
-
-        func imagePickerController(
-            _ picker: UIImagePickerController,
-            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
-        ) {
-            if let url = info[.mediaURL] as? URL {
-                parent.videoURL = url
-            }
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.mediaTypes = ["public.movie"]   // 🎥 video
-        picker.sourceType = .camera
-        picker.cameraCaptureMode = .video
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-}
+import AVKit
 
 struct VideoRecordingView: View {
     
-    let coachId: String
-
-    @State private var showingCamera = false
+    /// Url to the full game video recording
     @State private var videoURL: URL?
     
-    // Unique identifiers for the game and team
+    /// Unique identifiers for the coach, game, team and full game video
+    let coachId: String
     @State private var gameId: String = ""
     @State var teamId: String = ""
-    
     @State private var fullGameId: String?
-
-    @Binding var showLandingPageView: Bool
-    @State private var recordingIsDone: Bool = false
 
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
+    @StateObject private var camera = CameraViewModel()
     @EnvironmentObject private var dependencies: DependencyContainer
+
+    @State private var pulse = false
+    
+    /// Audio session
+    @State var session : AVAudioSession!
+    
+    /// Alerts for camera and audio access required
+    @State private var audioPermissionAlert: Bool = false
+    @State private var cameraPermissionAlert: Bool = false
+    
+    /// If the game is being recorded or not
+    @State private var isRecording: Bool = false
+    @State private var isSessionRunning = false
+
+    /// Handles if the camera is covering entire screen or not
+    @State private var isCameraExpanded = false
+    
+    /// Navigation state for transitioning back to the main page
+    @Binding var savedRecording: Bool
+    @State private var savingIsOn = false
+    
+    /// Allows dismissing the view to return to the previous screen
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
         NavigationView {
-            VStack {
-                
-                // TODO: Add key moments & integrate watch component here
-                if let url = videoURL {
-                    VideoPlayerView(url: url)   // 🔽 Custom player
-                        .frame(height: 300)
-                }
-                                
-                Button("Record Video") {
-                    showingCamera = true
-                }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-
-                NavigationLink(destination: CoachMainTabView(showLandingPageView: $showLandingPageView, coachId: coachId), isActive: $recordingIsDone) { EmptyView() }
-                
-            }.sheet(isPresented: $showingCamera) {
-                VideoPickerView(videoURL: $videoURL)
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        saveVideoRecording()
-                    } label: {
-                        Text("End Recording")
+            ZStack {
+                if !isSessionRunning || savingIsOn {
+                    Color.black.opacity(0.8)
+                        .ignoresSafeArea() // fills the entire screen, behind nav bar
+                    
+                    if savingIsOn {
+                        // Saving the game. Show progress view
+                        ProgressView("Saving game...")
+                            .foregroundStyle(.white)
+                    }
+                } else {
+                    GeometryReader { geo in
+                        let isLandscape = geo.size.width > geo.size.height
+                        
+                        // Need to record game in portrait mode
+                        if isLandscape {
+                            Color.black.opacity(0.8)
+                                .ignoresSafeArea()
+                                .overlay(
+                                    VStack(spacing: 20) {
+                                        Image(systemName: "rectangle.landscape.rotate")
+                                            .font(.system(size: 80))
+                                            .foregroundColor(.white)
+                                            .symbolEffect(.bounce, options: .repeat(2)) // fun little animation (iOS 17+)
+                                        Text("Please rotate your device")
+                                            .font(.title2)
+                                            .bold()
+                                            .foregroundColor(.white)
+                                        Text("Portrait mode is required to continue")
+                                            .foregroundColor(.gray)
+                                            .font(.subheadline)
+                                    }
+                                        .multilineTextAlignment(.center)
+                                        .padding()
+                                )
+                                .transition(.opacity)
+                                .animation(.easeInOut, value: isLandscape)
+                        }
+                        
+                        VStack(spacing: 0) {
+                            feedbackView
+                                .frame(maxWidth: geo.size.width)
+                                .frame(height: isRecording ? (isCameraExpanded ? 0 : geo.size.height * 0.8) : 0)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                                .animation(.easeInOut(duration: 0.4), value: isRecording)
+                            cameraView
+                                .frame(maxWidth: geo.size.width)
+                                .frame(height: isRecording ? (isCameraExpanded ? geo.size.height : geo.size.height * 0.2) : geo.size.height)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                                .animation(.easeInOut(duration: 0.4), value: isRecording)
+                                .onTapGesture {
+                                    withAnimation(.easeInOut(duration: 0.4)) {
+                                        isCameraExpanded.toggle()
+                                    }
+                                }
+                                .ignoresSafeArea()
+                        }
+                        .opacity(!isLandscape ? 1 : 0)
                     }
                 }
             }
             .task {
                 // Create a full game recording
-                do {
-                    // Load all recordings that are already there, if there are some
-                    // Start by creating a new game
-                    let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) // gameDocId
-                    self.gameId = gameDocId ?? ""
-
-                    let fgRecordingId = try await fgVideoRecordingModel.createFGRecording(teamId: teamId, gameId: gameDocId!)
-                    if let fgRecordingId = fgRecordingId {
+                if !cameraPermissionAlert && !audioPermissionAlert {
+                    do {
+                        // Load all recordings that are already there, if there are some
+                        // Start by creating a new game
+                        guard let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId) else {
+                            print("Could not create an unknown game")
+                            // TODO: Manage this throw error
+                            return
+                        }
+                        self.gameId = gameDocId
+                        
+                        guard let fgRecordingId = try await fgVideoRecordingModel.createFGRecording(teamId: teamId, gameId: gameDocId) else {
+                            // TODO: Do an error here if does not work
+                            print("error. Could not get the recording id")
+                            return
+                        }
+                        
                         self.fullGameId = fgRecordingId
-                    } else {
-                        // TODO: Do an error here if does not work
-                        print("error. Could not get the recording id")
+                    } catch {
+                        print("error")
                     }
-                } catch {
-                    print("error")
                 }
             }
-            .onAppear {
+        }
+        .onAppear {
+            
+            // Check for the camera permission, otherwise show alert
+            checkCameraPermission { granted in
+                self.cameraPermissionAlert = !granted
+            }
+            
+            // Check for the microphone permission, otherwise show alert
+            requestMicrophonePermission { micGranted in
+                self.audioPermissionAlert = !micGranted
+            }
+            
+            // Configure the session if both permissions were granted
+            if !cameraPermissionAlert && !audioPermissionAlert {
+                camera.configure()
+                DispatchQueue.global().async {
+                    while !camera.session.isRunning {
+                        usleep(10000) // 0.01 sec
+                    }
+                    DispatchQueue.main.async {
+                        isSessionRunning = true
+                    }
+                }
                 fgVideoRecordingModel.setDependencies(dependencies)
                 audioRecordingModel.setDependencies(dependencies)
             }
-        }.navigationBarBackButtonHidden(true)
+        }
+        .onDisappear {
+            camera.stopSession()
+        }
+        .alert("Camera access is required", isPresented: $cameraPermissionAlert) {
+            Button(role: .cancel) {
+                // Open the settings
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            } label: {
+                Text("Open Settings")
+            }
+        } message: {
+            Text("To record video, please allow camera access in your device settings.")
+        }
+        .alert("Microphone access is required", isPresented: $audioPermissionAlert) {
+            Button(role: .cancel) {
+                // Open the settings
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            } label: {
+                Text("Open Settings")
+            }
+        } message: {
+            Text("To do an audio recording of a feedback, please allow microphone access in your device settings.")
+        }
+        .navigationBarBackButtonHidden(true)
     }
     
-    private func saveVideoRecording() {
+    // MARK: - Subviews
+
+    private var feedbackView: some View {
+        VStack {
+            if !gameId.isEmpty {
+                // Show the audio transcript view
+                AudioRecordingView(
+                    coachId: coachId,
+                    showLandingPageView: .constant(false),
+                    gameId: gameId,
+                    teamId: teamId,
+                    showNavigationUI: false
+                )
+                .padding(.top, 10)
+                .padding(.bottom, 10)
+            }
+        }
+        .background(Color.white)
+    }
+
+    
+    private var cameraView: some View {
+        ZStack {
+            // Camera to record game
+            CameraPreview(session: camera.session)
+                .onAppear {
+                    camera.onRecordingFinished = { url in
+                        saveVideoRecording(videoURL: url)
+                    }
+                }
+            
+            VStack {
+                if camera.isRecording {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 12, height: 12)
+                            .scaleEffect(pulse ? 1.3 : 1.0)
+                            .shadow(color: .red.opacity(0.7), radius: pulse ? 6 : 2)
+                            .onAppear {
+                                withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                                    pulse = true
+                                }
+                            }
+                        
+                        Text("REC")
+                            .font(.headline)
+                            .foregroundColor(.red)
+                            .bold()
+                    }
+                    .padding(8)
+                    .background(Color.black.opacity(0.6))
+                    .cornerRadius(12)
+                    .padding(.top, isCameraExpanded ? 56 : 16)
+                    .onDisappear {
+                        pulse = false // 🔴 Stop pulsing when the indicator disappears
+                    }
+                }
+                Spacer()
+            }
+            
+            Spacer()
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    VideoRecordingButtonView()
+                    { isRecording in
+                        handleRecordingStateChange(camera.isRecording)
+                    }
+                    Spacer()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    func handleRecordingStateChange(_ isRecording: Bool) {        
+        withAnimation(.easeInOut(duration: 0.4)) {
+            isCameraExpanded = false // Reset camera view to normal
+        }
+        
+        if isRecording {
+            self.isRecording = false
+        } else {
+            self.isRecording = true
+        }
+        camera.toggleRecording()
+    }
+    
+    private func saveVideoRecording(videoURL: URL) {
         Task {
             do {
-                // Update full game recording details
-                // Update the link
-                print("videoURL: \(videoURL ?? URL(string: "")!)")
+                savingIsOn.toggle()
                 
                 // Save link to storage database
-                if let videoURL = videoURL, let fullGameId = fullGameId {
-                    try await fgVideoRecordingModel.updateFGRecording(endTime: Date(), fgRecordingId: fullGameId, gameId: gameId, teamId: teamId, localFile: videoURL)
+                if let fullGameId = fullGameId {
+                    try await fgVideoRecordingModel.updateFGRecording(
+                        endTime: Date(),
+                        fgRecordingId: fullGameId,
+                        gameId: gameId,
+                        teamId: teamId,
+                        localFile: videoURL
+                    )
                 }
                 
                 // Go back to main page
-                recordingIsDone.toggle()
+                dismiss()
+                savedRecording = true
             } catch {
                 print("error", error.localizedDescription)
             }
         }
-    }
-}
-
-// Simple SwiftUI video player
-import AVKit
-
-struct VideoPlayerView: View {
-    let url: URL
-
-    var body: some View {
-        FullscreenVideoPlayer(player: AVPlayer(url: url))
-    }
-}
-
-
-struct FullscreenVideoPlayer: UIViewControllerRepresentable {
-    let player: AVPlayer
-
-    func makeUIViewController(context: Context) -> AVPlayerViewController {
-        let controller = AVPlayerViewController()
-        controller.player = player
-        controller.showsPlaybackControls = true
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        uiViewController.player = player
     }
 }
