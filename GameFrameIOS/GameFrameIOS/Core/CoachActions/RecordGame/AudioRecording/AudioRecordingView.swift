@@ -237,7 +237,7 @@ struct AudioRecordingView: View {
                             tmpFeedback.append(feedbackFor.firstName)
                             if let nick = feedbackFor.nickname { tmpFeedback.append(nick) }
 
-                            transcript = normalizeTranscript(transcript, roster: tmpFeedback)
+//                            transcript = normalizeTranscript(transcript, roster: tmpFeedback)
                         }
                                                 
                         // Cut the transcript to see if the name of the player is in the transcript

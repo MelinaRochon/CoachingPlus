@@ -202,7 +202,7 @@ struct VideoRecordingView: View {
 
     private var feedbackView: some View {
         VStack {
-            if !gameId.isEmpty {
+            if !gameId.isEmpty && gameStartTime != nil {
                 // Show the audio transcript view
                 AudioRecordingView(
                     gameId: gameId,
