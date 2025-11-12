@@ -103,6 +103,7 @@ struct CoachRecordingConfigView: View {
                                 gameId: "",
                                 teamId: tid,
                                 navigateToHome: $savedRecording,
+                                isUsingWatch: selectedAppleWatchUseLabel,
                                 showNavigationUI: true
                             )
                         ) {
@@ -124,7 +125,8 @@ struct CoachRecordingConfigView: View {
                             destination: VideoRecordingView(
                                 gameId: "", // new game to be created
                                 teamId: tid,
-                                savedRecording: $savedRecording
+                                savedRecording: $savedRecording,
+                                isUsingWatch: selectedAppleWatchUseLabel
                             )
                         ) {
                             CustomUIFields.styledHStack(content: {

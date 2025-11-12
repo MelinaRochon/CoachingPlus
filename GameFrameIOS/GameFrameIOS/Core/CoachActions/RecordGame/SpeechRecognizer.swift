@@ -257,3 +257,32 @@ extension AVAudioSession {
         }
     }
 }
+
+
+import Speech
+
+class SpeechTranscriber {
+    static let shared = SpeechTranscriber()
+
+    func transcribeAudio(at url: URL, completion: @escaping (String?) -> Void) {
+        SFSpeechRecognizer.requestAuthorization { status in
+            guard status == .authorized else {
+                print("Speech recognition not authorized")
+                completion(nil)
+                return
+            }
+            
+            let recognizer = SFSpeechRecognizer()
+            let request = SFSpeechURLRecognitionRequest(url: url)
+            
+            recognizer?.recognitionTask(with: request) { result, error in
+                if let result = result, result.isFinal {
+                    completion(result.bestTranscription.formattedString)
+                } else if let error = error {
+                    print("Transcription error: \(error)")
+                    completion(nil)
+                }
+            }
+        }
+    }
+}

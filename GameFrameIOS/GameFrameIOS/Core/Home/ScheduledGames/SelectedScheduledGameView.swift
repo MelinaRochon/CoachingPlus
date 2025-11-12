@@ -317,7 +317,8 @@ struct SelectedScheduledGameView: View {
                 VideoRecordingView(
                     gameId: game.game.gameId,
                     teamId: game.team.teamId,
-                    savedRecording: $savedRecording
+                    savedRecording: $savedRecording,
+                    isUsingWatch: false // TODO: Add a toggle when adding a scheduled game to use watch
                 )
             }
         }
@@ -327,6 +328,7 @@ struct SelectedScheduledGameView: View {
                     gameId: game.game.gameId,
                     teamId: game.team.teamId,
                     navigateToHome: $savedRecording,
+                    isUsingWatch: false, // TODO: Add a toggle when adding a scheduled game to use watch
                     showNavigationUI: true
                 )
             }

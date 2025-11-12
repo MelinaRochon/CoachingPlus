@@ -9,7 +9,13 @@ import Foundation
 import GameFrameIOSShared
  
 /// Represents a transcript associated with a key moment in a game.
-struct keyMomentTranscript {
+struct keyMomentTranscript: Identifiable, Equatable {
+    static func == (lhs: keyMomentTranscript, rhs: keyMomentTranscript) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.transcript == rhs.transcript &&
+        lhs.frameStart == rhs.frameStart
+    }
+    
     let id: Int
     let keyMomentId: String // referenced key moment
     let transcriptId: String // referenced key moment

@@ -9,6 +9,32 @@ import Foundation
 import Combine
 import GameFrameIOSShared
 
+public class GameSessionContext {
+    var gameId: String
+    var teamId: String
+    var gameStartTime: Date
+    var players: [PlayerTranscriptInfo]?
+    var uploadedBy: String
+    
+    init(gameId: String, teamId: String, gameStartTime: Date, players: [PlayerTranscriptInfo]?, uploadedBy: String) {
+        self.gameId = gameId
+        self.teamId = teamId
+        self.gameStartTime = gameStartTime
+        self.players = players
+        self.uploadedBy = uploadedBy
+    }
+}
+
+public class GameRecordingsContext: ObservableObject {
+    @Published var recordings: [keyMomentTranscript]
+//    @Published var audios: [URL]
+    
+    init() {
+        self.recordings = []
+//        self.audios = []
+    }
+}
+
 public final class DependencyContainer: ObservableObject {
     @Published public var authenticationManager: AuthenticationManager
     public let userManager: UserManager
@@ -24,6 +50,8 @@ public final class DependencyContainer: ObservableObject {
     public let transcriptManager: TranscriptManager
     public let teamMembershipManager: TeamMembershipPlanManager
     public let commentManager: CommentManager
+    public var currentGameContext: GameSessionContext?
+    @Published public var currentGameRecordingsContext: GameRecordingsContext?
     
     public init(useLocalRepositories: Bool) {
         if useLocalRepositories {

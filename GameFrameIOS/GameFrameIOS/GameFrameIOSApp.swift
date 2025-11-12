@@ -13,6 +13,9 @@ import FirebaseCore
 struct GameFrameIOSApp: App {
     @StateObject private var dependencies: DependencyContainer
 
+    // Hold onto the connectivity provider
+    @StateObject private var watchConnectivityProvider: iPhoneConnectivityProvider
+    
     init(){
         UINavigationBar.appearance().tintColor = .red // ← this affects buttons
         
@@ -29,8 +32,14 @@ struct GameFrameIOSApp: App {
         } else {
             print("⚠️ Skipping Firebase configuration for UI testing.")
         }
-
-        _dependencies = StateObject(wrappedValue: DependencyContainer(useLocalRepositories: useLocalRepositories))
+        
+        let deps = DependencyContainer(useLocalRepositories: useLocalRepositories)
+        _dependencies = StateObject(wrappedValue: deps)
+        
+        // Initialize WatchConnectivity provider here
+        _watchConnectivityProvider = StateObject(
+            wrappedValue: iPhoneConnectivityProvider(dependencies: deps)
+        )
     }
     
     var sharedModelContainer: ModelContainer = {
@@ -50,6 +59,7 @@ struct GameFrameIOSApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(dependencies)
+                .environmentObject(watchConnectivityProvider) // optional if you need to interact with it in views
         }
         .modelContainer(sharedModelContainer)
     }

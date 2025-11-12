@@ -13,6 +13,8 @@ struct AudioRecordingContentView: View {
     @Binding var isRecording: Bool
     @Binding var audios: [URL]
     @State var gameStartTime: Date
+    @State var usingWatch: Bool
+    
     var onRecordingStateChange: (Bool) -> Void
 
     var body: some View {
@@ -38,14 +40,17 @@ struct AudioRecordingContentView: View {
             }
             
             Spacer()
-            Divider()
             
-            VStack {
-                Spacer().frame(height: 20)
-                RecordingButtonView { isRecording in
-                    onRecordingStateChange(isRecording)
+            if !usingWatch {
+                Divider()
+                
+                VStack {
+                    Spacer().frame(height: 20)
+                    RecordingButtonView { isRecording in
+                        onRecordingStateChange(isRecording)
+                    }
+                    Spacer().frame(height: 5)
                 }
-                Spacer().frame(height: 5)
             }
         }
     }

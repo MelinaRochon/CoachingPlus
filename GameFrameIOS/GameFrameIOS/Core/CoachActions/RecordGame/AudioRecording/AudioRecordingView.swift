@@ -11,6 +11,7 @@ import AVFoundation
 import TranscriptionKit
 import AVKit
 import FirebaseStorage
+import Combine
 
 /***
  This view is responsible for handling audio recording during a game session. It starts and stops audio recordings, manages transcriptions, and adds the resulting transcripts as key moments to the database.
@@ -32,6 +33,7 @@ struct AudioRecordingView: View {
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var gameModel = GameModel()
     @EnvironmentObject private var dependencies: DependencyContainer
+    @EnvironmentObject private var connectivity: iPhoneConnectivityProvider
 
     // The start time of the recording
     @State private var recordingStartTime: Date?
@@ -64,6 +66,10 @@ struct AudioRecordingView: View {
     
     @State private var gameStartTime: Date?
     @State private var savingIsOn = false
+    
+    @State var isUsingWatch: Bool
+
+//    @State private var cancellable: AnyCancellable?
 
     // MARK: - Body
     /// Allows dismissing the view to return to the previous screen
@@ -106,7 +112,19 @@ struct AudioRecordingView: View {
                                             
                                             try await audioRecordingModel.endAudioRecordingGame(teamId: teamId, gameId: gameId)
                                             // Go back to the main page
+                                            
+                                            // TODO: Need to put back when try with physical watch
+                                            #if !targetEnvironment(simulator)
                                             removeAllTempAudioFiles(count: self.audios.count)
+                                            #endif
+                                            
+                                            if isUsingWatch {
+                                                // End the game on the watch
+                                                connectivity.notifyWatchGameEnded()
+                                                
+                                                // Remove all recordings inside the GameRecordingsContext
+                                                dependencies.currentGameRecordingsContext = nil
+                                            }
                                             
                                             dismiss()
                                             navigateToHome = true
@@ -131,6 +149,9 @@ struct AudioRecordingView: View {
         .task {
             if !alert {
                 do {
+                    self.gameId = "06hUjGGT6hOdhy3gCRVx"
+                    self.teamId = "7B47AC81-D2C8-4BA7-8B13-3741ED4E6C2C"
+
                     if self.gameId.isEmpty {
                         // Create a new game
                         let gameDocId = try await audioRecordingModel.addUnknownGame(teamId: teamId)
@@ -139,15 +160,6 @@ struct AudioRecordingView: View {
                     
                     // Load the players of the team for the transcription
                     try await audioRecordingModel.loadPlayersForTranscription(teamId: teamId)
-                    
-                    if let players = audioRecordingModel.players {
-                        let playerNames = players.compactMap { player in
-                            [player.firstName, player.nickname].compactMap { $0 }
-                        }.flatMap { $0 } // flatten
-                        
-                        await speechRecognizer.updateContextualStrings(playerNames)
-                        print("Loaded player names into speech recognizer: \(playerNames)")
-                    }
                     
                     // Get the game
                     let game = try await gameModel.getGame(teamId: teamId, gameId: gameId)
@@ -164,10 +176,35 @@ struct AudioRecordingView: View {
                     } else {
                         self.gameStartTime = game?.startTime ?? Date()
                     }
-                    
-                    // Initialising the audio recorder
-                    self.session = AVAudioSession.sharedInstance()
-                    try self.session.setCategory(.playAndRecord, mode: .default)
+
+                    if isUsingWatch {
+                        // Set the game session context in case watchOS is used to record audio feedback
+                        let authUser = try dependencies.authenticationManager.getAuthenticatedUser()
+                        dependencies.currentGameContext = GameSessionContext(
+                            gameId: gameId,
+                            teamId: teamId,
+                            gameStartTime: self.gameStartTime ?? Date(),
+                            players: audioRecordingModel.players,
+                            uploadedBy: authUser.uid
+                        )
+                        
+                        // Notify the game has started
+                        connectivity.notifyWatchGameStarted(gameId: gameId)
+                    } else {
+                        
+                        if let players = audioRecordingModel.players {
+                            let playerNames = players.compactMap { player in
+                                [player.firstName, player.nickname].compactMap { $0 }
+                            }.flatMap { $0 } // flatten
+                            
+                            await speechRecognizer.updateContextualStrings(playerNames)
+                            print("Loaded player names into speech recognizer: \(playerNames)")
+                        }
+                        
+                        // Initialising the audio recorder
+                        self.session = AVAudioSession.sharedInstance()
+                        try self.session.setCategory(.playAndRecord, mode: .default)
+                    }
                 
                 } catch {
                     print("Error when loading the audio recording transcripts. Error: \(error)")
@@ -183,6 +220,15 @@ struct AudioRecordingView: View {
             gameModel.setDependencies(dependencies)
             audioRecordingModel.setDependencies(dependencies)
         }
+        .onReceive(recordingsPublisher) { newRecordings in
+            DispatchQueue.main.async {
+                if audioRecordingModel.recordings != newRecordings {
+                    print("🎧 Updated recordings: \(newRecordings.count)")
+                    
+                    audioRecordingModel.recordings = newRecordings
+                }
+            }
+        }
     }
 
     private var content: some View {
@@ -193,13 +239,19 @@ struct AudioRecordingView: View {
                     gameModel: gameModel,
                     isRecording: $isRecording,
                     audios: $audios,
-                    gameStartTime: startTime
+                    gameStartTime: startTime,
+                    usingWatch: isUsingWatch
                 ) { isRecording in
                     handleRecordingStateChange(isRecording)
                 }
             }
         }
     }
+    
+    private var recordingsPublisher: AnyPublisher<[keyMomentTranscript], Never> {
+        dependencies.currentGameRecordingsContext?.$recordings.eraseToAnyPublisher() ?? Just<[keyMomentTranscript]>([]).eraseToAnyPublisher()
+    }
+
     
     // MARK: - Helper Functions
         
@@ -352,48 +404,6 @@ struct AudioRecordingView: View {
     }
     
     
-    private func levenshtein(_ s: String, _ t: String) -> Int {
-        let s = Array(s)
-        let t = Array(t)
-        if s.isEmpty { return t.count }
-        if t.isEmpty { return s.count }
-        var v0 = Array(0...t.count)
-        var v1 = [Int](repeating: 0, count: t.count + 1)
-        for i in 0..<s.count {
-            v1[0] = i + 1
-            for j in 0..<t.count {
-                let cost = s[i] == t[j] ? 0 : 1
-                v1[j+1] = Swift.min(
-                    v1[j] + 1,          // insertion
-                    v0[j+1] + 1,        // deletion
-                    v0[j] + cost        // substitution
-                )
-            }
-            v0 = v1
-        }
-        return v1[t.count]
-    }
-
-    private func similarity(_ a: String, _ b: String) -> Double {
-        let a = a.normalizedForMatching()
-        let b = b.normalizedForMatching()
-        if a.isEmpty && b.isEmpty { return 1.0 }
-        let dist = Double(levenshtein(a, b))
-        let maxLen = Double(max(a.count, b.count))
-        return 1.0 - (dist / maxLen) // between 0.0 and 1.0
-    }
-
-    private func ngrams(from words: [String], maxN: Int = 3) -> [String] {
-        var result: [String] = []
-        for n in 1...maxN {
-            if words.count < n { break }
-            for i in 0...(words.count - n) {
-                result.append(words[i..<(i+n)].joined(separator: " "))
-            }
-        }
-        return result
-    }
-
     // replacement getPlayerAssociatedToTranscript
     private func getPlayerAssociatedToTranscript(transcript: String) async throws -> PlayerTranscriptInfo? {
         guard let players = audioRecordingModel.players else { return nil }
@@ -494,7 +504,7 @@ extension String {
 
 
 #Preview {
-    AudioRecordingView(gameId: "", teamId: "", navigateToHome: .constant(false), showNavigationUI: true)
+    AudioRecordingView(gameId: "", teamId: "", navigateToHome: .constant(false), isUsingWatch: false, showNavigationUI: true)
 }
 
 
@@ -570,4 +580,46 @@ private struct PlayersNameView: View {
             }
         }
     }
+}
+
+public func levenshtein(_ s: String, _ t: String) -> Int {
+    let s = Array(s)
+    let t = Array(t)
+    if s.isEmpty { return t.count }
+    if t.isEmpty { return s.count }
+    var v0 = Array(0...t.count)
+    var v1 = [Int](repeating: 0, count: t.count + 1)
+    for i in 0..<s.count {
+        v1[0] = i + 1
+        for j in 0..<t.count {
+            let cost = s[i] == t[j] ? 0 : 1
+            v1[j+1] = Swift.min(
+                v1[j] + 1,          // insertion
+                v0[j+1] + 1,        // deletion
+                v0[j] + cost        // substitution
+            )
+        }
+        v0 = v1
+    }
+    return v1[t.count]
+}
+
+public func similarity(_ a: String, _ b: String) -> Double {
+    let a = a.normalizedForMatching()
+    let b = b.normalizedForMatching()
+    if a.isEmpty && b.isEmpty { return 1.0 }
+    let dist = Double(levenshtein(a, b))
+    let maxLen = Double(max(a.count, b.count))
+    return 1.0 - (dist / maxLen) // between 0.0 and 1.0
+}
+
+public func ngrams(from words: [String], maxN: Int = 3) -> [String] {
+    var result: [String] = []
+    for n in 1...maxN {
+        if words.count < n { break }
+        for i in 0...(words.count - n) {
+            result.append(words[i..<(i+n)].joined(separator: " "))
+        }
+    }
+    return result
 }

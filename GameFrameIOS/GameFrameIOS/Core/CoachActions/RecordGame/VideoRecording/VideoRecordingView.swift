@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 import AVFoundation
 import AVKit
+import Combine
 
 struct VideoRecordingView: View {
     
@@ -23,7 +24,9 @@ struct VideoRecordingView: View {
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
     @StateObject private var camera = CameraViewModel()
+    
     @EnvironmentObject private var dependencies: DependencyContainer
+    @EnvironmentObject private var connectivity: iPhoneConnectivityProvider
 
     @State private var pulse = false
     
@@ -49,6 +52,7 @@ struct VideoRecordingView: View {
     @Environment(\.dismiss) var dismiss
     
     @State private var gameStartTime: Date?
+    @State var isUsingWatch: Bool
 
     var body: some View {
         NavigationView {
@@ -135,6 +139,22 @@ struct VideoRecordingView: View {
                         }
                         
                         self.fullGameId = fgRecordingId
+                        
+                        if isUsingWatch {
+                            // Set the game session context in case watchOS is used to record audio feedback
+                            let authUser = try dependencies.authenticationManager.getAuthenticatedUser()
+                            dependencies.currentGameContext = GameSessionContext(
+                                gameId: gameId,
+                                teamId: teamId,
+                                gameStartTime: self.gameStartTime ?? Date(),
+                                players: audioRecordingModel.players,
+                                uploadedBy: authUser.uid
+                            )
+                            
+                            // Notify the game has started
+                            connectivity.notifyWatchGameStarted(gameId: gameId)
+                        }
+
                     } catch {
                         print("error")
                     }
@@ -171,6 +191,16 @@ struct VideoRecordingView: View {
         .onDisappear {
             camera.stopSession()
         }
+        .onReceive(recordingsPublisher) { newRecordings in
+            DispatchQueue.main.async {
+                if audioRecordingModel.recordings != newRecordings {
+                    print("🎧 Updated recordings: \(newRecordings.count)")
+                    
+                    audioRecordingModel.recordings = newRecordings
+                }
+            }
+        }
+
         .alert("Camera access is required", isPresented: $cameraPermissionAlert) {
             Button(role: .cancel) {
                 // Open the settings
@@ -200,6 +230,11 @@ struct VideoRecordingView: View {
     
     // MARK: - Subviews
 
+    private var recordingsPublisher: AnyPublisher<[keyMomentTranscript], Never> {
+        dependencies.currentGameRecordingsContext?.$recordings.eraseToAnyPublisher() ?? Just<[keyMomentTranscript]>([]).eraseToAnyPublisher()
+    }
+
+
     private var feedbackView: some View {
         VStack {
             if !gameId.isEmpty && gameStartTime != nil {
@@ -208,6 +243,7 @@ struct VideoRecordingView: View {
                     gameId: gameId,
                     teamId: teamId,
                     navigateToHome: .constant(false),
+                    isUsingWatch: isUsingWatch,
                     showNavigationUI: false
                 )
                 .padding(.top, 10)
