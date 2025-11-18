@@ -24,7 +24,7 @@ struct CoachNotificationView: View {
                 if vm.isLoading {
                     HStack {
                         Spacer()
-                        ProgressView("Loading comments…")
+                        ProgressView("Loading activity…")
                             .font(.caption)
                         Spacer()
                     }
@@ -58,11 +58,28 @@ struct CoachNotificationView: View {
                 } else {
                     Section("Comments (last 7 days)") {
                         ForEach(vm.recentComments, id: \.commentId) { c in
-                            let title = vm.gameTitles[c.gameId] ?? "Game"
-                            let author = vm.authorNames[c.uploadedBy] ?? "Someone"
-                            ActivityCommentRow(comment: c, gameTitle: title, authorName: author)
+                            let title  = vm.gameTitles[c.gameId] ?? "Unknown Game"
+                            let author = vm.authorNames[c.uploadedBy] ?? "Unknown User"
+
+                            NavigationLink {
+                                // For now: simple destination so we know navigation works
+                                VStack(alignment: .leading, spacing: 8) {
+                                        Text("Comment detail")
+                                            .font(.headline)
+                                        Text("Game ID: \(c.gameId)")
+                                        Text("Key moment ID: \(c.keyMomentId)")
+                                    }
+                                .padding()
+                            } label: {
+                                ActivityCommentRow(
+                                    comment: c,
+                                    gameTitle: title,
+                                    authorName: author
+                                )
+                            }
                         }
                     }
+
 
                 }
             }
