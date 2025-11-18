@@ -68,6 +68,22 @@ public final class CommentManager {
         return try await repo.getAllCommentsForSpecificTranscriptId(teamDocId: teamDocId, transcriptId: transcriptId)
     }
     
+    /**
+     * Fetches recent comments for multiple teams since a given date.
+     * - Parameters:
+     *   - teamDocIds: The document IDs of the teams to fetch comments for.
+     *   - since: Only comments with `datePosted` >= `since` will be returned.
+     * - Returns: An array of `DBComment` objects.
+     * - Throws: If there is an issue fetching from the repository.
+     */
+    public func fetchRecentComments(
+        forTeamDocIds teamDocIds: [String],
+        since: Date
+    ) async throws -> [DBComment] {
+        return try await repo.fetchRecentComments(forTeamDocIds: teamDocIds, since: since)
+    }
+
+    
     
     /**
      * Adds a new comment to the Firestore database

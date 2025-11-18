@@ -12,40 +12,73 @@ import GameFrameIOSShared
  This structure is the recent activity view. All the recent acitivities made in the app (all types of notifications) will be shown here.
  */
 struct CoachNotificationView: View {
+    @EnvironmentObject private var dependencies: DependencyContainer
     @StateObject private var vm = NotificationsViewModel()
-    let coachId: String // inject from session/auth
+
+    let coachId: String
 
     var body: some View {
         NavigationStack {
-            Group {
+            Divider()
+            List {
                 if vm.isLoading {
-                    ProgressView("Loading last 7 days…")
-                } else if let err = vm.error {
-                    VStack(spacing: 8) {
-                        Text("Couldn’t load activity").font(.headline)
-                        Text(err).font(.footnote).foregroundStyle(.secondary)
-                        Button("Retry") { Task { await vm.loadLastWeekComments(coachId: coachId) } }
-                            .buttonStyle(.borderedProminent)
-                            .padding(.top, 4)
+                    HStack {
+                        Spacer()
+                        ProgressView("Loading comments…")
+                            .font(.caption)
+                        Spacer()
                     }
-                } else if vm.recentComments.isEmpty {
-                    ContentUnavailableView("No comments this week", systemImage: "bubble.left", description: Text("New comments in the last 7 days will appear here."))
-                } else {
-                    List {
-                        Section("Comments (last 7 days)") {
-                            ForEach(vm.recentComments, id: \.commentId) { c in
-                                ActivityCommentRow(comment: c)
+                } else if let err = vm.error {
+                    Section {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Couldn’t load activity")
+                                .font(.headline)
+                            Text(err)
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Button("Retry") {
+                            Task {
+                                vm.setDependencies(dependencies)
+                                await vm.loadLastWeekComments(coachId: coachId)
                             }
                         }
+                        .buttonStyle(.borderedProminent)
+                        .padding(.top, 4)
                     }
-                    .listStyle(.insetGrouped)
+                } else if vm.recentComments.isEmpty {
+                    Section {
+                        ContentUnavailableView(
+                            "No recent activity this week",
+                            systemImage: "bubble.left",
+                            description: Text("New activity in the last 7 days will appear here.")
+                        )
+                    }
+                } else {
+                    Section("Comments (last 7 days)") {
+                        ForEach(vm.recentComments, id: \.commentId) { c in
+                            let title = vm.gameTitles[c.gameId] ?? "Game"
+                            let author = vm.authorNames[c.uploadedBy] ?? "Someone"
+                            ActivityCommentRow(comment: c, gameTitle: title, authorName: author)
+                        }
+                    }
+
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(Color.white)
             .navigationTitle("Recent Activity")
         }
-        .task { await vm.loadLastWeekComments(coachId: coachId) }
+        .task {
+            vm.setDependencies(dependencies)
+            await vm.loadLastWeekComments(coachId: coachId)
+        }
     }
 }
+
+// MARK: - Helpers
 
 private func relative(_ date: Date) -> String {
     let f = RelativeDateTimeFormatter()
@@ -55,13 +88,19 @@ private func relative(_ date: Date) -> String {
 
 struct ActivityCommentRow: View {
     let comment: DBComment
+    let gameTitle: String
+    let authorName: String
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(comment.comment)
                 .font(.body)
                 .lineLimit(2)
+
             HStack(spacing: 8) {
-                Text("Game \(comment.gameId)")
+                Text(authorName)
+                Text("•")
+                Text(gameTitle)
                 Text("•")
                 Text(relative(comment.createdAt))
             }
@@ -71,6 +110,8 @@ struct ActivityCommentRow: View {
         .padding(.vertical, 6)
     }
 }
+
+
 
 #Preview {
     CoachNotificationView(coachId: "FQzOD32960ZCORcwmULPPh21Ql53")

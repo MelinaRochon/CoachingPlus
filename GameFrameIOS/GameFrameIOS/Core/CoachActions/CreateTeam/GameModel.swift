@@ -280,3 +280,14 @@ final class GameModel: ObservableObject {
         }
     }
 }
+// MARK: - Convenience helper
+
+extension GameModel {
+    /// Returns the game's title for a given team and game id.
+    func getGameTitle(teamId: String, gameId: String) async throws -> String? {
+        guard let game = try await getGame(teamId: teamId, gameId: gameId) else {
+            return nil
+        }
+        return game.title   // <- change to `game.name` if that's your field
+    }
+}

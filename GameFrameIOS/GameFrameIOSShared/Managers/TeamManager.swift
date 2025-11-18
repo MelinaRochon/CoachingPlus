@@ -59,7 +59,8 @@ public final class TeamManager {
     }
     
     public func getTeamsWithCoach(coachId: String) async throws -> [DBTeam] {
-        try await repo.getTeamsWithCoach(coachId: coachId)
+        print("In TeamManager!")
+        return try await repo.getTeamsWithCoach(coachId: coachId)
         // or: try await repo.getTeamsSubcollection(forCoach: coachId)
     }
         

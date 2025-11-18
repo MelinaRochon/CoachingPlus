@@ -298,3 +298,41 @@ final class TeamModel: ObservableObject {
     }
     
 }
+// MARK: - Find team by game id
+
+extension TeamModel {
+    /// Returns the team that owns the given game id (if any).
+    func getTeamForGameId(_ gameId: String) async throws -> DBTeam? {
+        guard let deps = dependencies else {
+            print("⚠️ Dependencies not set")
+            return nil
+        }
+
+        // Reuse your existing logic to load all teams for this user
+        guard let teams = try await loadAllTeams() else {
+            return nil
+        }
+
+        for team in teams {
+            // Get all games for this team
+            guard let games = try await deps.gameManager.getAllGames(teamId: team.teamId) else {
+                continue
+            }
+
+            // Does this team have a game with that id?
+            if games.contains(where: { $0.gameId == gameId }) {
+                return team
+            }
+        }
+
+        return nil
+    }
+
+    /// Convenience: return the teamId for a given game id.
+    func getTeamIdForGameId(_ gameId: String) async throws -> String? {
+        guard let team = try await getTeamForGameId(gameId) else {
+            return nil
+        }
+        return team.teamId    // or `team.id` if you prefer the doc id
+    }
+}

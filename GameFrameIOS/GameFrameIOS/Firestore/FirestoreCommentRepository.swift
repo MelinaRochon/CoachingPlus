@@ -177,7 +177,10 @@ public final class FirestoreCommentRepository: CommentRepository {
 extension FirestoreCommentRepository {
 
     /// Fetch comments newer than `since` for many team doc IDs (no listeners).
-    func fetchRecentComments(forTeamDocIds teamDocIds: [String], since: Date) async throws -> [DBComment] {
+    public func fetchRecentComments(
+        forTeamDocIds teamDocIds: [String],
+        since: Date
+    ) async throws -> [DBComment] {
         guard !teamDocIds.isEmpty else { return [] }
         let ts = Timestamp(date: since)
 

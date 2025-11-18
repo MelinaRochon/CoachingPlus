@@ -43,6 +43,18 @@ public protocol CommentRepository {
     func getAllCommentsForSpecificTranscriptId(teamDocId: String, transcriptId: String) async throws -> [DBComment]?
 
     
+    /// Retrieves all comments for the given team doc IDs that were posted on or after `since`.
+    /// - Parameters:
+    ///   - teamDocIds: List of team document IDs to filter by.
+    ///   - since: Only comments on or after this date will be returned.
+    /// - Returns: An array of `DBComment` objects.
+    /// - Throws: An error if the retrieval fails.
+    func fetchRecentComments(
+        forTeamDocIds teamDocIds: [String],
+        since: Date
+    ) async throws -> [DBComment]
+
+
     /// Adds a new comment to a team's collection.
     /// - Parameters:
     ///   - teamDocId: The Firestore document ID of the team.

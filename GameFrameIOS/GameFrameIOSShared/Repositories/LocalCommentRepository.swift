@@ -70,6 +70,7 @@ public final class LocalCommentRepository: CommentRepository {
     }
     
     
+    
     /// Removes a comment from a team's collection.
     /// - Parameters:
     ///   - teamId: The unique identifier of the team.
@@ -93,6 +94,16 @@ public final class LocalCommentRepository: CommentRepository {
 
     public func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
         _ = try await addNewCommentReturningId(teamDocId: teamDocId, commentDTO: commentDTO)
+    }
+    
+    public func fetchRecentComments(
+        forTeamDocIds teamDocIds: [String],
+        since: Date
+    ) async throws -> [DBComment] {
+        // In tests, DBComment has no teamId field, so we just filter by date.
+        // Adjust `createdAt` if your field name is different.
+        return comments.filter { $0.createdAt >= since }
+            .sorted { $0.createdAt > $1.createdAt }
     }
 
 }

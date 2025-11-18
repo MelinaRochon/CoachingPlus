@@ -14,51 +14,95 @@ final class NotificationsViewModel: ObservableObject {
     @Published var recentComments: [DBComment] = []
     @Published var isLoading = false
     @Published var error: String?
+    @Published var gameTitles: [String: String] = [:]   // gameId -> title
+    @Published var authorNames: [String: String] = [:]  // authorId -> "First Last"
 
-    // MARK: - Dependencies (injected as async closures)
-    private let loadTeamsOwnedByCoach: (_ coachId: String) async throws -> [DBTeam]
-    private let fetchRecentCommentsForTeams: (_ teamDocIds: [String], _ since: Date) async throws -> [DBComment]
 
-    /// Designated initializer with sensible defaults (no singletons required).
-    /// - Parameters:
-    ///   - loadTeamsOwnedByCoach: async function that returns teams owned by coach
-    ///   - fetchRecentCommentsForTeams: async function that returns recent comments for team doc IDs since a date
-    init(
-        loadTeamsOwnedByCoach: @escaping (_ coachId: String) async throws -> [DBTeam] = { coachId in
-            // Default: call your concrete manager directly
-            // TODO: Cate! Will cause error if do UI testing for notifications! Change this!
-            try await TeamManager(repo: FirestoreTeamRepository()).getTeamsWithCoach(coachId: coachId)
-        },
-        fetchRecentCommentsForTeams: @escaping (_ teamDocIds: [String], _ since: Date) async throws -> [DBComment] = { teamDocIds, since in
-            // Default: use the Firestore repository directly
-            try await FirestoreCommentRepository().fetchRecentComments(forTeamDocIds: teamDocIds, since: since)
-        }
-    ) {
-        self.loadTeamsOwnedByCoach = loadTeamsOwnedByCoach
-        self.fetchRecentCommentsForTeams = fetchRecentCommentsForTeams
+    private var dependencies: DependencyContainer?
+    private let teamModel = TeamModel()
+    private let gameModel = GameModel()
+
+    // MARK: - Dependency Injection
+    func setDependencies(_ dependencies: DependencyContainer) {
+        self.dependencies = dependencies
+        teamModel.setDependencies(dependencies)
+        gameModel.setDependencies(dependencies)
     }
 
-    /// Loads comments from the last 7 days for all teams owned by the coach.
     func loadLastWeekComments(coachId: String) async {
         isLoading = true
         error = nil
-
         defer { isLoading = false }
 
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+
         do {
-            // 1) Get this coach’s team *doc IDs* (assumes DBTeam.id is the document id)
-            let teams = try await loadTeamsOwnedByCoach(coachId)
+            // 0) Logged-in coach (current user)
+            let authUser = try repo.authenticationManager.getAuthenticatedUser()
+            let currentCoachId = authUser.uid
+
+            // 1) Get this coach’s teams
+            let teams = try await repo.teamManager.getTeamsWithCoach(coachId: coachId)
             let teamDocIds = teams.map { $0.id }
 
             // 2) Last 7 days
             let since = Calendar.current.date(byAdding: .day, value: -7, to: Date())
                         ?? Date().addingTimeInterval(-7 * 24 * 3600)
 
-            // 3) Fetch comments
-            let comments = try await fetchRecentCommentsForTeams(teamDocIds, since)
-            recentComments = comments
+            // 3) Fetch all recent comments for those teams
+            let comments = try await repo.commentManager
+                .fetchRecentComments(forTeamDocIds: teamDocIds, since: since)
+
+            // 4) ❗ Filter out comments written by the logged-in coach
+            let filtered = comments.filter { $0.uploadedBy != currentCoachId }
+
+            recentComments = filtered
+
+            // 5) Resolve game titles + author names based on the filtered list
+            await resolveMetadata()
+
         } catch {
             self.error = (error as NSError).localizedDescription
         }
     }
+
+
+
+    private func resolveMetadata() async {
+        guard let deps = dependencies else { return }
+
+        var titles: [String: String] = [:]
+        var authors: [String: String] = [:]
+
+        for comment in recentComments {
+            let gameId = comment.gameId
+            // 🔁 Change this to whatever your field is on DBComment:
+            let authorId = comment.uploadedBy    // e.g. comment.authorId / comment.userId
+
+            // --- Game title ---
+            if titles[gameId] == nil {
+                if let teamId = try? await teamModel.getTeamIdForGameId(gameId),
+                   let title = try? await gameModel.getGameTitle(teamId: teamId, gameId: gameId) {
+                    titles[gameId] = title
+                }
+            }
+
+            // --- Author name ---
+            if authors[authorId] == nil {
+                if let user = try? await deps.userManager.getUser(userId: authorId) {
+                    // adjust names if your DBUser uses other property names
+                    let name = "\(user.firstName) \(user.lastName)"
+                    authors[authorId] = name
+                }
+            }
+        }
+
+        gameTitles = titles
+        authorNames = authors
+    }
+
 }
+
