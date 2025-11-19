@@ -79,7 +79,7 @@ struct ContentView: View {
                         .padding(.horizontal, 5)
                         .opacity(recorder.isRecording ? 0.0 : 1.0)
                 }
-                .animation(.easeInOut(duration: 0.2), value: isRecording)
+                .animation(.easeInOut(duration: 0.2), value: recorder.isRecording)
                 
                 VStack {
                     Text("Time since start of game")
@@ -93,6 +93,7 @@ struct ContentView: View {
             .task {
                 startOfGame = Date()
                 timeSinceBeginningOfGame = 0
+                connectivity.startMonitoring() // start monitoring the heartbeats
                 gameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
                     if let start = startOfGame {
                         timeSinceBeginningOfGame = Date().timeIntervalSince(start)

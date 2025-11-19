@@ -32,6 +32,7 @@ struct CoachRecordingConfigView: View {
     /// ViewModel to manage the list of teams
     @StateObject private var teamModel = TeamModel() // Fetches the list of teams
     @EnvironmentObject private var dependencies: DependencyContainer
+    @EnvironmentObject private var connectivity: iPhoneConnectivityProvider
 
     /// State variables for managing user selections and app state
     /// This variable stores the ID of the team the user selects. It's optional to account for the case when no team is selected.
@@ -86,8 +87,10 @@ struct CoachRecordingConfigView: View {
                                 selectedOption: $selectedRecordingTypeLabel
                             ).pickerStyle(SegmentedPickerStyle())
                             
+                            // If an apple watch can be found, is paired and the application was downloaded on the watch
                             // Apple Watch Recording Toggle
                             Toggle("Use Apple Watch for Recording", isOn: $selectedAppleWatchUseLabel)
+                                .disabled(!connectivity.canRecordWithWatch)
                         }
                     }
                 }

@@ -29,8 +29,11 @@ class WatchAudioRecorder: NSObject, AVAudioRecorderDelegate, ObservableObject {
             try session.setActive(true)
             
             let fileName = UUID().uuidString + ".m4a"
-            let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-            
+            let url = FileManager.default.urls(for: .applicationSupportDirectory,in: .userDomainMask)[0]
+                .appendingPathComponent("recordings", isDirectory: true)
+            try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+
+            let fileURL = url.appendingPathComponent(fileName)
             let settings: [String: Any] = [
                 AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
                 AVSampleRateKey: 44100,

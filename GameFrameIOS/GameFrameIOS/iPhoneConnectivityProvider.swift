@@ -1,87 +1,9 @@
-//////
-//////  WatchConnecter.swift
-//////  GameFrameIOS
-//////
-//////  Created by Mélina Rochon on 2025-11-10.
-//////
-////
-////import Foundation
-////import WatchConnectivity
-////
-////class WatchConnecter: NSObject, WCSessionDelegate {
-////    var session: WCSession
-////    
-////    init(session: WCSession = .default) {
-////        self.session = session
-////        super.init()
-////        session.delegate = self
-////        session.activate()
-////    }
-////    
-////    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: (any Error)?) {
-////        
-////    }
-////    
-////    func sessionDidBecomeInactive(_ session: WCSession) {
-////        
-////    }
-////    
-////    func sessionDidDeactivate(_ session: WCSession) {
-////        
-////    }
-////    
-////    
-////    func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
-////        
-////    }
-////}
-//
-//
-//import WatchConnectivity
-//
-//class iPhoneConnectivityProvider: NSObject, WCSessionDelegate {
-//    
-//    static let shared = iPhoneConnectivityProvider()
-//    var dependencies: DependencyContainer?
-//
-//    override init() {
-//        super.init()
-//        if WCSession.isSupported() {
-//            WCSession.default.delegate = self
-//            WCSession.default.activate()
-//        }
-//    }
-//
-//    func session(_ session: WCSession, didReceive file: WCSessionFile) {
-//        print("Received audio file from watch: \(file.fileURL)")
-//        
-//        // Move file to a permanent location if needed
-//        let destination = FileManager.default.temporaryDirectory.appendingPathComponent("received_audio.m4a")
-//        try? FileManager.default.moveItem(at: file.fileURL, to: destination)
-//        
-//        // Transcribe it
-//        SpeechTranscriber.shared.transcribeAudio(at: destination) { transcript in
-//            print("Transcription: \(transcript ?? "none")")
-//            
-//            // Upload both
-//            FirebaseUploader.uploadAudioAndTranscript(audioURL: destination, transcript: transcript)
-//        }
-//    }
-//    
-//    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: (any Error)?) {
-//        <#code#>
-//    }
-//    
-//    func sessionDidBecomeInactive(_ session: WCSession) {
-//        <#code#>
-//    }
-//    
-//    func sessionDidDeactivate(_ session: WCSession) {
-//        <#code#>
-//    }
-//
-//}
-
+///
+///  WatchConnecter.swift
+///  GameFrameIOS
+///
+///  Created by Mélina Rochon on 2025-11-10.
+///
 
 import WatchConnectivity
 import Foundation
@@ -90,7 +12,29 @@ import GameFrameIOSShared
 final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
     private let session: WCSession
     private let dependencies: DependencyContainer
-
+    private var timer: Timer? // For heartbeats messages to the watch while the game is running
+    
+    var canRecordWithWatch: Bool {
+        session.isPaired &&
+        session.isWatchAppInstalled
+    }
+    
+    func isWatchReadyForRecording() -> Bool {
+        return session.isPaired && session.isWatchAppInstalled
+    }
+    
+    @Published var watchAppVersion: String? = nil
+    
+    var isWatchReachable: Bool {
+        session.isReachable
+    }
+    
+    var isWatchVersionValid: Bool {
+        guard let version = watchAppVersion else { return false }
+        print("versions: \(version)")
+        return version.compare("1.2.0", options: .numeric) != .orderedAscending
+    }
+    
     init(session: WCSession = .default, dependencies: DependencyContainer) {
         self.session = session
         self.dependencies = dependencies
@@ -101,7 +45,26 @@ final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableO
             session.activate()
         }
     }
-
+    
+    func startHeartbeats() {
+        stopHeartbeats() // ensure no duplicates
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.sendHeartbeat()
+        }
+    }
+    
+    func stopHeartbeats() {
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    private func sendHeartbeat() {
+        guard session.isReachable else { return }
+        session.sendMessage(["heartbeat": true], replyHandler: nil) { error in
+            print("Failed to send heartbeat: \(error.localizedDescription)")
+        }
+    }
+    
     // MARK: - File Transfer Handling
     func session(_ session: WCSession, didReceive file: WCSessionFile) {
         
@@ -115,50 +78,60 @@ final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableO
         
         let metadata = file.metadata ?? [:]
         print("📎 Metadata: \(metadata)")
+        print(" --- file : \(file.fileURL)")
 
-        /**
         // Receiving metadata
         let recordStartTime = metadata["recording_start_time"] as? Date
         let recordEndTime = metadata["recording_end_time"] as? Date
+        
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let folderURL = documentsURL.appendingPathComponent("watch_audio", isDirectory: true)
 
-        // Move file to a known temp destination
-        let destination = FileManager.default.temporaryDirectory.appendingPathComponent("watch_audio/\(UUID().uuidString).m4a")
+        // Create the folder if needed
+        try? fileManager.createDirectory(at: folderURL, withIntermediateDirectories: true)
+
+        let destination = folderURL.appendingPathComponent("\(UUID().uuidString).m4a")
+
         do {
-            try FileManager.default.moveItem(at: file.fileURL, to: destination)
+            try fileManager.moveItem(at: file.fileURL, to: destination)
+            print("Moved to:", destination)
         } catch {
-            print("❌ Failed to move file: \(error)")
+            print("Failed to move file:", error)
             return
         }
-         DispatchQueue.main.async { // May not be here
-             
-        // Step 1: Transcribe the audio (on iPhone)
-        SpeechTranscriber.shared.transcribeAudio(at: destination) { [weak self] transcript in
-            guard let self else { return }
-            print("🗣 Transcription complete: \(transcript ?? "none")")
+
+        // Move file to a known temp destination
+        DispatchQueue.main.async { // May not be here
             
-            Task {
-                await self.uploadAudioAndTranscript(
-                    audioURL: destination,
-                    transcript: transcript,
-                    context: context,
-                    recordStartTime: recordStartTime ?? Date(),
-                    recordEndTime: recordEndTime ?? Date()
-                )
+            // Step 1: Transcribe the audio (on iPhone)
+            SpeechTranscriber.shared.transcribeAudio(at: destination) { [weak self] transcript in
+                guard let self else { return }
+                print("🗣 Transcription complete: \(transcript ?? "none")")
+                
+                Task {
+                    await self.uploadAudioAndTranscript(
+                        audioURL: destination,
+                        transcript: transcript,
+                        context: context,
+                        recordStartTime: recordStartTime ?? Date(),
+                        recordEndTime: recordEndTime ?? Date()
+                    )
+                }
             }
         }
-         } // May not be here
-         */
     }
     
     func notifyWatchGameStarted(gameId: String) {
         guard session.isReachable else {
             print("⌛ Watch not reachable, queuing game start info")
-            WCSession.default.transferUserInfo(["gameStarted": true, "gameId": gameId])
+            WCSession.default.transferUserInfo(["gameRecordingOn": true])
             return
         }
+        
 
         session.sendMessage(
-            ["gameRecordingOn": true, "gameId": gameId],
+            ["gameRecordingOn": true],
             replyHandler: nil,
             errorHandler: { error in
                 print("⚠️ Failed to notify Watch: \(error.localizedDescription)")
@@ -170,10 +143,11 @@ final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableO
     func notifyWatchGameEnded() {
         guard session.isReachable else {
             print("⌛ Watch not reachable, queuing game start info")
-            WCSession.default.transferUserInfo(["gameEnded": true])
+            WCSession.default.transferUserInfo(["gameRecordingOn": true])
             return
         }
-
+        
+        print("->>>> ending game")
         session.sendMessage(
             ["gameRecordingOn": false],
             replyHandler: nil,
@@ -203,8 +177,11 @@ final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableO
                 }
             }
             
+            
             if self.dependencies.currentGameRecordingsContext == nil {
-                self.dependencies.currentGameRecordingsContext = GameRecordingsContext()
+                DispatchQueue.main.async {
+                    self.dependencies.currentGameRecordingsContext = GameRecordingsContext()
+                }
             }
             let feedbackFor = try await getPlayerAssociatedToFeedback(transcript: transcript ?? "", players: context.players ?? [])
             
@@ -229,65 +206,10 @@ final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableO
                 pathAudioURL: path
             )
 
-//            if let players = context.players {
-//                let feedbackFor = try await getPlayerAssociatedToFeedback(transcript: transcript ?? "", players: players)
-//                
-//                if let feedbackFor = feedbackFor {
-//                    var tmpFeedback: [String] = []
-//                    tmpFeedback.append(feedbackFor.firstName)
-//                    if let nick = feedbackFor.nickname { tmpFeedback.append(nick) }
-//
-////                            transcript = normalizeTranscript(transcript, roster: tmpFeedback)
-//                }
-//                
-//                // Determine which players the feedback is for
-//                var fbFor: [String]?
-//                if feedbackFor == nil {
-//                    // Associate the feedback to every player on the team
-//                    fbFor = players.map { $0.playerId }
-//                } else {
-//                    // Add a new key moment to the database
-//                    fbFor = feedbackFor.map { [$0.playerId] } ?? []
-//                }
-//                   
-//                try await addTranscriptToDB(
-//                    teamId: context.teamId,
-//                    gameId: context.gameId,
-//                    uploadedBy: context.uploadedBy,
-//                    recordingStart: recordStartTime,
-//                    recordingEnd: recordEndTime,
-//                    transcription: transcript ?? "",
-//                    feedbackFor: fbFor,
-//                    pathAudioURL: path
-//                )
-//            } else {
-//
-//            }
-//            // Create a new key moment entry
-//            let keyMomentDTO = KeyMomentDTO(fullGameId: nil, gameId: context.gameId, uploadedBy: context.uploadedBy, audioUrl: path, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: fbFor)
-//            
-//            // Add a new key moment to the database
-//            let keyMomentDocId = try await dependencies?.keyMomentManager.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)
-//            guard let safeKeyMomentId = keyMomentDocId else {
-//                print("Error: The key moment doc ID is nil. Aborting.")
-//                return
-//            }
-//
-//            
-//            let audioURLResult = try await dependencies.storageManager.uploadAudioFile(localFile: audioURL, path: path)
-//            print("✅ Uploaded audio to \(audioURLResult)")
-//            
-//            let metadata = [
-//                "path": path,
-//                "transcript": transcript ?? "",
-//                "timestamp": Date().ISO8601Format()
-//            ]
-//            
-//            try await dependencies.firestoreManager.addDocument(collection: "recordings", data: metadata)
             print("📤 Uploaded transcription + metadata to Firestore")
 
             // Clean up
-            try? FileManager.default.removeItem(at: audioURL)
+//            try? FileManager.default.removeItem(at: audioURL)
         } catch {
             print("🔥 Upload error: \(error.localizedDescription)")
         }
@@ -345,31 +267,45 @@ final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableO
             // TODO: Update the feedback for array that is showed on the audio and video views (local array)
             
             var feedbackForArray: [PlayerTranscriptInfo] = []
-            
+            DispatchQueue.main.async {
             if let feedback = feedbackFor {
-                print("append feedback")
                 feedbackForArray.append(feedback)
+                
                 // Add a new recording to the array
                 let recordingsLength = self.dependencies.currentGameRecordingsContext!.recordings.count
-                let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: "\(recordingsLength)", transcriptId: "\(recordingsLength)", transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
+                let newRecording = keyMomentTranscript(
+                    id: recordingsLength,
+                    keyMomentId: "\(recordingsLength)",
+                    transcriptId: "\(recordingsLength)",
+                    transcript: transcription,
+                    frameStart: recordingStart,
+                    frameEnd: recordingEnd,
+                    feedbackFor: feedbackForArray
+                )
                 
-                //                        let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: safeKeyMomentId, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
                 self.dependencies.currentGameRecordingsContext!.recordings.append(newRecording)
             } else {
                 // if there are players on the team, then associate to each one of them
                 if let playersInTeam = players {
-                    print("append all players")
                     feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
+                    
                     let recordingsLength = self.dependencies.currentGameRecordingsContext!.recordings.count
                     // Add a new recording to the array
-                    //                            let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: safeKeyMomentId, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
-                    let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: "\(recordingsLength)", transcriptId: "\(recordingsLength)", transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
+                    let newRecording = keyMomentTranscript(
+                        id: recordingsLength,
+                        keyMomentId: "\(recordingsLength)",
+                        transcriptId: "\(recordingsLength)",
+                        transcript: transcription,
+                        frameStart: recordingStart,
+                        frameEnd: recordingEnd,
+                        feedbackFor: feedbackForArray
+                    )
                     
-                    //                            self.recordings.append(newRecording)
                     self.dependencies.currentGameRecordingsContext!.recordings.append(newRecording)
                 } else {
                     print("no feedback")
                 }
+            }
             }
             
         } catch {
@@ -438,73 +374,108 @@ final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableO
         print("📩 Received message: \(message)")
         do {
             // Receiving metadata
-            let recordStartTime = message["recording_start_time"] as? Date
-            let recordEndTime = message["recording_end_time"] as? Date
-            let transcript = message["test_transcript"] as? String
-
-            guard let context = dependencies.currentGameContext else {
-                print("⚠️ No current game context available.")
-                return
+            if let version = message["watchAppVersion"] as? String {
+                DispatchQueue.main.async {
+                    self.watchAppVersion = version
+                }
             }
             
-            DispatchQueue.main.async {
-                if self.dependencies.currentGameRecordingsContext == nil {
-                    self.dependencies.currentGameRecordingsContext = GameRecordingsContext()
+            if let recordStartTime = message["recording_start_time"] as? Date, let recordEndTime = message["recording_end_time"] as? Date, let transcript = message["test_transcript"] as? String {
+                
+                guard let context = dependencies.currentGameContext else {
+                    print("⚠️ No current game context available.")
+                    return
                 }
                 
-                Task {
-                    if let players = context.players {
-                        let player = try await self.getPlayerAssociatedToFeedback(transcript: transcript!, players: players)
-                        if let feedbackFor = player {
-                            var tmpFeedback: [String] = []
-                            tmpFeedback.append(feedbackFor.firstName)
-                            if let nick = feedbackFor.nickname { tmpFeedback.append(nick) }
-                            
-                            //                            transcript = normalizeTranscript(transcript, roster: tmpFeedback)
-                        }
-                        
-                        // Determine which players the feedback is for
-                        var fbFor: [String]?
-                        if player == nil {
-                            // Associate the feedback to every player on the team
-                            fbFor = players.map { $0.playerId }
-                        } else {
-                            // Add a new key moment to the database
-                            fbFor = player.map { [$0.playerId] } ?? []
-                        }
-                                                
-                        var feedbackForArray: [PlayerTranscriptInfo] = []
-                        
-                        if let feedback = player {
-                            print("append feedback")
-                            feedbackForArray.append(feedback)
-                            // Add a new recording to the array
-                            let recordingsLength = self.dependencies.currentGameRecordingsContext!.recordings.count
-                            let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: "\(recordingsLength)", transcriptId: "\(recordingsLength)", transcript: transcript ?? "No transcript found", frameStart: recordStartTime!, frameEnd: recordEndTime!, feedbackFor: feedbackForArray)
-                            
-                            //                        let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: safeKeyMomentId, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
-                            self.dependencies.currentGameRecordingsContext!.recordings.append(newRecording)
-                        } else {
-                            // if there are players on the team, then associate to each one of them
-                            if let playersInTeam = context.players {
-                                print("append all players")
-                                feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
-                                let recordingsLength = self.dependencies.currentGameRecordingsContext!.recordings.count
-                                // Add a new recording to the array
-                                //                            let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: safeKeyMomentId, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
-                                let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: "\(recordingsLength)", transcriptId: "\(recordingsLength)", transcript: transcript ?? "No transcript found", frameStart: recordStartTime!, frameEnd: recordEndTime!, feedbackFor: feedbackForArray)
+                DispatchQueue.main.async {
+                    if self.dependencies.currentGameRecordingsContext == nil {
+                        self.dependencies.currentGameRecordingsContext = GameRecordingsContext()
+                    }
+                    
+                    Task {
+                        if let players = context.players {
+                            let player = try await self.getPlayerAssociatedToFeedback(transcript: transcript, players: players)
+                            if let feedbackFor = player {
+                                var tmpFeedback: [String] = []
+                                tmpFeedback.append(feedbackFor.firstName)
+                                if let nick = feedbackFor.nickname { tmpFeedback.append(nick) }
                                 
-                                //                            self.recordings.append(newRecording)
+                                //                            transcript = normalizeTranscript(transcript, roster: tmpFeedback)
+                            }
+                            
+                            // Determine which players the feedback is for
+                            var fbFor: [String]?
+                            if player == nil {
+                                // Associate the feedback to every player on the team
+                                fbFor = players.map { $0.playerId }
+                            } else {
+                                // Add a new key moment to the database
+                                fbFor = player.map { [$0.playerId] } ?? []
+                            }
+                            
+                            var feedbackForArray: [PlayerTranscriptInfo] = []
+                            
+                            if let feedback = player {
+                                print("append feedback")
+                                feedbackForArray.append(feedback)
+                                // Add a new recording to the array
+                                let recordingsLength = self.dependencies.currentGameRecordingsContext!.recordings.count
+                                let newRecording = keyMomentTranscript(
+                                    id: recordingsLength,
+                                    keyMomentId: "\(recordingsLength)",
+                                    transcriptId: "\(recordingsLength)",
+                                    transcript: transcript,
+                                    frameStart: recordStartTime,
+                                    frameEnd: recordEndTime,
+                                    feedbackFor: feedbackForArray
+                                )
+                                
                                 self.dependencies.currentGameRecordingsContext!.recordings.append(newRecording)
                             } else {
-                                print("no feedback")
+                                // if there are players on the team, then associate to each one of them
+                                if let playersInTeam = context.players {
+                                    print("append all players")
+                                    feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
+                                    let recordingsLength = self.dependencies.currentGameRecordingsContext!.recordings.count
+                                    // Add a new recording to the array
+                                    let newRecording = keyMomentTranscript(
+                                        id: recordingsLength,
+                                        keyMomentId: "\(recordingsLength)",
+                                        transcriptId: "\(recordingsLength)",
+                                        transcript: transcript,
+                                        frameStart: recordStartTime,
+                                        frameEnd: recordEndTime,
+                                        feedbackFor: feedbackForArray
+                                    )
+                                    
+                                    self.dependencies.currentGameRecordingsContext!.recordings.append(newRecording)
+                                } else {
+                                    print("no feedback")
+                                }
                             }
                         }
                     }
                 }
+            } else {
+                // TODO: Add an alert here to let the user know the recording cannot be saved properly
+                print("Could not get messages for recording_start_time, recording_end_time")
             }
         } catch {
             print("error when receiving message: \(error)")
+        }
+    }
+    
+    func session(_ session: WCSession,
+                 didReceiveMessage message: [String : Any],
+                 replyHandler: @escaping ([String : Any]) -> Void) {
+        
+        print("📩 Received message w/ reply handler: \(message)")
+        
+        // 1. Handle game state request
+        if message["requestState"] as? Bool == true {
+            let isGameRunning = dependencies.currentGameContext != nil
+            replyHandler(["gameRecordingOn": isGameRunning])
+            return
         }
     }
 }

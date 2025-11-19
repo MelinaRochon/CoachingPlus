@@ -14,24 +14,28 @@ struct GameFrameWatch_Watch_AppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if watchConnectivityProvider.isGameRecordingOn {
-                ContentView()
-                    .environmentObject(watchConnectivityProvider)
-            } else {
-                VStack {
-                    ProgressView()
-                    Text("Waiting for iPhone to start the game…")
-                        .font(.footnote)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                }
-                .alert("Connection Lost", isPresented: $watchConnectivityProvider.gameAbruptlyStoppedAlert) {
-                    Button("OK", role: .cancel) { }
-                } message: {
-                    Text("The iPhone app was closed. The game has been stopped.")
+            VStack {
+                if watchConnectivityProvider.isGameRecordingOn {
+                    ContentView()
+                        .environmentObject(watchConnectivityProvider)
+                } else {
+                    VStack {
+                        ProgressView()
+                        Text("Waiting for iPhone to start the game…")
+                            .font(.footnote)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                    }
+                    .alert("Connection Lost", isPresented: $watchConnectivityProvider.gameAbruptlyStoppedAlert) {
+                        Button("OK", role: .cancel) { }
+                    } message: {
+                        Text("The GameFrame app on the iPhone was closed. The game has been stopped.")
+                    }
                 }
             }
-            
+            .onAppear {
+                watchConnectivityProvider.requestCurrentGameState()
+            }
         }
     }
 }

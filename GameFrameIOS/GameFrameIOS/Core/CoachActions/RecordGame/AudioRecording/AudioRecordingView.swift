@@ -69,8 +69,6 @@ struct AudioRecordingView: View {
     
     @State var isUsingWatch: Bool
 
-//    @State private var cancellable: AnyCancellable?
-
     // MARK: - Body
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
@@ -108,20 +106,27 @@ struct AudioRecordingView: View {
                                     // Let the user see a page after with the game's detail that he can edit?
                                     Task {
                                         do {
+                                            if isUsingWatch {
+                                                // End the game on the watch
+                                                connectivity.notifyWatchGameEnded()
+                                                
+                                                // Stop the heartbeats to let the watch know the game's over
+                                                connectivity.stopHeartbeats()
+                                            }
+
                                             savingIsOn.toggle()
                                             
                                             try await audioRecordingModel.endAudioRecordingGame(teamId: teamId, gameId: gameId)
                                             // Go back to the main page
                                             
                                             // TODO: Need to put back when try with physical watch
-                                            #if !targetEnvironment(simulator)
-                                            removeAllTempAudioFiles(count: self.audios.count)
-                                            #endif
+                                            if self.audios.count > 0 {
+                                                #if !targetEnvironment(simulator)
+                                                removeAllTempAudioFiles(count: self.audios.count)
+                                                #endif
+                                            }
                                             
                                             if isUsingWatch {
-                                                // End the game on the watch
-                                                connectivity.notifyWatchGameEnded()
-                                                
                                                 // Remove all recordings inside the GameRecordingsContext
                                                 dependencies.currentGameRecordingsContext = nil
                                             }
@@ -190,6 +195,9 @@ struct AudioRecordingView: View {
                         
                         // Notify the game has started
                         connectivity.notifyWatchGameStarted(gameId: gameId)
+                        
+                        // Start the hearbeats on the watch side
+                        connectivity.startHeartbeats()
                     } else {
                         
                         if let players = audioRecordingModel.players {
@@ -205,8 +213,8 @@ struct AudioRecordingView: View {
                         self.session = AVAudioSession.sharedInstance()
                         try self.session.setCategory(.playAndRecord, mode: .default)
                     }
-                
                 } catch {
+                    // TODO: Handle errors here
                     print("Error when loading the audio recording transcripts. Error: \(error)")
                 }
             }
