@@ -126,10 +126,8 @@ struct AudioRecordingView: View {
                                                 #endif
                                             }
                                             
-                                            if isUsingWatch {
-                                                // Remove all recordings inside the GameRecordingsContext
-                                                dependencies.currentGameRecordingsContext = nil
-                                            }
+                                            // Remove all recordings inside the GameRecordingsContext
+                                            dependencies.currentGameRecordingsContext = nil
                                             
                                             dismiss()
                                             navigateToHome = true
@@ -142,7 +140,8 @@ struct AudioRecordingView: View {
                             }
                         }
                     }
-                }.navigationBarBackButtonHidden(true)
+                }
+                .navigationBarBackButtonHidden(true)
             } else {
                 // Just the core content, no NavigationView or toolbar
                 content
@@ -154,8 +153,8 @@ struct AudioRecordingView: View {
         .task {
             if !alert {
                 do {
-                    self.gameId = "06hUjGGT6hOdhy3gCRVx"
-                    self.teamId = "7B47AC81-D2C8-4BA7-8B13-3741ED4E6C2C"
+//                    self.gameId = "06hUjGGT6hOdhy3gCRVx"
+//                    self.teamId = "7B47AC81-D2C8-4BA7-8B13-3741ED4E6C2C"
 
                     if self.gameId.isEmpty {
                         // Create a new game
@@ -193,13 +192,13 @@ struct AudioRecordingView: View {
                             uploadedBy: authUser.uid
                         )
                         
+                        // Start the hearbeats on the watch side
+                        connectivity.startHeartbeats()
+
                         // Notify the game has started
                         connectivity.notifyWatchGameStarted(gameId: gameId)
                         
-                        // Start the hearbeats on the watch side
-                        connectivity.startHeartbeats()
                     } else {
-                        
                         if let players = audioRecordingModel.players {
                             let playerNames = players.compactMap { player in
                                 [player.firstName, player.nickname].compactMap { $0 }
@@ -302,7 +301,13 @@ struct AudioRecordingView: View {
                                                 
                         // Cut the transcript to see if the name of the player is in the transcript
                         // See which player the transcript is associated to
-                        try await audioRecordingModel.addRecording(recordingStart: startTime, recordingEnd: endTime, transcription: transcript, feedbackFor: feedbackFor, numAudioFiles: self.audios.count )
+                        try await audioRecordingModel.addRecording(
+                            recordingStart: startTime,
+                            recordingEnd: endTime,
+                            transcription: transcript,
+                            feedbackFor: feedbackFor,
+                            numAudioFiles: self.audios.count
+                        )
                     } catch {
                         errorWrapper = ErrorWrapper(error: error, guidance: "Error when saving the audio recording. Please try again later.")
                     }

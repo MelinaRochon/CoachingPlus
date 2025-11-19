@@ -15,6 +15,8 @@ final class WatchConnectivityProvider: NSObject, WCSessionDelegate, ObservableOb
     
     @Published var isGameRecordingOn = false
     @Published var gameAbruptlyStoppedAlert = false
+    @Published var tryingToReconnectToPhoneAlert = false
+
     private var activationCompletion: (() -> Void)?
 
     init(session: WCSession = .default) {
@@ -42,13 +44,30 @@ final class WatchConnectivityProvider: NSObject, WCSessionDelegate, ObservableOb
     }
 
     private func stopRecordingDueToPhoneClosure() {
-        isGameRecordingOn = false
-        gameAbruptlyStoppedAlert = true
+        DispatchQueue.main.async {
+            self.isGameRecordingOn = false
+            self.tryingToReconnectToPhoneAlert = false
+            self.gameAbruptlyStoppedAlert = true
+        }
         
         // Force the recording to stop
         _ = WatchAudioRecorder.shared.stopRecording()
         print("Stopped recording: no heartbeat from phone")
     }
+    
+    private func tryingToReconectToPhone() {
+        DispatchQueue.main.async {
+            if self.isGameRecordingOn {
+                self.tryingToReconnectToPhoneAlert = true
+            }
+            self.isGameRecordingOn = false
+        }
+        
+        // Force the recording to stop
+        _ = WatchAudioRecorder.shared.stopRecording()
+    }
+
+    
 
         // MARK: - WCSessionDelegate
     
@@ -109,23 +128,28 @@ final class WatchConnectivityProvider: NSObject, WCSessionDelegate, ObservableOb
             // --- 1. Existing logic (keep EXACTLY as is)
             if let isGameOn = message["gameRecordingOn"] as? Bool {
                 self.isGameRecordingOn = isGameOn
+                if isGameOn {
+                    self.lastHeartbeat = Date()
+                }
             }
                         
             if let _ = message["heartbeat"] as? Bool {
                 self.lastHeartbeat = Date()
                 // Optionally, could log receipt
-                print("Heartbeat received")
+                print("msg >> Heartbeat received")
             }
         }
     }
-    
+        
     func sessionReachabilityDidChange(_ session: WCSession) {
         if !session.isReachable {
             print("📴 iPhone app is no longer reachable.")
-            stopRecordingDueToPhoneClosure()
+            tryingToReconectToPhone()
         } else {
             print("📱 iPhone app is reachable again.")
-            requestCurrentGameState()
+            DispatchQueue.main.async {
+                self.requestCurrentGameState()
+            }
         }
     }
     
@@ -138,16 +162,7 @@ final class WatchConnectivityProvider: NSObject, WCSessionDelegate, ObservableOb
             errorHandler: nil
         )
     }
-    
-//    private func stopRecordingDueToPhoneClosure() {
-//        DispatchQueue.main.async {
-//            // Example: stop any active recording or timer
-//            self.isGameRecordingOn = false
-//            self.gameAbruptlyStoppedAlert = true
-//            // Optional: show an alert or message
-//        }
-//    }
-    
+        
     func deleteRecordingsDirectory() {
         let fileManager = FileManager.default
         
@@ -205,6 +220,12 @@ final class WatchConnectivityProvider: NSObject, WCSessionDelegate, ObservableOb
             DispatchQueue.main.async {
                 if let currentState = reply["gameRecordingOn"] as? Bool {
                     self.isGameRecordingOn = currentState
+                    
+                    if !currentState {
+                        self.tryingToReconnectToPhoneAlert = false
+                    } else {
+                        self.lastHeartbeat = Date() // so the game recordings can still be performed
+                    }
                     print("Synced game state from iPhone:", currentState)
                 }
             }

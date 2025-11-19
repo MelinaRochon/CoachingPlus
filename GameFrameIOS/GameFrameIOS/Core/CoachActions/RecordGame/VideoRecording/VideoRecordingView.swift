@@ -150,9 +150,6 @@ struct VideoRecordingView: View {
                                 players: audioRecordingModel.players,
                                 uploadedBy: authUser.uid
                             )
-                            
-                            // Notify the game has started
-                            connectivity.notifyWatchGameStarted(gameId: gameId)
                         }
 
                     } catch {
@@ -332,6 +329,14 @@ struct VideoRecordingView: View {
         Task {
             do {
                 try await fgVideoRecordingModel.updateGameStartTime(gameId: gameId, teamId: teamId, startTime: Date())
+                
+                if isUsingWatch {
+                    // Start the hearbeats on the watch side
+                    connectivity.startHeartbeats()
+                    
+                    // Notify the game has started
+                    connectivity.notifyWatchGameStarted(gameId: gameId)
+                }
             } catch {
                 print(error)
                 return
@@ -342,6 +347,14 @@ struct VideoRecordingView: View {
     private func saveVideoRecording(videoURL: URL) {
         Task {
             do {
+                if isUsingWatch {
+                    // End the game on the watch
+                    connectivity.notifyWatchGameEnded()
+                    
+                    // Stop the heartbeats to let the watch know the game's over
+                    connectivity.stopHeartbeats()
+                }
+
                 savingIsOn.toggle()
                 
                 // Save link to storage database
@@ -355,12 +368,44 @@ struct VideoRecordingView: View {
                     )
                 }
                 
+                if isUsingWatch {
+                    // Remove all recordings inside the GameRecordingsContext
+                    dependencies.currentGameRecordingsContext = nil
+                }
+                
+                // Remove all audio files saved locally
+                removeAllAudioFilesLocally()
+                
                 // Go back to main page
                 dismiss()
                 savedRecording = true
             } catch {
                 print("error", error.localizedDescription)
             }
+        }
+    }
+    
+    private func removeAllAudioFilesLocally() {
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let folderURL = documentsURL.appendingPathComponent("audio/\(teamId)/\(gameId)")
+
+        do {
+            // Get all files in the directory
+            let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
+
+            for fileURL in fileURLs {
+                if fileURL.pathExtension == "m4a" {
+                    do {
+                        try fileManager.removeItem(at: fileURL)
+                        print("✅ Deleted: \(fileURL.lastPathComponent)")
+                    } catch {
+                        print("❌ Failed to delete \(fileURL.lastPathComponent): \(error.localizedDescription)")
+                    }
+                }
+            }
+        } catch {
+            print("⚠️ Could not list directory: \(error.localizedDescription)")
         }
     }
 }

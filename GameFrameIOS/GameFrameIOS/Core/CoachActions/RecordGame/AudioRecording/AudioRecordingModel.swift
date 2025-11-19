@@ -115,6 +115,10 @@ final class AudioRecordingModel: ObservableObject {
             let tempURL = url.appendingPathComponent("audio/\(teamId)/\(gameId)/\(numAudioFiles)")
                 .appendingPathExtension("m4a")
             
+            if dependencies?.currentGameRecordingsContext == nil {
+                dependencies?.currentGameRecordingsContext = GameRecordingsContext()
+            }
+
             StorageManager.shared.uploadAudioFile(localFile: tempURL, path: path) { result in
                 switch result {
                 case .success(let downloadURL):
@@ -126,7 +130,15 @@ final class AudioRecordingModel: ObservableObject {
             }
             
             // Create a new key moment entry
-            let keyMomentDTO = KeyMomentDTO(fullGameId: nil, gameId: gameId, uploadedBy: authUser.uid, audioUrl: path, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: fbFor)
+            let keyMomentDTO = KeyMomentDTO(
+                fullGameId: nil,
+                gameId: gameId,
+                uploadedBy: authUser.uid,
+                audioUrl: path,
+                frameStart: recordingStart,
+                frameEnd: recordingEnd,
+                feedbackFor: fbFor
+            )
             
             // Add a new key moment to the database
             let keyMomentDocId = try await dependencies?.keyMomentManager.addNewKeyMoment(teamId: teamId, keyMomentDTO: keyMomentDTO)
@@ -139,7 +151,14 @@ final class AudioRecordingModel: ObservableObject {
             let confidence: Int = 5 // Should be from 1 to 5 where 1 is the lowest and 5 is most confident
             
             // Create a new transcript entry
-            let transcriptDTO = TranscriptDTO(keyMomentId: keyMomentDocId!, transcript: transcription, language: "English", generatedBy: authUser.uid, confidence: confidence, gameId: gameId)
+            let transcriptDTO = TranscriptDTO(
+                keyMomentId: keyMomentDocId!,
+                transcript: transcription,
+                language: "English",
+                generatedBy: authUser.uid,
+                confidence: confidence,
+                gameId: gameId
+            )
             
             // Add a new transcript to the database
             guard let transcriptDocId = try await dependencies?.transcriptManager.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
@@ -171,8 +190,17 @@ final class AudioRecordingModel: ObservableObject {
                 feedbackForArray.append(feedback)
                 // Add a new recording to the array
                 let recordingsLength = self.recordings.count
-                let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: safeKeyMomentId, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
-                self.recordings.append(newRecording)
+                let newRecording = keyMomentTranscript(
+                    id: recordingsLength,
+                    keyMomentId: safeKeyMomentId,
+                    transcriptId: transcriptDocId,
+                    transcript: transcription,
+                    frameStart: recordingStart,
+                    frameEnd: recordingEnd,
+                    feedbackFor: feedbackForArray
+                )
+//                self.recordings.append(newRecording)
+                dependencies?.currentGameRecordingsContext!.recordings.append(newRecording)
             } else {
                 // if there are players on the team, then associate to each one of them
                 if let playersInTeam = players {
@@ -180,8 +208,18 @@ final class AudioRecordingModel: ObservableObject {
                     feedbackForArray.append(contentsOf: playersInTeam.map { $0 })
                     let recordingsLength = self.recordings.count
                     // Add a new recording to the array
-                    let newRecording = keyMomentTranscript(id: recordingsLength, keyMomentId: safeKeyMomentId, transcriptId: transcriptDocId, transcript: transcription, frameStart: recordingStart, frameEnd: recordingEnd, feedbackFor: feedbackForArray)
-                    self.recordings.append(newRecording)
+                    let newRecording = keyMomentTranscript(
+                        id: recordingsLength,
+                        keyMomentId: safeKeyMomentId,
+                        transcriptId: transcriptDocId,
+                        transcript: transcription,
+                        frameStart: recordingStart,
+                        frameEnd: recordingEnd,
+                        feedbackFor: feedbackForArray
+                    )
+//                    self.recordings.append(newRecording)
+                    dependencies?.currentGameRecordingsContext!.recordings.append(newRecording)
+
                 } else {
                     print("no feedback")
                 }

@@ -20,11 +20,19 @@ struct GameFrameWatch_Watch_AppApp: App {
                         .environmentObject(watchConnectivityProvider)
                 } else {
                     VStack {
-                        ProgressView()
-                        Text("Waiting for iPhone to start the game…")
-                            .font(.footnote)
-                            .multilineTextAlignment(.center)
-                            .padding()
+                        if watchConnectivityProvider.tryingToReconnectToPhoneAlert {
+                            ProgressView()
+                            Text("Reconnecting to iPhone…")
+                                .font(.footnote)
+                                .multilineTextAlignment(.center)
+                                .padding()
+                        } else {
+                            ProgressView()
+                            Text("Waiting for iPhone to start the game…")
+                                .font(.footnote)
+                                .multilineTextAlignment(.center)
+                                .padding()
+                        }
                     }
                     .alert("Connection Lost", isPresented: $watchConnectivityProvider.gameAbruptlyStoppedAlert) {
                         Button("OK", role: .cancel) { }

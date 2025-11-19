@@ -56,6 +56,8 @@ struct CoachRecordingConfigView: View {
     /// To dismiss the view when a game is done saving
     @State private var savedRecording: Bool = false
     
+    @State private var showDisclamerForAppleWatch: Bool = false
+    
     // MARK: - View
 
     var body: some View {
@@ -90,7 +92,13 @@ struct CoachRecordingConfigView: View {
                             // If an apple watch can be found, is paired and the application was downloaded on the watch
                             // Apple Watch Recording Toggle
                             Toggle("Use Apple Watch for Recording", isOn: $selectedAppleWatchUseLabel)
+                                .onChange(of: selectedAppleWatchUseLabel) { newValue in
+                                    if newValue {
+                                        showDisclamerForAppleWatch = true
+                                    }
+                                }
                                 .disabled(!connectivity.canRecordWithWatch)
+                                .foregroundStyle(connectivity.canRecordWithWatch ? .primary : .secondary)
                         }
                     }
                 }
@@ -171,6 +179,14 @@ struct CoachRecordingConfigView: View {
                 // Video recording of game was saved and added to database
                 // Dismiss this view
                 dismiss()
+            }
+            .alert("Open GameFrame on Your Apple Watch", isPresented: $showDisclamerForAppleWatch) {
+                Button("OK") {
+                    // Proceed with setting up the apple watch
+                    showDisclamerForAppleWatch.toggle()
+                }
+            } message: {
+                Text("To start recording feedback using your Apple Watch, please open the GameFrame app on your watch. Recording will begin as soon as the watch app is active.")
             }
         }
     }

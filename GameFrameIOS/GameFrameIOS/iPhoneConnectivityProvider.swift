@@ -259,7 +259,7 @@ final class iPhoneConnectivityProvider: NSObject, WCSessionDelegate, ObservableO
             )
             
             // Add a new transcript to the database
-            guard let transcriptDocId = try await dependencies.transcriptManager.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
+            guard let _ = try await dependencies.transcriptManager.addNewTranscript(teamId: teamId, transcriptDTO: transcriptDTO) else {
                 print("Error: the transcript doc ID is nil.")
                 return
             }
