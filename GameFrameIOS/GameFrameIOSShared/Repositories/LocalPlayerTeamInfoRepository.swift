@@ -20,4 +20,25 @@ public final class LocalPlayerTeamInfoRepository: PlayerTeamInfoRepository {
         playerTeamInfos.append(playerTeamInfoObj)
         return id
     }
+    
+    public func getPlayerTeamInfo(playerDocId: String, teamId: String) async throws -> DBPlayerTeamInfo? {
+        guard let playerTeamInfo = playerTeamInfos.first(where: { $0.id == teamId}) else {
+            return nil
+        }
+        
+        return playerTeamInfo
+    }
+    
+    public func updatePlayerTeamInfoJerseyAndNickname(teamId: String, playerDocId: String, jersey: Int?, nickname: String?) async throws {
+        guard let index = playerTeamInfos.firstIndex(where: { $0.id == teamId}) else {
+            return
+        }
+        
+        if let jersey = jersey {
+            playerTeamInfos[index].jerseyNum = jersey
+        }
+        if let nickname = nickname {
+            playerTeamInfos[index].nickName = nickname
+        }
+    }
 }

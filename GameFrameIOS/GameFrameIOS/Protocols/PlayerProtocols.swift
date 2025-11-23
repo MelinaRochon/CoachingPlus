@@ -35,3 +35,21 @@ protocol PlayerProtocol {
     ///           and the email contains the "@" symbol. Otherwise, `false`.
     var addPlayerToTeamIsValid: Bool { get }
 }
+
+
+/// A protocol defining validation rules used when adding or updating a player on a team.
+/// Each property represents whether a specific field has been changed and is considered valid.
+protocol AddingPlayerToTeam {
+
+    /// Indicates whether the player's nickname is valid
+    /// (e.g., non-empty, formatted correctly, and different from the existing nickname).
+    var isValidNickname: Bool { get }
+
+    /// Indicates whether the player's jersey number is valid
+    /// (e.g., non-zero and different from the player's current jersey number).
+    var isValidJerseyNumber: Bool { get }
+
+    /// Indicates whether the player's selected positions are valid
+    /// (e.g., not empty and different from the player's previous positions).
+    var isValidPositions: Bool { get }
+}

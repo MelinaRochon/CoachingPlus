@@ -18,27 +18,24 @@ import Foundation
     - `status`: The current status of the invite (e.g., "pending", "accepted").
     - `dateInviteSent`: The date when the invite was sent.
     - `dateAccepted`: The date when the invite was accepted, or `nil` if not accepted.
-    - `teamId`: The ID of the team to which the invite pertains.
  */
 public struct DBInvite: Codable {
     public let id: String
     public let userDocId: String
     public let playerDocId: String
     public let email: String
-    public var status: String
+    public var status: UserAccountStatus
     public let dateInviteSent: Date
-    public let dateAccepted: Date?
-    public let teamId: String
+    public let dateVerified: Date?
     
-    public init(id: String, userDocId: String, playerDocId: String, email: String, status: String, dateInviteSent: Date, dateAccepted: Date? = nil, teamId: String) {
+    public init(id: String, userDocId: String, playerDocId: String, email: String, status: UserAccountStatus, dateInviteSent: Date, dateVerified: Date? = nil) {
         self.id = id
         self.userDocId = userDocId
         self.playerDocId = playerDocId
         self.email = email
         self.status = status
         self.dateInviteSent = dateInviteSent
-        self.dateAccepted = dateAccepted
-        self.teamId = teamId
+        self.dateVerified = dateVerified
     }
     
     public init(id: String, inviteDTO: InviteDTO) {
@@ -48,8 +45,7 @@ public struct DBInvite: Codable {
         self.email = inviteDTO.email
         self.status = inviteDTO.status
         self.dateInviteSent = Date()
-        self.dateAccepted = inviteDTO.dateAccepted
-        self.teamId = inviteDTO.teamId
+        self.dateVerified = inviteDTO.dateVerified
     }
     
     public enum CodingKeys: String, CodingKey {
@@ -59,8 +55,7 @@ public struct DBInvite: Codable {
         case email = "email"
         case status = "status"
         case dateInviteSent = "date_invite_sent"
-        case dateAccepted = "date_accepted"
-        case teamId = "team_id"
+        case dateVerified = "date_verified"
     }
     
     public init(from decoder: any Decoder) throws {
@@ -69,10 +64,9 @@ public struct DBInvite: Codable {
         self.userDocId = try container.decode(String.self, forKey: .userDocId)
         self.playerDocId = try container.decode(String.self, forKey: .playerDocId)
         self.email = try container.decode(String.self, forKey: .email)
-        self.status = try container.decode(String.self, forKey: .status)
+        self.status = try container.decode(UserAccountStatus.self, forKey: .status)
         self.dateInviteSent = try container.decode(Date.self, forKey: .dateInviteSent)
-        self.dateAccepted = try container.decodeIfPresent(Date.self, forKey: .dateAccepted)
-        self.teamId = try container.decode(String.self, forKey: .teamId)
+        self.dateVerified = try container.decodeIfPresent(Date.self, forKey: .dateVerified)
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -83,8 +77,7 @@ public struct DBInvite: Codable {
         try container.encode(self.email, forKey: .email)
         try container.encode(self.status, forKey: .status)
         try container.encode(self.dateInviteSent, forKey: .dateInviteSent)
-        try container.encodeIfPresent(self.dateAccepted, forKey: .dateAccepted)
-        try container.encode(self.teamId, forKey: .teamId)
+        try container.encodeIfPresent(self.dateVerified, forKey: .dateVerified)
     }
 }
 

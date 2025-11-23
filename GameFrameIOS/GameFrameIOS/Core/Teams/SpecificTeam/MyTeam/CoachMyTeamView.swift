@@ -190,9 +190,9 @@ struct CoachMyTeamView: View {
                 }
             }
         }
-        .sheet(isPresented: $addPlayerEnabled, onDismiss: refreshData) {
+        .fullScreenCover(isPresented: $addPlayerEnabled, onDismiss: refreshData) {
             // Sheet to add a new player
-            CoachAddPlayersView(team: selectedTeam) // passing the teamId as an argument
+            CoachAddNewInviteView(team: selectedTeam)
         }
         .sheet(isPresented: $addGameEnabled, onDismiss: refreshData) {
             // Sheet to add a new game

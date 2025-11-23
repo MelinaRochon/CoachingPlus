@@ -14,8 +14,6 @@ import Foundation
 public struct DBPlayer: Codable {
     public let id: String
     public var playerId: String?
-    public var jerseyNum: Int
-    public var nickName: String?
     public var gender: String?
     public let profilePicture: String?
     public var teamsEnrolled: [String]? // TODO: Think about leaving it as it is or putting it as optional
@@ -28,8 +26,6 @@ public struct DBPlayer: Codable {
     public init(
         id: String,
         playerId: String? = nil,
-        jerseyNum: Int,
-        nickName: String? = nil,
         gender: String? = nil,
         guardianName: String? = nil,
         guardianEmail: String? = nil,
@@ -39,8 +35,6 @@ public struct DBPlayer: Codable {
     ) {
         self.id = id
         self.playerId = playerId
-        self.jerseyNum = jerseyNum
-        self.nickName = nickName
         self.gender = gender
         self.guardianName = guardianName
         self.guardianEmail = guardianEmail
@@ -52,8 +46,6 @@ public struct DBPlayer: Codable {
     public init(id: String) {
         self.id = id
         self.playerId = nil
-        self.jerseyNum = 0
-        self.nickName = nil
         self.gender = nil
         self.guardianName = nil
         self.guardianEmail = nil
@@ -65,8 +57,6 @@ public struct DBPlayer: Codable {
     public init(id: String, playerDTO: PlayerDTO) {
         self.id = id
         self.playerId = playerDTO.playerId
-        self.jerseyNum = playerDTO.jerseyNum
-        self.nickName = playerDTO.nickName
         self.gender = playerDTO.gender
         self.guardianName = playerDTO.guardianName
         self.guardianEmail = playerDTO.guardianEmail
@@ -78,8 +68,6 @@ public struct DBPlayer: Codable {
     public enum CodingKeys: String, CodingKey {
         case id = "id"
         case playerId = "player_id"
-        case jerseyNum = "jersey_num"
-        case nickName = "nickname"
         case gender = "gender"
         case guardianName = "guardian_name"
         case guardianEmail = "guardian_email"
@@ -92,8 +80,6 @@ public struct DBPlayer: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)
         self.playerId = try container.decodeIfPresent(String.self, forKey: .playerId)
-        self.jerseyNum = try container.decode(Int.self, forKey: .jerseyNum)
-        self.nickName = try container.decodeIfPresent(String.self, forKey: .nickName)
         self.gender = try container.decodeIfPresent(String.self, forKey: .gender)
         self.guardianName = try container.decodeIfPresent(String.self, forKey: .guardianName)
         self.guardianEmail = try container.decodeIfPresent(String.self, forKey: .guardianEmail)
@@ -106,8 +92,6 @@ public struct DBPlayer: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.id, forKey: .id)
         try container.encode(self.playerId, forKey: .playerId)
-        try container.encode(self.jerseyNum, forKey: .jerseyNum)
-        try container.encodeIfPresent(self.nickName, forKey: .nickName)
         try container.encodeIfPresent(self.gender, forKey: .gender)
         try container.encodeIfPresent(self.guardianName, forKey: .guardianName)
         try container.encodeIfPresent(self.guardianEmail, forKey: .guardianEmail)

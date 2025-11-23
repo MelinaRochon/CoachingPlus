@@ -93,8 +93,6 @@ public protocol PlayerRepository {
     /// - Throws: An error if the update fails.
     func updatePlayerSettings(
         id: String,
-        jersey: Int?,
-        nickname: String?,
         guardianName: String?,
         guardianEmail: String?,
         guardianPhone: String?,
@@ -107,7 +105,7 @@ public protocol PlayerRepository {
     ///   - jersey: The new jersey number to assign.
     ///   - nickname: The new nickname to assign.
     /// - Throws: An error if the update fails.
-    func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws
+//    func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws
 
     /// Updates the player's unique identifier.
     /// - Parameters:

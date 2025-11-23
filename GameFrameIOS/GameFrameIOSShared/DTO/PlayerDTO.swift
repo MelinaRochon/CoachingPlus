@@ -29,12 +29,6 @@ public struct PlayerDTO {
     /// The unique identifier for the player. This field is optional because the player might not have an ID assigned at the time of creation.
     public let playerId: String?
     
-    /// The jersey number of the player. This is a required field to identify the player within the team.
-    public var jerseyNum: Int
-    
-    /// The nickname of the player, if any. This is an optional field.
-    public var nickName: String?
-    
     /// The gender of the player, if provided. This field is optional and can be used for sorting or filtering players by gender.
     public let gender: String?
     
@@ -54,10 +48,16 @@ public struct PlayerDTO {
     /// The guardian's phone number, if applicable. This field is optional.
     public var guardianPhone: String?
     
-    public init(playerId: String?, jerseyNum: Int, nickName: String? = nil, gender: String?, profilePicture: String?, teamsEnrolled: [String], guardianName: String? = nil, guardianEmail: String? = nil, guardianPhone: String? = nil) {
+    public init(
+        playerId: String?,
+        gender: String?,
+        profilePicture: String?,
+        teamsEnrolled: [String],
+        guardianName: String? = nil,
+        guardianEmail: String? = nil,
+        guardianPhone: String? = nil
+    ) {
         self.playerId = playerId
-        self.jerseyNum = jerseyNum
-        self.nickName = nickName
         self.gender = gender
         self.profilePicture = profilePicture
         self.teamsEnrolled = teamsEnrolled

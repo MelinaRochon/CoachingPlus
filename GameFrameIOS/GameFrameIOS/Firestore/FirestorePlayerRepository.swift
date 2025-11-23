@@ -201,8 +201,6 @@ public final class FirestorePlayerRepository: PlayerRepository {
      */
     public func updatePlayerInfo(player: DBPlayer) async throws {
         let data: [String:Any] = [
-            DBPlayer.CodingKeys.jerseyNum.rawValue: player.jerseyNum,
-            DBPlayer.CodingKeys.nickName.rawValue: player.nickName ?? "",
             DBPlayer.CodingKeys.guardianName.rawValue: player.guardianName ?? "",
             DBPlayer.CodingKeys.guardianEmail.rawValue: player.guardianEmail ?? "",
             DBPlayer.CodingKeys.guardianPhone.rawValue: player.guardianPhone ?? "",
@@ -222,16 +220,9 @@ public final class FirestorePlayerRepository: PlayerRepository {
     ///   - guardianPhone: Optional updated guardian's phone number.
     ///   - gender: Optional updated gender.
     /// - Throws: Rethrows any errors that occur during the Firestore update operation.
-    public func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
+    public func updatePlayerSettings(id: String, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
+
         var data: [String: Any] = [:]
-        if let jersey = jersey {
-            data[DBPlayer.CodingKeys.jerseyNum.rawValue] = jersey
-        }
-        
-        if let nickname = nickname {
-            data[DBPlayer.CodingKeys.nickName.rawValue] = nickname
-        }
-        
         if let guardianName = guardianName {
             data[DBPlayer.CodingKeys.guardianName.rawValue] = guardianName
         }
@@ -269,15 +260,15 @@ public final class FirestorePlayerRepository: PlayerRepository {
      - Parameter nickname: The new nickname for the player.
      - Throws: An error if updating the document fails.
      */
-    public func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
-        let data: [String:Any] = [
-            DBPlayer.CodingKeys.jerseyNum.rawValue: jersey,
-            DBPlayer.CodingKeys.nickName.rawValue: nickname,
-        ]
-        
-        // update data in the database
-        try await playerDocument(id: playerDocId).updateData(data as [AnyHashable: Any])
-    }
+//    public func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
+//        let data: [String:Any] = [
+//            DBPlayer.CodingKeys.jerseyNum.rawValue: jersey,
+//            DBPlayer.CodingKeys.nickName.rawValue: nickname,
+//        ]
+//        
+//        // update data in the database
+//        try await playerDocument(id: playerDocId).updateData(data as [AnyHashable: Any])
+//    }
     
     
     /**

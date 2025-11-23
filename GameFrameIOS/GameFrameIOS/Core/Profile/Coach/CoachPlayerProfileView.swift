@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /**
  This view represents a coach's interface for viewing and editing a player's profile.
@@ -95,8 +96,8 @@ struct CoachPlayerProfileView: View {
                             }
                         
                         Text("\(firstName) \(lastName)").font(.title)
-                        if let player = profileModel.player {
-                            Text("# \(player.jerseyNum)").font(.subheadline)
+                        if let playerTeamInfo = profileModel.playerTeamInfo {
+                            Text("# \(playerTeamInfo.jerseyNum)").font(.subheadline)
                         }
                         Text(user.email).font(.subheadline).foregroundStyle(.secondary).padding(.bottom)
                     }
@@ -221,9 +222,11 @@ struct CoachPlayerProfileView: View {
                         guardianName = player.guardianName ?? ""
                         guardianEmail = player.guardianEmail ?? ""
                         guardianPhone = player.guardianPhone ?? ""
-                        nickname = player.nickName ?? ""
-                        jerseyNum = player.jerseyNum
                         gender = player.gender ?? ""
+                    }
+                    if let playerTeamInfo = profileModel.playerTeamInfo {
+                        nickname = playerTeamInfo.nickName ?? ""
+                        jerseyNum = playerTeamInfo.jerseyNum
                     }
                     if let user = profileModel.user {
                         firstName = user.firstName
@@ -300,6 +303,8 @@ struct CoachEditPlayerProfileView: View {
     @Environment(\.dismiss) var dismiss
     
     @Binding var dismissOnRemove: Bool
+    
+    @State private var teamId: String?
     
     var body: some View {
         NavigationView {
@@ -451,9 +456,11 @@ struct CoachEditPlayerProfileView: View {
                                     guardianName = player.guardianName ?? ""
                                     guardianEmail = player.guardianEmail ?? ""
                                     guardianPhone = player.guardianPhone ?? ""
-                                    nickname = player.nickName ?? ""
-                                    jerseyNum = player.jerseyNum
                                     gender = player.gender ?? ""
+                                }
+                                if let playerTeamInfo = profileModel.playerTeamInfo {
+                                    nickname = playerTeamInfo.nickName ?? ""
+                                    jerseyNum = playerTeamInfo.jerseyNum
                                 }
                                 if let user = profileModel.user {
                                     firstName = user.firstName
@@ -489,6 +496,15 @@ struct CoachEditPlayerProfileView: View {
             }
             .onAppear {
                 profileModel.setDependencies(dependencies)
+                
+                Task {
+                    do {
+                        teamId = try await profileModel.getTeamId(teamDocId: teamDocId)
+                    } catch TeamError.teamNotFound {
+                        // TODO: Manage error
+                        return
+                    }
+                }
             }
         }
         .ignoresSafeArea()
@@ -496,7 +512,7 @@ struct CoachEditPlayerProfileView: View {
     
     private func savingPlayerInformation() {
         Task {
-            if let player = profileModel.player {
+            if let player = profileModel.player, let playerTeamInfo = profileModel.playerTeamInfo, let teamId = teamId {
                 var playerJersey: Int? = jerseyNum
                 var playerNickname: String? = nickname
                 var playerGuardianName: String? = guardianName
@@ -504,13 +520,20 @@ struct CoachEditPlayerProfileView: View {
                 var playerGuardianPhone: String? = guardianPhone
                 var playerGender: String? = gender
                 
-                if jerseyNum == player.jerseyNum {
+                if jerseyNum == playerTeamInfo.jerseyNum {
                     playerJersey = nil
                 }
                 
-                if nickname == player.nickName {
+                if nickname == playerTeamInfo.nickName {
                     playerNickname = nil
                 }
+                
+                profileModel.updatePlayerTeamInfoSettings(
+                    playerDocId: player.id,
+                    teamId: teamId,
+                    jersey: playerJersey,
+                    nickname: playerNickname
+                )
                 
                 if guardianName == player.guardianName {
                     playerGuardianName = nil
@@ -531,8 +554,6 @@ struct CoachEditPlayerProfileView: View {
   
                 profileModel.updatePlayerSettings(
                     id: player.id,
-                    jersey: playerJersey,
-                    nickname: playerNickname,
                     guardianName: playerGuardianName,
                     guardianEmail: playerGuardianEmail,
                     guardianPhone: playerGuardianPhone,
@@ -607,7 +628,7 @@ extension CoachEditPlayerProfileView: UserEditProfileProtocol {
             isDobToday = false
         }
         
-        if let user = profileModel.user, let player = profileModel.player {
+        if let user = profileModel.user, let player = profileModel.player, let playerTeamInfo = profileModel.playerTeamInfo {
             return (user.firstName != firstName || user.lastName != lastName)
             && (!firstName.isEmpty && isValidName(firstName))
             && (!lastName.isEmpty && isValidName(lastName))
@@ -616,8 +637,8 @@ extension CoachEditPlayerProfileView: UserEditProfileProtocol {
             || (player.guardianName != guardianName && (guardianName != "" || ((player.guardianName?.isEmpty) != nil)))
             || (player.guardianPhone != guardianPhone && ((guardianPhone != "" || (player.guardianPhone?.isEmpty) != nil)) && isValidPhoneNumber(guardianPhone))
             || (player.guardianEmail != guardianEmail && ((guardianEmail != "" || (player.guardianEmail?.isEmpty) != nil)) && isValidEmail(guardianEmail))
-            || (player.jerseyNum != jerseyNum)
-            || (player.nickName != nickname && ((player.nickName?.isEmpty) != nil))
+            || (playerTeamInfo.jerseyNum != jerseyNum)
+            || (playerTeamInfo.nickName != nickname && ((playerTeamInfo.nickName?.isEmpty) != nil))
         }
         return false
     }

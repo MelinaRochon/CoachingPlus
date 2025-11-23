@@ -30,9 +30,8 @@ final class LocalInviteRepositoryTests: XCTestCase {
             userDocId: "user1",
             playerDocId: "player1",
             email: "player@email.com",
-            status: "Accepted",
-            dateAccepted: Date(),
-            teamId: "team1"
+            status: .verified,
+            dateVerified: Date()
         )
 
         // Act
@@ -43,7 +42,6 @@ final class LocalInviteRepositoryTests: XCTestCase {
         let inv = try XCTUnwrap(fetched)
         XCTAssertEqual(inv.id, id)
         XCTAssertEqual(inv.email, dto.email)
-        XCTAssertEqual(inv.teamId, dto.teamId)
         XCTAssertEqual(inv.playerDocId, dto.playerDocId)
         XCTAssertEqual(inv.status, dto.status)
     }
@@ -60,17 +58,13 @@ final class LocalInviteRepositoryTests: XCTestCase {
         let b = fixtures[1]
 
         // Act
-        let foundA = try await manager.getInviteByEmailAndTeamId(email: a.email, teamId: a.teamId)
-        let foundB = try await manager.getInviteByEmailAndTeamId(email: b.email, teamId: b.teamId)
-        let notFound = try await manager.getInviteByEmailAndTeamId(email: "nope@example.com", teamId: a.teamId)
+        let foundA = try await manager.getInviteByEmailAndTeamId(email: a.email, teamId: "team3")
+        let foundB = try await manager.getInviteByEmailAndTeamId(email: b.email, teamId: "team3")
+        let notFound = try await manager.getInviteByEmailAndTeamId(email: "nope@example.com", teamId: "team3")
 
         // Assert
         XCTAssertEqual(foundA?.email, a.email)
-        XCTAssertEqual(foundA?.teamId, a.teamId)
-
         XCTAssertEqual(foundB?.email, b.email)
-        XCTAssertEqual(foundB?.teamId, b.teamId)
-
         XCTAssertNil(notFound)
     }
 
@@ -92,12 +86,11 @@ final class LocalInviteRepositoryTests: XCTestCase {
         // Assert: found by playerDocId; teamDocId is not enforced
         XCTAssertNotNil(found)
         XCTAssertEqual(found?.playerDocId, sample.playerDocId)
-        XCTAssertEqual(found?.teamId, sample.teamId)
 
         // Negative case: unknown playerDocId should return nil
         let notFound = try await manager.getInviteByPlayerDocIdAndTeamId(
             playerDocId: "non-existent-player",
-            teamDocId: sample.teamId
+            teamDocId: "team3"
         )
         XCTAssertNil(notFound)
     }
@@ -107,10 +100,10 @@ final class LocalInviteRepositoryTests: XCTestCase {
         let existing = try await manager.getInviteByEmailAndTeamId(email: "player9@example.com", teamId: "team3")
         let id = try XCTUnwrap(existing?.id)
 
-        try await manager.updateInviteStatus(id: id, newStatus: "accepted")
+        try await manager.updateInviteStatus(id: id, newStatus: .verified)
 
         let fetched = try await manager.getInvite(id: id)
-        XCTAssertEqual(fetched?.status, "accepted")
+        XCTAssertEqual(fetched?.status, .verified)
     }
 
 

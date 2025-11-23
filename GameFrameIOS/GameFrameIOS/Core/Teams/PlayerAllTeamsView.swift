@@ -135,7 +135,7 @@ struct PlayerAllTeamsView: View {
                                             let newTeam = try await teamModel.addingPlayerToTeam(team: tmpTeam)
                                             teams!.append(newTeam!)
                                             groupCode = "" // Reset input field
-
+                                            
                                             let teamId = newTeam?.teamId ?? ""
                                             guard !teamId.isEmpty else {
                                                 throw NSError(domain: "JoinTeam", code: 1,
@@ -146,18 +146,20 @@ struct PlayerAllTeamsView: View {
                                                 print("TODO: Show error")
                                                 return
                                             }
-
+                                            
+                                            let playerDocId = try await playerTeamInfoModel.findPlayerDocId(playerId: auth.uid)
+                                            
                                             // Build the DTO
-                                                let dto = PlayerTeamInfoDTO(
-                                                    id: teamId,
-                                                    playerId: auth.uid,
-                                                    nickname: nil,
-                                                    jerseyNum: nil,
-                                                    joinedAt: nil           // nil => server timestamp
-                                                )
-
-                                                _ = try await playerTeamInfoModel.createPlayerTeamInfo(playerTeamInfoDTO: dto)
-
+                                            let dto = PlayerTeamInfoDTO(
+                                                id: teamId,
+                                                playerDocId: playerDocId,
+                                                nickname: nil,
+                                                jerseyNum: 0,
+                                                joinedAt: nil           // nil => server timestamp
+                                            )
+                                            
+                                            _ = try await playerTeamInfoModel.createPlayerTeamInfo(playerTeamInfoDTO: dto)
+                                            
                                         } catch {
                                             print("Error when adding user to team. \(error)")
                                             showError = true

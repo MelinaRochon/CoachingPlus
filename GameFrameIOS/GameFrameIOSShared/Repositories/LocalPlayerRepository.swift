@@ -111,24 +111,14 @@ public final class LocalPlayerRepository: PlayerRepository {
         players[index] = player
     }
     
-    public func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
+    public func updatePlayerSettings(id: String, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
         guard let index = players.firstIndex(where: { $0.id == id}) else {
             throw PlayerError.playerNotFound
         }
-        players[index].jerseyNum = jersey ?? players[index].jerseyNum
-        players[index].nickName = nickname ?? players[index].nickName
         players[index].guardianName = guardianName ?? players[index].guardianName
         players[index].guardianEmail = guardianEmail ?? players[index].guardianEmail
         players[index].guardianPhone = guardianPhone ?? players[index].guardianPhone
         players[index].gender = gender ?? players[index].gender
-    }
-    
-    public func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
-        guard let index = players.firstIndex(where: { $0.id == playerDocId}) else {
-            throw PlayerError.playerNotFound
-        }
-        players[index].jerseyNum = jersey
-        players[index].nickName = nickname
     }
     
     public func updatePlayerId(id: String, playerId: String) async throws {

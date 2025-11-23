@@ -72,7 +72,7 @@ final class PlayerModel: ObservableObject {
             }
             
             // If the invitation is still pending, retrieve the user details.
-            if invite.status == "Pending" {
+            if invite.status == .unverified {
                 print("We are here. with \(inviteDocId)")
                 // get the user info
                 guard let user = try await dependencies?.userManager.getUserWithDocId(id: invite.userDocId) else {
@@ -193,5 +193,47 @@ final class PlayerModel: ObservableObject {
             print("Failed to add player to the team.. \(error.localizedDescription)")
             return false
         }
+    }
+    
+    
+    /// Retrieves a player document based on the provided `userId`,
+    /// and ensures that the player is not already associated with the given team.
+    ///
+    /// - Parameters:
+    ///   - userId: The ID that represents the user's account.
+    ///   - teamId: The team to check against for duplicate membership.
+    ///
+    /// - Throws:
+    ///   - `PlayerError.playerNotFound` if no corresponding player document exists.
+    ///   - `PlayerError.playerAlreadyAddedToTeam` if the player is already enrolled in the team.
+    ///
+    /// - Returns: The `DBPlayer` model representing the player.
+    func findPlayerWithUserId(userId: String, teamId: String) async throws -> DBPlayer {
+        guard let player = try await dependencies?.playerManager.getPlayer(playerId: userId) else {
+            throw PlayerError.playerNotFound
+        }
+        
+        // Ensure the player isn't already a member of this team
+        if let teamsEnrolled = player.teamsEnrolled {
+            if teamsEnrolled.contains(teamId) {
+                throw PlayerError.playerAlreadyAddedToTeam
+            }
+        }
+
+        return player
+    }
+    
+    /// Retrieves a player document directly using the player's document ID.
+    ///
+    /// - Parameter playerDocId: The Firestore document ID of the player.
+    /// - Throws:
+    ///   - `PlayerError.playerNotFound` if the player document does not exist.
+    /// - Returns: A `DBPlayer` object containing the player's information.
+    func findPlayerWithPlayerDocId(playerDocId: String) async throws -> DBPlayer {
+        guard let player = try await dependencies?.playerManager.findPlayerWithId(id: playerDocId) else {
+            throw PlayerError.playerNotFound
+        }
+        
+        return player
     }
 }

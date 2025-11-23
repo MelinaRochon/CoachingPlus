@@ -36,7 +36,7 @@ func createCoach(for manager: CoachManager, coachId: String = "coach_123") async
 /// - Returns: The created `DBUser` instance if successfully retrieved, otherwise `nil`.
 /// - Throws: Any error encountered during user creation or retrieval.
 func createUser(for manager: UserManager, userDTO: UserDTO, userId: String = "user_123") async throws -> DBUser? {
-    try await manager.createNewUser(userDTO: userDTO)
+    _ = try await manager.createNewUser(userDTO: userDTO)
     return try await manager.getUser(userId: userId)
 }
 
@@ -57,7 +57,7 @@ func createUserFromJSON(for manager: UserManager, user: DBUser, userId: String =
         firstName: user.firstName,
         lastName: user.lastName
     )
-    try await manager.createNewUser(userDTO: userDTO)
+    _ = try await manager.createNewUser(userDTO: userDTO)
     return try await manager.getUser(userId: userId)
 }
 
@@ -71,7 +71,7 @@ func createUserFromJSON(for manager: UserManager, user: DBUser, userId: String =
 /// - Returns: The created `DBPlayer` if successfully stored and retrieved, otherwise `nil`.
 /// - Throws: Any error thrown by the `PlayerManager` during creation or retrieval.
 func createPlayer(for manager: PlayerManager, playerDTO: PlayerDTO, playerId: String = "uid002") async throws -> DBPlayer? {
-    try await manager.createNewPlayer(playerDTO: playerDTO)
+    _ = try await manager.createNewPlayer(playerDTO: playerDTO)
     return try await manager.getPlayer(playerId: playerId)
 }
 
@@ -86,8 +86,6 @@ func createPlayer(for manager: PlayerManager, playerDTO: PlayerDTO, playerId: St
 func createPlayerForJSON(for manager: PlayerManager, player: DBPlayer) async throws -> DBPlayer? {
     let playerDTO = PlayerDTO(
         playerId: player.playerId,
-        jerseyNum: player.jerseyNum,
-        nickName: player.nickName,
         gender: player.gender,
         profilePicture: player.profilePicture,
         teamsEnrolled: player.teamsEnrolled ?? [],
@@ -95,7 +93,7 @@ func createPlayerForJSON(for manager: PlayerManager, player: DBPlayer) async thr
         guardianEmail: player.guardianEmail,
         guardianPhone: player.guardianPhone
     )
-    try await manager.createNewPlayer(playerDTO: playerDTO)
+    _ = try await manager.createNewPlayer(playerDTO: playerDTO)
     return try await manager.getPlayer(playerId: player.playerId!)
 }
 

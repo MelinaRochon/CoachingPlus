@@ -33,6 +33,7 @@ public enum KeyMomentError: Error {
 
 public enum PlayerError: Error {
     case playerNotFound
+    case playerAlreadyAddedToTeam
 }
 
 public enum TeamError: Error {
@@ -44,6 +45,13 @@ public enum TeamError: Error {
     case inviteNotFound
 }
 
+public enum InviteError: Error {
+    case inviteNotFound
+    case invalidStatus
+    case inviteAlreadyExistsForThisTeamId
+    case errorWhenCreatingTeamInvite
+}
+
 public enum TranscriptError: Error {
     case transcriptNotFound
 }
@@ -53,4 +61,8 @@ public enum UserError: Error {
     case userNotFound
     case userInvalidEmail
     case invalidUserName
+}
+
+public enum PlayerTeamInfoError: Error {
+    case playerTeamInfoNotFound
 }

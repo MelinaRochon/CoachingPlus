@@ -26,12 +26,12 @@ final class PlayerTeamInfoManagerTests: XCTestCase {
 
     func testAddNewPlayerTeamInfo() async throws {
         let playerTeamInfoId = "uuid01"
-        let playerId = "player_123"
+        let playerDocId = "player_123"
         let playerTeamInfoDocId = "playerTeamInfoDocId01"
         // Add a new user
         let playerTeamDTO = PlayerTeamInfoDTO(
             id: playerTeamInfoId,
-            playerId: playerId,
+            playerDocId: playerDocId,
             nickname: nil,
             jerseyNum: 12,
             joinedAt: Date()

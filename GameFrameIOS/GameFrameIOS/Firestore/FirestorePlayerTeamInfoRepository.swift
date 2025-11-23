@@ -53,5 +53,46 @@ public final class FirestorePlayerTeamInfoRepository: PlayerTeamInfoRepository {
 
         return ref.documentID
     }
+    
+    
+    /// Retrieves a player's team-specific info document from Firestore.
+    ///
+    /// - Parameters:
+    ///   - playerDocId: The Firestore document ID of the player.
+    ///   - teamId: The Firestore document ID of the team.
+    /// - Returns: A `DBPlayerTeamInfo` object if it exists, otherwise `nil`.
+    public func getPlayerTeamInfo(playerDocId: String, teamId: String) async throws -> DBPlayerTeamInfo? {
+        return try await teamInfoDocument(playerDocId: playerDocId, teamId: teamId).getDocument(as: DBPlayerTeamInfo.self)
+    }
+    
+    
+    /// Updates only the jersey number and/or nickname fields for a player's team info.
+    ///
+    /// - Parameters:
+    ///   - teamId: The Firestore team document ID.
+    ///   - playerDocId: The player's Firestore document ID.
+    ///   - jersey: An optional new jersey number. If `nil`, this field is not updated.
+    ///   - nickname: An optional new nickname. If `nil`, this field is not updated.
+    /// - Throws: An error if the update fails.
+    public func updatePlayerTeamInfoJerseyAndNickname(teamId: String, playerDocId: String, jersey: Int?, nickname: String?) async throws {
+        var data: [String: Any] = [:]
+        if let jersey = jersey {
+            data[DBPlayerTeamInfo.CodingKeys.jerseyNum.rawValue] = jersey
+        }
+        
+        if let nickname = nickname {
+            data[DBPlayerTeamInfo.CodingKeys.nickName.rawValue] = nickname
+        }
+
+        print("data is \(data) in updateUserSettings")
+        
+        // Only update if data is not empty
+        guard !data.isEmpty else {
+            print("No changes to update in updatePlayerInfo")
+            return
+        }
+
+        try await teamInfoDocument(playerDocId: playerDocId, teamId: teamId).updateData(data as [AnyHashable: Any])
+    }
 
 }

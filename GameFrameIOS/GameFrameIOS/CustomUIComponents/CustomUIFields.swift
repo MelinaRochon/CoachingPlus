@@ -39,6 +39,58 @@ struct CustomUIFields {
             .disabled(true)
     }
     
+    static func customDivider(_ title: String) -> some View {
+        VStack(alignment: .leading) {
+            Text(title)
+                .font(.footnote)
+                .bold()
+                .fontWeight(.medium)
+                .textCase(.uppercase)
+            Divider()
+        }
+    }
+    
+    static func customTitle(_ title: String, subTitle: String? = nil) -> some View {
+        VStack(alignment: .leading) {
+            VStack(alignment: .leading) {
+                Text(title)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                if let subTitle = subTitle {
+                    Text(subTitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 15)
+            Divider()
+        }
+        .padding(.top, 10)
+    }
+    
+    static func customPageTitle(_ title: String, subTitle: String? = nil) -> some View {
+        VStack(alignment: .leading) {
+            VStack(alignment: .leading) {
+                Text(title)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .multilineTextAlignment(.leading)
+                if let subTitle = subTitle {
+                    Text(subTitle)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+            }
+            .padding(.horizontal, 15)
+//            Divider()
+        }
+        .padding(.top, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+
+    
     /// Creates a password field that can toggle between a `SecureField` and `TextField`.
     ///
     /// - Parameters:

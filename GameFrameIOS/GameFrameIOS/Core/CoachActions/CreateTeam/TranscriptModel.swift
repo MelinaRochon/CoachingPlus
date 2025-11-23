@@ -89,7 +89,7 @@ final class TranscriptModel: ObservableObject {
                 }
             }
             
-            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds))
+            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds), teamDocId: teamDocId)
             let playersDict = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.playerId, $0) })
 
             // Lists to store processed transcripts and key moments.
@@ -180,7 +180,7 @@ final class TranscriptModel: ObservableObject {
             }
 
             // Fetch all players in a single batch
-            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds))
+            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds), teamDocId: teamDocId)
             let playersDict = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.playerId, $0) })
 
             // Process transcripts with in-memory lookups only
@@ -336,7 +336,7 @@ final class TranscriptModel: ObservableObject {
             }
 
             // Fetch all players in a single batch
-            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds))
+            let allPlayers = try await getAllPlayersInfo(feedbackFor: Array(allUserIds), teamDocId: teamDocId)
             let playersDict = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.playerId, $0) })
 
             // Process transcripts with in-memory lookups only
@@ -435,11 +435,15 @@ final class TranscriptModel: ObservableObject {
     /// - Parameter feedbackFor: An array of player IDs.
     /// - Returns: An array of `PlayerTranscriptInfo` objects containing player details.
     /// - Throws: An error if any player information retrieval fails.
-    func getAllPlayersInfo (feedbackFor: [String]?) async throws -> [PlayerTranscriptInfo] {
+    func getAllPlayersInfo (feedbackFor: [String]?, teamDocId: String) async throws -> [PlayerTranscriptInfo] {
+        guard let team = try await dependencies?.teamManager.getTeamWithDocId(docId: teamDocId) else {
+            // TODO: Throw error
+            throw TeamError.teamNotFound
+        }
         var tmpPlayer: [PlayerTranscriptInfo] = []
         if let feedbackFor = feedbackFor {
             for playerId in feedbackFor {
-                let player = try await loadPlayerInfo(playerId: playerId)!;
+                let player = try await loadPlayerInfo(playerId: playerId, teamId: team.teamId)!;
                 
                 tmpPlayer.append(player)
             }
@@ -453,7 +457,7 @@ final class TranscriptModel: ObservableObject {
     /// - Parameter playerId: The ID of the player.
     /// - Returns: A `PlayerTranscriptInfo` object containing the player's details, or `nil` if not found.
     /// - Throws: An error if retrieval fails.
-    func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
+    func loadPlayerInfo(playerId: String, teamId: String) async throws -> PlayerTranscriptInfo? {
         // Retrieve user information.
         guard let user = try await dependencies?.userManager.getUser(userId: playerId) else {
             print("no user found. abort")
@@ -461,13 +465,19 @@ final class TranscriptModel: ObservableObject {
         }
         
         // Retrieve player-specific information.
-        guard let player = try await dependencies?.playerManager.getPlayer(playerId: playerId) else {
-            print("no player found. abprt")
-            return nil
+        guard let playerTeamInfo = try await dependencies?.playerTeamInfoManager.getPlayerTeamInfo(playerDocId: playerId, teamId: teamId) else {
+            // TODO: Throw error
+            throw PlayerTeamInfoError.playerTeamInfoNotFound
         }
         
         // Create a structured player object.
-        let playerObject = PlayerTranscriptInfo(playerId: playerId, firstName: user.firstName, lastName: user.lastName, nickname: player.nickName, jersey: player.jerseyNum)
+        let playerObject = PlayerTranscriptInfo(
+            playerId: playerId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            nickname: playerTeamInfo.nickName,
+            jersey: playerTeamInfo.jerseyNum
+        )
         
         return playerObject
     }

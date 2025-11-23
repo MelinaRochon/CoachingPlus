@@ -76,4 +76,15 @@ final class UserModel: ObservableObject {
     func updateUserSettings(id: String, dateOfBirth: Date?, firstName: String?, lastName: String?, phone: String?) async throws {
         try await dependencies?.userManager.updateUserSettings(id: id, dateOfBirth: dateOfBirth, firstName: firstName, lastName: lastName, phone: phone)
     }
+    
+    
+    /// Finds and returns a user document based on an email address.
+    ///
+    /// - Parameter email: The email address to search for in the database.
+    /// - Returns: A `DBUser` if one exists with the provided email, or `nil` if no matching user is found.
+    /// - Throws: An error if the underlying repository call fails.
+    /// - Note: This method does *not* throw when the user doesn't exist; it simply returns `nil`.
+    func findUserWithEmail(email: String) async throws -> DBUser? {
+        return try await dependencies?.userManager.getUserWithEmail(email: email)
+    }
 }

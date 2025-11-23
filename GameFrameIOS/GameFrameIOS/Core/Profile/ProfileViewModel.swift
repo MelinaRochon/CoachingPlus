@@ -30,6 +30,8 @@ final class PlayerProfileModel: ObservableObject {
      This state is used to store the player's data, including the jersey number, nickname, and guardian's information. It will be updated when changes are made to the player's profile.
      */
     @Published var player: DBPlayer? = nil // player information
+    
+    @Published var playerTeamInfo: DBPlayerTeamInfo? = nil
         
     // MARK: - Dependency Injection
     
@@ -120,8 +122,8 @@ final class PlayerProfileModel: ObservableObject {
         let playerInfo = DBPlayer(
             id: player.id,
             playerId: player.playerId,
-            jerseyNum: jersey,
-            nickName: nickname,
+//            jerseyNum: jersey,
+//            nickName: nickname,
             gender: player.gender,
             guardianName: guardianName,
             guardianEmail: guardianEmail,
@@ -147,11 +149,10 @@ final class PlayerProfileModel: ObservableObject {
     ///   - guardianEmail: Optional updated guardian's email address.
     ///   - guardianPhone: Optional updated guardian's phone number.
     ///   - gender: Optional updated gender of the player.
-    func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) {
+    func updatePlayerSettings(id: String, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) {
+
         guard var player else { return }
         
-        player.jerseyNum = jersey ?? player.jerseyNum
-        player.nickName = nickname ?? player.nickName
         player.guardianName = guardianName ?? player.guardianName
         player.guardianEmail = guardianEmail ?? player.guardianEmail
         player.guardianPhone = guardianPhone ?? player.guardianPhone
@@ -161,8 +162,6 @@ final class PlayerProfileModel: ObservableObject {
             // Update the player's information in the database
             try await dependencies?.playerManager.updatePlayerSettings(
                 id: id,
-                jersey: jersey,
-                nickname: nickname,
                 guardianName: guardianName,
                 guardianEmail: guardianEmail,
                 guardianPhone: guardianPhone,
@@ -173,6 +172,34 @@ final class PlayerProfileModel: ObservableObject {
         }
     }
     
+    
+    /// Updates a player's team-specific info (jersey # and nickname).
+    /// - Parameters:
+    ///   - playerDocId: The player's document ID.
+    ///   - teamId: The team the player belongs to.
+    ///   - jersey: Optional new jersey number.
+    ///   - nickname: Optional new nickname.
+    ///
+    /// If a value is nil, the existing one is kept. After updating Firestore,
+    /// the local `playerTeamInfo` is refreshed.
+    func updatePlayerTeamInfoSettings(playerDocId: String, teamId: String, jersey: Int?, nickname: String?) {
+        Task {
+            guard var playerTeamInfo else { return }
+            
+            playerTeamInfo.jerseyNum = jersey ?? playerTeamInfo.jerseyNum
+            playerTeamInfo.nickName = nickname ?? playerTeamInfo.nickName
+            
+            try await dependencies?.playerTeamInfoManager.updatePlayerTeamInfoJerseyAndNickname(
+                teamId: teamId,
+                playerDocId: playerDocId,
+                jersey: playerTeamInfo.jerseyNum,
+                nickname: playerTeamInfo.nickName
+            )
+            
+            self.playerTeamInfo = try await dependencies?.playerTeamInfoManager.getPlayerTeamInfo(playerDocId: playerDocId, teamId: teamId)
+        }
+    }
+
     
     /**
      Updates the player's guardian name in the database.
@@ -266,4 +293,15 @@ final class PlayerProfileModel: ObservableObject {
         )
     }
     
+    
+    /// Fetches a team's internal ID using its document ID.
+    /// - Throws: `TeamError.teamNotFound` if the team does not exist.
+    /// - Returns: The team's unique identifier.
+    func getTeamId(teamDocId: String) async throws -> String {
+        guard let team = try await dependencies?.teamManager.getTeamWithDocId(docId: teamDocId) else {
+            throw TeamError.teamNotFound
+        }
+        
+        return team.id
+    }
 }

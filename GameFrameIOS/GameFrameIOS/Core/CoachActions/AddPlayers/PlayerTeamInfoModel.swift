@@ -28,23 +28,37 @@ final class PlayerTeamInfoModel: ObservableObject {
     }
     
 
-    func createPlayerTeamInfo(playerTeamInfoDTO dto: PlayerTeamInfoDTO) async throws -> String {
-        print("In PlayerTeamInfoModel!!")
-        
+    /// Creates a PlayerTeamInfo subdocument for the specified player.
+    ///
+    /// - Parameter dto: The data transfer object containing all fields needed
+    ///                  to create the PlayerTeamInfo document.
+    /// - Returns: The document ID of the newly created PlayerTeamInfo entry.
+    /// - Throws: An error if dependencies are missing or if the repository fails
+    ///           to create the document.
+    func createPlayerTeamInfo(playerTeamInfoDTO dto: PlayerTeamInfoDTO) async throws -> String {        
         guard let repo = dependencies else {
             throw NSError(domain: "PlayerTeamInfoModel", code: 404, userInfo: [NSLocalizedDescriptionKey: "Dependencies not found"])
         }
 
-        // 1) Resolve to player **document id**
-        guard let player = try await repo.playerManager.getPlayer(playerId: dto.playerId) else {
-                    throw NSError(domain: "PlayerTeamInfoModel", code: 404,
-                                  userInfo: [NSLocalizedDescriptionKey: "Player doc not found for current user"])
-                }
-
-        // 2) Create subdoc via manager
+        // Create the PlayerTeamInfo subdocument through the repository manager.
         let docId = try await repo.playerTeamInfoManager
-            .createNewPlayerTeamInfo(playerDocId: player.id, playerTeamInfoDTO: dto)
+            .createNewPlayerTeamInfo(playerDocId: dto.playerDocId, playerTeamInfoDTO: dto)
 
         return docId
+    }
+    
+    /// Retrieves the Firestore document ID associated with a given player ID.
+    ///
+    /// - Parameter playerId: The user’s player ID used to locate the corresponding
+    ///                       Player document in Firestore.
+    /// - Returns: The Firestore document ID of the found Player.
+    /// - Throws: An error if the player cannot be found or dependencies are missing.
+    func findPlayerDocId(playerId: String) async throws -> String {
+        guard let player = try await dependencies?.playerManager.getPlayer(playerId: playerId) else {
+            throw NSError(domain: "PlayerTeamInfoModel", code: 404,
+                          userInfo: [NSLocalizedDescriptionKey: "Player doc not found for current user"])
+        }
+        
+        return player.id
     }
 }

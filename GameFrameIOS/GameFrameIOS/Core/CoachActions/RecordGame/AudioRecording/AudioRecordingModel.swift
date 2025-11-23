@@ -242,46 +242,13 @@ final class AudioRecordingModel: ObservableObject {
     }
     
 
-    /// Loads all recordings and their associated key moments from the database.
-    ///
-    /// - Throws: An error if the operation fails.
-    func loadAllRecordings() async throws {
-        do {
-            // Get all the transcripts from the database
-            guard let transcripts = try await dependencies?.transcriptManager.getAllTranscripts(teamId: teamId, gameId: gameId) else {
-                print("No transcripts found") // TO DO - This is not an error because the game doesn't need to have a transcript (e.g. when it is being created -> no transcript)
-                return
-            }
-            
-            // transcripts were fround in the database. Get the key moments associated to each
-            for transcript in transcripts {
-                let keyMomentDocId = transcript.keyMomentId // get the key moment document id to be fetched
-                
-                // Fetch the key moment associated with the transcript
-                guard let keyMoment = try await dependencies?.keyMomentManager.getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentDocId) else {
-                    print("No key moment found. Aborting..")
-                    return
-                }
-                
-                // get the length of the array to set the id of the element of the list
-                let recordingsLength = self.recordings.count
-                
-                // Retrieve all player's information on the team
-                let tmpPlayer = try await getAllPlayersInfo(feedbackFor: keyMoment.feedbackFor)
-                
-                // Create a new key moment transcript object
-                let keyMomentTranscript = keyMomentTranscript(id: recordingsLength, keyMomentId: transcript.keyMomentId, transcriptId: transcript.transcriptId, transcript: transcript.transcript, frameStart: keyMoment.frameStart, frameEnd: keyMoment.frameEnd, feedbackFor: tmpPlayer)
-                
-                // Adding new element to the array
-                self.recordings.append(keyMomentTranscript)
-            }
-        } catch {
-            print("Error when loading the recordings from the database. Error: \(error)")
-            return
-        }
-    }
-
-
+    /// Retrieves the URL for a full game recording, if one exists.
+    /// - Parameters:
+    ///   - teamDocId: The Firestore document ID of the team.
+    ///   - gameId: The Firestore document ID of the game.
+    /// - Returns: A `URL` pointing to the full game recording, or `nil` if no recording exists.
+    /// - Note: This function does *not* throw an error if the full game recording cannot be found.
+    ///         It only throws if the underlying repository call fails unexpectedly.
     func getFullGameRecordingUrlIfExists(teamDocId: String, gameId: String) async throws -> URL? {
         // Try to find the full game recording if it exists, otherwise, return nil
         do {
@@ -350,7 +317,7 @@ final class AudioRecordingModel: ObservableObject {
         for playerId in players {
             
             // Retrieve the player's information
-            guard let playerObject = try await loadPlayerInfo(playerId: playerId) else {
+            guard let playerObject = try await loadPlayerInfo(playerId: playerId, teamId: teamId) else {
                 print("No player")
                 return
             }
@@ -374,7 +341,7 @@ final class AudioRecordingModel: ObservableObject {
         // Retrieve all the players information
         if let feedbackFor = feedbackFor {
             for playerId in feedbackFor {
-                let player = try await loadPlayerInfo(playerId: playerId)!;
+                let player = try await loadPlayerInfo(playerId: playerId, teamId: teamId)!;
                 
                 tmpPlayer.append(player)
             }
@@ -387,21 +354,27 @@ final class AudioRecordingModel: ObservableObject {
     ///
     /// - Parameter playerId: The player's ID.
     /// - Returns: A `PlayerTranscriptInfo` object, or `nil` if not found.
-    func loadPlayerInfo(playerId: String) async throws -> PlayerTranscriptInfo? {
+    func loadPlayerInfo(playerId: String, teamId: String) async throws -> PlayerTranscriptInfo? {
         // get the user info
         guard let user = try await dependencies?.userManager.getUser(userId: playerId) else {
             print("no user found. abort")
             return nil
         }
-        
-        guard let player = try await dependencies?.playerManager.getPlayer(playerId: playerId) else {
-            print("no player found. abprt")
-            return nil
+                
+        guard let playerTeamInfo = try await dependencies?.playerTeamInfoManager.getPlayerTeamInfo(playerDocId: playerId, teamId: teamId) else {
+            // TODO: Throw error
+            throw PlayerTeamInfoError.playerTeamInfoNotFound
         }
-        
+
         // create an object to store the player's info
-        let playerObject = PlayerTranscriptInfo(playerId: playerId, firstName: user.firstName, lastName: user.lastName, nickname: player.nickName, jersey: player.jerseyNum)
-        
+        let playerObject = PlayerTranscriptInfo(
+            playerId: playerId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            nickname: playerTeamInfo.nickName,
+            jersey: playerTeamInfo.jerseyNum
+        )
+
         return playerObject
     }
     

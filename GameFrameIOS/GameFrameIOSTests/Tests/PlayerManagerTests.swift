@@ -40,8 +40,6 @@ final class PlayerManagerTests: XCTestCase {
         // Add a new player
         let playerDTO = PlayerDTO(
             playerId: playerId,
-            jerseyNum: 12,
-            nickName: "Nick",
             gender: "Male",
             profilePicture: nil,
             teamsEnrolled: ["team_123"],
@@ -54,8 +52,6 @@ final class PlayerManagerTests: XCTestCase {
         
         XCTAssertNotNil(player)
         XCTAssertEqual(player?.playerId, playerId, "Player ID should match")
-        XCTAssertEqual(player?.jerseyNum, playerDTO.jerseyNum)
-        XCTAssertEqual(player?.nickName, playerDTO.nickName)
         XCTAssertEqual(player?.gender, playerDTO.gender)
         XCTAssertEqual(player?.profilePicture, playerDTO.profilePicture)
         XCTAssertEqual(player?.teamsEnrolled, playerDTO.teamsEnrolled)
@@ -267,13 +263,11 @@ final class PlayerManagerTests: XCTestCase {
         XCTAssertNotNil(player)
         XCTAssertNotEqual(player.guardianName, updatedGuardianName)
         XCTAssertNotEqual(player.gender, updatedGender)
-        XCTAssertNotEqual(player.jerseyNum, updatedJersey)
         XCTAssertNotNil(player.playerId)
         
         // Update the player's info
         player.guardianName = updatedGuardianName
         player.gender = updatedGender
-        player.jerseyNum = updatedJersey
 
         try await manager.updatePlayerInfo(player: player)
         let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
@@ -283,7 +277,6 @@ final class PlayerManagerTests: XCTestCase {
         XCTAssertEqual(updatedPlayer?.playerId, player.playerId, "Player ID should match")
         XCTAssertEqual(updatedPlayer?.guardianName, updatedGuardianName, "Player's Guardian Name should match")
         XCTAssertEqual(updatedPlayer?.gender, updatedGender, "Player Gender should match")
-        XCTAssertEqual(updatedPlayer?.jerseyNum, updatedJersey, "Player Jersey number should match")
     }
     
     func testUpdatePlayerSetting() async throws {
@@ -301,8 +294,6 @@ final class PlayerManagerTests: XCTestCase {
             return
         }
         XCTAssertNotNil(player)
-        XCTAssertNotEqual(player.jerseyNum, updatedJersey)
-        XCTAssertNotEqual(player.nickName, updatedNickname)
         XCTAssertNotEqual(player.gender, updatedGender)
         XCTAssertNotEqual(player.guardianName, updatedGuardianName)
         XCTAssertNotEqual(player.guardianEmail, updatedGuardianEmail)
@@ -312,8 +303,6 @@ final class PlayerManagerTests: XCTestCase {
         // Update the player info
         try await manager.updatePlayerSettings(
             id: playerDocId,
-            jersey: updatedJersey,
-            nickname: updatedNickname,
             guardianName: updatedGuardianName,
             guardianEmail: updatedGuardianEmail,
             guardianPhone: updatedGuardianPhone,
@@ -324,40 +313,36 @@ final class PlayerManagerTests: XCTestCase {
         XCTAssertNotNil(updatedPlayer)
         XCTAssertEqual(updatedPlayer?.id, playerDocId)
         XCTAssertEqual(updatedPlayer?.playerId, player.playerId, "Player ID should match")
-        XCTAssertEqual(updatedPlayer?.jerseyNum, updatedJersey, "Updated Jersey number should match")
-        XCTAssertEqual(updatedPlayer?.nickName, updatedNickname, "Updated Player Nickname should match")
         XCTAssertEqual(updatedPlayer?.gender, updatedGender, "Updated Player Gender should match")
         XCTAssertEqual(updatedPlayer?.guardianName, updatedGuardianName, "Updated Guardian Name should match")
         XCTAssertEqual(updatedPlayer?.guardianEmail, updatedGuardianEmail, "Updated Guardian Email should match")
         XCTAssertEqual(updatedPlayer?.guardianPhone, updatedGuardianPhone, "Updated Guardian Phone should match")
     }
     
-    func testUpdatePlayerJerseyAndNickname() async throws {
-        let playerDocId = "uidP001"
-        let updatedJersey = 34
-        let updatedNickname = "Cyn"
-        
-        // Make sure the player's jersey and nickname are different
-        let player = try await manager.findPlayerWithId(id: playerDocId)
-        XCTAssertNotNil(player)
-        XCTAssertNotEqual(player?.jerseyNum, updatedJersey)
-        XCTAssertNotEqual(player?.nickName, updatedNickname)
-        XCTAssertNotNil(player?.playerId)
-
-        // Update the player's jersey number and nickname
-        try await manager.updatePlayerJerseyAndNickname(
-            playerDocId: playerDocId,
-            jersey: updatedJersey,
-            nickname: updatedNickname
-        )
-        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
-        
-        XCTAssertNotNil(updatedPlayer)
-        XCTAssertEqual(updatedPlayer?.id, playerDocId)
-        XCTAssertEqual(updatedPlayer?.playerId, player?.playerId, "Player ID should match")
-        XCTAssertEqual(updatedPlayer?.jerseyNum, updatedJersey, "Updated Jersey number should match")
-        XCTAssertEqual(updatedPlayer?.nickName, updatedNickname, "Updated Player Nickname should match")
-    }
+//    func testUpdatePlayerJerseyAndNickname() async throws {
+//        let playerDocId = "uidP001"
+//        let updatedJersey = 34
+//        let updatedNickname = "Cyn"
+//        
+//        // Make sure the player's jersey and nickname are different
+//        let player = try await manager.findPlayerWithId(id: playerDocId)
+//        XCTAssertNotNil(player)
+////        XCTAssertNotEqual(player?.jerseyNum, updatedJersey)
+////        XCTAssertNotEqual(player?.nickName, updatedNickname)
+//        XCTAssertNotNil(player?.playerId)
+//
+//        // Update the player's jersey number and nickname
+//        try await manager.updatePlayerJerseyAndNickname(
+//            playerDocId: playerDocId,
+//            jersey: updatedJersey,
+//            nickname: updatedNickname
+//        )
+//        let updatedPlayer = try await manager.findPlayerWithId(id: playerDocId)
+//        
+//        XCTAssertNotNil(updatedPlayer)
+//        XCTAssertEqual(updatedPlayer?.id, playerDocId)
+//        XCTAssertEqual(updatedPlayer?.playerId, player?.playerId, "Player ID should match")
+//    }
     
     func testUpdatedPlayerId() async throws {
         let playerDocId = "uidP001"

@@ -60,6 +60,7 @@ struct PlayerProfileView: View {
     @State private var lastName: String = ""
     @State private var phone: String = ""
     @EnvironmentObject private var dependencies: DependencyContainer
+    @State private var teamId: String?
 
         
     /// Initializer to bind the showLandingPageView state
@@ -174,13 +175,13 @@ struct PlayerProfileView: View {
                             }
                             
                             Section {
-                                HStack {
-                                    Text("Nickname").foregroundStyle(isEditing ? .primary : .secondary)
-                                    Spacer()
-                                    TextField("Nickname", text: $nickname).disabled(!isEditing)
-                                        .multilineTextAlignment(.trailing)
-                                        .foregroundStyle(isEditing ? .primary : .secondary)
-                                }
+//                                HStack {
+//                                    Text("Nickname").foregroundStyle(isEditing ? .primary : .secondary)
+//                                    Spacer()
+//                                    TextField("Nickname", text: $nickname).disabled(!isEditing)
+//                                        .multilineTextAlignment(.trailing)
+//                                        .foregroundStyle(isEditing ? .primary : .secondary)
+//                                }
                                     
                                 if gender != "Select" && !isEditing {
                                     HStack {
@@ -289,14 +290,19 @@ struct PlayerProfileView: View {
                         guardianName = player.guardianName ?? ""
                         guardianEmail = player.guardianEmail ?? ""
                         guardianPhone = player.guardianPhone ?? ""
-                        jersey = player.jerseyNum
-                        nickname = player.nickName ?? ""
+//                        jersey = player.jerseyNum
+//                        nickname = player.nickName ?? ""
                         if let playerGender = player.gender, !playerGender.isEmpty {
                             gender = playerGender
                         } else {
                             gender = "Select"
                         }
                         print("player = \(player)")
+                    }
+                    
+                    if let playerTeamInfo = viewModel.playerTeamInfo {
+                        jersey = playerTeamInfo.jerseyNum
+                        nickname = playerTeamInfo.nickName ?? ""
                     }
                     
                     if let user = viewModel.user {
@@ -335,6 +341,16 @@ struct PlayerProfileView: View {
             .onAppear {
                 userModel.setDependencies(dependencies)
                 viewModel.setDependencies(dependencies)
+                
+//                Task {
+//                    do {
+//                        teamId = try await viewModel.getTeamId(teamDocId: teamDocId)
+//                        
+//                    } catch TeamError.teamNotFound {
+//                        // TODO: Manage error
+//                        return
+//                    }
+//                }
             }
         }
         .accessibilityIdentifier("page.player.profile")
@@ -362,8 +378,8 @@ struct PlayerProfileView: View {
                 if let userPhone = player.guardianPhone {
                     guardianPhone = userPhone
                 }
-                jersey = player.jerseyNum
-                nickname = player.nickName ?? ""
+//                jersey = player.jerseyNum
+//                nickname = player.nickName ?? ""
                 guardianName = player.guardianName ?? ""
                 guardianEmail = player.guardianEmail ?? ""
                 if let playerGender = player.gender, !playerGender.isEmpty {
@@ -371,6 +387,11 @@ struct PlayerProfileView: View {
                 } else {
                     gender = "Select"
                 }
+            }
+            
+            if let playerTeamInfo = viewModel.playerTeamInfo {
+                jersey = playerTeamInfo.jerseyNum
+                nickname = playerTeamInfo.nickName ?? ""
             }
             
             if let user = viewModel.user {
@@ -398,22 +419,29 @@ struct PlayerProfileView: View {
     
     private func savingPlayerInformation() {
         Task {
-            if let player = viewModel.player {
+            if let player = viewModel.player, let playerTeamInfo = viewModel.playerTeamInfo, let teamId = teamId {
                 var playerJersey: Int? = jersey
                 var playerNickname: String? = nickname
                 var playerGuardianName: String? = guardianName
                 var playerGuardianEmail: String? = guardianEmail
                 var playerGuardianPhone: String? = guardianPhone
                 var playerGender: String? = gender
-                
-                if jersey == player.jerseyNum {
+                                
+                if jersey == playerTeamInfo.jerseyNum {
                     playerJersey = nil
                 }
                 
-                if nickname == player.nickName {
+                if nickname == playerTeamInfo.nickName {
                     playerNickname = nil
                 }
                 
+                viewModel.updatePlayerTeamInfoSettings(
+                    playerDocId: player.id,
+                    teamId: teamId,
+                    jersey: playerJersey,
+                    nickname: playerNickname
+                )
+
                 if guardianName == player.guardianName {
                     playerGuardianName = nil
                 }
@@ -430,7 +458,15 @@ struct PlayerProfileView: View {
                     playerGender = nil
                 }
                 
-                viewModel.updatePlayerSettings(id: player.id, jersey: playerJersey, nickname: playerNickname, guardianName: playerGuardianName, guardianEmail: playerGuardianEmail, guardianPhone: playerGuardianPhone, gender: playerGender)
+                viewModel.updatePlayerSettings(
+                    id: player.id,
+//                    jersey: playerJersey,
+//                    nickname: playerNickname,
+                    guardianName: playerGuardianName,
+                    guardianEmail: playerGuardianEmail,
+                    guardianPhone: playerGuardianPhone,
+                    gender: playerGender
+                )
                 
             } else {
                 print("tyheres nbo player")
@@ -496,7 +532,7 @@ extension PlayerProfileView: UserEditProfileProtocol {
             isDobToday = false
         }
 
-        if let user = viewModel.user, let player = viewModel.player {
+        if let user = viewModel.user, let player = viewModel.player, let playerTeamInfo = viewModel.playerTeamInfo {
             return (user.firstName != firstName || user.lastName != lastName)
             && (!firstName.isEmpty && isValidName(firstName))
             && (!lastName.isEmpty && isValidName(lastName))
@@ -506,7 +542,9 @@ extension PlayerProfileView: UserEditProfileProtocol {
             || (player.guardianName != guardianName && (guardianName != "" || ((player.guardianName?.isEmpty) != nil)))
             || (player.guardianPhone != guardianPhone && ((guardianPhone != "" || (player.guardianPhone?.isEmpty) != nil)) && isValidPhoneNumber(guardianPhone))
             || (player.guardianEmail != guardianEmail && ((guardianEmail != "" || (player.guardianEmail?.isEmpty) != nil)) && isValidEmail(guardianEmail))
-            || (player.nickName != nickname && ((player.nickName?.isEmpty) != nil))
+//            || (player.nickName != nickname && ((player.nickName?.isEmpty) != nil))
+            || (playerTeamInfo.nickName != nickname && ((playerTeamInfo.nickName?.isEmpty) != nil))
+
         }
         return false
     }

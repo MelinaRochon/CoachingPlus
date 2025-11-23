@@ -159,11 +159,10 @@ public final class PlayerManager {
     ///   - guardianPhone: Optional updated guardian's phone number.
     ///   - gender: Optional updated gender.
     /// - Throws: Rethrows any errors that occur during the Firestore update operation.
-    public func updatePlayerSettings(id: String, jersey: Int?, nickname: String?, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
+    public func updatePlayerSettings(id: String, guardianName: String?, guardianEmail: String?, guardianPhone: String?, gender: String?) async throws {
+
         try await repo.updatePlayerSettings(
             id: id,
-            jersey: jersey,
-            nickname: nickname,
             guardianName: guardianName,
             guardianEmail: guardianEmail,
             guardianPhone: guardianPhone,
@@ -180,9 +179,9 @@ public final class PlayerManager {
      - Parameter nickname: The new nickname for the player.
      - Throws: An error if updating the document fails.
      */
-    public func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
-        try await repo.updatePlayerJerseyAndNickname(playerDocId: playerDocId, jersey: jersey, nickname: nickname)
-    }
+//    public func updatePlayerJerseyAndNickname(playerDocId: String, jersey: Int, nickname: String) async throws {
+//        try await repo.updatePlayerJerseyAndNickname(playerDocId: playerDocId, jersey: jersey, nickname: nickname)
+//    }
     
     
     /**

@@ -16,22 +16,19 @@ import Foundation
     - `email`: The email of the player being invited.
     - `status`: The status of the invite (e.g., "pending").
     - `dateAccepted`: The date the invite was accepted (optional).
-    - `teamId`: The ID of the team the invite pertains to.
  */
 public struct InviteDTO {
     public let userDocId: String
     public let playerDocId: String
     public let email: String
-    public let status: String
-    public let dateAccepted: Date?
-    public let teamId: String
-    
-    public init(userDocId: String, playerDocId: String, email: String, status: String, dateAccepted: Date?, teamId: String) {
+    public let status: UserAccountStatus
+    public let dateVerified: Date?
+
+    public init(userDocId: String, playerDocId: String, email: String, status: UserAccountStatus, dateVerified: Date?) {
         self.userDocId = userDocId
         self.playerDocId = playerDocId
         self.email = email
         self.status = status
-        self.dateAccepted = dateAccepted
-        self.teamId = teamId
+        self.dateVerified = dateVerified
     }
 }

@@ -10,27 +10,31 @@ import Foundation
 
 public struct DBPlayerTeamInfo: Codable {
     public let id: String
-    public var jerseyNum: Int?
+    public var jerseyNum: Int
     public var nickName: String?
+    public var positions: [SoccerPosition]?
     public var joinedAt: Date?
     
     public init(
         id: String,
-        jerseyNum: Int? = nil,
+        jerseyNum: Int = 0,
         nickName: String? = nil,
+        positions: [SoccerPosition]? = nil,
         joinedAt: Date? = nil
     ) {
         self.id = id
         self.jerseyNum = jerseyNum
         self.nickName = nickName
+        self.positions = positions
         self.joinedAt = joinedAt
     }
     
     
     public init(id: String) {
         self.id = id
-        self.jerseyNum = nil
+        self.jerseyNum = 0
         self.nickName = nil
+        self.positions = nil
         self.joinedAt = nil
     }
     
@@ -38,6 +42,7 @@ public struct DBPlayerTeamInfo: Codable {
         self.id = id
         self.jerseyNum = playerTeamInfoDTO.jerseyNum
         self.nickName = playerTeamInfoDTO.nickname
+        self.positions = playerTeamInfoDTO.positions
         self.joinedAt = playerTeamInfoDTO.joinedAt
     }
     
@@ -45,6 +50,7 @@ public struct DBPlayerTeamInfo: Codable {
         case id = "id"
         case jerseyNum = "jersey_num"
         case nickName = "nickname"
+        case positions = "positions"
         case joinedAt = "added_at"
     }
     
@@ -54,6 +60,7 @@ public struct DBPlayerTeamInfo: Codable {
         self.id = try container.decode(String.self, forKey: .id)
         self.jerseyNum = try container.decode(Int.self, forKey: .jerseyNum)
         self.nickName = try container.decodeIfPresent(String.self, forKey: .nickName)
+        self.positions = try container.decodeIfPresent([SoccerPosition].self, forKey: .positions)
         self.joinedAt = try container.decodeIfPresent(Date.self, forKey: .joinedAt)
     }
     
@@ -62,6 +69,7 @@ public struct DBPlayerTeamInfo: Codable {
         try container.encode(self.id, forKey: .id)
         try container.encode(self.jerseyNum, forKey: .jerseyNum)
         try container.encodeIfPresent(self.nickName, forKey: .nickName)
+        try container.encodeIfPresent(self.positions, forKey: .positions)
         try container.encodeIfPresent(self.joinedAt, forKey: .joinedAt)
     }
 }
