@@ -69,7 +69,7 @@ struct CoachAddNewInviteView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
+            
                 VStack {
                     CustomUIFields.customPageTitle("Adding player to roster", subTitle: "Invite a player to join your team")
                         .padding(.bottom, 10)
@@ -127,6 +127,7 @@ struct CoachAddNewInviteView: View {
                     
                     Divider()
                     
+                    ScrollView {
                     VStack (alignment: .center) {
                         if playerNotFound {
                             VStack(alignment: .center) {

@@ -191,4 +191,46 @@ public final class FirestoreGameRepository: GameRepository {
         // Update the scheduled game document
         try await gameDocument(teamDocId: teamDocId, gameId: gameId).updateData(data as [AnyHashable : Any])
     }
+    
+    func getRecentGames(teamDocId: String, limit: Int = 10) async throws -> [DBGame] {
+        let query = gameCollection(teamDocId: teamDocId)
+            .order(by: "start_time", descending: true)
+            .limit(to: limit)
+
+        let snapshot = try await query.getDocuments()
+        
+        let games = snapshot.documents.compactMap { try? $0.data(as: DBGame.self) }
+
+        return games
+    }
+
+    
+    func fetchRecentGames(teamDocId: String, limit: Int = 20) async throws -> ([DBGame], DocumentSnapshot?) {
+        let query = gameCollection(teamDocId: teamDocId)
+            .order(by: "start_time", descending: true)
+            .limit(to: limit)
+
+        let snapshot = try await query.getDocuments()
+        
+        let games = snapshot.documents.compactMap { try? $0.data(as: DBGame.self) }
+        let lastDoc = snapshot.documents.last      // Save this for pagination
+
+        return (games, lastDoc)
+    }
+    
+    func fetchMoreGames(after lastDoc: DocumentSnapshot, teamDocId: String, limit: Int = 20) async throws -> ([DBGame], DocumentSnapshot?) {
+        let db = Firestore.firestore()
+
+        let query = gameCollection(teamDocId: teamDocId)
+            .order(by: "start_time", descending: true)
+            .start(afterDocument: lastDoc)
+            .limit(to: limit)
+
+        let snapshot = try await query.getDocuments()
+
+        let games = snapshot.documents.compactMap { try? $0.data(as: DBGame.self) }
+        let newLastDoc = snapshot.documents.last
+
+        return (games, newLastDoc)
+    }
 }

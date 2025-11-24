@@ -86,4 +86,8 @@ public final class FullGameVideoRecordingManager {
     public func getFullGameVideoWithGameId(teamDocId: String, gameId: String) async throws -> DBFullGameVideoRecording? {
         return try await repo.getFullGameVideoWithGameId(teamDocId: teamDocId, gameId: gameId)
     }
+    
+    public func doesFullGameVideoExistsWithGameId(teamDocId: String, gameId: String, teamId: String) async throws -> Bool {
+        return try await repo.doesFullGameVideoExistsWithGameId(teamDocId: teamDocId, gameId: gameId, teamId: teamId)
+    }
 }

@@ -71,6 +71,7 @@ struct CoachMyTeamView: View {
 
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
+    @State private var showErrorWhenSaving: Bool = false
 
     
     // MARK: - View
@@ -196,7 +197,7 @@ struct CoachMyTeamView: View {
         }
         .sheet(isPresented: $addGameEnabled, onDismiss: refreshData) {
             // Sheet to add a new game
-            CoachAddingGameView(team: selectedTeam) // Adding a new game
+            CoachAddingGameView(team: selectedTeam, showErrorWhenSaving: $showErrorWhenSaving) // Adding a new game
         }
         .sheet(isPresented: $isTeamSettingsEnabled) {
             // Sheet to modify team settings
@@ -218,6 +219,13 @@ struct CoachMyTeamView: View {
                     .navigationTitle("Filtering Options")
                     .navigationBarTitleDisplayMode(.inline)
             }
+        }
+        .alert("Error occured when saving game", isPresented: $showErrorWhenSaving) {
+            Button("OK") {
+                showErrorWhenSaving = false
+            }
+        } message: {
+            Text("Please try again later")
         }
     }
     

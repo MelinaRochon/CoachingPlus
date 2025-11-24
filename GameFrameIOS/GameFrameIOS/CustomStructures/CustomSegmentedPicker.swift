@@ -22,7 +22,7 @@ struct CustomSegmentedPicker: View {
                         selectedIndex = index
                     }
                 }) {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 8) {
                         if let iconName = options[index].icon {
                             Image(systemName: iconName)
                         }

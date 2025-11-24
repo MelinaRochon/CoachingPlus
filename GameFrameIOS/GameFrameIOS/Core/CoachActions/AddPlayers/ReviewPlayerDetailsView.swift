@@ -42,10 +42,12 @@ struct ReviewPlayerDetailsView: View {
             CustomNavigationLinkDropdown(
                 label: "Positions",
                 placeholder: "Select Positions",
-                valueText: selectedPositions
-                    .map { $0.rawValue }
-                    .sorted()
-                    .joined(separator: ", "),
+                valueText: {
+                    return selectedPositions
+                        .map { $0.rawValue }
+                        .sorted()
+                        .joined(separator: ", ")
+                },
                 isRequired: false,
                 isActive: $isNavigating,
                 destination: MultiSelectPositionsView(selected: $selectedPositions),

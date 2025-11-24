@@ -25,20 +25,23 @@ struct UpdatingPlayerInfoView: View {
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                
+            VStack(alignment: .leading) {
                 CustomUIFields.customTitle("Review Player Details", subTitle: "Make changes to the player's nickname, jersey and field roles.")
 
-                ReviewPlayerDetailsView(
-                    selectedPositions: $selectedPositions,
-                    nickname: $nickname,
-                    jersey: $jersey,
-                    playerNickname: nickname,
-                    playerJersey: jersey,
-                    playerSelectedPositions: selectedPositions,
-                    showToolbarButtons: true
-                )
-                .padding(.top, 30)
+                ScrollView {
+                    
+                    
+                    ReviewPlayerDetailsView(
+                        selectedPositions: $selectedPositions,
+                        nickname: $nickname,
+                        jersey: $jersey,
+                        playerNickname: nickname,
+                        playerJersey: jersey,
+                        playerSelectedPositions: selectedPositions,
+                        showToolbarButtons: true
+                    )
+                    .padding(.top, 30)
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

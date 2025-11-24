@@ -51,7 +51,8 @@ struct CoachAddingGameView: View {
     
     /// Represents the start time of the game. Initially set to the current date and time.
     @State private var startTime: Date = Date()
-    
+    @State private var gameStartTime: Date?
+
     /// Represents the time (in seconds) before feedback is collected during or after the game./
     @State private var timeBeforeFeedback: Int = 0
     
@@ -70,120 +71,184 @@ struct CoachAddingGameView: View {
     
     /// Stores the team information
     @State var team: DBTeam
+    
+    @Binding var showErrorWhenSaving: Bool
             
     /// Variables for storing the selected time options for reminders and feedback
     @State private var selectedTimeLabel = "5 minutes before"  // User-friendly label
     @State private var feedbackBeforeTimeLabel = "10 seconds"
     @State private var feedbackAfterTimeLabel = "10 seconds"
     
+    @State private var locationIsActive: Bool = false
+    @State private var startTimeIsActive: Bool = false
+    @State private var durationIsActive: Bool = false
     
     // MARK: - View
 
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading) {
-                Form {
-                    
-                    // Section for the game title and selecting team
-                    Section {
-                        TextField("Title", text: $title).multilineTextAlignment(.leading)
-                        HStack {
-                            Text("Team")
-                            Spacer()
-                            Text(team.teamNickname).foregroundStyle(.secondary).multilineTextAlignment(.leading)
-                        }
-                        
-                        // Section for selecting the game location
-                        HStack {
-                            Text("Location")
-                            NavigationLink(destination: LocationView(location: $location), label: {
-                                HStack {
-                                    Spacer()
+            VStack (alignment: .leading) {
+                CustomUIFields.customTitle("Adding a New Game", subTitle: "Enter the details for your upcoming game so the app can schedule reminders and help manage feedbacks.")
+                
+                ScrollView {
+                    VStack(alignment: .leading) {
+                        VStack {
+                            CustomTextField(label: "Game Title", text: $title)
+                            CustomTextField(label: "Team", text: $team.teamNickname, disabled: true)
+                            CustomNavigationLinkDropdown(
+                                label: "Game Location",
+                                placeholder: "Location",
+                                valueText: {
                                     if let location = location {
-                                        Text("\(location.title) \(location.subtitle)").multilineTextAlignment(.trailing)
+                                        return "\(location.title) \(location.subtitle)"
                                     } else {
-                                        Text("Enter location").foregroundStyle(.secondary)
+                                        return ""
                                     }
+                                },
+                                valueTextEmpty: "Enter Location",
+                                icon: "mappin.and.ellipse",
+                                iconColor: .gray,
+                                isRequired: false,
+                                isActive: $locationIsActive,
+                                destination: LocationView(location: $location),
+                                onSelect: {
+                                    hideKeyboard()
+                                    locationIsActive = true
                                 }
-                                
-                            }).isDetailLink(true)
-                        }
-                    }
-                    
-                    // Section for scheduled time, including start time and duration
-                    Section (header: Text("Scheduled Time")) {
-                        HStack {
-                            DatePicker("Start", selection: $startTime, in: Date()..., displayedComponents: [.date, .hourAndMinute])
-                        }
-                        HStack {
-                            Text("Duration")
-                            Spacer()
-                            // Picker for selecting the number of hours for game duration
-                            Picker("", selection: $hours){
-                                ForEach(0..<13, id: \.self) { i in
-                                    Text("\(i)").tag(i)
-                                }
-                            }.pickerStyle(.wheel).frame(width: 60, height: 100)
-                                .clipped()
-                            Text("hours").bold()
-                            
-                            // Picker for selecting the number of minutes for game duration
-                            Picker("", selection: $minutes){
-                                ForEach(0..<60, id: \.self) { i in
-                                    Text("\(i)").tag(i)
-                                }
-                            }.pickerStyle(.wheel).frame(width: 60, height: 100)
-                            Text("min").bold()
-                        }
-                    }
-                    
-                    // Section for feedback settings
-                    Section(header: Text("Feedback Settings")) {
-                        // CustomPicker for selecting feedback before the event
-                        CustomPicker(
-                            title: "Before Feedback",
-                            options: AppData.feedbackBeforeTimeOptions.map { $0.0 },
-                            displayText: { $0 },
-                            selectedOption: $feedbackBeforeTimeLabel
-                        )
-                        
-                        // CustomPicker for selecting feedback after the event
-                        CustomPicker(
-                            title: "After Feedback",
-                            options: AppData.feedbackAfterTimeOptions.map { $0.0 },
-                            displayText: { $0 },
-                            selectedOption: $feedbackAfterTimeLabel
-                        )
-                    }
-                    
-                    // Section for reminder settings
-                    Section(footer:
-                                Text("Will send recording reminder at the scheduled time.")
-                    ){
-                        Toggle("Get Recording Reminder", isOn: $recordingReminder)
-                        if (recordingReminder == true) {
-                            // CustomPicker for selecting reminder time before the event
-                            CustomPicker(
-                                title: "Reminder",
-                                options: AppData.timeOptions.map { $0.0 },
-                                displayText: { $0 },
-                                selectedOption: $selectedTimeLabel
                             )
+                            
+                            CustomUIFields.customDivider("Scheduled Time")
+                                .padding(.top, 30)
+                            
+                            CustomNavigationLinkDropdown(
+                                label: "Start Time",
+                                placeholder: "Start",
+                                valueText: {
+                                    if let startTime = gameStartTime {
+                                        return String(startTime.formatted(date: .abbreviated, time: .shortened))
+                                    } else {
+                                        return ""
+                                    }
+                                },
+                                valueTextEmpty: "Select Date & Time",
+                                icon: "calendar",
+                                iconColor: .gray,
+                                isActive: $startTimeIsActive,
+                                destination: AddDateAndTimeView(
+                                    date: $startTime,
+                                    dateAtStart: $gameStartTime,
+                                    title: "Select Your Game Start Time",
+                                    subTitle: "Choose when the game begins so the app can schedule reminders and notify you before kickoff."
+                                ),
+                                onSelect: {
+                                    hideKeyboard()
+                                    startTimeIsActive = true
+                                }
+                            )
+                            
+                            CustomNavigationLinkDropdown(
+                                label: "Game Duration",
+                                placeholder: "Duration",
+                                valueText: {
+                                    if hours > 0 || minutes > 0 {
+                                        return "\(hours) h \(minutes)m"
+                                    } else {
+                                        return ""
+                                    }
+                                },
+                                valueTextEmpty: "Select Duration",
+                                icon: "timer",
+                                iconColor: .gray,
+                                isActive: $durationIsActive,
+                                destination: AddDurationView(
+                                    hours: $hours,
+                                    minutes: $minutes,
+                                    title: "Configure Your Game Duration",
+                                    subTitle: "The duration you set will be used to manage video recording and track feedback throughout the game."
+                                ),
+                                onSelect: {
+                                    hideKeyboard()
+                                    durationIsActive = true
+                                }
+                            )
+                            
+                            CustomUIFields.customDivider("Feedback Settings (Optional)")
+                                .padding(.top, 30)
+                            
+                            CustomMenuDropdown(
+                                label: "Before Feedback",
+                                placeholder: "Time before feedback",
+                                isRequired: false,
+                                onSelect: {
+                                    hideKeyboard()
+                                },
+                                options: AppData.feedbackBeforeTimeOptions.map { $0.0 },
+                                selectedOption: $feedbackBeforeTimeLabel
+                            )
+                            
+                            CustomMenuDropdown(
+                                label: "After Feedback",
+                                placeholder: "Time after feedback",
+                                isRequired: false,
+                                onSelect: {
+                                    hideKeyboard()
+                                },
+                                options: AppData.feedbackAfterTimeOptions.map { $0.0 },
+                                selectedOption: $feedbackAfterTimeLabel
+                            )
+                            
+                            CustomUIFields.customDivider("Notification Settings (Optional)")
+                                .padding(.top, 30)
+                            
+                            CustomToggleField(
+                                label: "",
+                                placeholder: "Get Recording Reminder",
+                                isRequired: false,
+                                onSelect: {
+                                    hideKeyboard()
+                                },
+                                toggleIsOn: $recordingReminder,
+                                icon: "bell.fill",
+                                iconColor: .gray
+                            )
+                            
+                            if (recordingReminder == true) {
+                                // CustomPicker for selecting reminder time before the event
+                                CustomMenuDropdown(
+                                    label: "Get Notified",
+                                    placeholder: "Remind me",
+                                    isRequired: false,
+                                    onSelect: {
+                                        hideKeyboard()
+                                    },
+                                    options: AppData.timeOptions.map { $0.0 },
+                                    selectedOption: $selectedTimeLabel
+                                )
+                            }
                         }
+                        .padding(.horizontal, 15)
+                        .padding(.bottom, 10)
                     }
                 }
-            }.toolbar {
+                .scrollDismissesKeyboard(.immediately)
+            }
+            .toolbarBackground(.clear, for: .bottomBar)
+            .toolbar {
                 // Cancel button in the toolbar to dismiss the view (Top Left)
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: {
                         dismiss() // Dismiss the full-screen cover
                     }) {
-                        Text("Cancel")
+                        HStack(spacing: 4) {
+                            Image(systemName: "xmark")
+                                .font(.headline)
+                        }
                     }
                 }
                 
+                
                 // Done button in the toolbar to save the game data
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .bottomBar) {
                     Button(action: { /* Action will need to be added -> complete team form */
                         // Save the selected settings for the game
                         if (recordingReminder == true) {
@@ -211,7 +276,16 @@ struct CoachAddingGameView: View {
                         Task {
                             do {
                                 let finalLocation = getFinalLocation()
-                                let gameDTO = GameDTO(title: title, duration: duration, location: finalLocation, scheduledTimeReminder: scheduledTimeReminder, startTime: startTime, timeBeforeFeedback: timeBeforeFeedback, timeAfterFeedback: timeAfterFeedback, recordingReminder: recordingReminder, teamId: team.teamId)
+                                let gameDTO = GameDTO(
+                                    title: title, duration: duration,
+                                    location: finalLocation,
+                                    scheduledTimeReminder: scheduledTimeReminder,
+                                    startTime: startTime,
+                                    timeBeforeFeedback: timeBeforeFeedback,
+                                    timeAfterFeedback: timeAfterFeedback,
+                                    recordingReminder: recordingReminder,
+                                    teamId: team.teamId
+                                )
 
                                 let canDismiss = try await gameModel.addNewGame(gameDTO: gameDTO) // add new game to the database
                                 if canDismiss {
@@ -219,18 +293,26 @@ struct CoachAddingGameView: View {
                                 }
                                 
                             } catch {
+                                showErrorWhenSaving = true
                                 print("Error when adding a new game... \(error)")
                             }
                         }
                         
                     }) {
-                        Text("Done").foregroundStyle(addGameIsValid ? .red : .gray)
+                        HStack {
+                            Text("Add Game")
+                                .font(.body).bold()
+                            Image(systemName: "arrow.right")
+                        }
+                        .padding(.horizontal, 25)
+                        .foregroundColor(.white)
+                        .padding(.vertical, 15)
+                        .background(Capsule().fill(addGameIsValid ? Color.black : Color.secondary))
+
                     }
                     .disabled(!addGameIsValid)
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle(Text("New Game"))
             .onAppear {
                 gameModel.setDependencies(dependencies)
             }
@@ -296,6 +378,7 @@ struct CoachAddingGameView: View {
 extension CoachAddingGameView: GameProtocol {
     var addGameIsValid: Bool {
         return !title.isEmpty
+        && (gameStartTime != nil)
         && (hours != 0 || minutes != 0)
     }
 }
@@ -304,5 +387,5 @@ extension CoachAddingGameView: GameProtocol {
 #Preview {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
 
-    CoachAddingGameView(team: team)
+    CoachAddingGameView(team: team, showErrorWhenSaving: .constant(false))
 }

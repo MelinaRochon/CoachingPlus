@@ -7,6 +7,7 @@
 
 import Foundation
 import GameFrameIOSShared
+import FirebaseFirestore
 
 /// **GameModel** is responsible for managing game-related data and interactions.
 ///
@@ -26,6 +27,11 @@ final class GameModel: ObservableObject {
     
     /// A list of games retrieved for a specific team.
     @Published var games: [DBGame] = []
+    
+    @Published var homeGames: [HomeGameDTO] = []
+
+    var lastDoc: DocumentSnapshot?
+    private var isLoading = false
 
     // MARK: - Dependency Injection
     
@@ -152,6 +158,13 @@ final class GameModel: ObservableObject {
     /// - Throws: An error if any data retrieval operation fails.
     func loadAllAssociatedGames() async throws -> [HomeGameDTO] {
         let gameRepo = FirestoreGameRepository()
+        
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            return []
+        }
+
+
         // Retrieve the list of team IDs associated with the user.
         guard let teamsId = try await getTeamsAssociatedToUser() else {
             print("No games associated to user")
@@ -164,25 +177,105 @@ final class GameModel: ObservableObject {
         // Iterate through each team ID to fetch associated games.
         for teamId in teamsId {
             // Attempt to fetch the team document.
-            guard let team = try await dependencies?.teamManager.getTeam(teamId: teamId) else {
+            guard let team = try await repo.teamManager.getTeam(teamId: teamId) else {
                 print("Could not find team. Aborting")
                 return [] // Return an empty list if the team is not found.
             }
             
             // Fetch game documents for the team.
-            let gameSnapshot = try await gameRepo.gameCollection(teamDocId: team.id).getDocuments()
+            let recentGames = try await gameRepo.getRecentGames(teamDocId: team.id, limit: 10)
+//            let gameSnapshot = try await gameRepo.gameCollection(teamDocId: team.id).getDocuments()
+            
+            for recentGame in recentGames {
+                    // Create a `HomeGameDTO` containing both game and team details.
+                let gameWithTeam = HomeGameDTO(id: recentGame.gameId, game: recentGame, team: team)
+                    
+                games.append(gameWithTeam)
+            }
+
             
             // Convert each document into a `DBGame` object and append it to the games list.
-            for document in gameSnapshot.documents {
-                if let game = try? document.data(as: DBGame.self) {
-                    // Create a `HomeGameDTO` containing both game and team details.
-                    let gameWithTeam = HomeGameDTO(game: game, team: team)
-                    games.append(gameWithTeam)
-                }
-            }
+//            for document in gameSnapshot.documents {
+//                if let game = try? document.data(as: DBGame.self) {
+//                    // Create a `HomeGameDTO` containing both game and team details.
+//                    let gameWithTeam = HomeGameDTO(id: game.gameId, game: game, team: team)
+//                    
+//                    games.append(gameWithTeam)
+//                }
+//            }
+            
+//            return teamGames
         }
+
         
-        return games
+//        for teamId in teamsId {
+//            // Attempt to fetch the team document.
+//            guard let team = try await repo.teamManager.getTeam(teamId: teamId) else {
+//                print("Could not find team. Aborting")
+//                return ([], []) // Return an empty list if the team is not found.
+//            }
+//            
+//            // Fetch game documents for the team.
+//            let gameSnapshot = try await gameRepo.gameCollection(teamDocId: team.id).getDocuments()
+//            
+//            // Convert each document into a `DBGame` object and append it to the games list.
+//            for document in gameSnapshot.documents {
+//                if let game = try? document.data(as: DBGame.self) {
+//                    // Create a `HomeGameDTO` containing both game and team details.
+//                    let fullGameExist = try await repo.fullGameRecordingManager.doesFullGameVideoExistsWithGameId(teamDocId: team.id, gameId: game.gameId, teamId: teamId)
+//                    let gameWithTeam = HomeGameDTO(id: game.gameId, game: game, team: team)
+//                    doesFullGameExist.append(fullGameExist)
+//                    games.append(gameWithTeam)
+//                }
+//            }
+//        }
+        // 🔥 Merge + sort all games
+            games.sort {
+                ($0.game.startTime ?? .distantPast) >
+                ($1.game.startTime ?? .distantPast)
+            }
+
+            // 🔥 Return only 20 most recent across ALL teams
+            return Array(games.prefix(20))
+        
+//        return games
+    }
+    
+    func loadInitial(teamDocId: String) async {
+        guard !isLoading else { return }
+        isLoading = true
+        do {
+            guard let team = try await dependencies?.teamManager.getTeamWithDocId(docId: teamDocId) else { return }
+            let (loadedGames, last) = try await FirestoreGameRepository().fetchRecentGames(teamDocId: teamDocId)
+//            self.games = loadedGames
+            for loadedGame in loadedGames {
+                self.homeGames.append(HomeGameDTO(id: loadedGame.gameId, game: loadedGame, team: team))
+            }
+            self.lastDoc = last
+        } catch {
+            print("Error: \(error)")
+        }
+        isLoading = false
+    }
+    
+    func loadMore(teamDocId: String) async {
+        guard let lastDoc, !isLoading else { return }
+        isLoading = true
+        do {
+            guard let team = try await dependencies?.teamManager.getTeamWithDocId(docId: teamDocId) else { return }
+
+            let (loadedGames, last) = try await FirestoreGameRepository().fetchMoreGames(after: lastDoc, teamDocId: teamDocId)
+//            self.games.append(contentsOf: loadedGames)
+            
+            for loadedGame in loadedGames {
+                self.homeGames.append( HomeGameDTO(id: loadedGame.gameId, game: loadedGame, team: team))
+            }
+
+            self.lastDoc = last
+        } catch {
+            print("Error: \(error)")
+        }
+        isLoading = false
     }
     
     

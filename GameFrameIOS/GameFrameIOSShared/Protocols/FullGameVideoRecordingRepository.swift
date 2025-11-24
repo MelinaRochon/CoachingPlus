@@ -40,4 +40,6 @@ public protocol FullGameVideoRecordingRepository {
     ///   - gameId: The unique identifier of the game
     /// - Returns: A `DBFullGameVideoRecording` object if found, otherwise `nil`
     func getFullGameVideoWithGameId(teamDocId: String, gameId: String) async throws -> DBFullGameVideoRecording?
+    
+    func doesFullGameVideoExistsWithGameId(teamDocId: String, gameId: String, teamId: String) async throws -> Bool
 }

@@ -16,7 +16,9 @@ import GameFrameIOSShared
  
  This DTO is typically used to transfer relevant information about a home game between different layers of the application, such as from the database to the view or business logic layers.
  */
-struct HomeGameDTO {
+struct HomeGameDTO: Identifiable {
+    var id: String
+    
     var game: DBGame
     let team: DBTeam
 }

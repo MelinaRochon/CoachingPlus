@@ -104,4 +104,12 @@ public final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecor
         guard let doc = query.documents.first else { return nil }
         return try doc.data(as: DBFullGameVideoRecording.self)
     }
+    
+    public func doesFullGameVideoExistsWithGameId(teamDocId: String, gameId: String, teamId: String) async throws -> Bool {
+        let fileUrl = "full_game/\(teamId)/\(gameId).mov"
+        // Query the collection for documents matching the game_id field
+        let query = try await fullGameVideoRecordingCollection(teamDocId: teamDocId).whereField("game_id", isEqualTo: gameId).whereField("file_url", isEqualTo: fileUrl).getDocuments()
+        
+        return !query.documents.isEmpty
+    }
 }

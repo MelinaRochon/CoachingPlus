@@ -62,4 +62,10 @@ public final class LocalFullGameRecordingRepository: FullGameVideoRecordingRepos
     public func getFullGameVideoWithGameId(teamDocId: String, gameId: String) async throws -> DBFullGameVideoRecording? {
         return fullGameRecording.first { $0.gameId == gameId }
     }
+    
+    public func doesFullGameVideoExistsWithGameId(teamDocId: String, gameId: String, teamId: String) async throws -> Bool {
+        let fileUrl = "full_game/\(teamId)/\(gameId).mov"
+
+        return fullGameRecording.contains(where: { $0.fileURL ==  fileUrl})
+    }
 }

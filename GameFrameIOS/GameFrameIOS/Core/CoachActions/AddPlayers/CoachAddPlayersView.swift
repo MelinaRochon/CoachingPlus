@@ -73,41 +73,44 @@ struct CoachAddPlayersView: View {
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack {
-                    
-                    CustomUIFields.customTitle("Player Profile Setup", subTitle: "Please provide the player’s basic information before inviting them to join the team.")
-                    
+            VStack (alignment: .leading) {
+                CustomUIFields.customTitle("Player Profile Setup", subTitle: "Please provide the player’s basic information before inviting them to join the team.")
+
+                ScrollView {
                     VStack {
-                        CustomUIFields.customDivider("Player Information")
-                            .padding(.top, 30)
-                        CustomTextField(label: "First Name", text: $firstName)
-                        CustomTextField(label: "Last Name", text: $lastName)
-                        CustomTextField(label: "Email", text: $email, icon: "envelope", type: .email, disabled: true)
                         
-                        CustomUIFields.customDivider("Guardian Information (Optional)")
-                            .padding(.top, 30)
-                        CustomTextField(label: "Guardian Name", text: $guardianName, isRequired: false)
-                        CustomTextField(label: "Guardian Email", text: $guardianEmail, isRequired: false, icon: "envelope", type: .email)
-                        CustomTextField(label: "Guardian Phone", placeholder: "(XXX)-XXX-XXXX", text: $guardianPhone, isRequired: false, icon: "phone", type: .phone)
+                        
+                        VStack {
+                            CustomUIFields.customDivider("Player Information")
+                                .padding(.top, 30)
+                            CustomTextField(label: "First Name", text: $firstName)
+                            CustomTextField(label: "Last Name", text: $lastName)
+                            CustomTextField(label: "Email", text: $email, icon: "envelope", type: .email, disabled: true)
+                            
+                            CustomUIFields.customDivider("Guardian Information (Optional)")
+                                .padding(.top, 30)
+                            CustomTextField(label: "Guardian Name", text: $guardianName, isRequired: false)
+                            CustomTextField(label: "Guardian Email", text: $guardianEmail, isRequired: false, icon: "envelope", type: .email)
+                            CustomTextField(label: "Guardian Phone", placeholder: "(XXX)-XXX-XXXX", text: $guardianPhone, isRequired: false, icon: "phone", type: .phone)
+                        }
+                        .padding(.horizontal, 15)
                     }
-                    .padding(.horizontal, 15)
+                    .padding(.bottom, 30)
+                    ReviewPlayerDetailsView(
+                        firstName: firstName,
+                        lastName: lastName,
+                        guardianName: guardianName,
+                        guardianEmail: guardianEmail,
+                        guardianPhone: guardianPhone,
+                        selectedPositions: $selectedPositions,
+                        nickname: $nickname,
+                        jersey: $jersey,
+                        playerNickname: nickname,
+                        playerJersey: jersey,
+                        playerSelectedPositions: selectedPositions,
+                    )
+                    
                 }
-                .padding(.bottom, 30)
-                ReviewPlayerDetailsView(
-                    firstName: firstName,
-                    lastName: lastName,
-                    guardianName: guardianName,
-                    guardianEmail: guardianEmail,
-                    guardianPhone: guardianPhone,
-                    selectedPositions: $selectedPositions,
-                    nickname: $nickname,
-                    jersey: $jersey,
-                    playerNickname: nickname,
-                    playerJersey: jersey,
-                    playerSelectedPositions: selectedPositions,
-                )
-                
             }
             .toolbarBackground(.clear, for: .bottomBar)
             .scrollDismissesKeyboard(.immediately)

@@ -41,7 +41,8 @@ struct CoachHomePageView: View {
     
     /// List of past games (recent footage).
     @State private var pastGames: [HomeGameDTO] = []
-    
+    @State private var pastGameIndexed: [IndexedGame] = []
+
     /// List of upcoming games (scheduled games).
     @State private var futureGames: [HomeGameDTO] = []
     
@@ -54,110 +55,177 @@ struct CoachHomePageView: View {
     @State private var selectedSegmentIndex: Int = 0
     @State private var segmentTypes: [String] = ["Scheduled Games", "Recent Games"]
     @State private var imageTypes: [String] = ["calendar.badge.clock", "camera.badge.clock"]
+    
+    @State private var selectedIndex: Int = 0
+    
+    @State private var isLoadingMyPastGames: Bool = false
+
     // MARK: - View
 
     var body: some View {
         NavigationStack {
-            Divider()
-            ScrollView {
-                ScrollViewReader { proxy in
-                    VStack {
-                        
-                        
-                        // Scheduled Games Sectio
-                        VStack(alignment: .leading, spacing: 10) {
-                            // Navigation link to view all scheduled games
-                            NavigationLink(destination: AllScheduledGamesView(futureGames: futureGames, userType: .coach)) {
-                                Text("Scheduled Games")
-                                    .font(.headline)
-                                    .foregroundColor(futureGamesFound ? .red : .secondary)
-                                
-                                Image(systemName: "chevron.right").foregroundColor(futureGamesFound ? .red : .secondary)
-                                Spacer()
-                            }
-                            .padding(.bottom, 4)
-                            .disabled(!futureGamesFound)
-                            
-                            // Display preview of upcoming games
-                            if !futureGames.isEmpty {
-                                // Loop through games and show a preview of the next 3 games only
-                                GameList(
-                                    games: futureGames,
-                                    prefix: 3,
-                                    gameType: .scheduled,
-                                    destinationBuilder: { game in
-                                        AnyView(SelectedScheduledGameView(selectedGame: game, userType: .coach))
-                                    }
-                                )
-                            } else {
-                                Text("No scheduled game.").font(.caption).foregroundColor(.secondary)
-                            }
-                        }
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
-                        .padding(.horizontal).padding(.top)
-                        
-                        // Recent Footage Section
-                        VStack(alignment: .leading, spacing: 10) {
-                            // Navigation link to view all recent games
-                            NavigationLink(destination: AllRecentFootageView(pastGames: pastGames, userType: .coach)) {
+            
+            VStack {
+                Divider()
+
+                CustomSegmentedPicker(
+                    selectedIndex: $selectedIndex,
+                    options: [
+                        (title: "Recent Games", icon: "person.crop.square.badge.video.fill"),
+                        (title: "Scheduled Games", icon: "calendar.badge.clock"),
+                    ]
+                )
+                
+                if selectedIndex == 0 {
+                    // Show the recent games, if any
+                    CustomListSection(
+                        titleContent: {
+                            AnyView(
+                                CustomUIFields.customDivider("Most Recent Games")
+
+//                                CustomDividerWithNavigationLink(
+//                                    title: "Most Recent Games",
+//                                    subTitle: "See All",
+//                                    subTitleColor: .red
+//                                ) {
+//                                    AllRecentFootageView(pastGames: pastGames, userType: .coach)
+//                                }
+                            )
+                        },
+                        items: Array(pastGameIndexed.prefix(20)),
+                        isLoading: isLoadingMyPastGames,
+                        isLoadingProgressViewTitle: "Searching for my recent games…",
+                        noItemsFoundIcon: "questionmark.video.fill",
+                        noItemsFoundTitle: "No recent games found at this time.",
+                        noItemsFoundSubtitle: "Try again later",
+                        destinationBuilder: { indexedGame in
+                            SelectedRecentGameView(selectedGame: indexedGame.homeGame, userType: .coach)
+                        },
+                        rowContent: { indexedGame in
+                            AnyView(
                                 HStack {
-                                    Text("Recent Games")
-                                        .font(.headline)
-                                        .foregroundColor(recentGamesFound ? .red : .secondary)
+                                    Image(systemName: indexedGame.isFullGame ? "video.fill" : "microphone.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 30, height: 30)
+                                        .foregroundColor(.red)
+                                        .padding(.horizontal, 5)
                                     
-                                    Image(systemName: "chevron.right").foregroundColor(recentGamesFound ? .red : .secondary)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.bottom, 4)
-                            .disabled(!recentGamesFound)
-                            
-                            // Display preview of recent games
-                            if !pastGames.isEmpty {
-                                GameList(
-                                    games: pastGames,
-                                    prefix: 3,
-                                    gameType: .recent,
-                                    destinationBuilder: { game in
-                                        AnyView(SelectedRecentGameView(selectedGame: game, userType: .coach))
+                                    VStack (alignment: .leading, spacing: 2) {
+                                        Text(indexedGame.homeGame.game.title)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .multilineTextAlignment(.leading)
+                                            .lineLimit(2)
+                                            .foregroundStyle(.black)
+                                        Text(indexedGame.homeGame.team.name)
+                                            .font(.footnote)
+                                            .padding(.leading, 1)
+                                            .multilineTextAlignment(.leading)
+                                            .foregroundStyle(.gray)
+                                        Text(formatStartTime(indexedGame.homeGame.game.startTime))
+                                            .font(.caption)
+                                            .multilineTextAlignment(.leading)
+                                            .foregroundStyle(.black)
                                     }
-                                )
-                            } else {
-                                Text("No recent games.").font(.caption).foregroundColor(.secondary)
-                            }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            )
                         }
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 2))
-                        .padding(.horizontal).padding(.top)
-                        
-                        if pastGames.isEmpty && futureGames.isEmpty {
-                            CustomUIFields.loadingSpinner("Loading games...")
+                    )
+                } else {
+                    // Show the scheduled games
+                    CustomListSection(
+                        titleContent: {
+                            AnyView(
+                                CustomUIFields.customDivider("Upcoming Games")
+//                                CustomDividerWithNavigationLink(
+//                                    title: "Upcoming Games",
+//                                    subTitle: "See All",
+//                                    subTitleColor: .red
+//                                ) {
+//                                    AllScheduledGamesView(futureGames: futureGames, userType: .coach)
+//                                }
+                            )
+                        },
+                      
+                        items: futureGames.prefix(20).map { $0 },
+                        isLoading: isLoadingMyPastGames,
+                        rowLogo: "clock.fill",
+                        rowLogoColor: .green,
+                        isLoadingProgressViewTitle: "Searching for my upcoming games…",
+                        noItemsFoundIcon: "clock.badge.questionmark.fill",
+                        noItemsFoundTitle: "No upcoming games found at this time.",
+                        noItemsFoundSubtitle: "Try again later",
+                        destinationBuilder: { game in
+                            SelectedScheduledGameView(selectedGame: game, userType: .coach)
+                        },
+                        rowContent: { game in
+                            AnyView(
+                                HStack {
+                                    VStack (alignment: .leading, spacing: 2) {
+                                        Text(game.game.title)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .multilineTextAlignment(.leading)
+                                            .lineLimit(2)
+                                            .foregroundStyle(.black)
+                                        Text(game.team.name)
+                                            .font(.footnote)
+                                            .padding(.leading, 1)
+                                            .multilineTextAlignment(.leading)
+                                            .foregroundStyle(.gray)
+                                        Text(formatStartTime(game.game.startTime))
+                                            .font(.caption)
+                                            .multilineTextAlignment(.leading)
+                                            .foregroundStyle(.green)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            )
                         }
-                        
-                    }
-                    .onAppear {
-                        DispatchQueue.main.async {
-                            proxy.scrollTo(0, anchor: .top) // Scroll to top when view appears
-                        }
-                        gameModel.setDependencies(dependencies)
-                    }
+                    )
                 }
+                Spacer()
             }
+            .onAppear {
+                gameModel.setDependencies(dependencies)
+            }
+
             .task {
                 // Fetch games when view loads
                 do {
+                    isLoadingMyPastGames = true
                     let allGames = try await gameModel.loadAllAssociatedGames()
                     if !allGames.isEmpty {
                         // Filter games into future and past categories
                         await filterGames(allGames: allGames)
                         
                         // Update flags based on availability of games
+                        if !pastGames.isEmpty {
+                            print("pastGames is not emptu")
+                            futureGamesFound = true
+                            for (index, pastGame) in pastGames.prefix(20).enumerated() {
+                                // Only do the first 3 games
+                                let fullGameExist = try await dependencies.fullGameRecordingManager.doesFullGameVideoExistsWithGameId(
+                                    teamDocId: pastGame.team.id,
+                                    gameId: pastGame.game.gameId,
+                                    teamId: pastGame.team.teamId
+                                )
+                                
+                                let indexedGame = IndexedGame(id: index, isFullGame: fullGameExist, homeGame: pastGame)
+                                print("indexed game = \(indexedGame)")
+                                pastGameIndexed.append(indexedGame)
+                            }
+
+                        }
                         futureGamesFound = !futureGames.isEmpty
                         recentGamesFound = !pastGames.isEmpty
                     }
+                    isLoadingMyPastGames = false
                 } catch {
                     print("Error needs to be handled. \(error)")
+                    isLoadingMyPastGames = false
                     showErrorMessage = true
                 }
             }
@@ -168,13 +236,23 @@ struct CoachHomePageView: View {
                     Text("OK")
                 }
             }
-            .background(Color(UIColor.white))
+//            .background(Color(UIColor.white))
             .navigationTitle(Text("Home"))
         }
         
     }
     
     // MARK: - Functions
+    
+    private func refreshHome(for index: Int) async throws {
+        if index == 0 {
+            do {
+                
+            }
+        } else {
+            
+        }
+    }
 
     /// Filters the provided list of games into past and future categories based on their end time.
     /// - Parameter allGames: An array of `HomeGameDTO` objects representing all games associated with the coach.
@@ -203,11 +281,23 @@ struct CoachHomePageView: View {
         }
         
         // Update the view's state with the filtered lists.
-        self.pastGames = tmpPastGames
+        let now = Date()
+        self.pastGames = tmpPastGames // = tmpPastGames.compactMap { $0.game.startTime != nil ? $0 : nil } // keep only games with startTime
+//            .filter { $0.game.startTime! <= now }               // force unwrap is safe here
+//            .sorted { $0.game.startTime! > $1.game.startTime! }
         self.futureGames = tmpFutureGames
     }
+        
+    
 }
 
 #Preview {
     CoachHomePageView()
+}
+
+
+struct IndexedGame: Identifiable {
+    let id: Int
+    let isFullGame: Bool
+    let homeGame: HomeGameDTO
 }

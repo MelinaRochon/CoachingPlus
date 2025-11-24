@@ -74,7 +74,11 @@ struct PlayerTeamsView: View {
                     if selectedIndex == 0 {
                         // Show the player's teams that they are registered on
                         CustomListSection(
-                            title: "My Teams",
+//                            title: "My Teams",
+                            titleContent: {
+                                AnyView(
+                                CustomUIFields.customDivider("My Teams")
+                            )},
                             items: teams ?? [],
                             isLoading: isLoadingMyTeams,
                             rowLogo: "tshirt",

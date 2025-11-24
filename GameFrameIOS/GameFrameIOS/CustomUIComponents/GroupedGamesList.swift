@@ -50,7 +50,7 @@ struct GroupedGamesList: View {
                 }.padding(.top, 5)
                 ) {
                     ForEach(upcomingGames.games, id: \.gameId) { game in
-                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: HomeGameDTO(game: game, team: selectedTeam), userType: userType)) {
+                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: HomeGameDTO(id: game.gameId, game: game, team: selectedTeam), userType: userType)) {
                             GameRow(game: game)
                         }
                     }

@@ -13,7 +13,7 @@ struct MultiSelectPositionsView: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 0) {
             CustomUIFields.customTitle("Select Player Positions", subTitle: "Choose all the positions this player can play.")
             List {
                 ForEach(SoccerPosition.allCases) { position in
@@ -28,11 +28,11 @@ struct MultiSelectPositionsView: View {
                                 .foregroundColor(.gray)
                         }
                     }
+                    
                     .contentShape(Rectangle())
                     .onTapGesture {
                         toggle(position)
                     }
-                    .padding(.vertical, 4)
                 }
             }
             .listStyle(.plain)
@@ -51,7 +51,7 @@ struct MultiSelectPositionsView: View {
                 }
             }
         }
-        .toolbarBackground(.clear, for: .bottomBar)
+        
     }
 
     private func toggle(_ pos: SoccerPosition) {
