@@ -29,8 +29,6 @@ struct UpdatingPlayerInfoView: View {
                 CustomUIFields.customTitle("Review Player Details", subTitle: "Make changes to the player's nickname, jersey and field roles.")
 
                 ScrollView {
-                    
-                    
                     ReviewPlayerDetailsView(
                         selectedPositions: $selectedPositions,
                         nickname: $nickname,
@@ -80,9 +78,7 @@ struct UpdatingPlayerInfoView: View {
         .scrollDismissesKeyboard(.immediately)
         .frame(maxWidth: .infinity, alignment: .top) // ensure it aligns to top
         .navigationBarBackButtonHidden(true)
-
     }
-    
 }
 
 extension UpdatingPlayerInfoView: AddingPlayerToTeam {

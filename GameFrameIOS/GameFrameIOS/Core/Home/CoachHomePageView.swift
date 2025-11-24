@@ -11,33 +11,11 @@ import SwiftUI
 /// This view fetches the coach's associated games and categorizes them into past and future games.
 struct CoachHomePageView: View {
     
-    @State private var selectedTab: Tab = .scheduled
-
-       enum Tab: String, CaseIterable, Identifiable {
-           case scheduled = "Scheduled Games"
-           case recent = "Recent Games"
-
-           var id: String { self.rawValue }
-
-           var iconName: String {
-               switch self {
-               case .scheduled: return "calendar.badge.clock"
-               case .recent: return "camera.badge.clock"
-               }
-           }
-       }
-
     // MARK: - State Properties
 
     /// ViewModel responsible for loading game data.
     @StateObject private var gameModel = GameModel()
     @EnvironmentObject private var dependencies: DependencyContainer
-
-    /// Indicates whether recent games are available.
-    @State private var recentGamesFound: Bool = false
-    
-    /// Indicates whether future games are available.
-    @State private var futureGamesFound: Bool = false
     
     /// List of past games (recent footage).
     @State private var pastGames: [HomeGameDTO] = []
@@ -48,13 +26,6 @@ struct CoachHomePageView: View {
     
     /// Controls whether an error message is displayed.
     @State private var showErrorMessage: Bool = false
-    
-    /// Tracks whether the ScrollView should reset to the top.
-    @State private var scrollToTop: Bool = false
-    
-    @State private var selectedSegmentIndex: Int = 0
-    @State private var segmentTypes: [String] = ["Scheduled Games", "Recent Games"]
-    @State private var imageTypes: [String] = ["calendar.badge.clock", "camera.badge.clock"]
     
     @State private var selectedIndex: Int = 0
     
@@ -203,8 +174,7 @@ struct CoachHomePageView: View {
                         
                         // Update flags based on availability of games
                         if !pastGames.isEmpty {
-                            print("pastGames is not emptu")
-                            futureGamesFound = true
+
                             for (index, pastGame) in pastGames.prefix(20).enumerated() {
                                 // Only do the first 3 games
                                 let fullGameExist = try await dependencies.fullGameRecordingManager.doesFullGameVideoExistsWithGameId(
@@ -214,13 +184,9 @@ struct CoachHomePageView: View {
                                 )
                                 
                                 let indexedGame = IndexedGame(id: index, isFullGame: fullGameExist, homeGame: pastGame)
-                                print("indexed game = \(indexedGame)")
                                 pastGameIndexed.append(indexedGame)
                             }
-
                         }
-                        futureGamesFound = !futureGames.isEmpty
-                        recentGamesFound = !pastGames.isEmpty
                     }
                     isLoadingMyPastGames = false
                 } catch {
@@ -236,24 +202,12 @@ struct CoachHomePageView: View {
                     Text("OK")
                 }
             }
-//            .background(Color(UIColor.white))
             .navigationTitle(Text("Home"))
         }
-        
     }
     
     // MARK: - Functions
     
-    private func refreshHome(for index: Int) async throws {
-        if index == 0 {
-            do {
-                
-            }
-        } else {
-            
-        }
-    }
-
     /// Filters the provided list of games into past and future categories based on their end time.
     /// - Parameter allGames: An array of `HomeGameDTO` objects representing all games associated with the coach.
     private func filterGames(allGames: [HomeGameDTO]) async {
@@ -281,14 +235,9 @@ struct CoachHomePageView: View {
         }
         
         // Update the view's state with the filtered lists.
-        let now = Date()
-        self.pastGames = tmpPastGames // = tmpPastGames.compactMap { $0.game.startTime != nil ? $0 : nil } // keep only games with startTime
-//            .filter { $0.game.startTime! <= now }               // force unwrap is safe here
-//            .sorted { $0.game.startTime! > $1.game.startTime! }
+        self.pastGames = tmpPastGames
         self.futureGames = tmpFutureGames
     }
-        
-    
 }
 
 #Preview {

@@ -137,7 +137,7 @@ public final class FirestoreGameRepository: GameRepository {
     ) async throws {
         
         // Find game
-        guard let game = try await getGameWithDocId(gameDocId: id, teamDocId: teamDocId) else {
+        guard let _ = try await getGameWithDocId(gameDocId: id, teamDocId: teamDocId) else {
             print("Unable to get the game details")
             return
         }
@@ -219,8 +219,6 @@ public final class FirestoreGameRepository: GameRepository {
     }
     
     func fetchMoreGames(after lastDoc: DocumentSnapshot, teamDocId: String, limit: Int = 20) async throws -> ([DBGame], DocumentSnapshot?) {
-        let db = Firestore.firestore()
-
         let query = gameCollection(teamDocId: teamDocId)
             .order(by: "start_time", descending: true)
             .start(afterDocument: lastDoc)

@@ -50,12 +50,10 @@ struct CoachAllTeamsView: View {
                 Divider() // This adds a divider after the title
                     .padding(.bottom, 30)
                 CustomListSection(
-//                    title: "My Teams",
                     titleContent: {
                         AnyView(
                         CustomUIFields.customDivider("My Teams")
                     )},
-
                     items: teams ?? [],
                     isLoading: isLoadingMyTeams,
                     rowLogo: "tshirt",

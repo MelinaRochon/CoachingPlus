@@ -11,10 +11,6 @@ import SwiftUI
 
 /// Reusable scrollable list with section header and optional loading indicator
 struct CustomListSection<Item: Identifiable, Destination: View>: View {
-
-//    /// Section title
-//    let title: String
-    
     let titleContent: () -> AnyView
     /// Data to iterate over
     let items: [Item]?
@@ -37,7 +33,6 @@ struct CustomListSection<Item: Identifiable, Destination: View>: View {
     
     var body: some View {
         VStack {
-//            CustomUIFields.customDivider(title)
             titleContent()
                 .padding(.bottom, 0)
                 .padding(.horizontal, 15)
@@ -84,7 +79,6 @@ struct CustomListSection<Item: Identifiable, Destination: View>: View {
                             }
                         }
                         .padding(.horizontal, 15)
-//                        .padding(.bottom, 10)
                     }
                     .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
                         Color.clear.frame(height: 75)

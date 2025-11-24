@@ -79,7 +79,7 @@ public final class FirestoreFullGameVideoRecordingRepository: FullGameVideoRecor
     /// Updates an existing full game video recording with new data
     public func updateFullGameVideoRecording(fullGameId: String, teamDocId: String, endTime: Date, path: String) async throws {
         // Ensure the full game video recording exists before updating
-        guard let fullGame = try await getFullGameVideo(teamDocId: teamDocId, fullGameId: fullGameId) else {
+        guard let _ = try await getFullGameVideo(teamDocId: teamDocId, fullGameId: fullGameId) else {
             print("Could not find full game video recording document. Aborting")
             return
         }
