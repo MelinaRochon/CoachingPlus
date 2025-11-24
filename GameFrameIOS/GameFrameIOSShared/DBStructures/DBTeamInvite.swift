@@ -9,7 +9,7 @@ import Foundation
 
 public struct DBTeamInvite: Codable {
     public let id: String
-    public let status: InviteStatus
+    public var status: InviteStatus
     public let dateTeamInviteSent: Date
     public let dateAccepted: Date?
     

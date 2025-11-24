@@ -34,40 +34,53 @@ struct CoachAllTeamsView: View {
     @StateObject private var teamModel = TeamModel()
     @EnvironmentObject private var dependencies: DependencyContainer
 
-    // Holds the list of teams that the coach is managing. This is fetched asynchronously.
+    /// Holds the list of teams that the coach is managing. This is fetched asynchronously.
     @State private var teams: [DBTeam]?
 
-    // A boolean flag that controls the visibility of the "Create Team" view. When true, the Create Team sheet is presented.
+    /// A boolean flag that controls the visibility of the "Create Team" view. When true, the Create Team sheet is presented.
     @State private var showCreateTeam: Bool = false
+    
+    @State private var isLoadingMyTeams: Bool = false
+
     
     var body: some View {
         NavigationStack {
+            
             VStack {
                 Divider() // This adds a divider after the title
-                
-                List {
-                    Section(header: HStack {
-                        Text("My Teams") // Section header text
-                            .accessibilityIdentifier("page.coach.teams.title")
-                    }) {
-                        if let teams = teams {
-                            if !teams.isEmpty {
-                                ForEach(teams, id: \.name) { team in
-                                    NavigationLink(destination: CoachMyTeamView(selectedTeam: team))
-                                    {
-                                        HStack {
-                                            Image(systemName: "tshirt").foregroundStyle(.red) // TODO: Will need to change the team's logo in the future
-                                            Text(team.name)
-                                        }
-                                    }
-                                }
-                            } else {
-                                Text("No teams found.").font(.caption).foregroundStyle(.secondary)
+                    .padding(.bottom, 30)
+                CustomListSection(
+                    title: "My Teams",
+                    items: teams ?? [],
+                    isLoading: isLoadingMyTeams,
+                    rowLogo: "tshirt",
+                    isLoadingProgressViewTitle: "Searching for my teams…",
+                    noItemsFoundIcon: "person.2.slash.fill",
+                    noItemsFoundTitle: "No teams found at this time.",
+                    noItemsFoundSubtitle: "Try adding a team or try again later",
+                    destinationBuilder: { team in
+                        CoachMyTeamView(selectedTeam: team)
+                    },
+                    rowContent: { team in
+                        AnyView(
+                            VStack (alignment: .leading, spacing: 4) {
+                                Text(team.name)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(2)
+                                    .foregroundStyle(.black)
+                                Text(team.sport)
+                                    .font(.caption)
+                                    .padding(.leading, 1)
+                                    .multilineTextAlignment(.leading)
+                                    .foregroundStyle(.gray)
                             }
-                        }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        )
                     }
-                }
-                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
+                )
+                Spacer()
             }
             .navigationTitle(Text("Teams"))
             .toolbar {
@@ -82,9 +95,12 @@ struct CoachAllTeamsView: View {
             }
             .task {
                 do {
+                    isLoadingMyTeams = true
                     self.teams = try await teamModel.loadAllTeams()
+                    isLoadingMyTeams = false
                     
                 } catch {
+                    isLoadingMyTeams = false
                     print("Error. Aborting... \(error)")
                 }
             }
@@ -93,7 +109,6 @@ struct CoachAllTeamsView: View {
             }
         }
         .sheet(isPresented: $showCreateTeam, onDismiss: refreshTeams) {
-//            CoachCreateTeamView(teamModel: teamModel)
             CoachCreateTeamView()
 
         }
@@ -104,8 +119,10 @@ struct CoachAllTeamsView: View {
     private func refreshTeams() {
         Task {
             do {
+                isLoadingMyTeams = true
                 // Reload the list of teams after creating a new one
                 self.teams = try await teamModel.loadAllTeams()
+                isLoadingMyTeams = false
             } catch {
                 // Print an error message if the refresh fails
                 print("Error occured when refreshing teams. Aborting... \(error)")

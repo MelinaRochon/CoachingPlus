@@ -147,4 +147,38 @@ public final class LocalInviteRepository: InviteRepository {
         }
         return true
     }
+    
+    public func findInviteWithUserDocId(userDocId: String) async throws -> DBInvite? {
+        return invites.first(where: { $0.userDocId == userDocId })
+
+    }
+        
+    public func getAllTeamInvitesWithInviteDocId(inviteDocId: String) async throws -> [DBTeamInvite]? {
+        return teamInvites.filter { $0.id == inviteDocId }
+    }
+
+    
+    public func updateTeamInviteStatus(inviteDocId: String, teamId: String, status: InviteStatus) async throws {
+        
+        guard let index = teamInvites.firstIndex(where: { $0.id == teamId }) else {
+            return
+        }
+        teamInvites[index].status = status
+    }
+
+    public func removeTeamInviteWithUserDocIdAndTeamId(inviteDocId: String, teamId: String) async throws {
+        guard let index = teamInvites.firstIndex(where: { $0.id == teamId }) else {
+            return
+        }
+        
+        teamInvites.remove(at: index)
+    }
+
+    public func findInviteWithPlayerDocId(playerDocId: String) async throws -> DBInvite? {
+        return invites.first(where: { $0.playerDocId == playerDocId })
+    }
+    
+    public func getTeamInviteByPlayerDocIdAndTeamId(playerDocId: String, teamId: String) async throws -> DBTeamInvite? {
+        return teamInvites.first(where: { $0.id == teamId })
+    }
 }

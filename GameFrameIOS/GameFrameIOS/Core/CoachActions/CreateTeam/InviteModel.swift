@@ -132,4 +132,82 @@ final class InviteModel: ObservableObject {
                         
         return invite
     }
+    
+    
+    /// Checks if a team invite exists for a player and team, and marks it as accepted.
+    ///
+    /// - Parameters:
+    ///   - playerDocId: Player's document ID.
+    ///   - teamId: Team's document ID.
+    /// - Returns: `true` if the invite exists and was updated, otherwise `false`.
+    /// - Throws: Errors from missing dependencies or repository operations.
+    func doesTeamInviteExistsWithPlayerDocId(playerDocId: String, teamId: String) async throws -> Bool {
+        guard let repo = dependencies else {
+            throw DependencyError.noDependencyAvailable
+        }
+        
+        guard let invite = try await repo.inviteManager.findInviteWithPlayerDocId(playerDocId: playerDocId) else {
+            print("Invite not found")
+            return false
+        }
+            // Invite to modify
+            
+            // Find the team invite for this team id, if it exists
+        guard let _ = try await repo.inviteManager.getTeamInvite(inviteDocId: invite.id, teamId: teamId) else {
+            print("Team invite not found for this team")
+            return false
+        }
+        
+        // Change the status to .accepted
+        try await repo.inviteManager.updateTeamInviteStatus(inviteDocId: invite.id, teamId: teamId, status: .accepted)
+        
+        return true
+    }
+    
+    
+    /// Fetches all team invites for the authenticated user along with the corresponding teams.
+    ///
+    /// - Returns: Tuple of `Invite` objects and their `DBTeam`s.
+    /// - Throws: Errors if user, invite, or team invites are not found.
+    func getAllTeamInvites() async throws -> ([Invite], [DBTeam]) {
+        
+        // Get the authenticated user's details.
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            return ([], [])
+        }
+        let authUser = try repo.authenticationManager.getAuthenticatedUser()
+        
+        guard let user = try await repo.userManager.getUser(userId: authUser.uid) else {
+            print("No user found")
+            // TODO: Throw error
+            throw UserError.userNotFound
+        }
+        
+        guard let invite = try await repo.inviteManager.findInviteWithUserDocId(userDocId: user.id) else {
+            print("No Team Invites found")
+            throw InviteError.inviteNotFound
+        }
+
+        guard let allTeamInvites = try await repo.inviteManager.getAllTeamInvitesWithInviteDocId(inviteDocId: invite.id) else {
+            print("No invites found")
+            // TODO: Throw error
+            throw InviteError.teamInviteNotFound
+        }
+
+        let allTeamInvitesIds = allTeamInvites.map { $0.id }
+
+        // Get the team id and team name of each of these invites
+        let allTeams = try await repo.teamManager.getAllTeams(teamIds: allTeamInvitesIds)
+        
+        var allInvites: [Invite] = []
+        for index in allTeamInvites.indices {
+            
+            // Create object Invite
+            let objInvite = Invite(invite: invite, teamInvite: allTeamInvites[index])
+            allInvites.append(objInvite)
+        }
+        
+        return (allInvites, allTeams)
+    }
 }

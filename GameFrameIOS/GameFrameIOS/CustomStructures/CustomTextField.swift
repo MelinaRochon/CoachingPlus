@@ -70,6 +70,7 @@ struct CustomTextField: View {
                     .focused($isFocused)
                     .font(.callout)
                     .foregroundStyle(fieldForegroundColor)
+                    .textInputAutocapitalization(autoCapitalization ? .sentences : .never )
             }
             .frame(height: 40)
             .padding(.horizontal)

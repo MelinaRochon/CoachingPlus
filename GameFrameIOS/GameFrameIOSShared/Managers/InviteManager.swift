@@ -139,4 +139,70 @@ public final class InviteManager {
     public func doesTeamInviteDocumentExist(inviteDocId: String, teamId: String) async throws -> Bool {
         return try await repo.doesTeamInviteDocumentExist(inviteDocId: inviteDocId, teamId: teamId)
     }
+    
+    
+    /// Retrieves the invite associated with a given user document.
+    ///
+    /// - Parameter userDocId: The Firestore document ID of the user.
+    /// - Returns: A `DBInvite` object if found, otherwise `nil`.
+    /// - Throws: Errors from repository operations.
+    public func findInviteWithUserDocId(userDocId: String) async throws -> DBInvite? {
+        return try await repo.findInviteWithUserDocId(userDocId: userDocId)
+    }
+    
+    
+    /// Retrieves the invite associated with a given player document.
+    ///
+    /// - Parameter playerDocId: The Firestore document ID of the player.
+    /// - Returns: A `DBInvite` object if found, otherwise `nil`.
+    /// - Throws: Errors from repository operations.
+    public func findInviteWithPlayerDocId(playerDocId: String) async throws -> DBInvite? {
+        return try await repo.findInviteWithPlayerDocId(playerDocId: playerDocId)
+    }
+
+    
+    /// Retrieves a team invite for a specific player and team.
+    ///
+    /// - Parameters:
+    ///   - playerDocId: The Firestore document ID of the player.
+    ///   - teamId: The Firestore document ID of the team.
+    /// - Returns: A `DBTeamInvite` object if found, otherwise `nil`.
+    /// - Throws: Errors from repository operations.
+    public func getTeamInviteByPlayerDocIdAndTeamId(playerDocId: String, teamId: String) async throws -> DBTeamInvite? {
+        return try await repo.getTeamInviteByPlayerDocIdAndTeamId(playerDocId: playerDocId, teamId: teamId)
+    }
+    
+    
+    /// Fetches all pending team invites for a given invite document.
+    ///
+    /// - Parameter inviteDocId: The ID of the invite document.
+    /// - Returns: An array of `DBTeamInvite` objects, or `nil` if none found.
+    /// - Throws: Errors from repository operations.
+    public func getAllTeamInvitesWithInviteDocId(inviteDocId: String) async throws -> [DBTeamInvite]? {
+        return try await repo.getAllTeamInvitesWithInviteDocId(inviteDocId: inviteDocId)
+    }
+
+    
+    /// Updates the status of a team invite.
+    ///
+    /// - Parameters:
+    ///   - inviteDocId: The ID of the invite document.
+    ///   - teamId: The ID of the team document.
+    ///   - status: The new `InviteStatus` to set.
+    /// - Throws: Errors from repository operations.
+    public func updateTeamInviteStatus(inviteDocId: String, teamId: String, status: InviteStatus) async throws {
+        try await repo.updateTeamInviteStatus(inviteDocId: inviteDocId, teamId: teamId, status: status)
+    }
+    
+    
+    /// Deletes a team invite for a specific user and team.
+    ///
+    /// - Parameters:
+    ///   - inviteDocId: The ID of the invite document.
+    ///   - teamId: The ID of the team document.
+    /// - Throws: Errors from repository operations.
+    public func removeTeamInviteWithUserDocIdAndTeamId(inviteDocId: String, teamId: String) async throws {
+        try await repo.removeTeamInviteWithUserDocIdAndTeamId(inviteDocId: inviteDocId , teamId: teamId)
+    }
+
 }

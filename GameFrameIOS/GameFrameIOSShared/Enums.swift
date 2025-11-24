@@ -15,6 +15,10 @@ public enum AuthError: Error {
     case userNotFound
 }
 
+public enum DependencyError: Error {
+    case noDependencyAvailable
+}
+
 public enum CoachError: Error {
     case coachNotFound
 }
@@ -50,6 +54,7 @@ public enum InviteError: Error {
     case invalidStatus
     case inviteAlreadyExistsForThisTeamId
     case errorWhenCreatingTeamInvite
+    case teamInviteNotFound
 }
 
 public enum TranscriptError: Error {

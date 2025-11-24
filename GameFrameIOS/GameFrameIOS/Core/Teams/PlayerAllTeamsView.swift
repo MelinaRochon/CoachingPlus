@@ -207,16 +207,6 @@ struct PlayerAllTeamsView: View {
                 print("Error. Aborting... \(error)")
             }
         }
-        .alert("Invalid access code entered", isPresented: $showErrorAccessCode) {
-            Button("OK", role: .cancel) {
-                groupCode = "" // Reset input field
-            }
-        }
-        .alert("Error when trying to add team. Please try again later", isPresented: $showError) {
-            Button("OK", role: .cancel) {
-                groupCode = "" // Reset input field
-            }
-        }
     }
 }
 

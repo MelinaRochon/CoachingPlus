@@ -40,7 +40,7 @@ public final class FirestoreTeamRepository: TeamRepository {
     /// - Returns: A `DBTeam` instance if found, otherwise `nil`.
     public func getAllTeams(teamIds: [String]) async throws -> [DBTeam] {
         guard !teamIds.isEmpty else { return [] }
-        let snapshot = try await teamCollection().whereField("team_id", isEqualTo: teamIds).getDocuments()
+        let snapshot = try await teamCollection().whereField("team_id", in: teamIds).getDocuments()
 
         return snapshot.documents.compactMap { try? $0.data(as: DBTeam.self) }
 
@@ -239,9 +239,7 @@ public final class FirestoreTeamRepository: TeamRepository {
     public func createNewTeam(coachId: String, teamDTO: TeamDTO) async throws {
         do {
             print("Sending team to Firestore: \(teamDTO)")
-            // verifie coach valide
-            let userManager = FirestoreUserRepository()
-            let coach = try await userManager.getUser(userId: coachId)
+
             let teamDocument = teamCollection().document()
             let documentId = teamDocument.documentID // get the document id
             

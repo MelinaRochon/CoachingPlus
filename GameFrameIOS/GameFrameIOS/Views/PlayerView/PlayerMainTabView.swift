@@ -27,7 +27,7 @@ struct PlayerMainTabView: View {
                 switch selectedTab {
                 case 0: PlayerHomePageView()
                 case 1: PlayerNotificationView()
-                case 2: PlayerAllTeamsView()
+                case 2: PlayerTeamsView()
                 case 3: PlayerProfileView(showLandingPageView: $showLandingPageView)
                 default: PlayerHomePageView()
                 }
@@ -49,7 +49,7 @@ struct PlayerMainTabView: View {
                     tabBarItem(image: "person", filledImage: "person.fill", label: "Profile", tabIndex: 3)
                     Spacer()
                 }
-                .frame(height: 80)
+                .frame(height: 75)
                 .background(Color.white) // Tab bar background
                 .overlay(
                     Rectangle()

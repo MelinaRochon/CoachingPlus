@@ -145,6 +145,7 @@ final class TeamModel: ObservableObject {
     /// - Throws: `TeamValidationError.userExists` if the player is already enrolled in the team.
     func addingPlayerToTeam(team: DBTeam) async throws -> DBTeam? {
         // Get the authenticated user's details.
+        
         guard let repo = dependencies else {
             print("⚠️ Dependencies not set")
             return nil
@@ -152,14 +153,17 @@ final class TeamModel: ObservableObject {
         let authUser = try repo.authenticationManager.getAuthenticatedUser()
         
         // Check if the player is already enrolled in the team.
-        let playerEnrolledToTeam = try await repo.playerManager.isPlayerEnrolledToTeam(playerId: authUser.uid, teamId: team.teamId)
+        async let isEnrolled = repo.playerManager.isPlayerEnrolledToTeam(playerId: authUser.uid, teamId: team.teamId)
+        
+        // Add player to all feedback that is directed to the whole squad
+        async let rosterCountResult = repo.teamManager.getTeamRosterLength(teamId: team.teamId)
+        
+        let (playerEnrolledToTeam, rosterCount) = try await (isEnrolled, rosterCountResult)
+
         if playerEnrolledToTeam {
             print("player is already enrolled to team")
             throw TeamValidationError.userExists
         }
-        
-        // Add player to all feedback that is directed to the whole squad
-        let rosterCount = try await repo.teamManager.getTeamRosterLength(teamId: team.teamId)
         
         if rosterCount == nil {
             print("invalid team id was entered.. aborting request")
@@ -167,10 +171,14 @@ final class TeamModel: ObservableObject {
             return nil
         }
                 
+        async let playerResult = repo.playerManager.getPlayer(playerId: authUser.uid)
+
         try await addPlayerToAllTeamFeedback(rosterCount: rosterCount!, teamDocId: team.id, teamId: team.teamId, playerId: authUser.uid)
         
         // Fetch the player details.
-        guard let player = try await repo.playerManager.getPlayer(playerId: authUser.uid) else {
+        let player = try await playerResult
+
+        guard let player else {
             print("Error. Access code is invalid")
             throw TeamValidationError.userExists
         }
@@ -206,11 +214,19 @@ final class TeamModel: ObservableObject {
             print("No need to add the player to feedback as there are no games for this team")
             return
         }
-                
-        // Do all games
-        for game in games {
-            // Get all key moments under this game that have a feedback for all players
-            try await repo.keyMomentManager.assignPlayerToKeyMomentsForEntireTeam(teamDocId: teamDocId, gameId: game.gameId, playersCount: rosterCount, playerId: playerId)
+           
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for game in games {
+                group.addTask {
+                    try await repo.keyMomentManager.assignPlayerToKeyMomentsForEntireTeam(
+                        teamDocId: teamDocId,
+                        gameId: game.gameId,
+                        playersCount: rosterCount,
+                        playerId: playerId
+                    )
+                }
+            }
+            try await group.waitForAll()
         }
     }
     
@@ -334,5 +350,53 @@ extension TeamModel {
             return nil
         }
         return team.teamId    // or `team.id` if you prefer the doc id
+    }
+    
+    
+    /// Marks a team invite as accepted and adds the player to the team.
+    ///
+    /// - Parameters:
+    ///   - inviteDocId: The ID of the invite document.
+    ///   - teamId: The ID of the team in the invite.
+    ///   - teamDocId: The Firestore document ID of the team.
+    ///   - playerDocId: The Firestore document ID of the player.
+    /// - Throws: Errors from missing dependencies or repository operations.
+    func playerAcceptedInvite(inviteDocId: String, teamId: String, teamDocId: String, playerDocId: String) async throws {
+        guard let deps = dependencies else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+        
+        print("invitedocId = \(inviteDocId), teamId=\(teamId), teamDocId=\(teamDocId)")
+
+        let authUser = try deps.authenticationManager.getAuthenticatedUser()
+        
+        // Update the invite status to accepted
+        try await deps.inviteManager.updateTeamInviteStatus(inviteDocId: inviteDocId, teamId: teamId, status: .accepted)
+        
+        // Add player to team and team to player
+        try await deps.teamManager.addPlayerToTeam(id: teamDocId, playerId: authUser.uid)
+        try await deps.playerManager.addTeamToPlayer(id: playerDocId, teamId: teamId)
+    }
+    
+    
+    /// Declines a team invite by removing it from both the user's and the team's records.
+    ///
+    /// - Parameters:
+    ///   - inviteDocId: The ID of the invite document.
+    ///   - teamId: The ID of the team in the invite.
+    ///   - teamDocId: The Firestore document ID of the team.
+    /// - Throws: Errors from missing dependencies or repository operations.
+    func playerDeclineInvite(inviteDocId: String, teamId: String, teamDocId: String) async throws {
+        guard let deps = dependencies else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+        
+        // Remove the team invite from the user's invites
+        try await deps.inviteManager.removeTeamInviteWithUserDocIdAndTeamId(inviteDocId: inviteDocId, teamId: teamId)
+        
+        // Remove the invitation on the team's document
+        try await deps.teamManager.removeInviteFromTeam(id: teamDocId, inviteDocId: inviteDocId)
     }
 }

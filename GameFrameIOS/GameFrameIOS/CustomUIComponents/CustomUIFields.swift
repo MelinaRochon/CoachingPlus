@@ -60,6 +60,7 @@ struct CustomUIFields {
                     Text(subTitle)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
                 }
             }
             .padding(.horizontal, 15)

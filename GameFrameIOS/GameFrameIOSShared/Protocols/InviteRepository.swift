@@ -82,4 +82,22 @@ public protocol InviteRepository {
     ///   - teamId: The ID of the team to check for.
     /// - Returns: `true` if the team invite document exists, otherwise `false`.
     func doesTeamInviteDocumentExist(inviteDocId: String, teamId: String) async throws -> Bool
+    
+    /// Retrieves the invite associated with a specific user.
+    func findInviteWithUserDocId(userDocId: String) async throws -> DBInvite?
+
+    /// Fetches all pending team invites for a given invite document.
+    func getAllTeamInvitesWithInviteDocId(inviteDocId: String) async throws -> [DBTeamInvite]?
+
+    /// Updates the status of a team invite.
+    func updateTeamInviteStatus(inviteDocId: String, teamId: String, status: InviteStatus) async throws
+
+    /// Deletes a team invite for a specific user and team.
+    func removeTeamInviteWithUserDocIdAndTeamId(inviteDocId: String, teamId: String) async throws
+
+    /// Retrieves the invite associated with a specific player.
+    func findInviteWithPlayerDocId(playerDocId: String) async throws -> DBInvite?
+
+    /// Retrieves a team invite for a specific player and team.
+    func getTeamInviteByPlayerDocIdAndTeamId(playerDocId: String, teamId: String) async throws -> DBTeamInvite?
 }

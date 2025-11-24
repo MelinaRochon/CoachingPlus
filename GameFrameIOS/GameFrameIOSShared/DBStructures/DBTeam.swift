@@ -10,7 +10,7 @@ import Foundation
 /// Represents a team in the database with all necessary properties.
 /// This structure conforms to `Codable` to support encoding and decoding
 /// between Swift objects and Firestore documents.
-public struct DBTeam: Codable {
+public struct DBTeam: Identifiable, Codable {
     public let id: String
     public let teamId: String
     public var name: String
