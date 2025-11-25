@@ -160,6 +160,7 @@ struct CoachHomePageView: View {
                 Spacer()
             }
             .onAppear {
+                pastGameIndexed = []
                 gameModel.setDependencies(dependencies)
             }
 
@@ -168,10 +169,13 @@ struct CoachHomePageView: View {
                 do {
                     isLoadingMyPastGames = true
                     let allGames = try await gameModel.loadAllAssociatedGames()
-                    print(">>> all GAMEs : \(allGames.map { $0.game.gameId }.joined(separator: ", ")) ")
+                    print(">>> all GAMEs : \(allGames.map { $0.game.title }.joined(separator: ", ")) ")
                     if !allGames.isEmpty {
                         // Filter games into future and past categories
                         await filterGames(allGames: allGames)
+                        
+                        print(">>> NOW ALL pastGames : \(pastGames.map { $0.game.title }.joined(separator: ", ")) ")
+
                         
                         // Update flags based on availability of games
                         if !pastGames.isEmpty {
@@ -187,6 +191,9 @@ struct CoachHomePageView: View {
                                 pastGameIndexed.append(indexedGame)
                             }
                         }
+                        
+                        print(">>> NOW ALL pastGameIndexed : \(pastGameIndexed.map { $0.homeGame.game.title }.joined(separator: ", ")) ")
+
                     }
                     isLoadingMyPastGames = false
                 } catch {
