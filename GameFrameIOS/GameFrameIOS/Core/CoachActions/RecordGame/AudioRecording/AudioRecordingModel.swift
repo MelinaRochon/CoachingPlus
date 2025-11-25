@@ -7,7 +7,7 @@
  
 import Foundation
 import GameFrameIOSShared
-import SwiftUICore
+import SwiftUI
  
 /// Represents a transcript associated with a key moment in a game.
 struct keyMomentTranscript: Identifiable, Equatable {
