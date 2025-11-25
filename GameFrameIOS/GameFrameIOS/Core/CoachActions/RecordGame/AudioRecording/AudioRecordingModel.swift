@@ -7,6 +7,7 @@
  
 import Foundation
 import GameFrameIOSShared
+import SwiftUICore
  
 /// Represents a transcript associated with a key moment in a game.
 struct keyMomentTranscript: Identifiable, Equatable {
@@ -67,6 +68,8 @@ final class AudioRecordingModel: ObservableObject {
 
     @Published var fullGameUrl: String?
     
+    @StateObject private var playerTeamInfoModel = PlayerTeamInfoModel()
+
     // MARK: - Dependency Injection
     
     /// Injects the provided `DependencyContainer` into the current context.
@@ -360,8 +363,13 @@ final class AudioRecordingModel: ObservableObject {
             print("no user found. abort")
             return nil
         }
-                
-        guard let playerTeamInfo = try await dependencies?.playerTeamInfoManager.getPlayerTeamInfo(playerDocId: playerId, teamId: teamId) else {
+
+        guard let player = try await dependencies?.playerManager.getPlayer(playerId: playerId) else {
+            print("no player found. abort")
+            return nil
+        }
+
+        guard let playerTeamInfo = try await dependencies?.playerTeamInfoManager.getPlayerTeamInfo(playerDocId: player.id, teamId: teamId) else {
             // TODO: Throw error
             throw PlayerTeamInfoError.playerTeamInfoNotFound
         }

@@ -105,7 +105,7 @@ struct CoachAddPlayersView: View {
                         jersey: $jersey,
                         playerNickname: nickname,
                         playerJersey: jersey,
-                        playerSelectedPositions: selectedPositions,
+                        playerSelectedPositions: selectedPositions
                     )
                     
                 }
