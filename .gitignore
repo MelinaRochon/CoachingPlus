@@ -2,3 +2,6 @@ GameFrameIOS/GameFrameIOS/Secrets.plist
 
 # macOS system files
 .DS_Store
+
+
+project.xcworkspace/xcshareddata/swiftpm/Package.resolved
