@@ -6,67 +6,89 @@
 //
 
 import SwiftUI
+import GameFrameIOSShared
 
 /***
  This structure is the recent activity view. All the recent acitivities made in the app (all types of notifications) will be shown here.
  */
 struct PlayerNotificationView: View {
+    @EnvironmentObject private var dependencies: DependencyContainer
+    @StateObject private var vm = NotificationsViewModel()
+
+    let playerId: String
+
     var body: some View {
-        NavigationView {
-            VStack {
-                
-                Divider() // This adds a divider after the title
-                
-                List {
-                    Section(header: HStack {
-                        Text("Notifications") // Section header text
-                    }) {
-                        
-                        // Notification 1
-                        HStack {
-                            Image(systemName: "person.crop.circle").resizable().frame(width: 30, height: 30).aspectRatio(contentMode: .fill)
-                                .clipShape(Circle())
-                                .clipped()
-                            VStack {
-                                Text("X commented on Game 1...").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Text("1 hour ago").font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+        NavigationStack {
+            Divider()
+            List {
+                if vm.isLoading {
+                    HStack {
+                        Spacer()
+                        ProgressView("Loading activity…")
+                            .font(.caption)
+                        Spacer()
+                    }
+                } else if let err = vm.error {
+                    Section {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Couldn’t load activity")
+                                .font(.headline)
+                            Text(err)
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Button("Retry") {
+                            Task {
+                                vm.setDependencies(dependencies)
+                                await vm.loadPlayerLastWeekComments(playerId: playerId)
                             }
                         }
-                        
-                        // Notification 2
-                        HStack {
-                            Image(systemName: "person.crop.circle").resizable().frame(width: 30, height: 30).aspectRatio(contentMode: .fill)
-                                .clipShape(Circle())
-                                .clipped()
-                            VStack {
-                                Text("X commented on Game 1...").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Text("1 hour ago").font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        
-                        // Notification 3
-                        HStack {
-                            Image(systemName: "person.crop.circle").resizable().frame(width: 30, height: 30).aspectRatio(contentMode: .fill)
-                                .clipShape(Circle())
-                                .clipped()
-                            VStack {
-                                Text("X commented on Game 1...").font(.headline).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                                Text("1 hour ago").font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                            }
+                        .buttonStyle(.borderedProminent)
+                        .padding(.top, 4)
+                    }
+                } else if vm.recentComments.isEmpty {
+                    Section {
+                        ContentUnavailableView(
+                            "No recent activity this week",
+                            systemImage: "bubble.left",
+                            description: Text("New activity in the last 7 days will appear here.")
+                        )
+                    }
+                } else {
+                    Section("Comments (last 7 days)") {
+                        ForEach(vm.recentComments, id: \.commentId) { c in
+                            let title  = vm.gameTitles[c.gameId] ?? "Unknown Game"
+                            let author = vm.authorNames[c.uploadedBy] ?? "Unknown User"
+                            let teamId = vm.teamIdsByGame[c.gameId]
+
+                            CommentNavigationRow(
+                                comment: c,
+                                gameTitle: title,
+                                authorName: author,
+                                teamId: teamId
+                            )
                         }
                     }
                 }
-                .listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                .background(Color.white) // Set background color to white for the List
-                
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
             .background(Color.white)
-            .navigationTitle(Text("Recent Activity"))
-            
+            .navigationTitle("Recent Activity")
         }
-        
+        .task {
+            vm.setDependencies(dependencies)
+            await vm.loadPlayerLastWeekComments(playerId: playerId)
+        }
     }
 }
-#Preview {
-    PlayerNotificationView()
+
+// MARK: - Helpers
+
+private func relative(_ date: Date) -> String {
+    let f = RelativeDateTimeFormatter()
+    f.unitsStyle = .abbreviated
+    return f.localizedString(for: date, relativeTo: Date())
 }
+

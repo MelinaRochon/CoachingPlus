@@ -69,6 +69,52 @@ final class NotificationsViewModel: ObservableObject {
         }
     }
 
+    func loadPlayerLastWeekComments(playerId: String) async {
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+
+        do {
+            // 1) Get player’s teams
+            guard let teams = try await repo.playerManager.getAllTeamsEnrolled(playerId: playerId),
+                      !teams.isEmpty else {
+                        print("No teams enrolled")
+                        recentComments = []
+                        return
+                    }
+            
+            // 2) Unpack the IDs
+            let teamDocIds = teams.map(\.id)
+
+            let since = Calendar.current.date(byAdding: .day, value: -7, to: Date())
+                        ?? Date().addingTimeInterval(-7 * 24 * 3600)
+
+            // 3) Fetch recent comments for these teams
+            let comments = try await repo.commentManager
+                .fetchRecentComments(forTeamDocIds: teamDocIds, since: since)
+
+            // 4) Filter out comments made by the player themself
+            let filtered = comments.filter { $0.uploadedBy != playerId }
+
+            // (Optional) If you only want COACH comments:
+            // let filtered = comments.filter { comment in
+            //     comment.uploadedBy != playerId && comment.authorRole == "coach"
+            // }
+
+            recentComments = filtered
+
+            // 5) Resolve the metadata so UI can show names, game titles, etc.
+            await resolveMetadata()
+
+        } catch {
+            self.error = (error as NSError).localizedDescription
+        }
+    }
 
 
     private func resolveMetadata() async {

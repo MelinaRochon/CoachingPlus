@@ -46,7 +46,13 @@ struct UserTypeRootView: View {
                 }
             } else if (userType == .player) {
                 // Display the main tab view for the Player if the user is identified as a Player.
-                PlayerMainTabView(showLandingPageView: $showSignInView)
+                if let uid = uidAuthUser {
+                    PlayerMainTabView(showLandingPageView: $showSignInView, playerId: uid)
+                } else {
+                    CustomUIFields.loadingSpinner("Loading player…")
+                        .accessibilityIdentifier("userTypeRoot.loadingPlayer.spinner")
+                }
+                
             } else {
                 // Empty view during the loading state or if the user type isn't determined yet.
                 // Could also be used to show a loading spinner or message if needed.
