@@ -88,9 +88,10 @@ final class NotificationsViewModel: ObservableObject {
                         return
                     }
             
-            // 2) Unpack the IDs
+            // Use the Firestore team document IDs
             let teamDocIds = teams.map(\.id)
-
+            
+            // 2) Last 7 days
             let since = Calendar.current.date(byAdding: .day, value: -7, to: Date())
                         ?? Date().addingTimeInterval(-7 * 24 * 3600)
 
@@ -98,13 +99,13 @@ final class NotificationsViewModel: ObservableObject {
             let comments = try await repo.commentManager
                 .fetchRecentComments(forTeamDocIds: teamDocIds, since: since)
 
-            // 4) Filter out comments made by the player themself
-            let filtered = comments.filter { $0.uploadedBy != playerId }
-
-            // (Optional) If you only want COACH comments:
-            // let filtered = comments.filter { comment in
-            //     comment.uploadedBy != playerId && comment.authorRole == "coach"
-            // }
+            // 4) Keep only:
+            //    - comments NOT written by the player
+            //    - comments whose key moment belongs to THIS player
+            let filtered = try await filterCommentsForPlayerKeyMoments(
+                comments,
+                playerId: playerId
+            )
 
             recentComments = filtered
 
@@ -153,6 +154,44 @@ final class NotificationsViewModel: ObservableObject {
         authorNames = authors
         teamIdsByGame = teamIds
     }
+    
+    private func filterCommentsForPlayerKeyMoments(
+        _ comments: [DBComment],
+        playerId: String
+    ) async throws -> [DBComment] {
+        guard let deps = dependencies else { return [] }
+
+        var result: [DBComment] = []
+
+        for comment in comments {
+            
+            // Skip own comments
+            if comment.uploadedBy == playerId {
+                continue
+            }
+            
+            let gameId = comment.gameId
+            let keyMomentDocId = comment.keyMomentId
+
+            // Derive teamId from gameId (like you already do in resolveMetadata)
+            guard let teamId = try? await teamModel.getTeamIdForGameId(gameId) else {
+                continue
+            }
+
+            // Fetch key moment
+            guard let keyMoment = try? await deps.keyMomentManager.getKeyMoment(teamId: teamId, gameId: gameId, keyMomentDocId: keyMomentDocId) else {
+                continue
+            }
+
+            // Keep only key moments that belong to this player
+            if ((keyMoment.feedbackFor?.contains(playerId)) != nil) {
+                result.append(comment)
+            }
+        }
+
+        return result
+    }
+
 
 }
 

@@ -70,6 +70,9 @@ final class CommentSectionViewModel: ObservableObject {
      It also replaces the `uploadedBy` field with the user's full name.
      */
     func loadCommentsForTranscript(teamDocId: String, transcriptId: String) async {
+        print("LOADCOMMENTS$TRANSCRIPTS")
+        print(teamDocId)
+        print(transcriptId)
         guard !teamDocId.isEmpty, !transcriptId.isEmpty else {
             print("Invalid teamId or transcriptId")
             return
