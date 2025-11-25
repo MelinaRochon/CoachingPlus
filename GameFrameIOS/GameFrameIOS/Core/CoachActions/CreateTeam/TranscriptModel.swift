@@ -135,7 +135,7 @@ final class TranscriptModel: ObservableObject {
             return allRecordings.sorted(by: { $0.frameStart < $1.frameStart })
                     
         } catch {
-            print("Error when loading the recordings from the database. Error: \(error)")
+            print("getAllTranscripts: Error when loading the recordings from the database. Error: \(error)")
             return nil
         }
     }
@@ -268,7 +268,7 @@ final class TranscriptModel: ObservableObject {
 
             return (sortedTranscripts, sortedKeyMoments)
         } catch {
-            print("Error when loading the recordings from the database. Error: \(error)")
+            print("getAllTranscriptsAndKeyMoments: Error when loading the recordings from the database. Error: \(error)")
             return (nil, nil)
         }
     }
@@ -424,7 +424,7 @@ final class TranscriptModel: ObservableObject {
 
             return (sortedTranscripts, sortedKeyMoments)
         } catch {
-            print("Error when loading the recordings from the database. Error: \(error)")
+            print("getPreviewTranscriptsAndKeyMoments: Error when loading the recordings from the database. Error: \(error)")
             return (nil, nil)
         }
     }
@@ -464,8 +464,13 @@ final class TranscriptModel: ObservableObject {
             return nil
         }
         
+        guard let player = try await dependencies?.playerManager.getPlayer(playerId: playerId) else {
+            print("no player found. abort")
+            return nil
+        }
+
         // Retrieve player-specific information.
-        guard let playerTeamInfo = try await dependencies?.playerTeamInfoManager.getPlayerTeamInfo(playerDocId: playerId, teamId: teamId) else {
+        guard let playerTeamInfo = try await dependencies?.playerTeamInfoManager.getPlayerTeamInfo(playerDocId: player.id, teamId: teamId) else {
             // TODO: Throw error
             throw PlayerTeamInfoError.playerTeamInfoNotFound
         }
