@@ -7,6 +7,7 @@
 
 import WatchConnectivity
 import WatchKit
+import Combine
 
 final class WatchConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
     private let session: WCSession

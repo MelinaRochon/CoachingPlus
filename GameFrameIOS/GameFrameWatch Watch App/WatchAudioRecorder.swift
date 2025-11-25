@@ -8,6 +8,7 @@
 import Foundation
 import AVFoundation
 import WatchConnectivity
+import Combine
 
 class WatchAudioRecorder: NSObject, AVAudioRecorderDelegate, ObservableObject {
     static let shared = WatchAudioRecorder()
