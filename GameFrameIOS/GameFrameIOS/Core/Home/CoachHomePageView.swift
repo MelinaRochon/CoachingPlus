@@ -63,7 +63,7 @@ struct CoachHomePageView: View {
 //                                }
                             )
                         },
-                        items: Array(pastGameIndexed.prefix(20)),
+                        items: pastGameIndexed.map { $0 },
                         isLoading: isLoadingMyPastGames,
                         isLoadingProgressViewTitle: "Searching for my recent games…",
                         noItemsFoundIcon: "questionmark.video.fill",
@@ -168,14 +168,14 @@ struct CoachHomePageView: View {
                 do {
                     isLoadingMyPastGames = true
                     let allGames = try await gameModel.loadAllAssociatedGames()
+                    print(">>> all GAMEs : \(allGames.map { $0.game.gameId }.joined(separator: ", ")) ")
                     if !allGames.isEmpty {
                         // Filter games into future and past categories
                         await filterGames(allGames: allGames)
                         
                         // Update flags based on availability of games
                         if !pastGames.isEmpty {
-
-                            for (index, pastGame) in pastGames.prefix(20).enumerated() {
+                            for pastGame in pastGames {
                                 // Only do the first 3 games
                                 let fullGameExist = try await dependencies.fullGameRecordingManager.doesFullGameVideoExistsWithGameId(
                                     teamDocId: pastGame.team.id,
@@ -183,7 +183,7 @@ struct CoachHomePageView: View {
                                     teamId: pastGame.team.teamId
                                 )
                                 
-                                let indexedGame = IndexedGame(id: index, isFullGame: fullGameExist, homeGame: pastGame)
+                                let indexedGame = IndexedGame(id: "\(pastGame.game.gameId)-\(UUID().uuidString)", isFullGame: fullGameExist, homeGame: pastGame)
                                 pastGameIndexed.append(indexedGame)
                             }
                         }
@@ -246,7 +246,7 @@ struct CoachHomePageView: View {
 
 
 struct IndexedGame: Identifiable {
-    let id: Int
+    let id: String
     let isFullGame: Bool
     let homeGame: HomeGameDTO
 }
