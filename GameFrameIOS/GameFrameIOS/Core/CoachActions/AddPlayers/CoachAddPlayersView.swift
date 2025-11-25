@@ -78,8 +78,6 @@ struct CoachAddPlayersView: View {
 
                 ScrollView {
                     VStack {
-                        
-                        
                         VStack {
                             CustomUIFields.customDivider("Player Information")
                                 .padding(.top, 30)

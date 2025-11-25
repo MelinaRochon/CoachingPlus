@@ -158,7 +158,6 @@ final class GameModel: ObservableObject {
     /// - Throws: An error if any data retrieval operation fails.
     func loadAllAssociatedGames() async throws -> [HomeGameDTO] {
         let gameRepo = FirestoreGameRepository()
-        
         guard let repo = dependencies else {
             print("⚠️ Dependencies not set")
             return []
@@ -171,7 +170,7 @@ final class GameModel: ObservableObject {
         }
         
         print("has teams id: \(teamsId)")
-        var games: [HomeGameDTO] = []
+        var tmpGames: [HomeGameDTO] = []
         
         // Iterate through each team ID to fetch associated games.
         for teamId in teamsId {
@@ -182,35 +181,32 @@ final class GameModel: ObservableObject {
             }
             
             // Fetch game documents for the team.
-            let recentGames = try await gameRepo.getRecentGames(teamDocId: team.id, limit: 10)
+            let recentGames = try await gameRepo.getRecentGames(teamDocId: team.id, limit: 2)
             
             for recentGame in recentGames {
                 // Create a `HomeGameDTO` containing both game and team details.
                 let gameWithTeam = HomeGameDTO(id: recentGame.gameId, game: recentGame, team: team)
                 
-                games.append(gameWithTeam)
+                tmpGames.append(gameWithTeam)
             }
         }
         
         // Merge + sort all games
-        games.sort {
+        tmpGames.sort {
             ($0.game.startTime ?? .distantPast) >
             ($1.game.startTime ?? .distantPast)
         }
         
         // Return only 20 most recent across ALL teams
-        return Array(games.prefix(20))
+        return Array(tmpGames.prefix(15))
     }
     
     func loadInitial(teamDocId: String) async {
         guard !isLoading else { return }
         isLoading = true
         do {
-            guard let team = try await dependencies?.teamManager.getTeamWithDocId(docId: teamDocId) else { return }
             let (loadedGames, last) = try await FirestoreGameRepository().fetchRecentGames(teamDocId: teamDocId)
-            for loadedGame in loadedGames {
-                self.homeGames.append(HomeGameDTO(id: loadedGame.gameId, game: loadedGame, team: team))
-            }
+            self.games = loadedGames
             self.lastDoc = last
         } catch {
             print("Error: \(error)")
@@ -222,12 +218,10 @@ final class GameModel: ObservableObject {
         guard let lastDoc, !isLoading else { return }
         isLoading = true
         do {
-            guard let team = try await dependencies?.teamManager.getTeamWithDocId(docId: teamDocId) else { return }
-
             let (loadedGames, last) = try await FirestoreGameRepository().fetchMoreGames(after: lastDoc, teamDocId: teamDocId)
-            
+    
             for loadedGame in loadedGames {
-                self.homeGames.append( HomeGameDTO(id: loadedGame.gameId, game: loadedGame, team: team))
+                self.games.append(loadedGame)
             }
 
             self.lastDoc = last

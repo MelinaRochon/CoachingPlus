@@ -30,6 +30,7 @@ struct CoachHomePageView: View {
     @State private var selectedIndex: Int = 0
     
     @State private var isLoadingMyPastGames: Bool = false
+    @State private var isLoadingMyScheduledGames: Bool = false
 
     // MARK: - View
 
@@ -121,7 +122,7 @@ struct CoachHomePageView: View {
                         },
                       
                         items: futureGames.prefix(20).map { $0 },
-                        isLoading: isLoadingMyPastGames,
+                        isLoading: isLoadingMyScheduledGames,
                         rowLogo: "clock.fill",
                         rowLogoColor: .green,
                         isLoadingProgressViewTitle: "Searching for my upcoming games…",
@@ -168,27 +169,46 @@ struct CoachHomePageView: View {
                 // Fetch games when view loads
                 do {
                     isLoadingMyPastGames = true
+                    isLoadingMyScheduledGames = true
                     let allGames = try await gameModel.loadAllAssociatedGames()
-                    print(">>> all GAMEs : \(allGames.map { $0.game.title }.joined(separator: ", ")) ")
+
                     if !allGames.isEmpty {
                         // Filter games into future and past categories
                         await filterGames(allGames: allGames)
                         
-                        print(">>> NOW ALL pastGames : \(pastGames.map { $0.game.title }.joined(separator: ", ")) ")
-
-                        
                         // Update flags based on availability of games
                         if !pastGames.isEmpty {
-                            for pastGame in pastGames {
-                                // Only do the first 3 games
-                                let fullGameExist = try await dependencies.fullGameRecordingManager.doesFullGameVideoExistsWithGameId(
-                                    teamDocId: pastGame.team.id,
-                                    gameId: pastGame.game.gameId,
-                                    teamId: pastGame.team.teamId
-                                )
+                            
+                            let indexed: [IndexedGame] = try await withThrowingTaskGroup(of: IndexedGame.self) { group in
+                                for pastGame in pastGames {
+                                    group.addTask {
+                                        let fullGameExist = try await dependencies.fullGameRecordingManager
+                                            .doesFullGameVideoExistsWithGameId(
+                                                teamDocId: pastGame.team.id,
+                                                gameId: pastGame.game.gameId,
+                                                teamId: pastGame.team.teamId
+                                            )
+                                        
+                                        return IndexedGame(
+                                            id: "\(pastGame.game.gameId)-\(UUID().uuidString)",
+                                            isFullGame: fullGameExist,
+                                            homeGame: pastGame
+                                        )
+                                    }
+                                }
                                 
-                                let indexedGame = IndexedGame(id: "\(pastGame.game.gameId)-\(UUID().uuidString)", isFullGame: fullGameExist, homeGame: pastGame)
-                                pastGameIndexed.append(indexedGame)
+                                var results: [IndexedGame] = []
+                                for try await result in group {
+                                    results.append(result)
+                                }
+                                return results
+                            }
+                            
+                            pastGameIndexed = indexed
+                            pastGameIndexed.sort { a, b in
+                                let da = a.homeGame.game.startTime ?? .distantPast
+                                let db = b.homeGame.game.startTime ?? .distantPast
+                                return da > db // DESCENDING — newest first
                             }
                         }
                         
@@ -199,6 +219,7 @@ struct CoachHomePageView: View {
                 } catch {
                     print("Error needs to be handled. \(error)")
                     isLoadingMyPastGames = false
+                    isLoadingMyScheduledGames = false
                     showErrorMessage = true
                 }
             }
@@ -244,6 +265,7 @@ struct CoachHomePageView: View {
         // Update the view's state with the filtered lists.
         self.pastGames = tmpPastGames
         self.futureGames = tmpFutureGames
+        isLoadingMyScheduledGames = false
     }
 }
 

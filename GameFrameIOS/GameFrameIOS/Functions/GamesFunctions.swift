@@ -18,22 +18,21 @@ import GameFrameIOSShared
 /// - Parameter games: An array of `DBGame` objects to group.
 /// - Returns: An array of tuples where each tuple contains a `label` (e.g., "This Week")
 ///            and an array of `DBGame` objects belonging to that week.
-func groupGamesByWeek(_ games: [DBGame]) -> [(label: String, games: [DBGame])] {
+func groupFootageByWeek(_ games: [IndexedFootage]) -> [(label: String, games: [IndexedFootage])] {
     let calendar = Calendar.current
     let formatter = DateFormatter()
     formatter.dateStyle = .medium
     let now = Date()
     
-    let futureGames = games.filter { ($0.startTime ?? now) > now }
-    let pastGames = games.filter { ($0.startTime ?? now) <= now }
-
+    let futureGames = games.filter { ($0.game.startTime ?? now) > now }
+    let pastGames = games.filter { ($0.game.startTime ?? now) <= now }
     
     // Group games by the start of their week.
     let groupedPast = Dictionary(grouping: pastGames) { game -> Date in
-        game.startTime?.startOfWeek(using: calendar) ?? Date().startOfWeek(using: calendar)
+        game.game.startTime?.startOfWeek(using: calendar) ?? Date().startOfWeek(using: calendar)
     }
     
-    let sortedGroupedPast: [(String, [DBGame])] = groupedPast
+    let sortedGroupedPast: [(String, [IndexedFootage])] = groupedPast
         .sorted { $0.key > $1.key } // Sort weeks in ascending order (oldest last)
         .map { (startOfWeek, games) in
             
@@ -54,13 +53,13 @@ func groupGamesByWeek(_ games: [DBGame]) -> [(label: String, games: [DBGame])] {
             }
             
             // Sort games within each section by descending start time
-            return (label: label, games: games.sorted { $0.startTime ?? Date() > $1.startTime ?? Date() })
+            return (label: label, games: games.sorted { $0.game.startTime ?? Date() > $1.game.startTime ?? Date() })
         }
     
     // Combine into one list
-    var result: [(String, [DBGame])] = []
+    var result: [(String, [IndexedFootage])] = []
     if !futureGames.isEmpty {
-        result.append(("Upcoming Games", futureGames.sorted { $0.startTime ?? now > $1.startTime ?? now }))
+        result.append(("Upcoming Games", futureGames.sorted { $0.game.startTime ?? now > $1.game.startTime ?? now }))
     }
     result.append(contentsOf: sortedGroupedPast)
     

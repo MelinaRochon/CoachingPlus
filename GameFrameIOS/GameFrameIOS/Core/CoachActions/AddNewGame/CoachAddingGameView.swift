@@ -88,8 +88,8 @@ struct CoachAddingGameView: View {
     var body: some View {
         NavigationView {
             VStack (alignment: .leading) {
-                CustomUIFields.customTitle("Adding a New Game", subTitle: "Enter the details for your upcoming game so the app can schedule reminders and help manage feedbacks.")
-                
+                CustomUIFields.customPageTitle("Adding a New Game", subTitle: "Enter the details of your upcoming game", divider: true)
+
                 ScrollView {
                     VStack(alignment: .leading) {
                         VStack {
@@ -245,7 +245,6 @@ struct CoachAddingGameView: View {
                         }
                     }
                 }
-                
                 
                 // Done button in the toolbar to save the game data
                 ToolbarItem(placement: .bottomBar) {

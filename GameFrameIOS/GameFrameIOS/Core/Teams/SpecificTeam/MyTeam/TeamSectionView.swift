@@ -24,39 +24,65 @@ struct TeamSectionView: View {
     @State var userType: UserType
     
     var body: some View {
-        VStack {
-            List {
-                // Section for toggling visibility of past and upcoming games
-                Section(header: Text("Footage Settings")) {
-                    Button {
-                        showRecentGames.toggle()
-                    } label: {
-                        HStack {
-                            Image(systemName: showRecentGames ? "checkmark.circle.fill" : "circle").foregroundStyle(.red)
-                            Text("Show Past Games").foregroundStyle(.black)
-                        }
-                    }
-                    Button {
-                        showUpcomingGames.toggle()
-                    } label: {
-                        HStack {
-                            Image(systemName: showUpcomingGames ? "checkmark.circle.fill" : "circle").foregroundStyle(.red)
-                            Text("Show Upcoming Games").foregroundStyle(.black)
-                        }
-                    }
-                }
-                if userType == .coach {
-                    // Section for choosing which group of players to show using a picker
-                    Section(header: Text("Player Settings")) {
-                        Picker("Show Players", selection: $showPlayersIndex) {
-                            ForEach(showPlayers.indices, id: \.self) { i in
-                                Text(self.showPlayers[i])
-                            }
-                        }
-                    }
-                }
+        VStack(alignment: .center) {
+            VStack(alignment: .center) {
+                Text("Filtering Options")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                Text("Filter games and players by date and status.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+            }
+            Divider()
+            VStack(alignment: .leading, spacing: 0) {
+                CustomUIFields.customDivider("Footage Settings")
+                    .padding(.top, 20)
                 
-            }.scrollDisabled(true) // Disables scrolling for this list
+                Button {
+                    showRecentGames.toggle()
+                } label: {
+                    HStack {
+                        Text("Show Past Games").foregroundStyle(.black)
+                        Spacer()
+                        
+                        Image(systemName: showRecentGames ? "checkmark.circle.fill" : "circle").foregroundStyle(.red)
+                    }
+                    .contentShape(Rectangle())
+                    .frame(height: 40)
+                    .padding(.horizontal)
+                }
+                Divider().padding(.leading, 15)
+                Button {
+                    showUpcomingGames.toggle()
+                } label: {
+                    HStack {
+                        Text("Show Upcoming Games").foregroundStyle(.black)
+                        
+                        Spacer()
+                        Image(systemName: showUpcomingGames ? "checkmark.circle.fill" : "circle").foregroundStyle(.red)
+                        
+                    }
+                    .contentShape(Rectangle())
+                    .frame(height: 40)
+                    .padding(.horizontal)
+                }
+                Divider().padding(.leading, 15)
+                CustomUIFields.customDivider("Roster Settings")
+                    .padding(.top, 30)
+                CustomMenuDropdown(
+                    label: "",
+                    placeholder: "Show Players",
+                    isRequired: false,
+                    onSelect: {
+                        hideKeyboard()
+                    },
+                    options: showPlayers,
+                    selectedOption: $showPlayers[showPlayersIndex]
+                )
+            }
+            .padding(.horizontal, 15)
+            Spacer()
         }
     }
 }

@@ -48,8 +48,9 @@ struct PlayerMyTeamView: View {
     /// Controls whether the team settings view is displayed.
     @State private var isTeamSettingsEnabled: Bool = false
     
-    @State private var groupedGames: [(label: String, games: [DBGame])]? = nil
-    
+    @State private var groupedGames: [(label: String, games: [IndexedFootage])]? = nil
+    @State private var groupedFootage: [IndexedFootage] = []
+
     /// Toggles the visibility of the games settings view (e.g., filters or display preferences).
     @State private var isGamesSettingsEnabled: Bool = false
     
@@ -67,25 +68,84 @@ struct PlayerMyTeamView: View {
     /// Tracks the currently selected index in the `showPlayers` filter array.
     @State private var showPlayersIndex = 0
 
+    @State private var isLoadingFootage: Bool = false
+    @State private var isLoadingRoster: Bool = false
+    @State private var isLoadingMoreFootage: Bool = false
+    @State private var hasTriggeredLoadFor: Set<String> = []
 
     var body: some View {
         VStack {
             Divider()
-            List {
-                
-                if let groupedGames = groupedGames {
-                    GroupedGamesList(
-                        groupedGames: groupedGames,
-                        selectedTeam: selectedTeam,
-                        showUpcomingGames: showUpcomingGames,
-                        showRecentGames: showRecentGames,
-                        userType: .player
-                    )
-                } else {
-                    Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
+            
+            if isLoadingFootage {
+                VStack {
+                    ProgressView("Loading Game Footage")
+                        .padding()
+                        .background(.white)
+                        .cornerRadius(12)
+                }
+                .padding(.top, 10)
+                .frame(maxWidth: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, pinnedViews: [.sectionHeaders]) {
+                        // "Footage" section: Displays games related to the team
+                        // Looping through games related to the team
+                        if let groupedGames = groupedGames, !groupedGames.isEmpty {
+                            GroupedGamesList(
+                                groupedGames: groupedGames,
+                                selectedTeam: selectedTeam,
+                                showUpcomingGames: showUpcomingGames,
+                                showRecentGames: showRecentGames,
+                                userType: .player
+                            )
+                            
+                            if let last = groupedFootage.last {
+                                // Attach load trigger to last visible game cell
+                                Color.clear
+                                    .frame(height: 1)
+                                    .onAppear {
+                                        guard gameModel.lastDoc != nil else { return }
+                                        guard !isLoadingMoreFootage else { return }
+                                        guard showRecentGames else { return }
+                                        guard !hasTriggeredLoadFor.contains(last.id) else { return }
+                                        
+                                        hasTriggeredLoadFor.insert(last.id)
+                                        
+                                        Task { await loadMoreFootage() }
+                                    }
+                            }
+                            
+                            if isLoadingMoreFootage {
+                                ProgressView("Loading more footage…")
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            }
+                        } else {
+                            VStack(alignment: .center) {
+                                Image(systemName: "video.slash.fill")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.gray)
+                                    .padding(.bottom, 2)
+                                
+                                Text("No game footage was found at this time.").font(.headline).foregroundStyle(.secondary)
+                                
+                                Text("Try adding a game first or try again later.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 20)
+                        }
+                    }
+                    .padding(.horizontal, 15)
+                }
+                .padding(.top, 15)
+                .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                    Color.clear.frame(height: 75)
                 }
             }
-            .listStyle(PlainListStyle()) // Optional: Make the list style more simple
         }
         .navigationTitle(Text(selectedTeam.teamNickname))
         .navigationBarTitleDisplayMode(.large)
@@ -123,45 +183,100 @@ struct PlayerMyTeamView: View {
         .sheet(isPresented: $isGamesSettingsEnabled) {
             NavigationStack {
                 TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: .player)
-                    .presentationDetents([.height(300)])
+                    .presentationDetents([.medium])
+                    .presentationCornerRadius(20)
+                    .presentationBackgroundInteraction(.disabled)
+                    .interactiveDismissDisabled(true)
                     .toolbar {
-                        ToolbarItem {
-                            Button (action: {
-                                isGamesSettingsEnabled = false // Close the filter options
-                            }) {
-                                Text("Done")
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button {
+                                isGamesSettingsEnabled = false
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .foregroundColor(.gray) // Make text + icon white
+                                    .frame(width: 40, height: 40) // Make it square
+                                    .background(Circle().fill(Color(uiColor: .systemGray6)))
                             }
+                            .padding(.top, 10)
+                            .padding(.bottom, 0)
                         }
                     }
-                    .navigationTitle("Filtering Options")
-                    .navigationBarTitleDisplayMode(.inline)
             }
         }
         .sheet(isPresented: $showPlayersSheet) {
             NavigationStack {
-                List {
-                    Section() {
-                        if !playerModel.players.isEmpty {
-                            ForEach(playerModel.players, id: \.playerDocId) { player in
-                                CustomUIFields.imageLabel(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
+                VStack(alignment: .leading) {
+                    VStack(alignment: .center) {
+                        Text("Roster")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                        Text("Team roster — your teammates")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .frame(maxWidth: .infinity)
+                    Divider()
+                    
+                    ScrollView {
+                        VStack {
+                            if isLoadingRoster {
+                                VStack {
+                                    ProgressView("Loading Roster…")
+                                        .padding()
+                                        .background(.white)
+                                        .cornerRadius(12)
+                                        .frame(maxWidth: .infinity)
+                                }
+                            } else {
+                                if !playerModel.players.isEmpty {
+                                    ForEach(playerModel.players, id: \.playerDocId) { player in
+                                        VStack(alignment: .leading) {
+                                            CustomUIFields.imageLabel(text: "\(player.firstName) \(player.lastName)", systemImage: "person.circle")
+                                                .padding(.vertical, 5)
+                                            
+                                            Divider()
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        
+                                    }
+                                } else {
+                                    VStack {
+                                        Image(systemName: "person.2.slash.fill")
+                                            .font(.system(size: 30))
+                                            .foregroundColor(.gray)
+                                            .padding(.bottom, 2)
+                                        
+                                        Text("No teammates found at this time.").font(.headline).foregroundStyle(.secondary)
+                                        Text("Try again later.")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                            .multilineTextAlignment(.center)
+                                    }
+                                    .padding(.top, 10)
+                                }
                             }
-                        } else {
-                            Text("No players found.").font(.caption).foregroundStyle(.secondary)
                         }
+                        .padding(.horizontal, 15)
                     }
                 }
-                .navigationTitle("Roster")
-                .navigationBarTitleDisplayMode(.inline)
-                .listStyle(.plain)
                 .toolbar {
-                    ToolbarItem {
-                        Button (action: {
-                            showPlayersSheet = false // Close the filter options
-                        }) {
-                            Text("Done")
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            showPlayersSheet = false
+                        } label: {
+                            Image(systemName: "xmark")
+                                .foregroundColor(.gray) // Make text + icon white
+                                .frame(width: 40, height: 40) // Make it square
+                                .background(Circle().fill(Color(uiColor: .systemGray6)))
                         }
+                        .padding(.top, 10)
+                        .padding(.bottom, 0)
                     }
                 }
+                .presentationCornerRadius(20)
+                .presentationBackgroundInteraction(.disabled)
+                .interactiveDismissDisabled(true)
             }
         }
         .onAppear {
@@ -178,10 +293,46 @@ struct PlayerMyTeamView: View {
     private func refreshData() {
         Task {
             do {
+                isLoadingFootage = true
+                isLoadingRoster = true
                 // Load games and players associated with the team
-                try await gameModel.getAllGames(teamId: selectedTeam.teamId)
-                self.groupedGames = groupGamesByWeek(gameModel.games)
-                self.selectedTeam = try await dependencies.teamManager.getTeam(teamId: selectedTeam.teamId)!
+                await gameModel.loadInitial(teamDocId: selectedTeam.id)
+                
+                await withTaskGroup(of: IndexedFootage?.self) { group in
+                    for game in gameModel.games {
+                        group.addTask {
+                            do {
+                                let exists = try await dependencies.fullGameRecordingManager
+                                    .doesFullGameVideoExistsWithGameId(
+                                        teamDocId: selectedTeam.id,
+                                        gameId: game.gameId,
+                                        teamId: game.teamId
+                                    )
+                                // Use stable id (gameId); avoid UUID unless intentionally unique
+                                return IndexedFootage(id: game.gameId, isFullGame: exists, game: game)
+                            } catch {
+                                print("error checking file for \(game.gameId): \(error)")
+                                return nil
+                            }
+                        }
+                    }
+                    
+                    for await result in group {
+                        if let indexed = result {
+                            // append on main thread
+                            await MainActor.run {
+                                // avoid duplicates (defensive)
+                                if !groupedFootage.contains(where: { $0.id == indexed.id }) {
+                                    groupedFootage.append(indexed)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                self.groupedGames = groupFootageByWeek(groupedFootage)
+                isLoadingFootage = false
+                
                 guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TODO: - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
@@ -194,13 +345,55 @@ struct PlayerMyTeamView: View {
                 }
                 
                 try await playerModel.getAllPlayers(invites: tmpInvites, players: tmpPlayers)
-                
+                isLoadingRoster = false
             } catch {
+                isLoadingFootage = false
+                isLoadingRoster = false
                 // Print error message if data fetching fails
                 print("Error occurred when getting the team games data: \(error.localizedDescription)")
             }
         }
     }
+    
+    func loadMoreFootage() async {
+        guard !isLoadingMoreFootage else { return }
+        isLoadingMoreFootage = true
+
+        await gameModel.loadMore(teamDocId: selectedTeam.id)
+
+        await withTaskGroup(of: IndexedFootage?.self) { group in
+            for game in gameModel.games {
+                group.addTask {
+                    do {
+                        let exists = try await dependencies.fullGameRecordingManager
+                            .doesFullGameVideoExistsWithGameId(
+                                teamDocId: selectedTeam.id,
+                                gameId: game.gameId,
+                                teamId: game.teamId
+                            )
+                        return IndexedFootage(id: game.gameId, isFullGame: exists, game: game)
+                    } catch {
+                        print("error checking file for \(game.gameId): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            for await result in group {
+                if let indexed = result {
+                    await MainActor.run {
+                        if !groupedFootage.contains(where: { $0.id == indexed.id }) {
+                            groupedFootage.append(indexed)
+                        }
+                    }
+                }
+            }
+        }
+
+        groupedGames = groupFootageByWeek(groupedFootage)
+        isLoadingMoreFootage = false
+    }
+
 }
 
 

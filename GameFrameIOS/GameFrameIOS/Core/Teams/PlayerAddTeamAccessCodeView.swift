@@ -33,7 +33,7 @@ struct PlayerAddTeamAccessCodeView: View {
                         label: "Team Access Code",
                         placeholder: "Your Code",
                         text: $groupCode,
-                        isRequired: false,
+                        isRequired: true,
                         disableAutocorrection: true,
                         autoCapitalization: false
                     )
@@ -51,6 +51,7 @@ struct PlayerAddTeamAccessCodeView: View {
                     }.disabled(groupCode.isEmpty)
                 }
                 .padding(.horizontal, 15)
+                Spacer()
             }
             .padding(.top, 0)
             
@@ -71,4 +72,11 @@ struct PlayerAddTeamAccessCodeView: View {
             }
         }
     }
+}
+
+#Preview {
+    @Previewable @State var groupCode = "code123"
+    PlayerAddTeamAccessCodeView(groupCode: $groupCode, onSubmit: {
+        
+    })
 }

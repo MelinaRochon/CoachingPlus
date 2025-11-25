@@ -99,7 +99,8 @@ struct CoachCreateTeamView: View {
     var body: some View {
         NavigationView {
             VStack(alignment: .leading) {
-                CustomUIFields.customTitle("Creating Your Team", subTitle: "Enter your team's basic information to get started.")
+
+                CustomUIFields.customPageTitle("Creating Your Team", subTitle: "Enter your team's information to get started.", divider: true)
 
                 ScrollView {
                     VStack {
@@ -157,11 +158,10 @@ struct CoachCreateTeamView: View {
                     Button(action: {
                         dismiss() // Dismiss the full-screen cover
                     }) {
-//                        Image(systemName: "xmark")
-//                            .foregroundColor(.gray) // Make text + icon white
-//                            .frame(width: 40, height: 40) // Make it square
-//                            .background(Circle().fill(Color(uiColor: .systemGray6)))
-                        Text("Cancel")
+                        HStack(spacing: 4) {
+                            Image(systemName: "xmark")
+                                .font(.headline)
+                        }
                     }
                     .accessibilityIdentifier("page.coach.team.create.cancel")
                 }
@@ -228,8 +228,6 @@ struct CoachCreateTeamView: View {
             .alert(isPresented: $showAlert) {
                 Alert(title: Text("Message"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
             }
-//            .navigationTitle(Text("Creating a New Team"))
-//            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 teamModel.setDependencies(dependencies)
             }
@@ -267,10 +265,5 @@ extension CoachCreateTeamView: TeamProtocol {
         && !colourHex.isEmpty
     }
 }
-
-
-//#Preview {
-//    CoachCreateTeamView()
-//}
 
 

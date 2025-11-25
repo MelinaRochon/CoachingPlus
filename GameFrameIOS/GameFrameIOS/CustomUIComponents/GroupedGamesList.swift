@@ -29,7 +29,7 @@ import GameFrameIOSShared
 /// )
 /// ```
 struct GroupedGamesList: View {
-    let groupedGames: [(label: String, games: [DBGame])]
+    let groupedGames: [(label: String, games: [IndexedFootage])]
     let selectedTeam: DBTeam
 
     let showUpcomingGames: Bool
@@ -44,14 +44,46 @@ struct GroupedGamesList: View {
             let upcomingGames = groupedGames.first(where: { $0.label == "Upcoming Games" })
             if let upcomingGames = upcomingGames {
                 // Create a section for each week or time period
-                Section(header: HStack{
-                    Text(upcomingGames.label).font(.subheadline).foregroundStyle(.black)
-                    Spacer()
-                }.padding(.top, 5)
+                Section(header:
+                    VStack {
+                        CustomUIFields.customDivider(upcomingGames.label)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 10)
+                    }
+                    .background(Color(.systemBackground))
                 ) {
-                    ForEach(upcomingGames.games, id: \.gameId) { game in
-                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: HomeGameDTO(id: game.gameId, game: game, team: selectedTeam), userType: userType)) {
-                            GameRow(game: game)
+                    ForEach(upcomingGames.games, id: \.id) { game in
+                        NavigationLink(destination: SelectedScheduledGameView(selectedGame: HomeGameDTO(id: game.id, game: game.game, team: selectedTeam), userType: userType)) {
+                            VStack {
+                                HStack {
+                                    Image(systemName: "clock.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 30, height: 30)
+                                        .foregroundColor(.green)
+                                        .padding(.horizontal, 5)
+                                    VStack (alignment: .leading, spacing: 4) {
+                                        Text(game.game.title)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .multilineTextAlignment(.leading)
+                                            .lineLimit(2)
+                                            .foregroundStyle(.black)
+                                        Text(formatStartTime(game.game.startTime))
+                                            .font(.subheadline)
+                                            .padding(.leading, 1)
+                                            .multilineTextAlignment(.leading)
+                                            .foregroundStyle(.gray)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.gray)
+                                        .padding(.leading)
+                                        .padding(.trailing, 5)
+                                }
+                                .padding(.vertical, 5)
+                                Divider()
+                            }
                         }
                     }
                 }
@@ -63,19 +95,30 @@ struct GroupedGamesList: View {
             let pastGroups = groupedGames.filter { $0.label != "Upcoming Games" }
             ForEach(pastGroups, id: \.label) { group in
                 // Create a section for each week or time period
-                Section(header: HStack{
-                    Text(group.label).font(.subheadline).foregroundStyle(.black)
-                    Spacer()
-                }.padding(.top, 5)
+                Section(header:
+                    VStack {
+                        CustomUIFields.customDivider(group.label)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 10)
+                    }
+                    .background(Color(.systemBackground))
                 ) {
-                    ForEach(group.games, id: \.gameId) { game in
+                    ForEach(group.games, id: \.id) { game in
                         if userType == .coach {
-                            NavigationLink(destination: CoachSpecificFootageView(game: game, team: selectedTeam)) {
-                                GameRow(game: game)
+                            NavigationLink(destination: CoachSpecificFootageView(game: game.game, team: selectedTeam)) {
+                                GameRow(
+                                    isFullGame: game.isFullGame,
+                                    title: game.game.title,
+                                    startTimeString: formatStartTime(game.game.startTime)
+                                )
                             }
                         } else {
-                            NavigationLink(destination: PlayerSpecificFootageView(game: game, team: selectedTeam)) {
-                                GameRow(game: game)
+                            NavigationLink(destination: PlayerSpecificFootageView(game: game.game, team: selectedTeam)) {
+                                GameRow(
+                                    isFullGame: game.isFullGame,
+                                    title: game.game.title,
+                                    startTimeString: formatStartTime(game.game.startTime)
+                                )
                             }
                         }
                     }
@@ -92,20 +135,40 @@ struct GroupedGamesList: View {
 /// - Parameters:
 ///   - game: The `DBGame` object to display in the row.
 struct GameRow: View {
-    let game: DBGame
+    let isFullGame: Bool
+    let title: String
+    let startTimeString: String
     
     var body: some View {
-        HStack {
-            // Custom preview for the game video or thumbnail
-           CustomUIFields.gameVideoPreviewStyle()
-                       
-            VStack(alignment: .leading) {
-                // Display the game title
-                Text(game.title).font(.headline)
-                
-                // Display formatted start time
-                Text(formatStartTime(game.startTime)).font(.subheadline)
+        VStack {
+            HStack {
+                Image(systemName: isFullGame ? "video.fill" : "microphone.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 5)
+                VStack (alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                        .foregroundStyle(.black)
+                    Text(startTimeString)
+                        .font(.subheadline)
+                        .padding(.leading, 1)
+                        .multilineTextAlignment(.leading)
+                        .foregroundStyle(.gray)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
+                    .padding(.leading)
+                    .padding(.trailing, 5)
             }
+            .padding(.vertical, 5)
+            Divider()
         }
     }
 }

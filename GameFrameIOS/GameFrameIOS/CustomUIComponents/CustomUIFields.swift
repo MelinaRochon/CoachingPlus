@@ -69,7 +69,7 @@ struct CustomUIFields {
         .padding(.top, 10)
     }
     
-    static func customPageTitle(_ title: String, subTitle: String? = nil) -> some View {
+    static func customPageTitle(_ title: String, subTitle: String? = nil, divider: Bool = false) -> some View {
         VStack(alignment: .leading) {
             VStack(alignment: .leading) {
                 Text(title)
@@ -83,9 +83,12 @@ struct CustomUIFields {
                         .multilineTextAlignment(.leading)
                 }
             }
-            .padding(.horizontal, 15)
-//            Divider()
+            
+            if divider {
+                Divider()
+            }
         }
+        .padding(.horizontal, 15)
         .padding(.top, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
     }

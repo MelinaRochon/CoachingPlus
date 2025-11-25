@@ -71,7 +71,7 @@ struct CoachAddNewInviteView: View {
         NavigationView {
             
                 VStack {
-                    CustomUIFields.customPageTitle("Adding player to roster", subTitle: "Invite a player to join your team")
+                    CustomUIFields.customPageTitle("Adding a Player", subTitle: "Invite a player to join your team")
                         .padding(.bottom, 10)
                     
                     VStack(alignment: .leading ,spacing: 0) {
@@ -254,8 +254,8 @@ struct CoachAddNewInviteView: View {
                         dismiss() // Dismiss the full-screen cover
                     }) {
                         HStack {
-                            Text("Cancel")
-//                            Image(systemName: "xmark")
+                            Image(systemName: "xmark")
+                                .font(.headline)
                         }
                     }
                 }

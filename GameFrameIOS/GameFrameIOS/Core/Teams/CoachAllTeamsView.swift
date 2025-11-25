@@ -60,7 +60,7 @@ struct CoachAllTeamsView: View {
                     isLoadingProgressViewTitle: "Searching for my teams…",
                     noItemsFoundIcon: "person.2.slash.fill",
                     noItemsFoundTitle: "No teams found at this time.",
-                    noItemsFoundSubtitle: "Try adding a team or try again later",
+                    noItemsFoundSubtitle: "Try adding a team or try again later.",
                     destinationBuilder: { team in
                         CoachMyTeamView(selectedTeam: team)
                     },

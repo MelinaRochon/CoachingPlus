@@ -32,10 +32,7 @@ struct CoachMyTeamView: View {
     
     /// Toggles visibility for the team settings view.
     @State private var isTeamSettingsEnabled: Bool = false
-    
-    /// The available segment options (Footage and Players).
-    let segmentTypes = ["Footage", "Players"]
-    
+        
     /// View model for managing game data.
     @StateObject private var gameModel = GameModel()
     
@@ -50,7 +47,8 @@ struct CoachMyTeamView: View {
     
     /// Holds the list of grouped games, organized by a label (e.g., "Upcoming Games", "Past Games").
     /// Initially set to `nil` to allow for asynchronous loading or conditional rendering.
-    @State private var groupedGames: [(label: String, games: [DBGame])]? = nil
+    @State private var groupedGames: [(label: String, games: [IndexedFootage])]? = nil
+    @State private var groupedFootage: [IndexedFootage] = []
 
     /// Toggles the visibility of the games settings view (e.g., filters or display preferences).
     @State private var isGamesSettingsEnabled: Bool = false
@@ -73,6 +71,9 @@ struct CoachMyTeamView: View {
     @Environment(\.dismiss) var dismiss
     @State private var showErrorWhenSaving: Bool = false
 
+    @State private var isLoadingFootage: Bool = false
+    @State private var isLoadingMoreFootage: Bool = false
+    @State private var hasTriggeredLoadFor: Set<String> = []
     
     // MARK: - View
     
@@ -81,34 +82,85 @@ struct CoachMyTeamView: View {
             Divider()
             
             // Segmented Picker to toggle between "Footage" and "Players" views
-            Picker("Type of selection - Segmented", selection: $selectedSegmentIndex) {
-                ForEach(segmentTypes.indices, id: \.self) { i in
-                    Text(self.segmentTypes[i])
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding(.leading)
-            .padding(.trailing)
+            CustomSegmentedPicker(
+                selectedIndex: $selectedSegmentIndex,
+                options: [
+                    (title: "Footage", icon: "video.fill"),
+                    (title: "Players", icon: "figure.indoor.soccer"),
+                ]
+            )
             
             // Main list that dynamically changes based on the selected segment
             if (selectedSegmentIndex == 0) {
                 
-                List {
-                    // "Footage" section: Displays games related to the team
-                    // Looping through games related to the team
-                    if let groupedGames = groupedGames {
-                        GroupedGamesList(
-                            groupedGames: groupedGames,
-                            selectedTeam: selectedTeam,
-                            showUpcomingGames: showUpcomingGames,
-                            showRecentGames: showRecentGames,
-                            userType: .coach
-                        )
-                    } else {
-                        Text("No saved footage.").font(.caption).foregroundStyle(.secondary)
+                if isLoadingFootage {
+                    VStack {
+                        ProgressView("Loading Game Footage")
+                            .padding()
+                            .background(.white)
+                            .cornerRadius(12)
                     }
-                }.listStyle(PlainListStyle()) // Optional: Make the list style more simple
-                
+                    .padding(.top, 10)
+                    .frame(maxWidth: .infinity)
+                } else {
+                    ScrollView {
+                        LazyVStack(alignment: .leading, pinnedViews: [.sectionHeaders]) {
+                            // "Footage" section: Displays games related to the team
+                            // Looping through games related to the team
+                            if let groupedGames = groupedGames, !groupedGames.isEmpty {
+                                GroupedGamesList(
+                                    groupedGames: groupedGames,
+                                    selectedTeam: selectedTeam,
+                                    showUpcomingGames: showUpcomingGames,
+                                    showRecentGames: showRecentGames,
+                                    userType: .coach
+                                )
+                                
+                                if let last = groupedFootage.last {
+                                    // Attach load trigger to last visible game cell
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .onAppear {
+                                            guard gameModel.lastDoc != nil else { return }
+                                            guard !isLoadingMoreFootage else { return }
+                                            guard showRecentGames else { return }
+                                            guard !hasTriggeredLoadFor.contains(last.id) else { return }
+                                            
+                                            hasTriggeredLoadFor.insert(last.id)
+                                            
+                                            Task { await loadMoreFootage() }
+                                        }
+                                }
+                                
+                                if isLoadingMoreFootage {
+                                    ProgressView("Loading more footage…")
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                }
+                            } else {
+                                VStack(alignment: .center) {
+                                        Image(systemName: "video.slash.fill")
+                                            .font(.system(size: 30))
+                                            .foregroundColor(.gray)
+                                            .padding(.bottom, 2)
+                                    
+                                    Text("No game footage was found at this time.").font(.headline).foregroundStyle(.secondary)
+                                    
+                                    Text("Try adding a game first or try again later.")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 20)
+                            }
+                        }
+                        .padding(.horizontal, 15)
+                    }
+                    .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                        Color.clear.frame(height: 75)
+                    }
+                }
             } else {
                 List {
                     // "Players" section: Displays players related to the team
@@ -127,10 +179,26 @@ struct CoachMyTeamView: View {
                             PlayersList(players: filteredPlayers, teamDocId: selectedTeam.id)
                         }
                     } else {
-                        Text("No players found.").font(.caption).foregroundStyle(.secondary)
+                        VStack(alignment: .center) {
+                            Image(systemName: "person.2.slash.fill")
+                                .font(.system(size: 30))
+                                .foregroundColor(.gray)
+                                .padding(.bottom, 2)
+                            
+                            Text("No player was found at this time.").font(.headline).foregroundStyle(.secondary)
+                            
+                            Text("Try adding a player to your roster.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 20)
                     }
-                }.listStyle(PlainListStyle()).padding(.top, 10) // Optional: Make the list style more simple
+                }.listStyle(PlainListStyle())
             }
+            
+            Spacer()
         }
         .navigationTitle(Text(selectedTeam.teamNickname))
         .navigationBarTitleDisplayMode(.large)
@@ -207,17 +275,23 @@ struct CoachMyTeamView: View {
             NavigationStack {
                 TeamSectionView(showUpcomingGames: $showUpcomingGames, showRecentGames: $showRecentGames, showPlayers: $showPlayers, showPlayersIndex: $showPlayersIndex, userType: .coach)
                     .presentationDetents([.medium])
+                    .presentationCornerRadius(20)
+                    .presentationBackgroundInteraction(.disabled)
+                    .interactiveDismissDisabled(true)
                     .toolbar {
-                        ToolbarItem {
-                            Button (action: {
-                                isGamesSettingsEnabled = false // Close the filter options
-                            }) {
-                                Text("Done")
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button {
+                                isGamesSettingsEnabled = false
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .foregroundColor(.gray) // Make text + icon white
+                                    .frame(width: 40, height: 40) // Make it square
+                                    .background(Circle().fill(Color(uiColor: .systemGray6)))
                             }
+                            .padding(.top, 10)
+                            .padding(.bottom, 0)
                         }
                     }
-                    .navigationTitle("Filtering Options")
-                    .navigationBarTitleDisplayMode(.inline)
             }
         }
         .alert("Error occured when saving game", isPresented: $showErrorWhenSaving) {
@@ -237,9 +311,45 @@ struct CoachMyTeamView: View {
         Task {
             do {
                 // Load games and players associated with the team
-                try await gameModel.getAllGames(teamId: selectedTeam.teamId)
-                self.groupedGames = groupGamesByWeek(gameModel.games)
-                self.selectedTeam = try await dependencies.teamManager.getTeam(teamId: selectedTeam.teamId)!
+                print("selected them = \(selectedTeam)")
+                isLoadingFootage = true
+                await gameModel.loadInitial(teamDocId: selectedTeam.id)
+                
+                await withTaskGroup(of: IndexedFootage?.self) { group in
+                    for game in gameModel.games {
+                        group.addTask {
+                            do {
+                                let exists = try await dependencies.fullGameRecordingManager
+                                    .doesFullGameVideoExistsWithGameId(
+                                        teamDocId: selectedTeam.id,
+                                        gameId: game.gameId,
+                                        teamId: game.teamId
+                                    )
+                                // Use stable id (gameId); avoid UUID unless intentionally unique
+                                return IndexedFootage(id: game.gameId, isFullGame: exists, game: game)
+                            } catch {
+                                print("error checking file for \(game.gameId): \(error)")
+                                return nil
+                            }
+                        }
+                    }
+                    
+                    for await result in group {
+                        if let indexed = result {
+                            // append on main thread
+                            await MainActor.run {
+                                // avoid duplicates (defensive)
+                                if !groupedFootage.contains(where: { $0.id == indexed.id }) {
+                                    groupedFootage.append(indexed)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                self.groupedGames = groupFootageByWeek(groupedFootage)                
+                isLoadingFootage = false
+                
                 guard let tmpPlayers = selectedTeam.players else {
                     print("There are no players in the team at the moment. Please add one.")
                     // TODO: - Will need to add more here! Maybe an icon can show on the page to let the user know there's no player in the team
@@ -254,14 +364,61 @@ struct CoachMyTeamView: View {
 
                 try await playerModel.getAllPlayers(invites: tmpInvites, players: tmpPlayers)
             } catch {
+                isLoadingFootage = false
                 // Print error message if data fetching fails
                 print("Error occurred when getting the team games data: \(error.localizedDescription)")
             }
         }
+    }
+    
+    func loadMoreFootage() async {
+        guard !isLoadingMoreFootage else { return }
+        isLoadingMoreFootage = true
+
+        await gameModel.loadMore(teamDocId: selectedTeam.id)
+
+        await withTaskGroup(of: IndexedFootage?.self) { group in
+            for game in gameModel.games {
+                group.addTask {
+                    do {
+                        let exists = try await dependencies.fullGameRecordingManager
+                            .doesFullGameVideoExistsWithGameId(
+                                teamDocId: selectedTeam.id,
+                                gameId: game.gameId,
+                                teamId: game.teamId
+                            )
+                        return IndexedFootage(id: game.gameId, isFullGame: exists, game: game)
+                    } catch {
+                        print("error checking file for \(game.gameId): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            for await result in group {
+                if let indexed = result {
+                    await MainActor.run {
+                        if !groupedFootage.contains(where: { $0.id == indexed.id }) {
+                            groupedFootage.append(indexed)
+                        }
+                    }
+                }
+            }
+        }
+
+        groupedGames = groupFootageByWeek(groupedFootage)
+        isLoadingMoreFootage = false
     }
 }
 
 #Preview {
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
     CoachMyTeamView(selectedTeam: team)
+}
+
+
+struct IndexedFootage: Identifiable {
+    let id: String
+    let isFullGame: Bool
+    let game: DBGame
 }
