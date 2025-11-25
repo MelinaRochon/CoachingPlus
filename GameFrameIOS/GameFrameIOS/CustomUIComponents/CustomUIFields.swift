@@ -50,6 +50,34 @@ struct CustomUIFields {
         }
     }
     
+    static func customDividerTitleWithNav(_ title: String, navtitle: String, navIcon: String? = nil, navColor: Color = .red) -> some View {
+        VStack(alignment: .leading) {
+            HStack {
+                Text(title)
+                    .font(.footnote)
+                    .bold()
+                    .fontWeight(.medium)
+                    .textCase(.uppercase)
+                Spacer()
+                
+                Text(navtitle)
+                    .font(.footnote)
+                    .bold()
+                    .fontWeight(.medium)
+                    .textCase(.uppercase)
+                    .foregroundStyle(navColor)
+                if let navIcon = navIcon {
+                    Image(systemName: navIcon)
+                        .foregroundStyle(navColor)
+                }
+                
+
+            }
+            Divider()
+        }
+    }
+
+    
     static func customTitle(_ title: String, subTitle: String? = nil) -> some View {
         VStack(alignment: .leading) {
             VStack(alignment: .leading) {

@@ -21,26 +21,42 @@ struct CoachMainTabView: View {
     let coachId: String
     
     @State private var showCoachRecordingConfig = false // Controls modal visibility
-    @State private var selectedTab: Int = 3 // Track selected tab
+    @State private var selectedTab: Int = 1 //3 // Track selected tab
     @Binding var showLandingPageView: Bool
+    
+    let homeView = CoachHomePageView()
+    let notificationView: CoachNotificationView
+    let teamsView = CoachAllTeamsView()
+    let profileView: CoachProfileView
     
     init(showLandingPageView: Binding<Bool>, coachId: String) {
         // Remove the default bottom shadow/line from the tab bar
         UITabBar.appearance().scrollEdgeAppearance = UITabBarAppearance()
         self._showLandingPageView = showLandingPageView
         self.coachId = coachId
+        
+        self.notificationView = CoachNotificationView(coachId: coachId)
+        self.profileView = CoachProfileView(showLandingPageView: showLandingPageView)
+
     }
     
     var body: some View {
         ZStack {
             Group {
+//                switch selectedTab {
+//                case 0: CoachHomePageView()
+//                case 1: CoachNotificationView(coachId: coachId)
+//                case 2: CoachAllTeamsView()
+//                case 3: CoachProfileView(showLandingPageView: $showLandingPageView)
+//                default: CoachHomePageView()
+//                }
                 switch selectedTab {
-                case 0: CoachHomePageView()
-                case 1: CoachNotificationView(coachId: coachId)
-                case 2: CoachAllTeamsView()
-                case 3: CoachProfileView(showLandingPageView: $showLandingPageView)
-                default: CoachHomePageView()
-                }
+                        case 0: AnyView(homeView)
+                        case 1: AnyView(notificationView)
+                        case 2: AnyView(teamsView)
+                        case 3: AnyView(profileView)
+                        default: AnyView(homeView)
+                        }
             }
             .edgesIgnoringSafeArea(.bottom) // Ensures full-screen usage
             
@@ -102,10 +118,12 @@ struct CoachMainTabView: View {
                 Image(systemName: selectedTab == tabIndex ? filledImage : image) // Change icon when selected
                     .resizable()
                     .frame(width: 24, height: 24)
-                    .foregroundColor(selectedTab == tabIndex ? Color(.darkGray) : Color(.darkGray))// Highlight selected tab
+                    .foregroundColor(Color(.darkGray))
+//                    .foregroundColor(selectedTab == tabIndex ? Color(.darkGray) : Color(.darkGray))// Highlight selected tab
                 Text(label)
                     .font(.caption)
-                    .foregroundColor(selectedTab == tabIndex ? Color(.darkGray) : Color(.darkGray))
+                    .foregroundColor(Color(.darkGray))
+//                    .foregroundColor(selectedTab == tabIndex ? Color(.darkGray) : Color(.darkGray))
             }
             .padding()
         }

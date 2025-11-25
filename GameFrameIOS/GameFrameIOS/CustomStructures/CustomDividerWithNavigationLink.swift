@@ -13,6 +13,9 @@ struct CustomDividerWithNavigationLink<Destination: View>: View {
     let title: String
     let subTitle: String
     var subTitleColor: Color = .gray
+    var icon: String? = nil
+    var iconColor: Color = .red
+    
     let destinationBuilder: (() -> Destination)  // closure that returns the destination view
 
     var body: some View {
@@ -26,10 +29,19 @@ struct CustomDividerWithNavigationLink<Destination: View>: View {
                 Spacer()
                 
                 NavigationLink(destination: destinationBuilder()) {
-                    Text(subTitle)
-                        .font(.footnote)
-                        .textCase(.uppercase)
-                        .foregroundColor(subTitleColor)
+                    HStack {
+                        Text(subTitle)
+                            .font(.footnote)
+                            .textCase(.uppercase)
+                            .fontWeight(.medium)
+                            .foregroundColor(subTitleColor)
+                        
+                        if let icon = icon {
+                            Image(systemName: icon)
+                                .foregroundStyle(iconColor)
+                        }
+
+                    }
                 }
             }
             Divider()

@@ -79,8 +79,13 @@ struct CoachMyTeamView: View {
     
     var body: some View {
         VStack {
-            Divider()
-            
+//            Divider()
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(selectedTeam.teamNickname).font(Font.largeTitle.bold()).padding(.horizontal, 15)
+                Divider()
+            }
+
             // Segmented Picker to toggle between "Footage" and "Players" views
             CustomSegmentedPicker(
                 selectedIndex: $selectedSegmentIndex,
@@ -200,8 +205,10 @@ struct CoachMyTeamView: View {
             
             Spacer()
         }
-        .navigationTitle(Text(selectedTeam.teamNickname))
-        .navigationBarTitleDisplayMode(.large)
+//        .navigationTitle(Text(selectedTeam.teamNickname))
+//        .navigationBarTitleDisplayMode(.large)
+//        .navigationBarTitleDisplayMode(.automatic)
+
         .onAppear {
             teamModel.setDependencies(dependencies)
             gameModel.setDependencies(dependencies)
@@ -240,22 +247,53 @@ struct CoachMyTeamView: View {
                     }
                     .tint(.red)
                     
-                    Menu {
+                    if selectedSegmentIndex == 0 {
                         Button{
                             addGameEnabled.toggle()
                         } label: {
                             Label("Add Game", systemImage: "calendar.badge.plus")
                         }
+                        
+
+                    } else {
                         Button{
                             addPlayerEnabled.toggle()
                         } label: {
                             Label("Add Player", systemImage: "person.fill.badge.plus")
                         }
-                        
-                    } label: {
-                        Label("Plus", systemImage: "plus")
                     }
-                    .tint(.red)
+//                    Menu {
+//                        Button{
+//                            addGameEnabled.toggle()
+//                        } label: {
+//                            Label("Add Game", systemImage: "calendar.badge.plus")
+//                        }
+//                        Button{
+//                            addPlayerEnabled.toggle()
+//                        } label: {
+//                            Label("Add Player", systemImage: "person.fill.badge.plus")
+//                        }
+//                        
+//                    } label: {
+//                        Label("Plus", systemImage: "plus")
+//                    }
+                    
+//                    Menu {
+//                        Button(action: { addGameEnabled.toggle() }) {
+//                            Label("Add Game", systemImage: "calendar.badge.plus")
+//                        }
+//                        Button(action: { addPlayerEnabled.toggle() }) {
+//                            Label("Add Player", systemImage: "person.fill.badge.plus")
+//                        }
+//                    } label: {
+//                        Label("Plus", systemImage: "plus")
+//                    }
+//                    Menu {
+//                                toolbarMenuContent
+//                    } label: {
+//                        Label("Plus", systemImage: "plus")
+//                    }
+//                    .tint(.red)
                 }
             }
         }
@@ -305,6 +343,21 @@ struct CoachMyTeamView: View {
     
     
     // MARK: - Function
+    
+    var toolbarMenuContent: some View {
+        Group {
+            Button {
+                addGameEnabled.toggle()
+            } label: {
+                Label("Add Game", systemImage: "calendar.badge.plus")
+            }
+            Button {
+                addPlayerEnabled.toggle()
+            } label: {
+                Label("Add Player", systemImage: "person.fill.badge.plus")
+            }
+        }
+    }
     
     /// Function to refresh team data and load games and players
     private func refreshData() {

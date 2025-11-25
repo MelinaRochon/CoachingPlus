@@ -45,53 +45,70 @@ struct CoachAllTeamsView: View {
     
     var body: some View {
         NavigationStack {
-            
-            VStack {
-                Divider() // This adds a divider after the title
-                    .padding(.bottom, 30)
-                CustomListSection(
-                    titleContent: {
-                        AnyView(
-                        CustomUIFields.customDivider("My Teams")
-                    )},
-                    items: teams ?? [],
-                    isLoading: isLoadingMyTeams,
-                    rowLogo: "tshirt",
-                    isLoadingProgressViewTitle: "Searching for my teams…",
-                    noItemsFoundIcon: "person.2.slash.fill",
-                    noItemsFoundTitle: "No teams found at this time.",
-                    noItemsFoundSubtitle: "Try adding a team or try again later.",
-                    destinationBuilder: { team in
-                        CoachMyTeamView(selectedTeam: team)
-                    },
-                    rowContent: { team in
-                        AnyView(
-                            VStack (alignment: .leading, spacing: 4) {
-                                Text(team.name)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .multilineTextAlignment(.leading)
-                                    .lineLimit(2)
-                                    .foregroundStyle(.black)
-                                Text(team.sport)
-                                    .font(.caption)
-                                    .padding(.leading, 1)
-                                    .multilineTextAlignment(.leading)
-                                    .foregroundStyle(.gray)
-                            }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        )
+//            ScrollView {
+                //            VStack(alignment: .leading, spacing: 4) {
+                //                Text("Teams").font(Font.largeTitle.bold())
+//                                Divider() // This adds a divider after the title
+//                                    .padding(.bottom, 30)
+                //            }
+                //            .padding(.top, 0)
+                
+                VStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Teams").font(Font.largeTitle.bold()).padding(.horizontal, 15)
+                        Divider()
                     }
-                )
-                Spacer()
+
+//                    Divider() // This adds a divider after the title
+                        .padding(.bottom, 30)
+                    CustomListSection(
+                        titleContent: {
+                            AnyView(
+                                CustomUIFields.customDivider("My Teams")
+                            )},
+                        items: teams ?? [],
+                        isLoading: isLoadingMyTeams,
+                        rowLogo: "tshirt",
+                        isLoadingProgressViewTitle: "Searching for my teams…",
+                        noItemsFoundIcon: "person.2.slash.fill",
+                        noItemsFoundTitle: "No teams found at this time.",
+                        noItemsFoundSubtitle: "Try adding a team or try again later.",
+                        destinationBuilder: { team in
+                            CoachMyTeamView(selectedTeam: team)
+                        },
+                        rowContent: { team in
+                            AnyView(
+                                VStack (alignment: .leading, spacing: 4) {
+                                    Text(team.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(2)
+                                        .foregroundStyle(.black)
+                                    Text(team.sport)
+                                        .font(.caption)
+                                        .padding(.leading, 1)
+                                        .multilineTextAlignment(.leading)
+                                        .foregroundStyle(.gray)
+                                }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            )
+                        }
+                    )
+                    Spacer()
+//                }
+                //            .toolbarBackground(.visible, for: .navigationBar)
+                //            .toolbarBackground(Color(.systemBackground), for: .navigationBar)
             }
-            .navigationTitle(Text("Teams"))
+//            .navigationTitle(Text("Teams"))
+//            .navigationBarTitleDisplayMode(.automatic)
+//            .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showCreateTeam.toggle()
                     } label: {
-                        Label("Add Team", systemImage: "plus")
+                        Image(systemName: "plus")
                     }
                     .accessibilityIdentifier("page.coach.teams.add")
                 }
