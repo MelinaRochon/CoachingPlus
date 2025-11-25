@@ -16,7 +16,7 @@ final class NotificationsViewModel: ObservableObject {
     @Published var error: String?
     @Published var gameTitles: [String: String] = [:]   // gameId -> title
     @Published var authorNames: [String: String] = [:]  // authorId -> "First Last"
-
+    @Published var teamIdsByGame: [String: String] = [:] // 👈 NEW: gameId -> teamId
 
     private var dependencies: DependencyContainer?
     private let teamModel = TeamModel()
@@ -29,7 +29,7 @@ final class NotificationsViewModel: ObservableObject {
         gameModel.setDependencies(dependencies)
     }
 
-    func loadLastWeekComments(coachId: String) async {
+    func loadCoachLastWeekComments(coachId: String) async {
         isLoading = true
         error = nil
         defer { isLoading = false }
@@ -56,7 +56,7 @@ final class NotificationsViewModel: ObservableObject {
             let comments = try await repo.commentManager
                 .fetchRecentComments(forTeamDocIds: teamDocIds, since: since)
 
-            // 4) ❗ Filter out comments written by the logged-in coach
+            // 4) Filter out comments written by the logged-in coach
             let filtered = comments.filter { $0.uploadedBy != currentCoachId }
 
             recentComments = filtered
@@ -76,17 +76,20 @@ final class NotificationsViewModel: ObservableObject {
 
         var titles: [String: String] = [:]
         var authors: [String: String] = [:]
+        var teamIds: [String: String] = [:]
 
         for comment in recentComments {
             let gameId = comment.gameId
-            // 🔁 Change this to whatever your field is on DBComment:
             let authorId = comment.uploadedBy    // e.g. comment.authorId / comment.userId
 
-            // --- Game title ---
-            if titles[gameId] == nil {
-                if let teamId = try? await teamModel.getTeamIdForGameId(gameId),
-                   let title = try? await gameModel.getGameTitle(teamId: teamId, gameId: gameId) {
-                    titles[gameId] = title
+            // --- Game title + teamId ---
+            if titles[gameId] == nil || teamIds[gameId] == nil {
+                if let teamId = try? await teamModel.getTeamIdForGameId(gameId) {
+                    teamIds[gameId] = teamId
+
+                    if let title = try? await gameModel.getGameTitle(teamId: teamId, gameId: gameId) {
+                        titles[gameId] = title
+                    }
                 }
             }
 
@@ -102,6 +105,7 @@ final class NotificationsViewModel: ObservableObject {
 
         gameTitles = titles
         authorNames = authors
+        teamIdsByGame = teamIds
     }
 
 }

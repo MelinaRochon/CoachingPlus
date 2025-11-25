@@ -41,7 +41,7 @@ struct CoachNotificationView: View {
                         Button("Retry") {
                             Task {
                                 vm.setDependencies(dependencies)
-                                await vm.loadLastWeekComments(coachId: coachId)
+                                await vm.loadCoachLastWeekComments(coachId: coachId)
                             }
                         }
                         .buttonStyle(.borderedProminent)
@@ -60,27 +60,16 @@ struct CoachNotificationView: View {
                         ForEach(vm.recentComments, id: \.commentId) { c in
                             let title  = vm.gameTitles[c.gameId] ?? "Unknown Game"
                             let author = vm.authorNames[c.uploadedBy] ?? "Unknown User"
+                            let teamId = vm.teamIdsByGame[c.gameId]
 
-                            NavigationLink {
-                                // For now: simple destination so we know navigation works
-                                VStack(alignment: .leading, spacing: 8) {
-                                        Text("Comment detail")
-                                            .font(.headline)
-                                        Text("Game ID: \(c.gameId)")
-                                        Text("Key moment ID: \(c.keyMomentId)")
-                                    }
-                                .padding()
-                            } label: {
-                                ActivityCommentRow(
-                                    comment: c,
-                                    gameTitle: title,
-                                    authorName: author
-                                )
-                            }
+                            CommentNavigationRow(
+                                comment: c,
+                                gameTitle: title,
+                                authorName: author,
+                                teamId: teamId
+                            )
                         }
                     }
-
-
                 }
             }
             .listStyle(.insetGrouped)
@@ -90,7 +79,7 @@ struct CoachNotificationView: View {
         }
         .task {
             vm.setDependencies(dependencies)
-            await vm.loadLastWeekComments(coachId: coachId)
+            await vm.loadCoachLastWeekComments(coachId: coachId)
         }
     }
 }
@@ -127,6 +116,39 @@ struct ActivityCommentRow: View {
         .padding(.vertical, 6)
     }
 }
+
+struct CommentNavigationRow: View {
+    let comment: DBComment
+    let gameTitle: String
+    let authorName: String
+    let teamId: String?    // may be nil if we couldn't resolve it
+
+    var body: some View {
+        if let teamId {
+            NavigationLink {
+                CoachSpecificKeyMomentLoaderView(
+                    teamId: teamId,
+                    gameId: comment.gameId,
+                    keyMomentId: comment.keyMomentId ?? ""
+                )
+            } label: {
+                ActivityCommentRow(
+                    comment: comment,
+                    gameTitle: gameTitle,
+                    authorName: authorName
+                )
+            }
+        } else {
+            // Fallback: show the row but don't navigate
+            ActivityCommentRow(
+                comment: comment,
+                gameTitle: gameTitle,
+                authorName: authorName
+            )
+        }
+    }
+}
+
 
 
 
