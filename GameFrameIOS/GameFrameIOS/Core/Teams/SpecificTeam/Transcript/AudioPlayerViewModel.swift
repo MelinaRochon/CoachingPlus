@@ -17,9 +17,37 @@ class AudioPlayerViewModel: ObservableObject {
     @Published var progress: TimeInterval = 0
     @Published var totalDuration: TimeInterval? //= 0 // Duration in seconds
     
+    private var audioSessionConfigured = false
+
     private var timer: Timer?
+    
+    func configureAudioSession() {
+            guard !audioSessionConfigured else { return }
+
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try session.setActive(true)
+                audioSessionConfigured = true
+                print("Audio session configured 🔊")
+            } catch {
+                print("❌ Failed to configure audio session: \(error)")
+            }
+        }
+
+    func forcePrepare() {
+            let session = AVAudioSession.sharedInstance()
+            do {
+                try session.setActive(true)
+                print("Audio session prepared again")
+            } catch {
+                print("❌ Could not activate session: \(error)")
+            }
+        }
 
     func playAudio(from url: URL) {
+        configureAudioSession()   // <-- ADD THIS
+            forcePrepare()
         // Check if the audio is already loaded and it's the same file
         if let player = audioPlayer, lastURL == url {
             if isPlaying {

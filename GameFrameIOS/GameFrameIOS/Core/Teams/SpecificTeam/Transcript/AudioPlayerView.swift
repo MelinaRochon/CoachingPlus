@@ -39,41 +39,21 @@ struct AudioPlayerView: View {
                     VStack(alignment: .leading) {
                         
                         // Progress Slider
-                        Slider(
-                            value: Binding(
-                                get: { audioPlayerVM.progress },
-                                set: { newValue in
-                                    audioPlayerVM.seek(to: newValue)
-                                }
-                            ),
-                            in: 0...totalDuration,
-                            onEditingChanged: { editing in
-                                if !editing && audioPlayerVM.isPlaying {
-                                    audioPlayerVM.seek(to: audioPlayerVM.progress)
-                                }
+                        SimpleSlider(value: Binding(
+                            get: { audioPlayerVM.progress },
+                            set: { newValue in
+                                audioPlayerVM.seek(to: newValue)
                             }
+                        ), range: 0...totalDuration,
+                                     onEditingChanged: { editing in
+                                         if !editing && audioPlayerVM.isPlaying {
+                                             audioPlayerVM.seek(to: audioPlayerVM.progress)
+                                         }
+                                     }
                         )
-                        .tint(.gray)
-                        .frame(height: 30)
-                        
-//                        SimpleSlider(value: Binding(
-//                            get: { audioPlayerVM.progress },
-//                            set: { newValue in
-//                                audioPlayerVM.seek(to: newValue)
-//                            }
-//                        ), range: 0...totalDuration,
-//                                     onEditingChanged: { editing in
-//                                         if !editing && audioPlayerVM.isPlaying {
-//                                             audioPlayerVM.seek(to: audioPlayerVM.progress)
-//                                         }
-//                                     }
-//                        )
-//                        .frame(height: 30)
-
-//                            .padding(.horizontal, 25)
-//                            .padding(.vertical)
-//                            .border(Color.gray, width: 3)
-
+                        .tint(.gray) // Change color if needed
+                        .frame(height: 20) // Adjust slider height
+                        .padding(.horizontal, 5)
                         
                         // Time Labels (Start Time & Remaining Time)
                         HStack {
@@ -88,12 +68,9 @@ struct AudioPlayerView: View {
             }.padding(.horizontal).padding(.bottom)
         }
         .task {
-            do {
-                // Set the audio duration
-                audioPlayerVM.setAudioDuration(from: audioURL)
-            } catch {
-                print("error getting the audio duration")
-            }
+            // Set the audio duration & configure the audio session
+            audioPlayerVM.configureAudioSession()
+            audioPlayerVM.setAudioDuration(from: audioURL)
         }
     }
     
