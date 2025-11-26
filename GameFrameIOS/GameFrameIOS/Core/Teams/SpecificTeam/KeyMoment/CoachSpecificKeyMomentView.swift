@@ -237,9 +237,9 @@ struct CoachSpecificKeyMomentView: View {
                         CommentSectionView(
                             viewModel: commentViewModel,
                             teamDocId: team.id,
-                            keyMomentId: String(specificKeyMoment.id),
+                            keyMomentId: String(specificKeyMoment.keyMomentId),
                             gameId: game.gameId,
-                            transcriptId: String(specificKeyMoment.transcript)
+                            transcriptId: String(specificKeyMoment.transcriptId)
                         )
                         
                     }

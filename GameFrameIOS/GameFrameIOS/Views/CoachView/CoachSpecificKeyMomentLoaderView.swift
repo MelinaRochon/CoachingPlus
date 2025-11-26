@@ -1,51 +1,74 @@
 //
-// CoachSpecificKeyMomentLoaderView.swift
-// GameFrameIOS
+//  CoachSpecificKeyMomentLoaderView.swift
+//  GameFrameIOS
 //
-// Created by Caterina Bosi on 2025-11-23.
+//  Created by Caterina Bosi on 2025-11-23.
 //
 
 import SwiftUI
 import GameFrameIOSShared
 
 /// Loads DBTeam, DBGame and keyMomentTranscript from ids,
-/// then shows `CoachSpecificKeyMomentView`.
+/// then shows either:
+/// - `CoachSpecificKeyMomentView` if a video URL exists, or
+/// - `CoachSpecificTranscriptView` if there is no video.
 struct CoachSpecificKeyMomentLoaderView: View {
     @EnvironmentObject private var dependencies: DependencyContainer
-
+    
     let teamId: String
     let gameId: String
     let keyMomentId: String
-
+    
     @State private var team: DBTeam?
     @State private var game: DBGame?
     @State private var keyMoment: keyMomentTranscript?
-    @State private var videoUrl: URL?      // we’ll resolve this later
+    @State private var videoUrl: URL?      // optional: nil means “no video available”
     @State private var isLoading = true
     @State private var error: String?
-
+    
+    init(teamId: String, gameId: String, keyMomentId: String) {
+        self.teamId = teamId
+        self.gameId = gameId
+        self.keyMomentId = keyMomentId
+        
+//        print("CoachSpecificKeyMomentLoaderView init")
+//        print("   teamId: \(teamId)")
+//        print("   gameId: \(gameId)")
+//        print("   keyMomentId: \(keyMomentId)")
+    }
+    
     var body: some View {
         content
             .task {
                 await load()
             }
     }
-
+    
     // MARK: - View content
-
+    
     @ViewBuilder
     private var content: some View {
         if let error {
             Text("Error: \(error)")
         } else if isLoading {
             ProgressView("Loading key moment…")
-        } else if let team, let game, let keyMoment, let videoUrl {
-            CoachSpecificKeyMomentView(
-                game: game,
-                team: team,
-                specificKeyMoment: keyMoment,
-                videoUrl: videoUrl
-            )
+        } else if let team, let game, let keyMoment {
+            // Decide which detail view to show based on presence of a video URL
+            if let videoUrl {
+                CoachSpecificKeyMomentView(
+                    game: game,
+                    team: team,
+                    specificKeyMoment: keyMoment,
+                    videoUrl: videoUrl
+                )
+            } else {
+                // No associated video → fall back to transcript-only view
+                CoachSpecificTranscriptView(
+                    game: game,
+                    team: team,
+                    transcript: keyMoment
+                )
+            }
         } else {
             // Shouldn’t really happen, but keeps the compiler happy
             EmptyView()
@@ -79,23 +102,58 @@ struct CoachSpecificKeyMomentLoaderView: View {
             let transcriptModel = TranscriptModel()
             transcriptModel.setDependencies(dependencies)
 
-            // IMPORTANT: use the *document id* here
             let allKeyMoments = try await transcriptModel.getAllTranscripts(
                 gameId: gameId,
                 teamDocId: teamDocId
             ) ?? []
 
             // 4) Pick the key moment matching our keyMomentId
-            let kmObj = allKeyMoments.first { $0.keyMomentId == keyMomentId }
+            guard let kmObj = allKeyMoments.first(where: { $0.keyMomentId == keyMomentId }) else {
+                self.error = "Key moment not found."
+                self.isLoading = false
+                return
+            }
 
-            // 5) TODO: replace with real video URL logic
-            let dummyUrl = URL(string: "https://example.com/video.mp4")!
-
-            // 6) Update state
+            // Set base state (so we always have data for transcript view)
             self.team = teamObj
             self.game = gameObj
             self.keyMoment = kmObj
-            self.videoUrl = dummyUrl
+
+            // 5) Try to resolve full-game video URL
+            let fgRecordingModel = FGVideoRecordingModel()
+            fgRecordingModel.setDependencies(dependencies)
+
+            do {
+                if let videoPath = try await fgRecordingModel.getFGRecordingVideoUrl(
+                    teamDocId: teamDocId,
+                    gameId: gameId
+                ) {
+                    print("🎥 Found video path: \(videoPath)")
+                    
+                    // Convert Firebase Storage path -> HTTPS download URL
+                    let storageRef = StorageManager.shared.getAudioURL(path: videoPath)
+                    let downloadURL: URL = try await withCheckedThrowingContinuation { continuation in
+                        storageRef.downloadURL { url, error in
+                            if let error = error {
+                                continuation.resume(throwing: error)
+                            } else if let url = url {
+                                continuation.resume(returning: url)
+                            } else {
+                                continuation.resume(throwing: URLError(.badURL))
+                            }
+                        }
+                    }
+                    
+                    print("✅ Resolved full-game video URL: \(downloadURL)")
+                    self.videoUrl = downloadURL
+                } else {
+                    print("ℹ️ No full-game video path found: will show transcript-only view.")
+                }
+            } catch {
+                // If video fails, we just log and fall back to transcript view
+                print("❌ Failed to resolve full-game video, falling back to transcript view: \(error)")
+            }
+
             self.isLoading = false
         } catch {
             self.error = error.localizedDescription

@@ -25,15 +25,9 @@ struct CoachNotificationView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Recent Activity").font(Font.largeTitle.bold())
-                        .padding(.top, 54)
-                        .padding(.horizontal, 15)
-                    Divider()
-                }
-//                .padding(.horizontal, 15)
-//                .padding(.top, 8)
-                .padding(.bottom, 30)
+                
+                Divider().padding(.bottom, 30)
+
                 CustomListSection(
                     titleContent: {
                         AnyView(
@@ -47,6 +41,7 @@ struct CoachNotificationView: View {
                     noItemsFoundTitle: "No activity found at this time.",
                     noItemsFoundSubtitle: "Try again later.",
                     destinationBuilder: { comment in
+                        
                         // use the view-model’s mapping from gameId → teamId
                         CoachSpecificKeyMomentLoaderView(
                             teamId: notifModel.teamIdsByGame[comment.gameId] ?? "",
@@ -80,6 +75,7 @@ struct CoachNotificationView: View {
                 Spacer()
             }
             .background(Color.white)
+            .navigationTitle(Text("Recent Activity"))
         }
         .task {
             // inject deps and load notifications when the view appears
