@@ -71,3 +71,12 @@ public enum UserError: Error {
 public enum PlayerTeamInfoError: Error {
     case playerTeamInfoNotFound
 }
+
+public enum NotificationType: String, Codable {
+    case recordingReady      // full game video ready
+    case keyMomentFeedback   // feedback/key moment created or updated
+    case transcriptFeedback  // audio-only transcript created or updated
+    case commentAdded        // new comment on something you're involved in
+    case commentReply        // reply to your comment
+    case generic             // fallback / misc
+}
