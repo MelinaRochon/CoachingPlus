@@ -12,146 +12,101 @@ import GameFrameIOSShared
  This structure is the recent activity view. All the recent acitivities made in the app (all types of notifications) will be shown here.
  */
 struct CoachNotificationView: View {
+    @StateObject private var notifModel = NotificationsViewModel()
     @EnvironmentObject private var dependencies: DependencyContainer
-    @StateObject private var vm = NotificationsViewModel()
-
+    
+    @State private var comments: [DBComment]?
+    
+    @State private var isLoadingMyNotifs: Bool = false
+    
+    
     let coachId: String
-
+    
     var body: some View {
         NavigationStack {
-            Divider()
-            List {
-                if vm.isLoading {
-                    HStack {
-                        Spacer()
-                        ProgressView("Loading activity…")
-                            .font(.caption)
-                        Spacer()
-                    }
-                } else if let err = vm.error {
-                    Section {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Couldn’t load activity")
-                                .font(.headline)
-                            Text(err)
-                                .font(.footnote)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Button("Retry") {
-                            Task {
-                                vm.setDependencies(dependencies)
-                                await vm.loadCoachLastWeekComments(coachId: coachId)
+            VStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Recent Activity").font(Font.largeTitle.bold())
+                        .padding(.top, 54)
+                        .padding(.horizontal, 15)
+                    Divider()
+                }
+//                .padding(.horizontal, 15)
+//                .padding(.top, 8)
+                .padding(.bottom, 30)
+                CustomListSection(
+                    titleContent: {
+                        AnyView(
+                            CustomUIFields.customDivider("My notifications")
+                        )},
+                    items: comments ?? [],
+                    isLoading: isLoadingMyNotifs,
+                    rowLogo: "text.bubble",
+                    isLoadingProgressViewTitle: "Searching for my activity…",
+                    noItemsFoundIcon: "bubble.left",
+                    noItemsFoundTitle: "No activity found at this time.",
+                    noItemsFoundSubtitle: "Try again later.",
+                    destinationBuilder: { comment in
+                        // use the view-model’s mapping from gameId → teamId
+                        CoachSpecificKeyMomentLoaderView(
+                            teamId: notifModel.teamIdsByGame[comment.gameId] ?? "",
+                            gameId: comment.gameId,
+                            keyMomentId: comment.keyMomentId ?? ""
+                        )
+                    },
+                    rowContent: { comment in
+                        let authorName = notifModel.authorNames[comment.uploadedBy] ?? "Unknown User"
+                        let gameTitle = notifModel.gameTitles[comment.gameId] ?? "Unknown Game"
+                        
+                        return AnyView(
+                            VStack (alignment: .leading, spacing: 4) {
+                                Text("\(authorName) commented on \(gameTitle)")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .foregroundStyle(.black)
+                                Text(relative(comment.createdAt))
+                                    .font(.caption)
+                                    .padding(.leading, 1)
+                                    .multilineTextAlignment(.leading)
+                                    .foregroundStyle(.gray)
                             }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .padding(.top, 4)
-                    }
-                } else if vm.recentComments.isEmpty {
-                    Section {
-                        ContentUnavailableView(
-                            "No recent activity this week",
-                            systemImage: "bubble.left",
-                            description: Text("New activity in the last 7 days will appear here.")
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         )
                     }
-                } else {
-                    Section("Comments (last 7 days)") {
-                        ForEach(vm.recentComments, id: \.commentId) { c in
-                            let title  = vm.gameTitles[c.gameId] ?? "Unknown Game"
-                            let author = vm.authorNames[c.uploadedBy] ?? "Unknown User"
-                            let teamId = vm.teamIdsByGame[c.gameId]
-
-                            CommentNavigationRow(
-                                comment: c,
-                                gameTitle: title,
-                                authorName: author,
-                                teamId: teamId
-                            )
-                        }
-                    }
-                }
+                )
+                Spacer()
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
             .background(Color.white)
-            .navigationTitle("Recent Activity")
         }
         .task {
-            vm.setDependencies(dependencies)
-            await vm.loadCoachLastWeekComments(coachId: coachId)
+            // inject deps and load notifications when the view appears
+            notifModel.setDependencies(dependencies)
+            await loadNotifications()
         }
     }
-}
-
-// MARK: - Helpers
-
-private func relative(_ date: Date) -> String {
-    let f = RelativeDateTimeFormatter()
-    f.unitsStyle = .abbreviated
-    return f.localizedString(for: date, relativeTo: Date())
-}
-
-struct ActivityCommentRow: View {
-    let comment: DBComment
-    let gameTitle: String
-    let authorName: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(comment.comment)
-                .font(.body)
-                .lineLimit(2)
-
-            HStack(spacing: 8) {
-                Text(authorName)
-                Text("•")
-                Text(gameTitle)
-                Text("•")
-                Text(relative(comment.createdAt))
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 6)
+    
+    
+    // MARK: - Helpers
+    
+    private func relative(_ date: Date) -> String {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .abbreviated
+        return f.localizedString(for: date, relativeTo: Date())
     }
-}
-
-struct CommentNavigationRow: View {
-    let comment: DBComment
-    let gameTitle: String
-    let authorName: String
-    let teamId: String?    // may be nil if we couldn't resolve it
-
-    var body: some View {
-        if let teamId {
-            NavigationLink {
-                CoachSpecificKeyMomentLoaderView(
-                    teamId: teamId,
-                    gameId: comment.gameId,
-                    keyMomentId: comment.keyMomentId ?? ""
-                )
-            } label: {
-                ActivityCommentRow(
-                    comment: comment,
-                    gameTitle: gameTitle,
-                    authorName: authorName
-                )
-            }
-        } else {
-            // Fallback: show the row but don't navigate
-            ActivityCommentRow(
-                comment: comment,
-                gameTitle: gameTitle,
-                authorName: authorName
-            )
+    
+    private func loadNotifications() async {
+        do {
+            isLoadingMyNotifs = true
+            await notifModel.loadCoachLastWeekComments(coachId: coachId)
+            // copy from VM into local state, just like teams
+            comments = notifModel.recentComments
+            isLoadingMyNotifs = false
+        } catch {
+            isLoadingMyNotifs = false
+            print("Error loading notifications: \(error)")
         }
     }
-}
-
-
-
-
-#Preview {
-    CoachNotificationView(coachId: "FQzOD32960ZCORcwmULPPh21Ql53")
 }
