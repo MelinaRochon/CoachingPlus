@@ -217,10 +217,16 @@ struct CoachSpecificKeyMomentView: View {
                                 .font(.headline)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             
+                            if feedbackFor.isEmpty {
+                                HStack {
+                                    Text("No player associated.")
+                                        .font(.caption)
+                                }
+                                .multilineTextAlignment(.leading)
+                            }
                             HStack {
                                 Text(feedbackFor.map { $0.name }.joined(separator: ", "))
                                     .font(.caption)
-                                    .padding(.top, 2)
                             }
                             .multilineTextAlignment(.leading)
                         }.padding(.horizontal).padding(.vertical, 10)
@@ -239,6 +245,9 @@ struct CoachSpecificKeyMomentView: View {
                     }
                 }
                 
+            }
+            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                Color.clear.frame(height: 90)
             }
         }
         .onChange(of: dismissOnRemove) { newValue in
@@ -347,9 +356,6 @@ struct CoachSpecificKeyMomentView: View {
             } catch {
                 print("Error when fetching specific footage info: \(error)")
             }
-        }
-        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
-            Color.clear.frame(height: 75)
         }
     }
         

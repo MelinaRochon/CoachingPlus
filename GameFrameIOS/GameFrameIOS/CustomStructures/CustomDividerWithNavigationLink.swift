@@ -29,7 +29,7 @@ struct CustomDividerWithNavigationLink<Destination: View>: View {
                 Spacer()
                 
                 NavigationLink(destination: destinationBuilder()) {
-                    HStack {
+                    HStack(spacing: 2) {
                         Text(subTitle)
                             .font(.footnote)
                             .textCase(.uppercase)
@@ -39,6 +39,7 @@ struct CustomDividerWithNavigationLink<Destination: View>: View {
                         if let icon = icon {
                             Image(systemName: icon)
                                 .foregroundStyle(iconColor)
+                                .padding(.trailing, 5)
                         }
 
                     }
@@ -46,5 +47,6 @@ struct CustomDividerWithNavigationLink<Destination: View>: View {
             }
             Divider()
         }
+        .padding(.top, 15)
     }
 }

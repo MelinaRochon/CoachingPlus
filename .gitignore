@@ -5,3 +5,24 @@ GameFrameIOS/GameFrameIOS/Secrets.plist
 
 
 project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+
+# macOS junk
+.DS_Store
+
+# Xcode workspace state
+*.xcuserstate
+*.xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+
+# Previews / SwiftUI Canvas noise
+*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+*.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcshareddata/
+*.xcodeproj/xcuserdata/
+
+# Swift Package Manager
+Package.resolved
+.swiftpm/

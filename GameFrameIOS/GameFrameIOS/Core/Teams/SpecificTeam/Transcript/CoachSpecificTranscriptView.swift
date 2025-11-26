@@ -161,7 +161,7 @@ struct CoachSpecificTranscriptView: View {
                 //                )
             }
             .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
-                Color.clear.frame(height: 75)
+                Color.clear.frame(height: 90)
             }
             .task {
                 do {

@@ -56,6 +56,25 @@ struct AudioPlayerView: View {
                         .tint(.gray)
                         .frame(height: 30)
                         
+//                        SimpleSlider(value: Binding(
+//                            get: { audioPlayerVM.progress },
+//                            set: { newValue in
+//                                audioPlayerVM.seek(to: newValue)
+//                            }
+//                        ), range: 0...totalDuration,
+//                                     onEditingChanged: { editing in
+//                                         if !editing && audioPlayerVM.isPlaying {
+//                                             audioPlayerVM.seek(to: audioPlayerVM.progress)
+//                                         }
+//                                     }
+//                        )
+//                        .frame(height: 30)
+
+//                            .padding(.horizontal, 25)
+//                            .padding(.vertical)
+//                            .border(Color.gray, width: 3)
+
+                        
                         // Time Labels (Start Time & Remaining Time)
                         HStack {
                             Text(formatTime(audioPlayerVM.progress)) // Current time
