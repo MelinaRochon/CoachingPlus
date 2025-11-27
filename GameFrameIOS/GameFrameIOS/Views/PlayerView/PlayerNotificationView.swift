@@ -5,7 +5,6 @@
 //  Created by Caterina Bosi on 2025-02-05.
 //
 
-
 import SwiftUI
 import GameFrameIOSShared
 
@@ -47,10 +46,15 @@ struct PlayerNotificationView: View {
                         switch notif.type {
                         case .comment:
                             return AnyView(
-                                CoachSpecificKeyMomentLoaderView(
-                                    teamId: notif.teamDocId ?? "",
-                                    gameId: notif.gameId ?? "",
-                                    keyMomentId: notif.keyMomentId ?? ""
+                                MarkOnAppearWrapper(
+                                    onAppear: { markNotificationAsRead(notif) },
+                                    content: {
+                                        CoachSpecificKeyMomentLoaderView(
+                                            teamId: notif.teamDocId ?? "",
+                                            gameId: notif.gameId ?? "",
+                                            keyMomentId: notif.keyMomentId ?? ""
+                                        )
+                                    }
                                 )
                             )
                         case .gameRecordingReady:
@@ -68,22 +72,30 @@ struct PlayerNotificationView: View {
                     // MARK: - Row content
                     rowContent: { notif in
                         AnyView(
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(notif.title)          // comes from DBNotification
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .multilineTextAlignment(.leading)
-                                    .lineLimit(2)
-                                    .truncationMode(.tail)
-                                    .foregroundStyle(.black)
-                                
-                                Text(relative(notif.createdAt))
-                                    .font(.caption)
-                                    .padding(.leading, 1)
-                                    .multilineTextAlignment(.leading)
-                                    .foregroundStyle(.gray)
+                            HStack(alignment: .top, spacing: 8) {
+                                if !notif.isRead {
+                                                Circle()
+                                                    .frame(width: 8, height: 8)
+                                                    .foregroundStyle(.red)
+                                                    .padding(.top, 6)
+                                            }
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(notif.title)          // comes from DBNotification
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(2)
+                                        .truncationMode(.tail)
+                                        .foregroundStyle(.black)
+                                    
+                                    Text(relative(notif.createdAt))
+                                        .font(.caption)
+                                        .padding(.leading, 1)
+                                        .multilineTextAlignment(.leading)
+                                        .foregroundStyle(.gray)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         )
                     }
                 )
@@ -95,10 +107,27 @@ struct PlayerNotificationView: View {
         .task {
             // inject deps and load notifications when the view appears
             notifModel.setDependencies(dependencies)
-            await loadPlayerNotifications()
+            await loadCoachNotifications()
         }
     }
     
+    private struct MarkOnAppearWrapper<Content: View>: View {
+        let onAppear: () -> Void
+        let content: () -> Content
+        
+        @State private var hasAppeared = false
+        
+        var body: some View {
+            content()
+                .onAppear {
+                    if !hasAppeared {
+                        hasAppeared = true
+                        onAppear()
+                    }
+                }
+        }
+    }
+
     
     // MARK: - Helpers
     
@@ -108,9 +137,9 @@ struct PlayerNotificationView: View {
         return f.localizedString(for: date, relativeTo: Date())
     }
     
-    private func loadPlayerNotifications() async {
+    private func loadCoachNotifications() async {
         do {
-            isLoadingMyNotifs = true            
+            isLoadingMyNotifs = true
             try await notifModel.loadNotifications(userId: playerId)
             notifications = notifModel.notifications
             print("🔔 View copying \(notifModel.notifications.count) notifications into state")
@@ -120,4 +149,30 @@ struct PlayerNotificationView: View {
             print("Error loading notifications: \(error)")
         }
     }
+    
+    private func markNotificationAsRead(_ notif: DBNotification) {
+        // Don’t do anything if it’s already read
+        if notif.isRead { return }
+        
+        Task {
+            do {
+                print("Marking notification as read!")
+                try await dependencies.notificationManager.markNotificationAsRead(
+                    userDocId: notif.userDocId,
+                    id: notif.id
+                )
+
+                // Update local state so UI reflects it immediately
+                var copy = notifications
+                if let idx = copy.firstIndex(where: { $0.id == notif.id }) {
+                    copy[idx].isRead = true
+                }
+                notifications = copy
+            } catch {
+                print("❌ Failed to mark notification as read: \(error)")
+            }
+        }
+    }
+
+
 }
