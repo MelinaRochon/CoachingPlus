@@ -91,10 +91,15 @@ public final class LocalCommentRepository: CommentRepository {
         comments.append(DBComment(commentId: id, commentDTO: commentDTO))
         return id
     }
-
-    public func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
-        _ = try await addNewCommentReturningId(teamDocId: teamDocId, commentDTO: commentDTO)
+    
+    @discardableResult
+    public func addNewComment(
+        teamDocId: String,
+        commentDTO: CommentDTO
+    ) async throws -> String {
+        try await addNewCommentReturningId(teamDocId: teamDocId, commentDTO: commentDTO)
     }
+
     
     public func fetchRecentComments(
         forTeamDocIds teamDocIds: [String],

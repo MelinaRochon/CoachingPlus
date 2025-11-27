@@ -60,7 +60,7 @@ public protocol CommentRepository {
     ///   - teamDocId: The Firestore document ID of the team.
     ///   - commentDTO: A data transfer object containing the comment details to be added.
     /// - Throws: An error if adding the comment fails.
-    func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws
+    func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws -> String
 
     
     /// Removes a comment from a team's collection.

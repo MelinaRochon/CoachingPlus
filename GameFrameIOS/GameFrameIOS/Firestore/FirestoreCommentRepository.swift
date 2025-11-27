@@ -138,20 +138,24 @@ public final class FirestoreCommentRepository: CommentRepository {
      *   - commentDTO: The `CommentDTO` object containing the comment data to be added
      * - Throws: Throws an error if there is an issue adding the comment to Firestore
      */
-    public func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
+    @discardableResult
+    public func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws -> String {
+        let ref = commentCollection(teamDocId: teamDocId).document()
+        let commentId = ref.documentID
 
-        // Make sure the team document can be found with the team id given
-        let teamDocId = try await FirestoreTeamRepository().getTeamWithDocId(docId: teamDocId).id
+        let dbComment = DBComment(
+            commentId: commentId,
+            keyMomentId: commentDTO.keyMomentId,
+            gameId: commentDTO.gameId,
+            transcriptId: commentDTO.transcriptId,
+            uploadedBy: commentDTO.uploadedBy,
+            comment: commentDTO.comment,
+            createdAt: commentDTO.createdAt,
+            parentCommentId: commentDTO.parentCommentId
+        )
 
-        let commentDocument = commentCollection(teamDocId: teamDocId).document()
-        let documentId = commentDocument.documentID // get the document ID
-        
-        // Create a new comment object
-        let comment = DBComment(commentId: documentId, commentDTO: commentDTO)
-        
-        // Add the comment to the database
-        try commentDocument.setData(from: comment, merge: false)
-        print("done!")
+        try ref.setData(from: dbComment, merge: false)
+        return commentId
     }
     
     

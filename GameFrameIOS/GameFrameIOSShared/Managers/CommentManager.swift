@@ -92,9 +92,11 @@ public final class CommentManager {
      *   - commentDTO: The `CommentDTO` object containing the comment data to be added
      * - Throws: Throws an error if there is an issue adding the comment to Firestore
      */
-    public func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws {
+    @discardableResult
+    public func addNewComment(teamDocId: String, commentDTO: CommentDTO) async throws -> String {
         try await repo.addNewComment(teamDocId: teamDocId, commentDTO: commentDTO)
     }
+
     
     
     /**

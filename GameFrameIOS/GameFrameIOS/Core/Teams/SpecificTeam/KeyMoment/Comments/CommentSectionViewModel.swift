@@ -23,7 +23,16 @@ final class CommentSectionViewModel: ObservableObject {
      This will automatically update the view when the comments are loaded or modified.
      */
     @Published var comments: [DBComment] = []
-        
+    
+    private var commentRepo: CommentRepository!
+    private var notificationManager: NotificationManager?
+    private var teamManager: TeamManager?
+    private var transcriptModel: TranscriptModel?
+    private var playerModel: PlayerModel?
+    private var coachModel: CoachManager?
+    private var authManager: AuthenticationManager?
+    private var userManager: UserManager?
+
     // MARK: - Dependency Injection
     
     /// Injects the provided `DependencyContainer` into the current context.
@@ -34,6 +43,19 @@ final class CommentSectionViewModel: ObservableObject {
     /// or replacing dependencies at runtime.
     func setDependencies(_ dependencies: DependencyContainer) {
         self.dependencies = dependencies
+        // wire managers from the container
+        self.notificationManager = dependencies.notificationManager
+        self.teamManager = dependencies.teamManager
+        self.authManager = dependencies.authenticationManager
+
+        // create/use models that themselves need dependencies
+        let tModel = TranscriptModel()
+        tModel.setDependencies(dependencies)
+        self.transcriptModel = tModel
+
+        let pModel = PlayerModel()
+        pModel.setDependencies(dependencies)
+        self.playerModel = pModel
     }
 
     /**
@@ -136,22 +158,79 @@ final class CommentSectionViewModel: ObservableObject {
             }
 
             let authUser = try repo.getAuthenticatedUser()
+            let currentUserId = authUser.uid
+            print("THE CURRENT LOGGED IN USER: \(currentUserId)")
+            
+//            let user = try? await dependencies?.userManager.getUser(userId: currentUserId)
+            guard let user = try await dependencies?.userManager.getUser(userId: currentUserId) else {
+                print("⚠️ Could not load domain user for uid \(currentUserId)")
+                return
+            }
+            let currentUserDocId = user.id
+            let displayName = "\(user.firstName ?? "Someone") \(user.lastName ?? "")"
+
             let newComment = CommentDTO(
                 keyMomentId: keyMomentId,
                 gameId: gameId,
                 transcriptId: transcriptId,
-                uploadedBy: authUser.uid ?? "Unknown User",
+                uploadedBy: currentUserId ?? "Unknown User",
                 comment: text,
                 createdAt: Date(),
                 parentCommentId: parentCommentId
             )
             print("trying to add comment: \(text)")
-            try await dependencies?.commentManager.addNewComment(teamDocId: teamDocId, commentDTO: newComment)
+            let commentId = try await dependencies?.commentManager.addNewComment(teamDocId: teamDocId, commentDTO: newComment)
             print("success!")
             
-            // Refresh comments after adding
-            print("loading comments")
+            var recipients = Set<String>()
+            
+            let kmRecipients = try await recipientsForKeyMomentComment(
+                teamDocId: teamDocId,
+                gameId: gameId,
+                keyMomentId: keyMomentId,
+                currentUserDocId: currentUserId
+            )
+            recipients.formUnion(kmRecipients)
+
+
+            let isKeyMoment = !keyMomentId.isEmpty
+            let type: NotificationType = isKeyMoment ? .commentOnKeyMoment : .commentOnTranscript
+            let title: String = isKeyMoment
+                ? "New comment on a key moment"
+                : "New comment on a transcript"
+            let body: String = "\(displayName) commented: \"\(text)\""
+            print("notification body: \(body)")
+
+            for recipientUserDocId in recipients {
+                if recipientUserDocId == currentUserDocId { continue }
+                
+                guard let toUserDocId = try await dependencies?
+                    .userManager
+                    .getUser(userId: recipientUserDocId)?
+                    .id else {
+                    // if we can't resolve the user, skip this recipient
+                    continue
+                }
+                
+                _ = try await notificationManager?.createCommentNotification(
+                    toUserDocId: toUserDocId,
+                    playerDocId: nil,              // or a specific playerDocId if needed
+                    teamDocId: teamDocId,
+                    teamId: nil,                   // or team.teamId if you want
+                    gameId: gameId,
+                    keyMomentId: keyMomentId,
+                    transcriptId: transcriptId,
+                    commentId: commentId ?? "",
+                    type: type,
+                    title: title,
+                    body: body
+                )
+            }
+            print("success adding notif!")
+
+            // 5) Refresh UI
             await loadCommentsForTranscript(teamDocId: teamDocId, transcriptId: transcriptId)
+
         } catch {
             print("Error adding comment: \(error)")
         }
@@ -209,5 +288,50 @@ final class CommentSectionViewModel: ObservableObject {
             print("Error adding reply: \(error)")
         }
     }
+    
+    private func recipientsForKeyMomentComment(
+            teamDocId: String,
+            gameId: String,
+            keyMomentId: String,
+            currentUserDocId: String
+        ) async throws -> Set<String> {
+            var recipients = Set<String>()
+            print("recipientsForKeyMomentComment")
+            
+            // 1) Team -> coaches
+            if let team = try await dependencies?.teamManager.getTeamWithDocId(docId: teamDocId) {
+                for coachId in team.coaches where coachId != currentUserDocId {
+                    if coachId == currentUserDocId { continue }
+                    
+                    recipients.insert(coachId)
+                }
+            }
 
+            // 2) Key moment -> feedbackFor players
+            if let transcriptModel {
+                let allKeyMoments = try await transcriptModel.getAllTranscripts(
+                    gameId: gameId,
+                    teamDocId: teamDocId
+                ) ?? []
+                guard let km = allKeyMoments.first(where: { $0.keyMomentId == keyMomentId }) else {
+                    return recipients
+                }
+
+                let feedbackPlayers = km.feedbackFor ?? []
+                for player in feedbackPlayers {
+                    
+                let playerDocId = player.playerId
+
+                // playerModel might be optional, dbPlayer is NOT optional
+                if let playerModel {
+                    if playerDocId != currentUserDocId {
+                    recipients.insert(playerDocId)
+                }
+            }
+        }
+    }
+    print("final list:")
+    print(recipients)
+    return recipients
+    }
 }

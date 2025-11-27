@@ -110,4 +110,50 @@ public final class NotificationManager {
     public func deleteNotification(id: String) async throws {
         try await repo.deleteNotification(id: id)
     }
-}
+    
+    /// Creates a notification for a new comment or reply.
+      ///
+      /// - Parameters:
+      ///   - toUserDocId: The user who should receive this notification.
+      ///   - playerDocId: Optional player document ID (if relevant).
+      ///   - teamDocId: Firestore team document ID.
+      ///   - teamId: Logical team ID (DBTeam.teamId).
+      ///   - gameId: Game ID.
+      ///   - keyMomentId: Key moment ID if this is for a key moment, else `nil`.
+      ///   - transcriptId: Transcript ID.
+      ///   - commentId: The comment ID this notification refers to.
+      ///   - type: The notification type (e.g. `.commentOnKeyMoment`).
+      ///   - title: Short title for the notification.
+      ///   - body: Body text shown in lists.
+      @discardableResult
+      public func createCommentNotification(
+          toUserDocId: String,
+          playerDocId: String? = nil,
+          teamDocId: String?,
+          teamId: String?,
+          gameId: String?,
+          keyMomentId: String?,
+          transcriptId: String?,
+          commentId: String,
+          type: NotificationType,
+          title: String,
+          body: String
+      ) async throws -> String {
+          
+          let dto = NotificationDTO(
+              userDocId: toUserDocId,
+              playerDocId: playerDocId,
+              teamDocId: teamDocId,
+              teamId: teamId,
+              gameId: gameId,
+              keyMomentId: keyMomentId,
+              transcriptId: transcriptId,
+              commentId: commentId,
+              type: type,
+              title: title,
+              body: body
+          )
+          
+          return try await repo.createNotification(notificationDTO: dto)
+      }
+  }

@@ -12,9 +12,9 @@ import GameFrameIOSShared
 /**
  A Firestore-backed implementation of `NotificationRepository`.
 
- Notifications are stored in a top-level collection:
+ Notifications are stored under each user document:
 
- - `notifications/{notificationId}`
+ - `users/{userDocId}/notifications/{notificationId}`
 
  Each document is a `DBNotification` and contains:
  - `user_doc_id` to indicate which user this notification belongs to.
@@ -24,36 +24,50 @@ public final class FirestoreNotificationRepository: NotificationRepository {
     
     // MARK: - Firestore references
     
-    /// Top-level `notifications` collection in Firestore.
-    private let notificationsCollection = Firestore.firestore().collection("notifications")
+    /// Returns the `notifications` subcollection for a given user.
+    ///
+    /// Path:
+    /// - `users/{userDocId}/notifications`
+    private func notificationsCollection(for userDocId: String) -> CollectionReference {
+        Firestore.firestore()
+            .collection("users")
+            .document(userDocId)
+            .collection("notifications")
+    }
     
-    /**
-     Returns a reference to a specific notification document in Firestore.
-     
-     Path:
-     - `notifications/{id}`
-     
-     - Parameter id: The Firestore document ID of the notification.
-     - Returns: A `DocumentReference` pointing to the specified notification.
-     */
-    private func notificationDocument(id: String) -> DocumentReference {
-        notificationsCollection.document(id)
+    /// Finds a notification document by its `id` field across all users,
+    /// using a collection group query on `notifications`.
+    ///
+    /// - Parameter id: The notification's Firestore document ID stored in the `id` field.
+    /// - Returns: The first matching `DocumentSnapshot` if found, otherwise `nil`.
+    private func findNotificationDocument(id: String) async throws -> DocumentSnapshot? {
+        let snapshot = try await Firestore.firestore()
+            .collectionGroup("notifications")
+            .whereField(DBNotification.CodingKeys.id.rawValue, isEqualTo: id)
+            .limit(to: 1)
+            .getDocuments()
+        
+        return snapshot.documents.first
     }
     
     // MARK: - Create
     
     /**
      Creates a new notification in the Firestore database.
-     
+
      A new document is created under:
-     - `notifications/{notificationId}`
-     
+     - `users/{userDocId}/notifications/{notificationId}`
+
      - Parameter notificationDTO: A `NotificationDTO` containing the notification data.
      - Returns: The Firestore document ID of the newly created notification.
      - Throws: An error if the notification creation fails.
      */
     public func createNotification(notificationDTO: NotificationDTO) async throws -> String {
-        let docRef = notificationsCollection.document()
+        print("FirestoreNotificationRepository - createNotification")
+        print(notificationDTO.userDocId)
+        print("")
+        let collection = notificationsCollection(for: notificationDTO.userDocId)
+        let docRef = collection.document()
         let documentId = docRef.documentID
         
         // Build DBNotification from DTO
@@ -67,23 +81,31 @@ public final class FirestoreNotificationRepository: NotificationRepository {
     
     /**
      Retrieves a notification from Firestore by its document ID.
-     
-     - Parameter id: The Firestore document ID of the notification.
+
+     This uses a `collectionGroup("notifications")` query since
+     notifications are nested under each user.
+
+     - Parameter id: The Firestore document ID of the notification (stored in the `id` field).
      - Returns: A `DBNotification` if found, otherwise `nil`.
      - Throws: An error if retrieval or decoding fails.
      */
     public func getNotification(id: String) async throws -> DBNotification? {
-        try await notificationDocument(id: id).getDocument(as: DBNotification.self)
+        guard let doc = try await findNotificationDocument(id: id) else {
+            return nil
+        }
+        return try doc.data(as: DBNotification.self)
     }
     
     // MARK: - Read lists
     
     /**
      Retrieves all notifications for a specific user.
-     
-     The query filters by `user_doc_id` and orders by `created_at` (newest first).
-     If `limit` is provided, the result set is limited to that number of documents.
-     
+
+     The query is scoped to:
+     - `users/{userDocId}/notifications`
+
+     and orders by `created_at` (newest first).
+
      - Parameters:
        - userDocId: The Firestore document ID of the user who receives the notifications.
        - limit: Optional maximum number of notifications to return. If `nil`, all matching notifications are returned.
@@ -95,8 +117,7 @@ public final class FirestoreNotificationRepository: NotificationRepository {
         limit: Int?
     ) async throws -> [DBNotification] {
         
-        var query: Query = notificationsCollection
-            .whereField(DBNotification.CodingKeys.userDocId.rawValue, isEqualTo: userDocId)
+        var query: Query = notificationsCollection(for: userDocId)
             .order(by: DBNotification.CodingKeys.createdAt.rawValue, descending: true)
         
         if let limit = limit {
@@ -111,9 +132,9 @@ public final class FirestoreNotificationRepository: NotificationRepository {
     
     /**
      Retrieves all unread notifications for a specific user.
-     
+
      A notification is considered unread if `is_read == false`.
-     
+
      - Parameter userDocId: The Firestore document ID of the user.
      - Returns: An array of unread `DBNotification` objects (empty if none found).
      - Throws: An error if retrieval or decoding fails.
@@ -122,8 +143,7 @@ public final class FirestoreNotificationRepository: NotificationRepository {
         userDocId: String
     ) async throws -> [DBNotification] {
         
-        let snapshot = try await notificationsCollection
-            .whereField(DBNotification.CodingKeys.userDocId.rawValue, isEqualTo: userDocId)
+        let snapshot = try await notificationsCollection(for: userDocId)
             .whereField(DBNotification.CodingKeys.isRead.rawValue, isEqualTo: false)
             .order(by: DBNotification.CodingKeys.createdAt.rawValue, descending: true)
             .getDocuments()
@@ -137,34 +157,38 @@ public final class FirestoreNotificationRepository: NotificationRepository {
     
     /**
      Marks a specific notification as read.
-     
-     This sets `is_read` to `true` on:
-     - `notifications/{id}`
-     
+
+     This sets `is_read` to `true` on the matching document found in any
+     `users/{userDocId}/notifications` subcollection.
+
      - Parameter id: The Firestore document ID of the notification to update.
      - Throws: An error if the update fails.
      */
     public func markNotificationAsRead(id: String) async throws {
+        guard let doc = try await findNotificationDocument(id: id) else {
+            return
+        }
+        
         let data: [String: Any] = [
             DBNotification.CodingKeys.isRead.rawValue: true
         ]
         
-        try await notificationDocument(id: id).updateData(data as [AnyHashable: Any])
+        try await doc.reference.updateData(data as [AnyHashable: Any])
     }
     
     /**
      Marks all notifications as read for a given user.
-     
+
      This:
-     - Queries all notifications where `user_doc_id == userDocId` and `is_read == false`
+     - Queries all notifications in `users/{userDocId}/notifications`
+       where `is_read == false`
      - Updates `is_read` to `true` for each in a single batch operation.
-     
+
      - Parameter userDocId: The Firestore document ID of the user.
      - Throws: An error if the update fails.
      */
     public func markAllNotificationsAsRead(for userDocId: String) async throws {
-        let query = notificationsCollection
-            .whereField(DBNotification.CodingKeys.userDocId.rawValue, isEqualTo: userDocId)
+        let query = notificationsCollection(for: userDocId)
             .whereField(DBNotification.CodingKeys.isRead.rawValue, isEqualTo: false)
         
         let snapshot = try await query.getDocuments()
@@ -186,14 +210,17 @@ public final class FirestoreNotificationRepository: NotificationRepository {
     
     /**
      Deletes a notification from the database.
-     
-     Path:
-     - `notifications/{id}`
-     
+
+     This finds the document by `id` across all `notifications`
+     subcollections and deletes the first match.
+
      - Parameter id: The Firestore document ID of the notification to delete.
      - Throws: An error if deletion fails.
      */
     public func deleteNotification(id: String) async throws {
-        try await notificationDocument(id: id).delete()
+        guard let doc = try await findNotificationDocument(id: id) else {
+            return
+        }
+        try await doc.reference.delete()
     }
 }

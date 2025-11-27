@@ -50,6 +50,7 @@ public final class DependencyContainer: ObservableObject {
     public let transcriptManager: TranscriptManager
     public let teamMembershipManager: TeamMembershipPlanManager
     public let commentManager: CommentManager
+    public let notificationManager: NotificationManager
     public var currentGameContext: GameSessionContext?
     @Published public var currentGameRecordingsContext: GameRecordingsContext?
     
@@ -70,6 +71,7 @@ public final class DependencyContainer: ObservableObject {
             transcriptManager = TranscriptManager(repo: LocalTranscriptRepository())
             teamMembershipManager = TeamMembershipPlanManager(repo: LocalTeamMembershipPlanRepository())
             commentManager = CommentManager(repo: LocalCommentRepository())
+            notificationManager = NotificationManager(repo: LocalNotificationRepository())
         }
         else {
             print("Using Firestore Repositories (Firebase enabled)")
@@ -87,6 +89,7 @@ public final class DependencyContainer: ObservableObject {
             transcriptManager = TranscriptManager(repo: FirestoreTranscriptRepository())
             teamMembershipManager = TeamMembershipPlanManager(repo: FirestoreTeamMembershipPlanRepository())
             commentManager = CommentManager(repo: FirestoreCommentRepository())
+            notificationManager = NotificationManager(repo: FirestoreNotificationRepository())
         }
     }
 }
