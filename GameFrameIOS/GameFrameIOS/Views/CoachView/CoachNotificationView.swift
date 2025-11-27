@@ -15,8 +15,9 @@ struct CoachNotificationView: View {
     @StateObject private var notifModel = NotificationsViewModel()
     @EnvironmentObject private var dependencies: DependencyContainer
     
-    @State private var comments: [DBComment]?
-    
+//    @State private var comments: [DBComment]?
+    @State private var notifications: [DBNotification] = []
+
     @State private var isLoadingMyNotifs: Bool = false
     
     
@@ -33,42 +34,55 @@ struct CoachNotificationView: View {
                         AnyView(
                             CustomUIFields.customDivider("My notifications")
                         )},
-                    items: comments ?? [],
+                    items: notifications,
                     isLoading: isLoadingMyNotifs,
-                    rowLogo: "text.bubble",
+                    rowLogo: "bell",
                     isLoadingProgressViewTitle: "Searching for my activity…",
                     noItemsFoundIcon: "bubble.left",
                     noItemsFoundTitle: "No activity found at this time.",
                     noItemsFoundSubtitle: "Try again later.",
-                    destinationBuilder: { comment in
-                        
-                        // use the view-model’s mapping from gameId → teamId
-                        CoachSpecificKeyMomentLoaderView(
-                            teamId: notifModel.teamIdsByGame[comment.gameId] ?? "",
-                            gameId: comment.gameId,
-                            keyMomentId: comment.keyMomentId ?? ""
-                        )
+
+                    destinationBuilder: { notif in
+                        switch notif.type {
+                        case .comment:
+                            return AnyView(
+                                CoachSpecificKeyMomentLoaderView(
+                                    teamId: notif.teamDocId ?? "",
+                                    gameId: notif.gameId ?? "",
+                                    keyMomentId: notif.keyMomentId ?? ""
+                                )
+                            )
+                        case .gameRecordingReady:
+                            return AnyView(EmptyView()
+//                                CoachFullGameRecordingView(
+//                                    teamId: notif.teamId ?? "",
+//                                    gameId: notif.gameId,
+//                                    recordingId: notif.recordingId ?? ""
+                                )
+                        default:
+                            // if you add more enum cases later and don't want navigation for them yet
+                            return AnyView(EmptyView())
+                        }
                     },
-                    rowContent: { comment in
-                        let authorName = notifModel.authorNames[comment.uploadedBy] ?? "Unknown User"
-                        let gameTitle = notifModel.gameTitles[comment.gameId] ?? "Unknown Game"
-                        
-                        return AnyView(
-                            VStack (alignment: .leading, spacing: 4) {
-                                Text("\(authorName) commented on \(gameTitle)")
+                    // MARK: - Row content
+                    rowContent: { notif in
+                        AnyView(
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(notif.title)          // comes from DBNotification
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                                     .multilineTextAlignment(.leading)
-                                    .lineLimit(1)
+                                    .lineLimit(2)
                                     .truncationMode(.tail)
                                     .foregroundStyle(.black)
-                                Text(relative(comment.createdAt))
+                                
+                                Text(relative(notif.createdAt))
                                     .font(.caption)
                                     .padding(.leading, 1)
                                     .multilineTextAlignment(.leading)
                                     .foregroundStyle(.gray)
                             }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         )
                     }
                 )
@@ -80,7 +94,7 @@ struct CoachNotificationView: View {
         .task {
             // inject deps and load notifications when the view appears
             notifModel.setDependencies(dependencies)
-            await loadNotifications()
+            await loadCoachNotifications()
         }
     }
     
@@ -93,12 +107,12 @@ struct CoachNotificationView: View {
         return f.localizedString(for: date, relativeTo: Date())
     }
     
-    private func loadNotifications() async {
+    private func loadCoachNotifications() async {
         do {
-            isLoadingMyNotifs = true
-            await notifModel.loadCoachLastWeekComments(coachId: coachId)
-            // copy from VM into local state, just like teams
-            comments = notifModel.recentComments
+            isLoadingMyNotifs = true            
+            try await notifModel.loadNotifications(userId: coachId)
+            notifications = notifModel.notifications
+            print("🔔 View copying \(notifModel.notifications.count) notifications into state")
             isLoadingMyNotifs = false
         } catch {
             isLoadingMyNotifs = false

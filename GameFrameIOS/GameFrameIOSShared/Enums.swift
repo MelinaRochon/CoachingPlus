@@ -77,9 +77,6 @@ public enum NotificationType: String, Codable {
     case keyMomentFeedback
     case transcriptFeedback
     
-    case commentOnKeyMoment
-    case commentOnTranscript
+    case comment
     case replyToComment
 }
-
-

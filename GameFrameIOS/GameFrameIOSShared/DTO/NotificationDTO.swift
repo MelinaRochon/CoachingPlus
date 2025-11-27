@@ -40,7 +40,6 @@ public struct NotificationDTO {
     
     public let type: NotificationType
     public let title: String
-    public let body: String
 
     public init(
         userDocId: String,
@@ -52,8 +51,7 @@ public struct NotificationDTO {
         transcriptId: String? = nil,
         commentId: String? = nil,
         type: NotificationType,
-        title: String,
-        body: String
+        title: String
     ) {
         self.userDocId = userDocId
         self.playerDocId = playerDocId
@@ -65,6 +63,5 @@ public struct NotificationDTO {
         self.commentId = commentId
         self.type = type
         self.title = title
-        self.body = body
     }
 }

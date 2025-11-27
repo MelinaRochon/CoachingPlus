@@ -116,6 +116,7 @@ public final class FirestoreNotificationRepository: NotificationRepository {
         userDocId: String,
         limit: Int?
     ) async throws -> [DBNotification] {
+        print("Getting notifications for user \(userDocId)")
         
         var query: Query = notificationsCollection(for: userDocId)
             .order(by: DBNotification.CodingKeys.createdAt.rawValue, descending: true)
@@ -125,10 +126,23 @@ public final class FirestoreNotificationRepository: NotificationRepository {
         }
         
         let snapshot = try await query.getDocuments()
-        return snapshot.documents.compactMap { doc in
-            try? doc.data(as: DBNotification.self)
+        print("📄 Raw snapshot doc count: \(snapshot.documents.count)")
+        
+        var results: [DBNotification] = []
+        
+        for doc in snapshot.documents {
+            do {
+                let notif = try doc.data(as: DBNotification.self)
+                results.append(notif)
+            } catch {
+                print("❌ Failed to decode DBNotification for doc \(doc.documentID): \(error)")
+                print("   Raw data: \(doc.data())")
+            }
         }
+        
+        return results
     }
+
     
     /**
      Retrieves all unread notifications for a specific user.

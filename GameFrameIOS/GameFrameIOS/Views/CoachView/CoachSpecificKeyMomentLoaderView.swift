@@ -31,10 +31,10 @@ struct CoachSpecificKeyMomentLoaderView: View {
         self.gameId = gameId
         self.keyMomentId = keyMomentId
         
-//        print("CoachSpecificKeyMomentLoaderView init")
-//        print("   teamId: \(teamId)")
-//        print("   gameId: \(gameId)")
-//        print("   keyMomentId: \(keyMomentId)")
+        print("CoachSpecificKeyMomentLoaderView init")
+        print("   teamId: \(teamId)")
+        print("   gameId: \(gameId)")
+        print("   keyMomentId: \(keyMomentId)")
     }
     
     var body: some View {
@@ -80,14 +80,11 @@ struct CoachSpecificKeyMomentLoaderView: View {
     @MainActor
     private func load() async {
         do {
+            let teamDocId = teamId
             // 1) Load team using the teamId passed into the loader
-            guard let teamObj = try await dependencies.teamManager.getTeam(teamId: teamId) else {
-                self.error = "Team not found."
-                self.isLoading = false
-                return
-            }
-            let teamDocId = teamObj.id
-
+            let teamObj = try await dependencies.teamManager.getTeamWithDocId(docId: teamDocId)
+            let teamId = teamObj.teamId
+            
             // 2) Load game
             guard let gameObj = try await dependencies.gameManager.getGame(
                 gameId: gameId,
@@ -106,6 +103,13 @@ struct CoachSpecificKeyMomentLoaderView: View {
                 gameId: gameId,
                 teamDocId: teamDocId
             ) ?? []
+            
+            print("🔍 Loader – keyMoment from notification: \(keyMomentId)")
+            print("🔍 Loaded \(allKeyMoments.count) key moments for game \(gameId)")
+
+            for km in allKeyMoments {
+                print("   ↳ keyMomentTranscript: keyMomentId=\(km.keyMomentId)")
+            }
 
             // 4) Pick the key moment matching our keyMomentId
             guard let kmObj = allKeyMoments.first(where: { $0.keyMomentId == keyMomentId }) else {

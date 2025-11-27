@@ -17,6 +17,7 @@ final class NotificationsViewModel: ObservableObject {
     @Published var gameTitles: [String: String] = [:]   // gameId -> title
     @Published var authorNames: [String: String] = [:]  // authorId -> "First Last"
     @Published var teamIdsByGame: [String: String] = [:] // 👈 NEW: gameId -> teamId
+    @Published var notifications: [DBNotification] = []
 
     private var dependencies: DependencyContainer?
     private let teamModel = TeamModel()
@@ -191,7 +192,25 @@ final class NotificationsViewModel: ObservableObject {
 
         return result
     }
+    
 
+    func loadNotifications(userId: String) async throws {
+        print("🔔 Loading coach notifications for user: \(userId)")
+        guard let repo = dependencies else {
+            print("⚠️ Dependencies not set")
+            return
+        }
+        
+        let userDocId = try await repo.userManager.getUser(userId: userId)?.id
+        
+        // Replace this with your real repo call:
+        let notifs = try await repo.notificationManager
+            .getNotificationsForUser(userDocId: userDocId ?? userId)
+        print("🔔 Fetched \(notifs.count) notifications from backend")
 
+        await MainActor.run {
+            self.notifications = notifs
+        }
+    }
 }
 

@@ -59,3 +59,4 @@ enum TranscriptTypeEnum {
     case keyMoment
     case fullGame
 }
+

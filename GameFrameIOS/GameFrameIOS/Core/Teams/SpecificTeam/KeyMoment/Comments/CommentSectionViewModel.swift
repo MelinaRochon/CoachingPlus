@@ -92,9 +92,6 @@ final class CommentSectionViewModel: ObservableObject {
      It also replaces the `uploadedBy` field with the user's full name.
      */
     func loadCommentsForTranscript(teamDocId: String, transcriptId: String) async {
-        print("LOADCOMMENTS$TRANSCRIPTS")
-        print(teamDocId)
-        print(transcriptId)
         guard !teamDocId.isEmpty, !transcriptId.isEmpty else {
             print("Invalid teamId or transcriptId")
             return
@@ -168,6 +165,8 @@ final class CommentSectionViewModel: ObservableObject {
             }
             let currentUserDocId = user.id
             let displayName = "\(user.firstName ?? "Someone") \(user.lastName ?? "")"
+            
+            print("keyMomendId: \(keyMomentId)")
 
             let newComment = CommentDTO(
                 keyMomentId: keyMomentId,
@@ -194,12 +193,8 @@ final class CommentSectionViewModel: ObservableObject {
 
 
             let isKeyMoment = !keyMomentId.isEmpty
-            let type: NotificationType = isKeyMoment ? .commentOnKeyMoment : .commentOnTranscript
-            let title: String = isKeyMoment
-                ? "New comment on a key moment"
-                : "New comment on a transcript"
-            let body: String = "\(displayName) commented: \"\(text)\""
-            print("notification body: \(body)")
+            let type: NotificationType = .comment
+            let title: String = "\(displayName) commented: \"\(text)\""
 
             for recipientUserDocId in recipients {
                 if recipientUserDocId == currentUserDocId { continue }
@@ -223,7 +218,6 @@ final class CommentSectionViewModel: ObservableObject {
                     commentId: commentId ?? "",
                     type: type,
                     title: title,
-                    body: body
                 )
             }
             print("success adding notif!")

@@ -26,7 +26,7 @@ import Foundation
 ///   - `body`: Description/body text for the notification.
 ///   - `createdAt`: When the notification was created.
 ///   - `isRead`: Whether the user has opened / read this notification.
-public struct DBNotification: Codable {
+public struct DBNotification: Identifiable, Codable {
     
     public let id: String
     public let userDocId: String
@@ -42,7 +42,6 @@ public struct DBNotification: Codable {
     
     public let type: NotificationType
     public let title: String
-    public let body: String
     
     public let createdAt: Date
     public var isRead: Bool
@@ -61,7 +60,6 @@ public struct DBNotification: Codable {
         commentId: String? = nil,
         type: NotificationType,
         title: String,
-        body: String,
         createdAt: Date = Date(),
         isRead: Bool = false
     ) {
@@ -76,7 +74,6 @@ public struct DBNotification: Codable {
         self.commentId = commentId
         self.type = type
         self.title = title
-        self.body = body
         self.createdAt = createdAt
         self.isRead = isRead
     }
@@ -93,7 +90,6 @@ public struct DBNotification: Codable {
         self.commentId = notificationDTO.commentId
         self.type = notificationDTO.type
         self.title = notificationDTO.title
-        self.body = notificationDTO.body
         self.isRead = false                     // new notifications start unread
         self.createdAt = Date()                 // stamp creation time
     }
@@ -112,7 +108,6 @@ public struct DBNotification: Codable {
         case commentId = "comment_id"
         case type = "type"
         case title = "title"
-        case body = "body"
         case createdAt = "created_at"
         case isRead = "is_read"
     }
@@ -136,7 +131,6 @@ public struct DBNotification: Codable {
         
         self.type = try container.decode(NotificationType.self, forKey: .type)
         self.title = try container.decode(String.self, forKey: .title)
-        self.body = try container.decode(String.self, forKey: .body)
         
         self.createdAt = try container.decode(Date.self, forKey: .createdAt)
         self.isRead = try container.decode(Bool.self, forKey: .isRead)
@@ -159,7 +153,6 @@ public struct DBNotification: Codable {
         
         try container.encode(self.type, forKey: .type)
         try container.encode(self.title, forKey: .title)
-        try container.encode(self.body, forKey: .body)
         
         try container.encode(self.createdAt, forKey: .createdAt)
         try container.encode(self.isRead, forKey: .isRead)

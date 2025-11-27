@@ -136,8 +136,7 @@ public final class NotificationManager {
           transcriptId: String?,
           commentId: String,
           type: NotificationType,
-          title: String,
-          body: String
+          title: String
       ) async throws -> String {
           
           let dto = NotificationDTO(
@@ -150,8 +149,7 @@ public final class NotificationManager {
               transcriptId: transcriptId,
               commentId: commentId,
               type: type,
-              title: title,
-              body: body
+              title: title
           )
           
           return try await repo.createNotification(notificationDTO: dto)
