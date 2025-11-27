@@ -54,6 +54,8 @@ public final class DependencyContainer: ObservableObject {
     public var currentGameContext: GameSessionContext?
     @Published public var currentGameRecordingsContext: GameRecordingsContext?
     
+    @Published var hasUnreadNotifications: Bool = false
+    
     public init(useLocalRepositories: Bool) {
         if useLocalRepositories {
             print("⚠️ Using Local Repositories (Firebase disabled)")

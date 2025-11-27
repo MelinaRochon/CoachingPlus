@@ -19,6 +19,7 @@ import SwiftUI
 struct CoachMainTabView: View {
     
     let coachId: String
+    @EnvironmentObject private var dependencies: DependencyContainer
     
     @State private var showCoachRecordingConfig = false // Controls modal visibility
     @State private var selectedTab: Int = 3 // Track selected tab
@@ -107,6 +108,9 @@ struct CoachMainTabView: View {
             CoachRecordingConfigView(showLandingPageView: $showLandingPageView)
         }.navigationBarBackButtonHidden(true) // Hides the back button
             .ignoresSafeArea(.keyboard, edges: .bottom) // tab stays at bottom
+            .task {
+                    await preloadUnreadNotificationsOnLaunch()
+                }
     }
     
     // Helper function for items (changes icon fill when selected)
@@ -120,6 +124,16 @@ struct CoachMainTabView: View {
                     .frame(width: 24, height: 24)
                     .foregroundColor(Color(.darkGray))
 //                    .foregroundColor(selectedTab == tabIndex ? Color(.darkGray) : Color(.darkGray))// Highlight selected tab
+                
+                    .overlay(alignment: .topTrailing) {
+                                        if tabIndex == 1 && dependencies.hasUnreadNotifications {
+                                            Circle()
+                                                .fill(Color.red)
+                                                .frame(width: 8, height: 8)
+                                                .offset(x: 4, y: -4) // tweak until it looks nice
+                                        }
+                                    }
+                
                 Text(label)
                     .font(.caption)
                     .foregroundColor(Color(.darkGray))
@@ -129,6 +143,29 @@ struct CoachMainTabView: View {
         }
         .accessibilityIdentifier("navBar.tab.\(label.lowercased())")
     }
+    
+    private func preloadUnreadNotificationsOnLaunch() async {
+        do {
+            // Map from coachId (auth uid) to domain user doc id
+            guard let user = try await dependencies.userManager.getUser(userId: coachId) else {
+                print("⚠️ Could not resolve user for coachId \(coachId)")
+                return
+            }
+            let userDocId = user.id
+            print("🔍 Preloading notifications for userDocId: \(userDocId)")
+
+            let recent = try await dependencies.notificationManager
+                .getNotificationsForUser(userDocId: userDocId, limit: 20)
+
+            await MainActor.run {
+                dependencies.hasUnreadNotifications = recent.contains { !$0.isRead }
+                print("🔴 hasUnreadNotifications on launch = \(dependencies.hasUnreadNotifications)")
+            }
+        } catch {
+            print("❌ Failed to preload notifications: \(error)")
+        }
+    }
+
 }
 
 #Preview {

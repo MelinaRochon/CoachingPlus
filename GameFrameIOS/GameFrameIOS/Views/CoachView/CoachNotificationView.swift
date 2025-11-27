@@ -143,6 +143,9 @@ struct CoachNotificationView: View {
             try await notifModel.loadNotifications(userId: coachId)
             notifications = notifModel.notifications
             print("🔔 View copying \(notifModel.notifications.count) notifications into state")
+            
+            dependencies.hasUnreadNotifications = notifications.contains { !$0.isRead }
+
             isLoadingMyNotifs = false
         } catch {
             isLoadingMyNotifs = false
@@ -168,6 +171,9 @@ struct CoachNotificationView: View {
                     copy[idx].isRead = true
                 }
                 notifications = copy
+                
+                dependencies.hasUnreadNotifications = notifications.contains { !$0.isRead }
+
             } catch {
                 print("❌ Failed to mark notification as read: \(error)")
             }
