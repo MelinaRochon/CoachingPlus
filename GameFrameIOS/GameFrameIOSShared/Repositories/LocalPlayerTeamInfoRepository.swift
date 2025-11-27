@@ -29,6 +29,14 @@ public final class LocalPlayerTeamInfoRepository: PlayerTeamInfoRepository {
         return playerTeamInfo
     }
     
+    public func getPlayerTeamInfoWithPlayerId(playerId: String, teamId: String) async throws -> DBPlayerTeamInfo? {
+        guard let playerTeamInfo = playerTeamInfos.first(where: { $0.id == teamId}) else {
+            return nil
+        }
+        
+        return playerTeamInfo
+    }
+    
     public func updatePlayerTeamInfoJerseyAndNickname(teamId: String, playerDocId: String, jersey: Int?, nickname: String?) async throws {
         guard let index = playerTeamInfos.firstIndex(where: { $0.id == teamId}) else {
             return

@@ -301,7 +301,7 @@ struct PlayerProfileView: View {
                     }
                     
                     if let playerTeamInfo = viewModel.playerTeamInfo {
-                        jersey = playerTeamInfo.jerseyNum
+                        jersey = playerTeamInfo.jerseyNum ?? 0
                         nickname = playerTeamInfo.nickName ?? ""
                     }
                     
@@ -390,7 +390,7 @@ struct PlayerProfileView: View {
             }
             
             if let playerTeamInfo = viewModel.playerTeamInfo {
-                jersey = playerTeamInfo.jerseyNum
+                jersey = playerTeamInfo.jerseyNum ?? 0
                 nickname = playerTeamInfo.nickName ?? ""
             }
             

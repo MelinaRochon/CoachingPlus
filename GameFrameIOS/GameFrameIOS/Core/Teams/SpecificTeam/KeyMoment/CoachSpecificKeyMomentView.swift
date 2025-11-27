@@ -95,6 +95,7 @@ struct CoachSpecificKeyMomentView: View {
     
     /// Stores all players mapped into a feedback structure with selection state.
     @State private var playersFeedback: [PlayerFeedback] = []
+    @State private var deleteConfirmationShow: Bool = false
 
     
     var body: some View {
@@ -263,50 +264,51 @@ struct CoachSpecificKeyMomentView: View {
         }
         .sheet(isPresented: $isEditing) {
             NavigationView {
-                FeedbackForView(dismissOnRemove: $dismissOnRemove, allPlayers: team.players, feedbackTranscript: $feedbackKeyMoment, playersFeedback: $playersFeedback)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button(action: {
-                                resetData()
-                                isInitialLoadComplete = false
-                                isEditing = false // Dismiss the full-screen cover
-                            }) {
-                                Text("Cancel")
+                FeedbackForView(
+                    dismissOnRemove: $dismissOnRemove,
+                    allPlayers: team.players,
+                    feedbackTranscript: $feedbackKeyMoment,
+                    playersFeedback: $playersFeedback
+                )
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel", systemImage: "xmark") {
+                            resetData()
+                            isInitialLoadComplete = false
+                            isEditing = false // Dismiss the full-screen cover
+                        }
+                    }
+                    
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save", systemImage: "checkmark") {
+                            saveData()
+                            isInitialLoadComplete = false
+                            isEditing = false // Dismiss the full-screen cover
+                        }
+                        .disabled(!hasChanges || !isInitialLoadComplete)
+                    }
+                }
+                .task {
+                    do {
+                        
+                        if let allPlayers = team.players {
+                            print("getting all players = \(allPlayers)")
+                            let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
+                            // Map to include selection state
+                            playersFeedback = players.map { (id, name, photoUrl) in
+                                let isSelected = feedbackFor.contains { $0.playerId == id }
+                                return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
                             }
                         }
                         
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(action: {
-                                saveData()
-                                isInitialLoadComplete = false
-                                isEditing = false // Dismiss the full-screen cover
-                            }) {
-                                Text("Save")
-                            }
-                            .disabled(!hasChanges || !isInitialLoadComplete)
-                        }
+                        originalTranscriptText = feedbackKeyMoment
+                        originalSelectedPlayers = feedbackFor.map { $0.playerId }
+                        isInitialLoadComplete = true
+                        
+                    } catch {
+                        print("Error when fetching specific footage info: \(error)")
                     }
-                    .task {
-                        do {
-                            
-                            if let allPlayers = team.players {
-                                print("getting all players = \(allPlayers)")
-                                let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
-                                // Map to include selection state
-                                playersFeedback = players.map { (id, name, photoUrl) in
-                                    let isSelected = feedbackFor.contains { $0.playerId == id }
-                                    return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
-                                }
-                            }
-                            
-                            originalTranscriptText = feedbackKeyMoment
-                            originalSelectedPlayers = feedbackFor.map { $0.playerId }
-                            isInitialLoadComplete = true
-                            
-                        } catch {
-                            print("Error when fetching specific footage info: \(error)")
-                        }
-                    }
+                }
             }
         }
         .onAppear {
@@ -324,18 +326,25 @@ struct CoachSpecificKeyMomentView: View {
             commentViewModel.setDependencies(dependencies)
         }
         .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                if !isEditing {
-                    Button {
-                        withAnimation {
-                            isEditing.toggle()
-                        }
-                    } label: {
-                        Text("Edit")
-                    }
-                    .frame(width: 40)
-                    .foregroundColor(.red)
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Delete", systemImage: "trash") {
+                    deleteConfirmationShow = true
                 }
+            }
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    withAnimation {
+                        isEditing.toggle()
+                    }
+                } label: {
+                    Text("Edit")
+                }
+                .frame(width: 40)
+                .foregroundColor(.red)
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
@@ -355,6 +364,35 @@ struct CoachSpecificKeyMomentView: View {
                     }
             } catch {
                 print("Error when fetching specific footage info: \(error)")
+            }
+        }
+        .alert(
+            "Are you sure you want to delete this feedback? This will remove the transcript and its associated key moment. This action cannot be undone.",
+            isPresented: $deleteConfirmationShow
+            
+        ) {
+            Button(role: .destructive, action: {
+                isInitialLoadComplete = false
+                Task {
+                    do {
+                        try await transcriptModel.removeTranscript(
+                            gameId: game.gameId,
+                            teamId: team.teamId,
+                            transcriptId: specificKeyMoment.transcriptId,
+                            keyMomentId: specificKeyMoment.keyMomentId
+                        )
+                        dismiss()
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                }
+            }) {
+                Text("Delete")
+            }
+            Button(role: .cancel, action: {
+                deleteConfirmationShow = false
+            }) {
+                Text("Cancel")
             }
         }
     }

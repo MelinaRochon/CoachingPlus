@@ -26,6 +26,7 @@ public protocol PlayerTeamInfoRepository {
     /// - Returns: A `DBPlayerTeamInfo` object if found, otherwise `nil`.
     func getPlayerTeamInfo(playerDocId: String, teamId: String) async throws -> DBPlayerTeamInfo?
 
+    func getPlayerTeamInfoWithPlayerId(playerId: String, teamId: String) async throws -> DBPlayerTeamInfo?
     
     /// Updates the player's jersey number and/or nickname for a specific team.
     /// Only non-nil parameters will be updated.

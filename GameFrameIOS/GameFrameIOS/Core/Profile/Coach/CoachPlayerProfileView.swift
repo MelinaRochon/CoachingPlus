@@ -226,7 +226,7 @@ struct CoachPlayerProfileView: View {
                     }
                     if let playerTeamInfo = profileModel.playerTeamInfo {
                         nickname = playerTeamInfo.nickName ?? ""
-                        jerseyNum = playerTeamInfo.jerseyNum
+                        jerseyNum = playerTeamInfo.jerseyNum ?? 0
                     }
                     if let user = profileModel.user {
                         firstName = user.firstName
@@ -460,7 +460,7 @@ struct CoachEditPlayerProfileView: View {
                                 }
                                 if let playerTeamInfo = profileModel.playerTeamInfo {
                                     nickname = playerTeamInfo.nickName ?? ""
-                                    jerseyNum = playerTeamInfo.jerseyNum
+                                    jerseyNum = playerTeamInfo.jerseyNum ?? 0
                                 }
                                 if let user = profileModel.user {
                                     firstName = user.firstName

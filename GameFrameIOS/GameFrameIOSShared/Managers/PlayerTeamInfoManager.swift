@@ -31,6 +31,10 @@ public final class PlayerTeamInfoManager {
         return try await repo.getPlayerTeamInfo(playerDocId: playerDocId, teamId: teamId)
     }
     
+    public func getPlayerTeamInfoWithPlayerId(playerId: String, teamId: String) async throws -> DBPlayerTeamInfo? {
+        return try await repo.getPlayerTeamInfoWithPlayerId(playerId: playerId, teamId: teamId)
+    }
+    
     
     /// Updates the jersey number and/or nickname fields in a player's team info document.
     /// Only the provided (non-nil) fields will be updated.

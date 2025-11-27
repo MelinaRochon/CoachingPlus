@@ -21,7 +21,7 @@ struct CoachMainTabView: View {
     let coachId: String
     
     @State private var showCoachRecordingConfig = false // Controls modal visibility
-    @State private var selectedTab: Int = 1 //3 // Track selected tab
+    @State private var selectedTab: Int = 3 // Track selected tab
     @Binding var showLandingPageView: Bool
     
     let homeView = CoachHomePageView()

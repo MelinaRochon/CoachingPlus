@@ -16,57 +16,55 @@ struct SearchTranscriptView: View {
     let game: DBGame
     let team: DBTeam
     let destinationBuilder: (keyMomentTranscript?) -> AnyView
-        
+    
     var body: some View {
         // Iterate through each games
         // Safely unwrap prefix to get the first N games, or return the full list if nil.
         let recordings = prefix.map { Array(transcripts.prefix($0)) } ?? transcripts
         ForEach(recordings, id: \.id) { recording in
-            HStack(alignment: .center) {
-                /// Navigation to `CoachSpecificTranscriptView` when a transcript is selected.
-                NavigationLink(destination: destinationBuilder(recording)) {
+            /// Navigation to `CoachSpecificTranscriptView` when a transcript is selected.
+            NavigationLink(destination: destinationBuilder(recording)) {
+                VStack {
                     transcriptRow(for: recording)
+                    Divider()
                 }
+                .padding(.horizontal, 15)
             }
         }
     }
     
     @ViewBuilder
     private func transcriptRow(for recording: keyMomentTranscript) -> some View {
-        HStack(alignment: .center) {
+        HStack {
+            Image(systemName: "waveform.and.mic")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 30, height: 30)
+                .padding(.horizontal, 5)
+            
             if let gameStartTime = game.startTime {
-                let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
-                Text(formatDuration(durationInSeconds))
-                    .bold()
-                    .font(.headline)
-                    .frame(width: 80)
-                    .multilineTextAlignment(.leading)
-                Spacer()
-                
-                VStack(alignment: .leading) {
+                VStack(spacing: 4) {
+                    let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
+                    Text(formatDuration(durationInSeconds))
+                        .bold()
+                        .font(.headline)
+                        .foregroundColor(Color.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Text("\(recording.transcript)")
                         .font(.caption)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 2)
                         .lineLimit(2)
-                        .padding(.top, 0)
-                    
-                    if let feedback = recording.feedbackFor {
-                        if let players = team.players {
-                            if players.count == feedback.count {
-                                Text("All").font(.caption)
-                                    .foregroundStyle(.red)
-                            } else {
-                                let names = feedback.map { $0.firstName + " " + $0.lastName }.joined(separator: ", ")
-                                Text(names)
-                                    .font(.caption2)
-                                    .foregroundStyle(.red)
-                            }
-                        }
-                    }
+                        .foregroundColor(Color.black)
                 }
             }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .foregroundColor(.gray)
+                .padding(.leading)
+                .padding(.trailing, 5)
+            
         }
+        .padding(.vertical, 5)        
     }
 }

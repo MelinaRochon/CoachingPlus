@@ -108,7 +108,7 @@ struct SelectedRecentGameView: View {
                         if !canStartRecording {
                             VStack {
                                 if userType == .coach {
-                                    NavigationLink(destination: CoachSpecificFootageView(game: selectedGame.game, team: selectedGame.team)) {
+                                    NavigationLink(destination: CoachSpecificFootageView(game: selectedGame.game, team: selectedGame.team, gameModel: GameModel())) {
                                         navigationLabel()
                                     }
 

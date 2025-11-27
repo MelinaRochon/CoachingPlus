@@ -380,7 +380,7 @@ final class AudioRecordingModel: ObservableObject {
             firstName: user.firstName,
             lastName: user.lastName,
             nickname: playerTeamInfo.nickName,
-            jersey: playerTeamInfo.jerseyNum
+            jersey: playerTeamInfo.jerseyNum ?? 0
         )
 
         return playerObject
@@ -399,4 +399,57 @@ final class AudioRecordingModel: ObservableObject {
             startTime: startTime
         )
     }
+    
+    /// Loads detailed player information for a given player ID.
+    ///
+    /// - Parameter playerId: The player's ID.
+    /// - Returns: A `PlayerTranscriptInfo` object, or `nil` if not found.
+    func loadAllPlayersInfo(teamId: String) async throws {
+        guard let team = try await dependencies?.teamManager.getTeam(teamId: teamId) else {
+            print("Unable to get team. abort")
+            // TODO: Throw error
+            return
+        }
+        
+        if let playerIds = team.players {
+            
+            
+            // get the user info
+            guard let users = try await dependencies?.userManager.getAllUsers(userIds: playerIds) else {
+                print("no user found. abort")
+                return
+            }
+            
+            var tmpPlayers: [PlayerTranscriptInfo] = []
+            for user in users {
+                
+                guard let userId = user.userId else {
+                    print("USer id should not be nil")
+                    // TODO: Throw error
+                    return
+                }
+                // Get the team player info
+                guard let playerTeamInfo = try await dependencies?.playerTeamInfoManager.getPlayerTeamInfoWithPlayerId(playerId: userId, teamId: teamId) else {
+                    print("Could not find playerTeamInfo for \(userId). Abort")
+                    // TODO: Manage the Throw error
+                    throw PlayerTeamInfoError.playerTeamInfoNotFound
+                }
+                
+                // create an object to store the player's info
+                let playerObject = PlayerTranscriptInfo(
+                    playerId: userId,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    nickname: playerTeamInfo.nickName,
+                    jersey: playerTeamInfo.jerseyNum ?? 0
+                )
+                
+                tmpPlayers.append(playerObject)
+                
+            }
+            
+            players = tmpPlayers
+        }
+    }
+
 }

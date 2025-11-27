@@ -23,35 +23,90 @@ struct FilterTranscriptsListView: View {
     @State var userType: UserType
     
     var body: some View {
-        VStack {
-            List {
-                // First section: Sorting options (Time)
-                Section {
-                    // Toggle switch to sort by time
-                    Toggle("Sort By Time", isOn: $sortByTime)
+        VStack(alignment: .center) {
+            VStack(alignment: .center) {
+                Text("Filtering Options")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                Text("Filter feedback by player, position, or sort by time.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+            }
+            Divider()
+            VStack(alignment: .leading, spacing: 0) {
+                Button {
+                    sortByTime.toggle()
+                } label: {
+                    HStack {
+                        Text("Sort By Time").foregroundStyle(.black)
+                        Spacer()
+                        
+                        Image(systemName: sortByTime ? "checkmark.circle.fill" : "circle").foregroundStyle(.red)
+                    }
+                    .contentShape(Rectangle())
+                    .frame(height: 40)
+                    
                 }
                 
                 if userType == .coach {
-                    // Second section: Advanced filter options
-                    Section (header: HStack {
-                        Text("Advanced") // Section header text
-                    }) {
-                        
-                        // Toggle switch to enable or disable sorting by player
-                        Toggle("Sort By Player", isOn: $sortByPlayer)
-                        
-                        // Show the player selection picker only if "Sort By Player" is enabled
-                        if (sortByPlayer == true && userType == .coach) {
-                            Picker("Select Players", selection: $playerSelectedIndex) {
-                                ForEach(playersNames.indices, id: \.self) { i in
-                                    Text(self.playersNames[i].1).tag(i as Int)
-                                }
-                            }
-                            // TODO: Reimplement this so we can filter multiple players at once
+                    CustomUIFields.customDivider("Advanced")
+                        .padding(.top, 20)
+                    
+                    Button {
+                        sortByPlayer.toggle()
+                    } label: {
+                        HStack {
+                            Text("Sort By Player").foregroundStyle(.black)
+                            Spacer()
+                            
+                            Image(systemName: sortByPlayer ? "checkmark.circle.fill" : "circle").foregroundStyle(.red)
                         }
+                        .contentShape(Rectangle())
+                        .frame(height: 40)
+                    }
+                    
+                    if sortByPlayer == true {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 5) {
+                                Text("Players")
+                                    .font(.footnote)
+                                    .fontWeight(.semibold)
+                            }
+                            
+                            Button(action: {
+                                
+                            }) {
+                                HStack {
+                                    Text("Select a Player")
+                                        .foregroundStyle(.black)
+                                    Spacer()
+                                    // TODO: Make sure the players filter is working
+                                    Picker("Select Players", selection: $playerSelectedIndex) {
+                                        ForEach(playersNames.indices, id: \.self) { i in
+                                            Text(self.playersNames[i].1).tag(i as Int)
+                                        }
+                                    }
+                                }
+                                .font(.callout)
+                                .frame(height: 40)
+                                .padding(.leading, 15)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(.gray, lineWidth: 1)
+                                )
+                            }
+                            .foregroundColor(.black)
+                        }
+                        .padding(.top, 10)
                     }
                 }
-            }.scrollDisabled(true) // Disables scrolling for this list
+            }
+            .padding(.top, 5)
+            .padding(.horizontal, 15)
+            
+            Spacer()
+
         }
     }
 }

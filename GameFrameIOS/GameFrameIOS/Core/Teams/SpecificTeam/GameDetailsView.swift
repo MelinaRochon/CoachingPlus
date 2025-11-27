@@ -48,134 +48,134 @@ struct GameDetailsView: View {
 
     @State private var removeGame: Bool = false
     @Binding var dismissOnRemove: Bool
+    
+    @Binding var gameTitle: String
 
     var body: some View {
         NavigationView {
-            VStack {
-                // Displays the game title in a large, bold font.
-                if !isEditing {
-                    Text(selectedGame.title)
-                        .font(.largeTitle)
-                        .bold()
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 5)
-                        .padding(.bottom, 5)
-                        .padding(.horizontal)
-                    
-                    // View the game details
-                    VStack {
-                        
-                        Text("Game Details")
+            
+            ScrollView {
+                VStack {
+                    // Displays the game title in a large, bold font.
+                    if !isEditing {
+                        Text(selectedGame.title)
+                            .font(.largeTitle)
+                            .bold()
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .font(.headline)
+                            .padding(.top, 5)
+                            .padding(.horizontal, 15)
                         
-                        label(text: team.name, systemImage: "person.2.fill", textStyle: .secondary)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 4)
-                        
-                        // Displays the scheduled game time.
-                        label(text: formatStartTime(selectedGame.startTime), systemImage: "calendar.badge.clock")
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 4)
-                        
-                        // Displays the game location with a button to open Apple Maps.
-                        HStack (alignment: .center) {
-                            if let location = selectedGame.location {
-                                // On click -> go to apple maps to that specific location
-                                Button {
-                                    if location.contains("Search Nearby") {
-                                        let newLocation = location.components(separatedBy: "Search Nearby")
-                                        if let url = URL(string: "maps://?q=\(newLocation.first)") {
-                                            if UIApplication.shared.canOpenURL(url) {
-                                                UIApplication.shared.open(url)
-                                            } else {
-                                                print("Could not open Maps URL")
+                        // View the game details
+                        VStack {
+                            
+                            CustomUIFields.customDivider("Game Details")
+                                .padding(.top, 15)
+                            
+                            label(text: team.name, systemImage: "person.2.fill", textStyle: .secondary)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 4)
+                            
+                            // Displays the scheduled game time.
+                            label(text: formatStartTime(selectedGame.startTime), systemImage: "calendar.badge.clock")
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 4)
+                            
+                            // Displays the game location with a button to open Apple Maps.
+                            HStack (alignment: .center) {
+                                if let location = selectedGame.location {
+                                    // On click -> go to apple maps to that specific location
+                                    Button {
+                                        if location.contains("Search Nearby") {
+                                            let newLocation = location.components(separatedBy: "Search Nearby")
+                                            if let url = URL(string: "maps://?q=\(newLocation.first)") {
+                                                if UIApplication.shared.canOpenURL(url) {
+                                                    UIApplication.shared.open(url)
+                                                } else {
+                                                    print("Could not open Maps URL")
+                                                }
+                                            }
+                                        } else {
+                                            if let url = URL(string: "maps://?address=\(location)") {
+                                                if UIApplication.shared.canOpenURL(url) {
+                                                    UIApplication.shared.open(url)
+                                                } else {
+                                                    print("Could not open Maps URL")
+                                                }
                                             }
                                         }
-                                    } else {
-                                        if let url = URL(string: "maps://?address=\(location)") {
-                                            if UIApplication.shared.canOpenURL(url) {
-                                                UIApplication.shared.open(url)
-                                            } else {
-                                                print("Could not open Maps URL")
-                                            }
-                                        }
+                                    } label: {
+                                        label(text: location, systemImage: "mappin.and.ellipse")
                                     }
-                                } label: {
-                                    label(text: location, systemImage: "mappin.and.ellipse")
                                 }
                             }
-                        }
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 4)
-                        
-                        // Displays the duration of the game.
-                        label(text: "\(hours) h \(minutes) m", systemImage: "clock")
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 4)
-                        // TODO: - If is not a scheduled game and there was a video recording, show the actual game duration!
-                    }.padding(.horizontal)
-                    
-                    if userType == .coach {
-                        Divider()
-                        // View the game Settings
-                        List {
-                            gameSettingsSection
-                        }.listStyle(.plain)
+                            .padding(.top, 4)
+                            
+                            // Displays the duration of the game.
+                            label(text: "\(hours) h \(minutes) m", systemImage: "clock")
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 4)
+                            // TODO: - If is not a scheduled game and there was a video recording, show the actual game duration!
+                        }
+                        .padding(.horizontal, 15)
+                        
+                        if userType == .coach {
+                            // View the game Settings
+                            VStack {
+                                CustomUIFields.customDivider("Game Settings")
+                                    .padding(.top, 15)
+                                
+                                gameSettingsSection
+                            }
+                            .padding(.horizontal, 15)
+                        }
+                        Spacer()
+                    } else {
+                        listOfGameDetail
                     }
-                    Spacer()
-                } else {
-                    listOfGameDetail
                 }
+                
             }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button  {
+                        withAnimation {
+                            isEditing = false
+                        }
+                        gameName = selectedGame.title
+                        dismiss()
+                    } label: {
+                        Label("Cancel", systemImage: "xmark")
+                    }
+                }
+
                 if userType == .coach {
-                    ToolbarItem(placement: .topBarLeading) {
-                        if !isEditing {
+                    
+                    if isEditing {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save", systemImage: "checkmark") {
+                                withAnimation {
+                                    isEditing = false
+                                }
+                                saveGameName()
+                                selectedGame.title = gameName
+                            }
+                            .disabled(gameName == selectedGame.title || gameName.isEmpty)
+                        }
+                    } else {
+                        ToolbarItem(placement: .topBarTrailing) {
                             Button {
                                 withAnimation {
                                     isEditing = true
                                 }
                             } label: {
-                                Text("Edit").font(.subheadline)
+                                Text("Edit")
                             }
-                            
-                        } else {
-                            Button {
-                                withAnimation {
-                                    isEditing = false
-                                }
-                                gameName = selectedGame.title
-                            } label: {
-                                Text("Cancel").font(.subheadline)
-                            }
-                        }
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    if isEditing && userType == .coach {
-                        Button {
-                            withAnimation {
-                                isEditing = false
-                            }
-                            
-                            saveGameName()
-                            selectedGame.title = gameName
-                        } label: {
-                            Text("Save").font(.subheadline)
-                        }
-                        .disabled(!saveGameSettingsIfValid)
-                    } else {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done").font(.subheadline)
                         }
                     }
                 }
@@ -198,25 +198,32 @@ struct GameDetailsView: View {
     
     
     var gameSettingsSection: some View {
-        Section( header: Text("Game Settings")) {
-
+        VStack {
             HStack {
                 Text("Time Before Feedback")
                 Spacer()
                 Text("\(selectedGame.timeBeforeFeedback) seconds")
             }
-            .foregroundStyle(!isEditing ? .primary : .secondary)
-
+            .foregroundStyle(.primary)
+            .padding(.vertical, 5)
+            
+            Divider()
+            
             HStack {
                 Text("Time After Feedback")
                 Spacer()
                 Text("\(selectedGame.timeAfterFeedback) seconds")
             }
-            .foregroundStyle(!isEditing ? .primary : .secondary)
-
+            .foregroundStyle(.primary)
+            .padding(.vertical, 5)
+            
+            Divider()
+            
             Toggle("Recording Reminder:", isOn: $recordReminder)
-                .foregroundStyle(!isEditing ? .primary : .secondary)
+                .foregroundStyle(.primary)
                 .disabled(true)
+            
+            Divider()
             
             if recordReminder == true {
                 // show alert
@@ -225,80 +232,37 @@ struct GameDetailsView: View {
                     Spacer()
                     Text("\(selectedGame.scheduledTimeReminder) seconds")
                 }
-                .foregroundStyle(!isEditing ? .primary : .secondary)
+                .foregroundStyle(.primary)
+                .padding(.vertical, 5)
+                
+                Divider()
             }
         }
+        .font(.callout)
     }
     
     
     var listOfGameDetail: some View {
-        List {
-            Section (header: Text("Game Details")) {
-                HStack {
-                    Text("Game Title")
-                    Spacer()
-                    TextField("Title", text: $gameName)
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                HStack {
-                    Text("Team Name")
-                    Spacer()
-                    Text(team.name)
-                }.foregroundStyle(.secondary)
-                
-                // Displays the scheduled game time.
-                HStack {
-                    Text("Start Time")
-                    Spacer()
-                    Text(formatStartTime(selectedGame.startTime))
-                        .multilineTextAlignment(.trailing)
-                }.foregroundStyle(.secondary)
-                
+        VStack {
+            CustomUIFields.customTitle("Editing Game Details", subTitle: "Please update your game title below.")
+            
+            VStack {
+                CustomTextField(label: "Game Title", text: $gameName)
+                CustomTextField(label: "Team Name", text: $team.name, disabled: true)
+                CustomText(label: "Start Time", text: formatStartTime(selectedGame.startTime), isRequired: true, disabled: true)
                 if let location = selectedGame.location {
-                    // Displays the game location with a button to open Apple Maps.
-                    HStack {
-                        Text("Location")
-                        Spacer()
-                        Text(location).multilineTextAlignment(.trailing)
-                    }.foregroundStyle(.secondary)
+                    CustomText(label: "Game Location", text: location, disabled: true)
                 }
                 
-                // Displays the duration of the game.
-                HStack {
-                    Text("Duration")
-                    Spacer()
-                    Text("\(hours) h \(minutes) m")
-                    // TODO: - If is not a scheduled game and there was a video recording, show the actual game duration!
-                }.foregroundStyle(.secondary)
+                let duration = "\(hours) h \(minutes) m"
+                CustomText(label: "Game Duration", text: duration, isRequired: true, disabled: true)
+                   
+                CustomUIFields.customDivider("Game Settings")
+                    .padding(.top, 15)
+
+                gameSettingsSection
             }
-            
-            // Game settings section
-            gameSettingsSection
-            
-            Section {
-                Button("Delete Game") {
-                    Task {
-                        removeGame.toggle()
-                    }
-                }
-                .confirmationDialog(
-                    "Are you sure you want to delete this game? All recordings will be permanently deleted.",
-                    isPresented: $removeGame,
-                    titleVisibility: .visible
-                ) {
-                    Button(role: .destructive, action: {
-                        withAnimation {
-                            isEditing.toggle()
-                        }
-                        dismiss()
-                        dismissOnRemove = true
-                    }) {
-                        Text("Delete")
-                    }
-                }
-            }
+            .padding(.horizontal, 15)
         }
     }
     
@@ -306,6 +270,7 @@ struct GameDetailsView: View {
     private func saveGameName() {
         Task {
             do {
+                gameTitle = gameName
                 try await gameModel.updateGameTitle(gameId: selectedGame.gameId, teamDocId: team.id, title: gameName)
             } catch {
                 print(error.localizedDescription)
@@ -339,12 +304,13 @@ struct GameDetailsView: View {
 }
 
 #Preview {
+    @Previewable @State var title = "Hello, World!"
     let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
     
     let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
     
     
-    GameDetailsView(selectedGame: game, team: team, userType: .player, dismissOnRemove: .constant(false))
+    GameDetailsView(selectedGame: game, team: team, userType: .player, dismissOnRemove: .constant(false), gameTitle: $title)
 }
 
 extension GameDetailsView: GameSaveSettingsProtocol {

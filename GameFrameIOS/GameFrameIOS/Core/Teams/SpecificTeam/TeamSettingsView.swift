@@ -53,33 +53,34 @@ struct TeamSettingsView: View {
     var body: some View {
         // Navigation view that allows for navigation between views and displaying a toolbar.
         NavigationView {
-            VStack {
-                // List displaying the various team settings (nickname, age group, sport, gender, access code).
-                if !isEditing {
-                    Text(team.name)
-                        .font(.largeTitle)
-                        .bold()
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 5)
-                        .padding(.bottom, 5)
-                        .padding(.horizontal)
-                        .foregroundColor(.primary)
+            ScrollView {
+                VStack {
+                    // List displaying the various team settings (nickname, age group, sport, gender, access code).
+                    if !isEditing {
+                        Text(team.name)
+                            .font(.largeTitle)
+                            .bold()
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 5)
+
+                        teamList
+                            .font(.callout)
+                    } else {
+                        teamDetails_editing
+                            .font(.callout)
+                    }
                     
-                    Divider()
-                    teamList.listStyle(.plain)
-                } else {
-                    teamList.listStyle(.insetGrouped)
+                    // Show "Copied!" message
+                    if showCopiedMessage {
+                        Text("Copied!")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .transition(.opacity)
+                            .padding(.top, 5)
+                    }
                 }
-                
-                // Show "Copied!" message
-                if showCopiedMessage {
-                    Text("Copied!")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .transition(.opacity)
-                        .padding(.top, 5)
-                }
+                .padding(.horizontal, 15)
             }
             .task {
                 do {
@@ -92,50 +93,42 @@ struct TeamSettingsView: View {
                 }
             }
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", systemImage: "xmark") {
+                        withAnimation {
+                            isEditing = false
+                        }
+                        
+                        nickname = team.teamNickname
+                        ageGroup = team.ageGrp
+                        gender = team.gender
+                        name = team.name
+                        dismiss()
+                    }
+                }
+                
                 if userType == .coach {
-                    ToolbarItem(placement: .topBarLeading) {
-                        if !isEditing {
+                    if isEditing {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save", systemImage: "checkmark") {
+                                savingTeamSettings()
+                                withAnimation {
+                                    isEditing = false
+                                }
+                                dismiss()
+                            }
+                            .disabled(!saveTeamIfValid)
+                        }
+                    } else {
+                        ToolbarItem(placement: .topBarTrailing) {
                             Button {
                                 withAnimation {
                                     isEditing = true
                                 }
-                            } label : {
+                            } label: {
                                 Text("Edit")
                             }
-                        } else {
-                            Button {
-                                withAnimation {
-                                    isEditing = false
-                                }
-                                
-                                nickname = team.teamNickname
-                                ageGroup = team.ageGrp
-                                gender = team.gender
-                                name = team.name
-                            } label : {
-                                Text("Cancel")
-                            }
                         }
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    
-                    if !isEditing {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done").font(.subheadline)
-                        }
-                    } else {
-                        Button {
-                            savingTeamSettings()
-                            withAnimation {
-                                isEditing = false
-                            }
-                        } label : {
-                            Text("Save")
-                        }
-                        .disabled(!saveTeamIfValid)
                     }
                 }
             }
@@ -158,134 +151,104 @@ struct TeamSettingsView: View {
     ///   - Lists all players associated with the team.
     ///   - If no players are available, displays a placeholder message.
     var teamList: some View {
-        List {
-            // Section Title
-            Section(header: Text("Team Settings")) {
-                // Team Name
-                if isEditing {
-                    HStack {
-                        Text("Team Name")
-                        Spacer()
-                        TextField("Name", text: $name).foregroundColor(.primary).multilineTextAlignment(.trailing)
-                    }
-                }
-                
-                // Team Nickname
-                HStack {
-                    if isEditing {
-                        Text("Nickname")
-                        Spacer()
-                        TextField("Nickname", text: $nickname).foregroundColor(.primary).multilineTextAlignment(.trailing)
-                    } else {
-                        CustomUIFields.imageLabel(text: "Nickname", systemImage: "person.2.fill")
-                        Spacer()
-
-                        Text(team.teamNickname)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                // Age Group
-                HStack {
-                    if isEditing {
-                        Text("Age Group")
-                        Spacer()
-                        CustomPicker(
-                            title: "",
-                            options: AppData.ageGroupOptions,
-                            displayText: { $0 },
-                            selectedOption: $ageGroup
-                        ).frame(height: 20)
-                    } else {
-                        CustomUIFields.imageLabel(text: "Age Group", systemImage: "calendar.and.person")
-                        Spacer()
-                        Text(team.ageGrp)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                // Sport
-                HStack {
-                    if isEditing {
-                        Text("Sport").foregroundStyle(.secondary)
-                    } else {
-                        CustomUIFields.imageLabel(text: "Sport", systemImage: "soccerball")
-                    }
-                    Spacer()
-                    Text(team.sport)
-                        .foregroundColor(.secondary)
-                }
-                
-                // Gender
-                HStack {
-                    if isEditing {
-                        Text("Gender")
-                        Spacer()
-                        CustomPicker(
-                            title: "",
-                            options: AppData.genderOptions,
-                            displayText: { $0 },
-                            selectedOption: $gender
-                        ).frame(height: 20)
-                    } else {
-                        CustomUIFields.imageLabel(text: "Gender", systemImage: "figure")
-                        Spacer()
-                        Text(team.gender.capitalized)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                // Access Code with Copy Button & Tooltip
-                if userType == .coach {
-                    HStack {
-                        if isEditing {
-                            Text("Access Code").foregroundStyle(.secondary)
-                        } else {
-                            CustomUIFields.imageLabel(text: "Access Code", systemImage: "qrcode")
-                        }
-                        Spacer()
-                        Text(team.accessCode ?? "N/A")
-                            .foregroundColor(.secondary).padding(.trailing, 5)
-                        
-                        // Copy Button
-                        Button(action: {
-                            UIPasteboard.general.string = team.accessCode ?? ""
-                            showCopiedMessage = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                showCopiedMessage = false
-                            }
-                        }) {
-                            Image(systemName: "doc.on.doc.fill")
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-            }
+        VStack {
+            CustomUIFields.customDivider("Game Details")
+                .padding(.top, 15)
             
-            if isEditing {
-                Section {
-                    Button("Delete team") {
-                        Task {
-                            removeTeam.toggle()
-                        }
+            HStack {
+                CustomUIFields.imageLabel(text: "Nickname", systemImage: "person.2.fill")
+                Spacer()
+                Text(team.teamNickname)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 5)
+            
+            Divider()
+            
+            HStack {
+                CustomUIFields.imageLabel(text: "Age Group", systemImage: "calendar.and.person")
+                Spacer()
+                Text(team.ageGrp)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 5)
+            
+            Divider()
+            
+            HStack {
+                CustomUIFields.imageLabel(text: "Sport", systemImage: "soccerball")
+                Spacer()
+                Text(team.sport)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 5)
+            
+            Divider()
+            
+            HStack {
+                CustomUIFields.imageLabel(text: "Gender", systemImage: "figure")
+                Spacer()
+                Text(team.gender.capitalized)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 5)
+            
+            Divider()
+            
+            HStack {
+                CustomUIFields.imageLabel(text: "Access Code", systemImage: "qrcode")
+                Spacer()
+                Text(team.accessCode ?? "N/A")
+                    .foregroundColor(.secondary).padding(.trailing, 5)
+                
+                // Copy Button
+                Button(action: {
+                    UIPasteboard.general.string = team.accessCode ?? ""
+                    showCopiedMessage = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        showCopiedMessage = false
                     }
-                    .confirmationDialog(
-                        "Are you sure you want to delete this team? All games and recordings will be permanently deleted.",
-                        isPresented: $removeTeam,
-                        titleVisibility: .visible
-                    ) {
-                        Button(role: .destructive, action: {
-                            withAnimation {
-                                isEditing.toggle()
-                            }
-                            dismiss()
-                            dismissOnRemove = true
-                        }) {
-                            Text("Delete")
-                        }
-                    }
+                }) {
+                    Image(systemName: "doc.on.doc.fill")
+                        .foregroundColor(.gray)
                 }
             }
+            .padding(.vertical, 5)
+            
+            Divider()
+        }
+    }
+    
+    var teamDetails_editing: some View {
+        VStack {
+            CustomUIFields.customDivider("Game Details")
+                .padding(.top, 15)
+            
+            CustomTextField(label: "Team Name", text: $name, isRequired: true)
+            CustomTextField(label: "Team Nickkname", text: $nickname, isRequired: true)
+            CustomMenuDropdown(
+                label: "Age group",
+                placeholder: "Select an age group",
+                onSelect: {
+                    hideKeyboard()
+                },
+                options: AppData.ageGroupOptions,
+                selectedOption: $ageGroup
+            )
+            
+            
+            CustomTextField(label: "Sport", text: $team.sport, disabled: true)
+            
+            CustomMenuDropdown(
+                label: "Gender",
+                placeholder: "Select a gender",
+                onSelect: {
+                    hideKeyboard()
+                    
+                },
+                options: AppData.genderOptions,
+                selectedOption: $gender
+            )
         }
     }
     
@@ -342,9 +305,7 @@ struct TeamSettingsView: View {
 
 extension TeamSettingsView {
     var saveTeamIfValid: Bool {
-        return (name != team.name && !name.isEmpty && name != "")
-        || (nickname != team.teamNickname && !nickname.isEmpty && nickname != "")
-        || (team.ageGrp != ageGroup)
-        || (team.gender != gender)
+        return (name != team.name || nickname != team.teamNickname || gender != team.gender)
+        && (!name.isEmpty && !nickname.isEmpty )
     }
 }

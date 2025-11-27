@@ -10,7 +10,7 @@ import Foundation
 
 public struct DBPlayerTeamInfo: Codable {
     public let id: String
-    public var jerseyNum: Int
+    public var jerseyNum: Int?
     public var nickName: String?
     public var positions: [SoccerPosition]?
     public var joinedAt: Date?
@@ -58,7 +58,7 @@ public struct DBPlayerTeamInfo: Codable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)
-        self.jerseyNum = try container.decode(Int.self, forKey: .jerseyNum)
+        self.jerseyNum = try container.decodeIfPresent(Int.self, forKey: .jerseyNum)
         self.nickName = try container.decodeIfPresent(String.self, forKey: .nickName)
         self.positions = try container.decodeIfPresent([SoccerPosition].self, forKey: .positions)
         self.joinedAt = try container.decodeIfPresent(Date.self, forKey: .joinedAt)
@@ -67,7 +67,7 @@ public struct DBPlayerTeamInfo: Codable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.id, forKey: .id)
-        try container.encode(self.jerseyNum, forKey: .jerseyNum)
+        try container.encodeIfPresent(self.jerseyNum, forKey: .jerseyNum)
         try container.encodeIfPresent(self.nickName, forKey: .nickName)
         try container.encodeIfPresent(self.positions, forKey: .positions)
         try container.encodeIfPresent(self.joinedAt, forKey: .joinedAt)

@@ -164,7 +164,7 @@ struct CoachRecordingConfigView: View {
                     }
                 }
             }
-            .alert("A team must be added first to add a new game.", isPresented: $showNoTeamsAlert) {
+            .alert("A team must be added first to start a new game.", isPresented: $showNoTeamsAlert) {
                 Button(role: .cancel) {
                     navigateToCreateTeam = true // Trigger navigation after alert
                 } label: {

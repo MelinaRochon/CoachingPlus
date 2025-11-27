@@ -45,22 +45,14 @@ struct CoachAllTeamsView: View {
     
     var body: some View {
         NavigationStack {
-//            ScrollView {
-                //            VStack(alignment: .leading, spacing: 4) {
-                //                Text("Teams").font(Font.largeTitle.bold())
-//                                Divider() // This adds a divider after the title
-//                                    .padding(.bottom, 30)
-                //            }
-                //            .padding(.top, 0)
+            VStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Teams").font(Font.largeTitle.bold()).padding(.horizontal, 15)
+                    Divider()
+                }
+                .padding(.bottom, 15)
                 
                 VStack {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Teams").font(Font.largeTitle.bold()).padding(.horizontal, 15)
-                        Divider()
-                    }
-
-//                    Divider() // This adds a divider after the title
-                        .padding(.bottom, 30)
                     CustomListSection(
                         titleContent: {
                             AnyView(
@@ -96,13 +88,8 @@ struct CoachAllTeamsView: View {
                         }
                     )
                     Spacer()
-//                }
-                //            .toolbarBackground(.visible, for: .navigationBar)
-                //            .toolbarBackground(Color(.systemBackground), for: .navigationBar)
+                }
             }
-//            .navigationTitle(Text("Teams"))
-//            .navigationBarTitleDisplayMode(.automatic)
-//            .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {

@@ -68,7 +68,8 @@ struct CoachSpecificTranscriptView: View {
     @Environment(\.dismiss) var dismiss
     
     @State private var dismissOnRemove: Bool = false
-    
+    @State private var deleteConfirmationShow: Bool = false
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -136,6 +137,14 @@ struct CoachSpecificTranscriptView: View {
                                 .font(.headline)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             
+                            if feedbackFor.isEmpty {
+                                HStack {
+                                    Text("No player associated.")
+                                        .font(.caption)
+                                }
+                                .multilineTextAlignment(.leading)
+                            }
+                            
                             HStack {
                                 Text(feedbackFor.map { $0.name }.joined(separator: ", "))
                                     .font(.caption)
@@ -158,7 +167,6 @@ struct CoachSpecificTranscriptView: View {
                         .frame(maxHeight: .infinity, alignment: .bottom)
                     }
                 }
-                //                )
             }
             .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
                 Color.clear.frame(height: 90)
@@ -182,66 +190,51 @@ struct CoachSpecificTranscriptView: View {
                     print("Error when fetching specific footage info: \(error)")
                 }
             }
-            .onChange(of: dismissOnRemove) { newValue in
-                // Remove transcript from database
-                Task {
-                    do {
-                        if let transcript = transcript {
-                            try await transcriptModel.removeTranscript(gameId: game.gameId, teamId: team.teamId, transcriptId: transcript.transcriptId, keyMomentId: transcript.keyMomentId)
-                            dismiss()
-                        }
-                    } catch {
-                        print(error.localizedDescription)
-                    }
-                }
-            }
             .sheet(isPresented: $isEditing) {
-                if let transcript = transcript {
-                    NavigationView {
-                        FeedbackForView(dismissOnRemove: $dismissOnRemove, allPlayers: team.players, feedbackTranscript: $feedbackTranscript, playersFeedback: $playersFeedback)
-                            .toolbar {
-                                ToolbarItem(placement: .topBarLeading) {
-                                    Button(action: {
-                                        resetData()
-                                        isInitialLoadComplete = false
-                                        isEditing = false // Dismiss the full-screen cover
-                                    }) {
-                                        Text("Cancel")
-                                    }
-                                }
-                                
-                                ToolbarItem(placement: .topBarTrailing) {
-                                    Button(action: {
-                                        saveData()
-                                        isInitialLoadComplete = false
-                                        isEditing = false // Dismiss the full-screen cover
-                                    }) {
-                                        Text("Save")
-                                    }
-                                    .disabled(!hasChanges || !isInitialLoadComplete)
+                NavigationView {
+                    FeedbackForView(
+                        dismissOnRemove: $dismissOnRemove,
+                        allPlayers: team.players,
+                        feedbackTranscript: $feedbackTranscript,
+                        playersFeedback: $playersFeedback
+                    )
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel", systemImage: "xmark") {
+                                resetData()
+                                isInitialLoadComplete = false
+                                isEditing = false // Dismiss the full-screen cover
+                            }
+                        }
+                                                
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save", systemImage: "checkmark") {
+                                saveData()
+                                isInitialLoadComplete = false
+                                isEditing = false // Dismiss the full-screen cover
+                            }
+                            .disabled(!hasChanges || !isInitialLoadComplete || feedbackTranscript.isEmpty)
+                        }
+                    }
+                    .task {
+                        do {
+                            if let allPlayers = team.players {
+                                print("getting all players = \(allPlayers)")
+                                let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
+                                // Map to include selection state
+                                playersFeedback = players.map { (id, name, photoUrl) in
+                                    let isSelected = feedbackFor.contains { $0.playerId == id }
+                                    return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
                                 }
                             }
-                            .task {
-                                do {
-
-                                    if let allPlayers = team.players {
-                                        print("getting all players = \(allPlayers)")
-                                        let players = try await playerModel.getAllPlayersNamesAndUrl(players: allPlayers)
-                                        // Map to include selection state
-                                        playersFeedback = players.map { (id, name, photoUrl) in
-                                            let isSelected = feedbackFor.contains { $0.playerId == id }
-                                            return PlayerFeedback(id: id, name: name, photoUrl: photoUrl, isSelected: isSelected)
-                                        }
-                                    }
-                                    
-                                    originalTranscriptText = feedbackTranscript
-                                    originalSelectedPlayers = feedbackFor.map { $0.playerId }
-                                    isInitialLoadComplete = true
-
-                                } catch {
-                                    print("Error when fetching specific footage info: \(error)")
-                                }
-                            }
+                            
+                            originalTranscriptText = feedbackTranscript
+                            originalSelectedPlayers = feedbackFor.map { $0.playerId }
+                            isInitialLoadComplete = true
+                            
+                        } catch {
+                            print("Error when fetching specific footage info: \(error)")
+                        }
                     }
                 }
             }
@@ -252,18 +245,25 @@ struct CoachSpecificTranscriptView: View {
             }
         }
         .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                if !isEditing {
-                    Button {
-                        withAnimation {
-                            isEditing.toggle()
-                        }
-                    } label: {
-                        Text("Edit")
-                    }
-                    .frame(width: 40)
-                    .foregroundColor(.red)
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Delete", systemImage: "trash") {
+                    deleteConfirmationShow = true
                 }
+            }
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    withAnimation {
+                        isEditing.toggle()
+                    }
+                } label: {
+                    Text("Edit")
+                }
+                .frame(width: 40)
+                .foregroundColor(.red)
             }
         }
         .task {
@@ -293,6 +293,37 @@ struct CoachSpecificTranscriptView: View {
                 } catch {
                     print("ERROR WHEN fetching AUDIO url: \(error)")
                 }
+            }
+        }
+        .alert(
+            "Are you sure you want to delete this feedback? This will remove the transcript and its associated key moment. This action cannot be undone.",
+            isPresented: $deleteConfirmationShow
+            
+        ) {
+            Button(role: .destructive, action: {
+                isInitialLoadComplete = false
+                Task {
+                    do {
+                        if let transcript = transcript {
+                            try await transcriptModel.removeTranscript(
+                                gameId: game.gameId,
+                                teamId: team.teamId,
+                                transcriptId: transcript.transcriptId,
+                                keyMomentId: transcript.keyMomentId
+                            )
+                            dismiss()
+                        }
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                }
+            }) {
+                Text("Delete")
+            }
+            Button(role: .cancel, action: {
+                deleteConfirmationShow = false
+            }) {
+                Text("Cancel")
             }
         }
     }
@@ -363,59 +394,124 @@ struct FeedbackForView: View {
     
     /// Binding to the list of players with feedback selection state.
     @Binding var playersFeedback: [PlayerFeedback]
-    
+        
     /// Transcript model used for fetching and updating transcript data.
     @StateObject private var transcriptModel = TranscriptModel()
     @EnvironmentObject private var dependencies: DependencyContainer
 
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
-    
-    @State private var confirmationShow: Bool = false
-    
+        
     var body: some View {
         VStack {
-            Form {
-                Section (header: Text("Transcript")) {
-                    TextField("Enter your text", text: $feedbackTranscript, axis: .vertical)
-                        .lineLimit(5)
-                }
+            ScrollView {
+                CustomUIFields.customTitle("Edit Transcript", subTitle: "Update your transcript and tag the players involved.")
                 
-                Section(header: Text("Selected Players")) {
-                    ForEach(playersFeedback.indices.filter { playersFeedback[$0].isSelected }, id: \.self) { index in
-                        CheckboxRow(title: playersFeedback[index].name,
-                                    isChecked: $playersFeedback[index].isSelected)
-                    }
-                }
-                
-                Section(header: Text("Other Players")) {
-                    ForEach(playersFeedback.indices.filter { !playersFeedback[$0].isSelected }, id: \.self) { index in
-                        CheckboxRow(title: playersFeedback[index].name,
-                                    isChecked: $playersFeedback[index].isSelected)
-                    }
-                }
-                
-                Section {
-                    Button(role: .destructive, action: {
-                        confirmationShow = true
+                // Transcripts
+                VStack {
+                    
+//                    Section (header: Text("Transcript")) {
+//                    CustomUIFields.customDivider("Transcript")
+//                        TextField("Enter your text", text: $feedbackTranscript, axis: .vertical)
+//                            .lineLimit(5)
+//                    }
+                    
+                    CustomLongTextFieldView(label: "Transcript", text: $feedbackTranscript, isRequired: true)
+                    
+                    
+                    // Players
+                    if !playersFeedback.isEmpty {
                         
-                    }) {
-                        Text("Delete")
+                        CustomUIFields.customDivider("Selected Players")
+                            .padding(.top, 15)
+                        
+                        let selectedPlayers = playersFeedback.indices.filter { playersFeedback[$0].isSelected }
+                        if !selectedPlayers.isEmpty {
+                            ForEach(playersFeedback.indices.filter { playersFeedback[$0].isSelected }, id: \.self) { index in
+                                VStack {
+                                    CheckboxRow(title: playersFeedback[index].name,
+                                                isChecked: $playersFeedback[index].isSelected)
+                                    Divider()
+                                }
+                            }
+                        } else {
+                            VStack(alignment: .center) {
+                                Image(systemName: "person.2.slash.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.gray)
+                                    .padding(.bottom, 2)
+                                
+                                Text("No players are linked to this transcript.")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text("Consider assigning a player to this feedback.")
+                                    .font(.footnote) .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 10)
+                            .padding(.horizontal, 15)
+                            
+                        }
+                        
+                        CustomUIFields.customDivider("Other Players")
+                            .padding(.top, 15)
+                        
+                        let otherPlayers = playersFeedback.indices.filter { !playersFeedback[$0].isSelected }
+                        if !otherPlayers.isEmpty {
+                            ForEach(playersFeedback.indices.filter { !playersFeedback[$0].isSelected }, id: \.self) { index in
+                                VStack {
+                                    CheckboxRow(title: playersFeedback[index].name,
+                                                isChecked: $playersFeedback[index].isSelected)
+                                    Divider()
+                                }
+                            }
+                        } else {
+                            VStack(alignment: .center) {
+                                Image(systemName: "person.slash.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.gray)
+                                    .padding(.bottom, 2)
+                                
+                                Text("All players on your team have been linked to this feedback.")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 10)
+                            .padding(.horizontal, 15)
+                        }
+                    } else {
+                        // No players assigned to team
+                        CustomUIFields.customDivider("Players")
+                            .padding(.top, 15)
+                        
+                        VStack(alignment: .center) {
+                            Image(systemName: "person.slash.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.gray)
+                                .padding(.bottom, 2)
+                            
+                            Text("You don't have any players on your team yet.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                            
+                            Text("Consider adding players first.")
+                                .font(.footnote) .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 10)
+                        .padding(.horizontal, 15)
                     }
                 }
+                .padding(.horizontal, 15)
             }
-        }
-        .confirmationDialog(
-            "Are you sure you want to delete this feedback? This will remove the transcript and its associated key moment. This action cannot be undone.",
-            isPresented: $confirmationShow,
-            titleVisibility: .visible
-        ) {
-            Button(role: .destructive, action: {
-                dismiss()
-                dismissOnRemove = true
-            }) {
-                Text("Delete")
-            }
+            .scrollDismissesKeyboard(.immediately)
         }
         .onAppear {
             transcriptModel.setDependencies(dependencies)
@@ -436,7 +532,11 @@ struct CheckboxRow: View {
     var body: some View {
         Button {
             withAnimation {
-                isChecked.toggle()
+                if isChecked {
+                    isChecked = false
+                } else {
+                    isChecked = true
+                }
             }
         } label: {
             HStack {
@@ -446,6 +546,7 @@ struct CheckboxRow: View {
                     .foregroundColor(.primary)
                 Spacer()
             }
+            .padding(.vertical, 5)
         }
         .buttonStyle(.plain)
     }

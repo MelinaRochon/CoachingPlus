@@ -50,6 +50,12 @@ struct CustomUIFields {
         }
     }
     
+    static func customTextWithIcon(_ title: String, icon: String) -> some View {
+        HStack {
+            
+        }
+    }
+    
     static func customDividerTitleWithNav(_ title: String, navtitle: String, navIcon: String? = nil, navColor: Color = .red) -> some View {
         VStack(alignment: .leading) {
             HStack {
@@ -235,8 +241,10 @@ struct CustomUIFields {
             Image(systemName: systemImage)
                 .frame(width: 25)
                 .foregroundStyle(.red) // Red icon
+                .padding(.trailing, 5)
             Text(text)
                 .foregroundStyle(.primary) // Default text color
+                .font(.callout)
         }
     }
 }

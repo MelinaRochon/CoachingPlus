@@ -30,7 +30,7 @@ struct AppData {
     
     /// Predefined list of gender options for team categorization.
     static var teamGenderOptions = ["Select", "Female", "Male", "Mixed", "Non-binary", "Other", "Prefer not to say"]
-    static var genderOptions = ["Female", "Male", "Non-binary", "Other", "Prefer not to say"]
+    static var genderOptions = ["Female", "Male", "Mixed", "Non-binary", "Other", "Prefer not to say"]
     static var userGenderOptions = ["Select", "Female", "Male", "Non-binary", "Other", "Prefer not to say"]
 
     /// Options for reminder time before the event

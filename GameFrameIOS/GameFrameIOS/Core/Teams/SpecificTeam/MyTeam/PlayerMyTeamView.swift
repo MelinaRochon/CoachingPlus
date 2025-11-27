@@ -97,7 +97,8 @@ struct PlayerMyTeamView: View {
                                 selectedTeam: selectedTeam,
                                 showUpcomingGames: showUpcomingGames,
                                 showRecentGames: showRecentGames,
-                                userType: .player
+                                userType: .player,
+                                gameModel: gameModel
                             )
                             
                             if let last = groupedFootage.last {
@@ -241,7 +242,7 @@ struct PlayerMyTeamView: View {
                                         
                                     }
                                 } else {
-                                    VStack {
+                                    VStack(alignment: .center) {
                                         Image(systemName: "person.2.slash.fill")
                                             .font(.system(size: 30))
                                             .foregroundColor(.gray)
@@ -253,6 +254,7 @@ struct PlayerMyTeamView: View {
                                             .foregroundColor(.secondary)
                                             .multilineTextAlignment(.center)
                                     }
+                                    .frame(maxWidth: .infinity)
                                     .padding(.top, 10)
                                 }
                             }
@@ -261,17 +263,12 @@ struct PlayerMyTeamView: View {
                     }
                 }
                 .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            showPlayersSheet = false
-                        } label: {
-                            Image(systemName: "xmark")
-                                .foregroundColor(.gray) // Make text + icon white
-                                .frame(width: 40, height: 40) // Make it square
-                                .background(Circle().fill(Color(uiColor: .systemGray6)))
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel", systemImage: "xmark") {
+                            withAnimation {
+                                showPlayersSheet = false
+                            }
                         }
-                        .padding(.top, 10)
-                        .padding(.bottom, 0)
                     }
                 }
                 .presentationCornerRadius(20)

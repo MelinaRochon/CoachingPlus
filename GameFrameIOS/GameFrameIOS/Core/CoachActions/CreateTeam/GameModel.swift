@@ -305,14 +305,18 @@ final class GameModel: ObservableObject {
     /// - Note: This only removes the game document itself.
     ///         Any subcollections (e.g., feedback, transcripts) must be deleted separately if needed.
     func removeGame(gameId: String, teamDocId: String, teamId: String) async throws {
+        lastDoc = nil
+        games.removeAll(where: { $0.gameId == gameId && $0.teamId == teamId })
+        
+        // Delete the game
+        try await dependencies?.gameManager.deleteGame(gameId: gameId, teamDocId: teamDocId)
+
         // Delete all key moments
         try await dependencies?.keyMomentManager.deleteAllKeyMoments(teamDocId: teamDocId, gameId: gameId)
         
         // Delete all transcripts
         try await dependencies?.transcriptManager.deleteAllTranscripts(teamDocId: teamDocId, gameId: gameId)
         
-        // Delete the game
-        try await dependencies?.gameManager.deleteGame(gameId: gameId, teamDocId: teamDocId)
         
         // Delete each audio files that are assigned to this game
         let folderPath = "audio/\(teamId)/\(gameId)"

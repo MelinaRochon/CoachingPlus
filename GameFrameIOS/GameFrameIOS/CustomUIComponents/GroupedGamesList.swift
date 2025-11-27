@@ -35,6 +35,7 @@ struct GroupedGamesList: View {
     let showUpcomingGames: Bool
     let showRecentGames: Bool
     let userType: UserType
+    let gameModel: GameModel
         
     var body: some View {
         
@@ -105,7 +106,7 @@ struct GroupedGamesList: View {
                 ) {
                     ForEach(group.games, id: \.id) { game in
                         if userType == .coach {
-                            NavigationLink(destination: CoachSpecificFootageView(game: game.game, team: selectedTeam)) {
+                            NavigationLink(destination: CoachSpecificFootageView(game: game.game, team: selectedTeam, gameModel: gameModel)) {
                                 GameRow(
                                     isFullGame: game.isFullGame,
                                     title: game.game.title,

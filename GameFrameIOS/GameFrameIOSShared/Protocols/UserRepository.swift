@@ -22,6 +22,7 @@ public protocol UserRepository {
     /// - Returns: The `DBUser` object if found, otherwise `nil`.
     func getUser(userId: String) async throws -> DBUser?
     
+    func getAllUsers(userIds: [String]) async throws -> [DBUser]?
     
     /// Retrieves a user by their Firestore document ID.
     /// - Parameter id: The Firestore document ID.

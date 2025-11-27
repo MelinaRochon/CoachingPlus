@@ -36,10 +36,13 @@ struct CoachHomePageView: View {
 
     var body: some View {
         NavigationStack {
-            
             VStack {
-                Divider()
-
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Home").font(Font.largeTitle.bold()).padding(.horizontal, 15)
+                    Divider()
+                }
+                .padding(.bottom, 15)
+                
                 CustomSegmentedPicker(
                     selectedIndex: $selectedIndex,
                     options: [
@@ -54,14 +57,6 @@ struct CoachHomePageView: View {
                         titleContent: {
                             AnyView(
                                 CustomUIFields.customDivider("Most Recent Games")
-
-//                                CustomDividerWithNavigationLink(
-//                                    title: "Most Recent Games",
-//                                    subTitle: "See All",
-//                                    subTitleColor: .red
-//                                ) {
-//                                    AllRecentFootageView(pastGames: pastGames, userType: .coach)
-//                                }
                             )
                         },
                         items: pastGameIndexed.map { $0 },
@@ -111,16 +106,8 @@ struct CoachHomePageView: View {
                         titleContent: {
                             AnyView(
                                 CustomUIFields.customDivider("Upcoming Games")
-//                                CustomDividerWithNavigationLink(
-//                                    title: "Upcoming Games",
-//                                    subTitle: "See All",
-//                                    subTitleColor: .red
-//                                ) {
-//                                    AllScheduledGamesView(futureGames: futureGames, userType: .coach)
-//                                }
                             )
                         },
-                      
                         items: futureGames.prefix(20).map { $0 },
                         isLoading: isLoadingMyScheduledGames,
                         rowLogo: "clock.fill",
@@ -164,14 +151,13 @@ struct CoachHomePageView: View {
                 pastGameIndexed = []
                 gameModel.setDependencies(dependencies)
             }
-
             .task {
                 // Fetch games when view loads
                 do {
                     isLoadingMyPastGames = true
                     isLoadingMyScheduledGames = true
                     let allGames = try await gameModel.loadAllAssociatedGames()
-
+                    
                     if !allGames.isEmpty {
                         // Filter games into future and past categories
                         await filterGames(allGames: allGames)
@@ -211,9 +197,6 @@ struct CoachHomePageView: View {
                                 return da > db // DESCENDING — newest first
                             }
                         }
-                        
-                        print(">>> NOW ALL pastGameIndexed : \(pastGameIndexed.map { $0.homeGame.game.title }.joined(separator: ", ")) ")
-
                     }
                     isLoadingMyPastGames = false
                 } catch {
@@ -230,7 +213,14 @@ struct CoachHomePageView: View {
                     Text("OK")
                 }
             }
-            .navigationTitle(Text("Home"))
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Color.clear
+                        .frame(width: 0, height:0)  // forces layout space without UI
+                        .allowsHitTesting(false)     // makes it inert
+                }
+            }
         }
     }
     

@@ -69,8 +69,8 @@ struct CoachSpecificFootageView: View {
     @State private var transcripts: [keyMomentTranscript]?
     @State private var keyMoments: [keyMomentTranscript]?
     
-    @StateObject private var gameModel = GameModel()
-    
+    @StateObject var gameModel: GameModel
+
     @State private var dismissOnRemove: Bool = false
     
     /// Cache of thumbnails for key moments, keyed by keyMomentId
@@ -89,25 +89,19 @@ struct CoachSpecificFootageView: View {
     /// Allows dismissing the view to return to the previous screen
     @Environment(\.dismiss) var dismiss
     
+    @State private var gameName: String = ""
+    
     var body: some View {
         NavigationStack {
             Group {
                 HStack(alignment: .top) {
-                    VStack {
-                        Text(game.title).font(.title2)
-                            .multilineTextAlignment(.center)
-                            .fontWeight(.medium)
-                            .padding(.top, 0)
-                        //                        Text(team.teamNickname).font(.headline)
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(game.title).font(Font.title.bold()).padding(.horizontal, 15)
                         if let gameStartTime = gameStartTime {
-                            Text(gameStartTime, style: .date).font(.subheadline).foregroundStyle(.secondary)
+                            Text(formatStartTime(gameStartTime)).font(.subheadline).foregroundStyle(.secondary).padding(.horizontal, 15)
                         }
-                        
-                        Button {
-                            isGameDetailsEnabled.toggle()
-                        } label: {
-                            Text("View Game Details").foregroundColor(Color.red).underline()
-                        }
+
                         Divider()
                     }
                 }
@@ -181,7 +175,6 @@ struct CoachSpecificFootageView: View {
                                                 ) {
                                                     CoachAllKeyMomentsView(game: game, team: team, videoUrl: videoURL)
                                                 }
-//                                        .padding(.top)
                                         .background(Color(.systemBackground))
                                     ) {
                                         ForEach(keyMoments, id: \.id) { keyMoment in
@@ -273,7 +266,6 @@ struct CoachSpecificFootageView: View {
                                             ) {
                                                 CoachAllTranscriptsView(game: game, team: team)
                                             }
-//                                    .padding(.top)
                                     .background(Color(.systemBackground))
                                 ) {
                                     ForEach(transcripts, id: \.id) { recording in
@@ -367,6 +359,7 @@ struct CoachSpecificFootageView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .task {
                 isLoadingContent = true
+                gameName = game.title
                 
                 if let startTime = game.startTime {
                     gameStartTime = startTime
@@ -432,26 +425,57 @@ struct CoachSpecificFootageView: View {
                 
                 isLoadingContent = false
             }
-            .sheet(isPresented: $isGameDetailsEnabled, onDismiss: refreshData) {
-                GameDetailsView(selectedGame: game, team: team, userType: .coach, dismissOnRemove: $dismissOnRemove)
+            .onChange(of: game.title) {
+                print("RESET gameModel.lastDoc because game.title changed")
+                gameModel.lastDoc = nil
             }
-//            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
-//                Color.clear.frame(height: 75)
-//            }
-            .onChange(of: dismissOnRemove) {
-                Task {
-                    do {
-                        // Remove game from database and from all players
-                        try await gameModel.removeGame(gameId: game.gameId, teamDocId: team.id, teamId: team.teamId)
-                        dismiss()
-                    } catch {
-                        print(error.localizedDescription)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Delete", systemImage: "trash") {
+                        dismissOnRemove = true
+                    }
+                }
+                if #available(iOS 26.0, *) {
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isGameDetailsEnabled.toggle()
+                    } label: {
+                        Image(systemName: "info")
                     }
                 }
             }
+            .alert(
+                "Are you sure you want to delete this game? This will remove all feedback associated with it.",
+                isPresented: $dismissOnRemove
+                
+            ) {
+                Button(role: .destructive, action: {
+                    Task {
+                        do {
+                            // Remove game from database and from all players
+                            try await gameModel.removeGame(gameId: game.gameId, teamDocId: team.id, teamId: team.teamId)
+                            dismiss()
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+                    }
+                }) {
+                    Text("Delete")
+                }
+                Button(role: .cancel, action: {
+                    dismissOnRemove = false
+                }) {
+                    Text("Cancel")
+                }
+            }
+            .sheet(isPresented: $isGameDetailsEnabled, onDismiss: refreshData) {
+                GameDetailsView(selectedGame: game, team: team, userType: .coach, dismissOnRemove: $dismissOnRemove, gameTitle: $gameName)
+            }
             .onAppear {
                 transcriptModel.setDependencies(dependencies)
-                gameModel.setDependencies(dependencies)
                 fgVideoRecordingModel.setDependencies(dependencies)
             }
         }
@@ -517,10 +541,10 @@ struct CoachSpecificFootageView: View {
     }
 }
 
-#Preview {
-    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
-    
-    let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
-    
-    CoachSpecificFootageView(game: game, team: team)
-}
+//#Preview {
+//    let team = DBTeam(id: "123", teamId: "team-123", name: "Testing Team", teamNickname: "TEST", sport: "Soccer", gender: "Mixed", ageGrp: "Senior", coaches: ["FbhFGYxkp1YIJ360vPVLZtUSW193"])
+//    
+//    let game = DBGame(gameId: "game1", title: "Ottawa vs Toronto", duration: 1020, scheduledTimeReminder: 10, timeBeforeFeedback: 15, timeAfterFeedback: 15, recordingReminder: true, teamId: "team-123")
+//    
+//    CoachSpecificFootageView(game: game, team: team, gameModel: GameModel())
+//}

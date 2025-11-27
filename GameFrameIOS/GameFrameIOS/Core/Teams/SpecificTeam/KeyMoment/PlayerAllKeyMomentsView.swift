@@ -47,17 +47,17 @@ struct PlayerAllKeyMomentsView: View {
                 if let recordings = keyMoments {
                     List {
                         if !recordings.isEmpty {
-                            SearchKeyMomentsView(
-                                game: game,
-                                team: team,
-                                keyMoments: recordings,
-                                userType: .player,
-                                prefix: nil,
-                                destinationBuilder: { recording in
-                                    AnyView(PlayerSpecificKeyMomentView(game: game, team: team, specificKeyMoment: recording!, videoUrl: videoUrl))
-                                },
-                                videoUrl: videoUrl
-                            )
+//                            SearchKeyMomentsView(
+//                                game: game,
+//                                team: team,
+//                                keyMoments: recordings,
+//                                userType: .player,
+//                                prefix: nil,
+//                                destinationBuilder: { recording in
+//                                    AnyView(PlayerSpecificKeyMomentView(game: game, team: team, specificKeyMoment: recording!, videoUrl: videoUrl))
+//                                },
+//                                videoUrl: videoUrl
+//                            )
                         } else {
                             Text("No key moments found.").font(.caption).foregroundStyle(.secondary)
                         }

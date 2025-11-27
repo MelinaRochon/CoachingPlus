@@ -481,7 +481,7 @@ final class TranscriptModel: ObservableObject {
             firstName: user.firstName,
             lastName: user.lastName,
             nickname: playerTeamInfo.nickName,
-            jersey: playerTeamInfo.jerseyNum
+            jersey: playerTeamInfo.jerseyNum ?? 0
         )
         
         return playerObject
@@ -581,4 +581,74 @@ final class TranscriptModel: ObservableObject {
             }
         }
     }
+    
+    /** FOLLOWING FUNCTIONS ARE NOT BEING USED AT THE MOMENT */
+    // Load a batch of transcripts
+    func loadTranscriptsBatch(teamDocId: String, gameId: String, search: String? = nil, startAfterId: String? = nil) async throws -> [DBTranscript] {
+        let transcriptRepo = FirestoreTranscriptRepository()
+        let collection = transcriptRepo.transcriptCollection(teamDocId: teamDocId, gameDocId: gameId)
+        var query = collection.order(by: "key_moment_id").limit(to: 20)
+
+        if let search = search, !search.isEmpty {
+            query = query.whereField("transcript", isGreaterThanOrEqualTo: search)
+                         .whereField("transcript", isLessThanOrEqualTo: search + "\u{f8ff}")
+        }
+
+        if let startAfterId = startAfterId {
+            // paginate
+            let lastDoc = try await collection.document(startAfterId).getDocument()
+            query = query.start(afterDocument: lastDoc)
+        }
+
+        let snapshot = try await query.getDocuments()
+        return snapshot.documents.compactMap { try? $0.data(as: DBTranscript.self) }
+    }
+
+    // Only fetch keyMoments when user taps a transcript
+    func loadKeyMoments(teamDocId: String, gameId: String, keyMomentIds: [String]) async throws -> [DBKeyMoment] {
+        let keyMomentRepo = FirestoreKeyMomentRepository()
+        let collection = keyMomentRepo.keyMomentCollection(teamDocId: teamDocId, gameDocId: gameId)
+        
+        guard !keyMomentIds.isEmpty else { return [] }
+        let snapshot = try await collection.whereField("key_moment_id", in: keyMomentIds).getDocuments()
+
+        return snapshot.documents.compactMap { try? $0.data(as: DBKeyMoment.self) }
+    }
+    
+    func loadKeyMomentsBatch(teamDocId: String, gameId: String, playerId: String?, filterByTime: Bool, startAfterId: String? = nil) async throws -> [DBKeyMoment] {
+        let keyMomentRepo = FirestoreKeyMomentRepository()
+        let collection = keyMomentRepo.keyMomentCollection(teamDocId: teamDocId, gameDocId: gameId)
+        
+        var query = collection.order(by: filterByTime ? "key_moment_id" : "frame_start").limit(to: 20)
+        
+        if let playerId = playerId, !playerId.isEmpty {
+            query = query.whereField("feedback_for", arrayContains: playerId)
+        }
+        if let startAfterId = startAfterId {
+            // paginate
+            let lastDoc = try await collection.document(startAfterId).getDocument()
+            query = query.start(afterDocument: lastDoc)
+        }
+
+        let snapshot = try await query.getDocuments()
+        return snapshot.documents.compactMap { try? $0.data(as: DBKeyMoment.self) }
+    }
+    
+
+    // Only fetch transcripts when user taps a transcript
+    func loadTranscripts(teamDocId: String, gameId: String, search: String?) async throws -> [DBTranscript] {
+        let transcriptRepo = FirestoreTranscriptRepository()
+        let collection = transcriptRepo.transcriptCollection(teamDocId: teamDocId, gameDocId: gameId)
+        var query = collection.order(by: "transcript_id").limit(to: 20)
+
+        if let search = search, !search.isEmpty {
+            query = query.whereField("transcript", isGreaterThanOrEqualTo: search)
+                         .whereField("transcript", isLessThanOrEqualTo: search + "\u{f8ff}")
+        }
+
+        let snapshot = try await query.getDocuments()
+
+        return snapshot.documents.compactMap { try? $0.data(as: DBTranscript.self) }
+    }
+
 }

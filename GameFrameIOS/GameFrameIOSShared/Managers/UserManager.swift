@@ -37,6 +37,10 @@ public final class UserManager: ObservableObject {
         return try await repo.getUser(userId: userId)
     }
     
+    public func getAllUsers(userIds: [String]) async throws -> [DBUser]? {
+        return try await repo.getAllUsers(userIds: userIds)
+    }
+    
     
     /**
      GET - Retrieves user information from the database using document ID.

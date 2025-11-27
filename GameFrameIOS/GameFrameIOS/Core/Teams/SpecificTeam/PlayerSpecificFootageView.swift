@@ -64,206 +64,342 @@ struct PlayerSpecificFootageView: View {
     @State private var thumbnails: [String: UIImage] = [:]
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
     @State private var videoURL: URL?
+    @State private var gameTitle: String = ""
+
+    @State private var isLoadingContent: Bool = false
+
+    private var isStillLoading: Bool {
+        isLoadingContent || transcripts == nil || keyMoments == nil
+    }
 
 
     var body: some View {
-        //        NavigationView {
-        ScrollView {
-            VStack {
+        NavigationStack {
+            Group {
                 HStack(alignment: .top) {
-                    VStack {
-                        Text(game.title).font(.title2)
-                        Text(team.teamNickname).font(.headline)
-                        
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(game.title).font(Font.title.bold()).padding(.horizontal, 15)
                         if let gameStartTime = gameStartTime {
-                            Text(gameStartTime, style: .date).font(.subheadline).foregroundStyle(.secondary)
+                            Text(formatStartTime(gameStartTime)).font(.subheadline).foregroundStyle(.secondary).padding(.horizontal, 15)
                         }
-                        Button {
-                            isGameDetailsEnabled.toggle()
-                        } label: {
-                            Text("View Game Details").foregroundColor(Color.red).underline()
-                        }
+                        
                         Divider()
                     }
-                    
                 }
                 
-                // Watch Full Game
-                VStack(alignment: .leading, spacing: 0) {
-                    NavigationLink(destination: PlayerFullGameTranscriptView(teamDocId: team.id, gameId: game.gameId, recordStartTime: game.startTime, gameTitle: game.title)) {
-                        Text("Full Game Transcript")
-                            .font(.headline)
-                            .foregroundColor(.black)
-                        Spacer()
-                        Text("Watch").foregroundColor(.gray)
-                        Image(systemName: "chevron.right").foregroundColor(.gray)
+                if isLoadingContent {
+                    VStack {
+                        ProgressView("Loading feedback...")
+                            .padding()
+                            .background(.white)
+                            .cornerRadius(12)
                     }
-                }.padding()
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
-                    .padding(.horizontal).padding(.top)
-                    .disabled(false) // TODO: - Implement full game transcription in future release (only disabled if no videoUrl
-                
-                if let videoURL = videoURL {
-                    // Key moments
-                    VStack(alignment: .leading, spacing: 10) {
-                        NavigationLink(destination: PlayerAllKeyMomentsView(game: game, team: team, videoUrl: videoURL)) {
-                            Text("Key moments")
-                                .font(.headline)
-                                .foregroundStyle(keyMomentsFound ? .black : .secondary)
-                            
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(keyMomentsFound ? .black : .secondary)
-                            Spacer()
-                            
-                        }.padding(.bottom, 4).disabled(!keyMomentsFound)
-                        
-                        if let keyMoments = keyMoments {
-                            if !keyMoments.isEmpty {
-                                ForEach(keyMoments, id: \.id) { keyMoment in
-                                    HStack(alignment: .top) {
-                                        NavigationLink(destination: PlayerSpecificKeyMomentView(game: game, team: team, specificKeyMoment: keyMoment, videoUrl: videoURL)) {
-                                            if let image = thumbnails[keyMoment.keyMomentId] {
-                                                Image(uiImage: image)
+                } else {
+                    
+                    ScrollView {
+                        LazyVStack(alignment: .leading, pinnedViews: [.sectionHeaders]) {
+                            if let videoURL = videoURL {
+                                // Full Game Recording Section
+                                Section(header: VStack {
+                                    CustomUIFields.customDivider("Full Game Recording")
+                                        .padding(.top, 15)
+                                }.background(Color(.systemBackground))) {
+                                    VStack {
+                                        NavigationLink(destination: PlayerFullGameTranscriptView(
+                                            teamDocId: team.id,
+                                            gameId: game.gameId,
+                                            recordStartTime: game.startTime,
+                                            gameTitle: game.title
+                                        )) {
+                                            HStack {
+                                                Image(systemName: "video.fill")
                                                     .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width: 110, height: 60)
-                                                    .clipped()
-                                                    .cornerRadius(10)
-                                            } else {
-                                                Rectangle()
-                                                    .fill(Color.gray.opacity(0.3))
-                                                    .frame(width: 110, height: 60)
-                                                    .cornerRadius(10)
-                                            }
-                                            VStack {
+                                                    .scaledToFit()
+                                                    .frame(width: 30, height: 30)
+                                                    .foregroundColor(.red)
+                                                    .padding(.horizontal, 5)
+                                                
+                                                Text("Game Name")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                    .multilineTextAlignment(.leading)
+                                                    .lineLimit(2)
+                                                    .foregroundStyle(.black)
+                                                Spacer()
+                                                
                                                 HStack {
-                                                    if let gameStartTime = gameStartTime {
-                                                        let durationInSeconds = keyMoment.frameStart.timeIntervalSince(gameStartTime)
-                                                        Text(formatDuration(durationInSeconds)).font(.headline).bold().foregroundStyle(.black)
-                                                        Spacer()
-                                                    }
+                                                    Text("Watch")
+                                                        .foregroundStyle(.gray)
+                                                    Image(systemName: "chevron.right")
+                                                        .foregroundColor(.gray)
+                                                        .padding(.trailing, 5)
                                                 }
-                                                Text(keyMoment.transcript).font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.black).lineLimit(2)
+                                            }
+                                            .font(.callout)
+                                            .frame(height: 40)
+                                            .padding(.horizontal)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(Color.gray, lineWidth: 1)
+                                            )
+                                        }
+                                    }
+                                    .padding(.horizontal, 5)
+                                }
+                                
+                                
+                                if let keyMoments = keyMoments, !keyMoments.isEmpty {
+                                    // Key moments section
+                                    Section(header:
+                                                CustomDividerWithNavigationLink(
+                                                    title: "Key Moments",
+                                                    subTitle: "See all",
+                                                    subTitleColor: .red,
+                                                    icon: "arrow.right"
+                                                ) {
+                                                    PlayerAllKeyMomentsView(game: game, team: team, videoUrl: videoURL)
+                                                }
+                                        .background(Color(.systemBackground))
+                                    ) {
+                                        ForEach(keyMoments, id: \.id) { keyMoment in
+                                            VStack(alignment: .center) {
+                                                NavigationLink(destination: CoachSpecificKeyMomentView(game: game,
+                                                                                                       team: team,
+                                                                                                       specificKeyMoment: keyMoment,
+                                                                                                       videoUrl: videoURL)
+                                                ) {
+                                                    HStack {
+                                                        if let image = thumbnails[keyMoment.keyMomentId] {
+                                                            Image(uiImage: image)
+                                                                .resizable()
+                                                                .scaledToFill()
+                                                                .frame(width: 110, height: 60)
+                                                                .clipped()
+                                                                .cornerRadius(10)
+                                                        } else {
+                                                            Rectangle()
+                                                                .fill(Color(uiColor: .systemFill))
+                                                                .frame(width: 110, height: 60)
+                                                                .cornerRadius(10)
+                                                                .overlay(
+                                                                    Image(systemName: "video.slash")
+                                                                        .font(.title)   // size of icon
+                                                                        .foregroundColor(.gray)
+                                                                )
+                                                        }
+                                                        
+                                                        VStack {
+                                                            if let gameStartTime = gameStartTime {
+                                                                let durationInSeconds = keyMoment.frameStart.timeIntervalSince(gameStartTime)
+                                                                Text(formatDuration(durationInSeconds))
+                                                                    .font(.headline)
+                                                                    .bold()
+                                                                    .foregroundStyle(.black)
+                                                                    .multilineTextAlignment(.leading)
+                                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                            }
+                                                            
+                                                            Text(keyMoment.transcript)
+                                                                .font(.caption)
+                                                                .multilineTextAlignment(.leading)
+                                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                                .foregroundStyle(.black)
+                                                                .lineLimit(2)
+                                                        }
+                                                        Spacer()
+                                                        Image(systemName: "chevron.right")
+                                                            .foregroundColor(.gray)
+                                                            .padding(.leading)
+                                                            .padding(.trailing, 5)
+                                                    }
+                                                    
+                                                }
+                                                Divider()
+                                                
+                                            }
+                                        }
+                                    }
+                                } else if !isStillLoading {
+                                    CustomUIFields.customDivider("Key Moments")
+                                        .padding(.top, 15)
+                                    
+                                    // Transcripts empty
+                                    VStack(alignment: .center) {
+                                        Image(systemName: "video.slash.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.gray)
+                                            .padding(.bottom, 2)
+                                        
+                                        Text("No key moments assigned to you were found at this time.")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                            .multilineTextAlignment(.center)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.top, 10)
+                                    .padding(.horizontal, 15)
+                                }
+                            }
+                            
+                            if let transcripts = transcripts, !transcripts.isEmpty {
+                                Section(header:
+                                            CustomDividerWithNavigationLink(
+                                                title: "Transcripts",
+                                                subTitle: "See all",
+                                                subTitleColor: .red,
+                                                icon: "arrow.right"
+                                            ) {
+                                                PlayerAllTranscriptsView(game: game, team: team)
+                                            }
+                                    .background(Color(.systemBackground))
+                                ) {
+                                    ForEach(transcripts, id: \.id) { recording in
+                                        if let gameStartTime = gameStartTime {
+                                            VStack {
+                                                NavigationLink(destination: PlayerSpecificTranscriptView(game: game, team: team, transcript: recording)
+                                                ) {
+                                                    HStack {
+                                                        Image(systemName: "waveform.and.mic")
+                                                            .resizable()
+                                                            .scaledToFit()
+                                                            .frame(width: 30, height: 30)
+                                                            .padding(.horizontal, 5)
+                                                        
+                                                        VStack(spacing: 4) {
+                                                            let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
+                                                            Text(formatDuration(durationInSeconds))
+                                                                .bold()
+                                                                .font(.headline)
+                                                                .foregroundColor(Color.black)
+                                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                            Text("\(recording.transcript)")
+                                                                .font(.caption)
+                                                                .multilineTextAlignment(.leading)
+                                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                                .lineLimit(2)
+                                                                .foregroundColor(Color.black)
+                                                        }
+                                                        Spacer()
+                                                        Image(systemName: "chevron.right")
+                                                            .foregroundColor(.gray)
+                                                            .padding(.leading)
+                                                            .padding(.trailing, 5)
+                                                        
+                                                    }.tag(recording.id as Int)
+                                                        .padding(.vertical, 2)
+                                                }
+                                                Divider()
                                             }
                                         }
                                     }
                                 }
-                            } else {
-                                // key moments empty
-                                Text("No key moments.").font(.caption).foregroundColor(.secondary)
-                            }
-                        }
-                    }.padding()
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
-                        .padding(.horizontal).padding(.top)
-                }
-                
-                // Transcript
-                VStack(alignment: .leading, spacing: 10) {
-                    
-                    NavigationLink(destination: PlayerAllTranscriptsView(game: game, team: team)) {
-                        Text("Transcript")
-                            .font(.headline)
-                            .foregroundStyle(transcriptsFound ? .black : .secondary)
-                        
-                        Image(systemName: "chevron.right")
-                            .foregroundStyle(transcriptsFound ? .black : .secondary)
-                        Spacer()
-                        
-                    }.padding(.bottom, 4).disabled(!transcriptsFound)
-                    if let transcripts = transcripts {
-                        if !transcripts.isEmpty {
-                            ForEach(transcripts, id: \.id) { recording in
-                                HStack(alignment: .center) {
-                                    NavigationLink(destination: PlayerSpecificTranscriptView(game: game, team: team, transcript: recording)) {
-                                        HStack(alignment: .center) {
-                                            if let gameStartTime = gameStartTime {
-                                                let durationInSeconds = recording.frameStart.timeIntervalSince(gameStartTime)
-                                                Text(formatDuration(durationInSeconds)).bold().font(.headline).foregroundColor(Color.black)
-                                                Spacer()
-                                                Text(recording.transcript)
-                                                    .font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).lineLimit(2).padding(.top, 4).foregroundColor(Color.black)
-                                                
-                                                Image(systemName: "person.crop.circle").resizable().frame(width: 20, height: 20).foregroundColor(.gray)
-                                            }
-                                        }.tag(recording.id as Int)
-                                    }.foregroundStyle(.black)
+                            } else if !isStillLoading {
+                                // Transcripts empty
+                                CustomUIFields.customDivider("Transcripts")
+                                    .padding(.top, 15)
+                                
+                                VStack(alignment: .center) {
+                                    Image(systemName: "microphone.slash.fill")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(.gray)
+                                        .padding(.bottom, 2)
+                                    Text("No transcripts assigned to you were found at this time.").font(.subheadline).foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.center)
                                 }
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.top, 10)
+                                .padding(.horizontal, 15)
                             }
-                        } else {
-                            // Transcripts empty
-                            Text("No transcripts.").font(.caption).foregroundColor(.secondary)
                         }
+                        .padding(.horizontal, 15)
+                    }
+                    .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                        Color.clear.frame(height: 90)
                     }
                 }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 1))
-                .padding(.horizontal).padding(.top)
+                
+                Spacer()
             }
-        }
-        .frame(maxHeight: .infinity, alignment: .top)
-        .task {
-            do {
+            
+            .frame(maxHeight: .infinity, alignment: .top)
+            .task {
+                isLoadingContent = true
+                gameTitle = game.title
+                
                 if let startTime = game.startTime {
                     gameStartTime = startTime
                 }
-                let (tmpTranscripts, tmpKeyMom) = try await transcriptModel.getPreviewTranscriptsAndKeyMoments(gameId: game.gameId, teamDocId: team.id)
                 
-                self.transcripts = tmpTranscripts
-                self.keyMoments = tmpKeyMom
+                async let transcriptsTask = transcriptModel.getPreviewTranscriptsAndKeyMoments(
+                    gameId: game.gameId,
+                    teamDocId: team.id
+                )
                 
-                if let allTranscripts = transcripts {
-                    if !allTranscripts.isEmpty {
-                        transcriptsFound = true
+                async let videoPathTask = fgVideoRecordingModel.getFGRecordingVideoUrl(
+                    teamDocId: team.id,
+                    gameId: game.gameId
+                )
+                
+                do {
+                    // 3. Await transcripts and keymoments
+                    let (tmpTranscripts, tmpKeyMoments) = try await transcriptsTask
+                    self.transcripts = tmpTranscripts
+                    self.keyMoments = tmpKeyMoments
+                    
+                    // Set the flags
+                    transcriptsFound = !(tmpTranscripts?.isEmpty ?? true)
+                    keyMomentsFound = !(tmpKeyMoments?.isEmpty ?? true)
+                    
+                    // 4. Await the video path
+                    guard let videoPath = try await videoPathTask else {
+                        print("❌ Error: No videoPath found for \(team.id), \(game.gameId)")
+                        isLoadingContent = false
+                        return
                     }
-                }
-                
-                // Get the full game video path
-                guard let videoPath = try await fgVideoRecordingModel.getFGRecordingVideoUrl(teamDocId: team.id, gameId: game.gameId) else {
-                    print("error with videoPath for \(team.id), \(game.gameId)")
-                    return
-                }
-                
-                let storageRef = StorageManager.shared.getAudioURL(path: videoPath)
-                storageRef.downloadURL { url, error in
-                    if let error = error {
-                        print("❌ Failed to get stream URL: \(error.localizedDescription)")
-                    } else if let url = url {
-                        print("✅ download url is: \(url)")
-                        self.videoURL = url
-                        if let allKeyMoments = keyMoments {
-                            print("key moments found")
-                            if !allKeyMoments.isEmpty {
-                                keyMomentsFound = true
-                            }
-                            
-                            // Get the thumbail for each key moments
-                            for keyMoment in allKeyMoments {
-                                print("are we at least passing here")
-                                // TODO: Add time before feedback? possibly for the thumbnail
-                                if let gameStartTime = gameStartTime {
-                                    print("generating a thumbnail")
-                                    let startTime = keyMoment.frameStart.timeIntervalSince(gameStartTime)
-                                    generateThumbnail(for: url, key: keyMoment.keyMomentId, sec: startTime)
-                                }
+                    
+                    // 5. Convert to async URL fetch instead of callback
+                    let storageRef = StorageManager.shared.getAudioURL(path: videoPath)
+                    let url: URL = try await withCheckedThrowingContinuation { continuation in
+                        storageRef.downloadURL { url, error in
+                            if let error = error {
+                                continuation.resume(throwing: error)
+                            } else if let url = url {
+                                continuation.resume(returning: url)
+                            } else {
+                                continuation.resume(throwing: URLError(.badURL))
                             }
                         }
                     }
+                    
+                    self.videoURL = url
+                    print("✅ Download URL: \(url)")
+                    
+                    // 6. Generate thumbnails for key moments
+                    if let allKeyMoments = tmpKeyMoments,
+                       let gameStartTime = self.gameStartTime {
+                        
+                        for moment in allKeyMoments {
+                            let startSec = moment.frameStart.timeIntervalSince(gameStartTime)
+                            await generateThumbnail(for: url, key: moment.keyMomentId, sec: startSec)
+                        }
+                    }
+                } catch {
+                    print("Error when fetching specific footage info: \(error)")
                 }
                 
-            } catch {
-                print("Error when fetching specific footage info: \(error)")
+                isLoadingContent = false
             }
-        }
-        .sheet(isPresented: $isGameDetailsEnabled) {
-            GameDetailsView(selectedGame: game, team: team, userType: .player, dismissOnRemove: .constant(false))
-        }
-        .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
-            Color.clear.frame(height: 75)
-        }
-        .onAppear {
-            transcriptModel.setDependencies(dependencies)
-            fgVideoRecordingModel.setDependencies(dependencies)
+            .sheet(isPresented: $isGameDetailsEnabled) {
+                GameDetailsView(selectedGame: game, team: team, userType: .player, dismissOnRemove: .constant(false), gameTitle: $gameTitle)
+            }
+            .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
+                Color.clear.frame(height: 75)
+            }
+            .onAppear {
+                transcriptModel.setDependencies(dependencies)
+                fgVideoRecordingModel.setDependencies(dependencies)
+            }
         }
     }
     

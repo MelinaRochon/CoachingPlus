@@ -15,12 +15,12 @@ public struct DBTeam: Identifiable, Codable {
     public let teamId: String
     public var name: String
     public var teamNickname: String
-    public let sport: String
+    public var sport: String
     public let logoUrl: String?
     public let colour: String?
     public var gender: String
     public var ageGrp: String
-    public let accessCode: String?
+    public var accessCode: String?
     public var coaches: [String]
     public var players: [String]?
     public var invites: [String]?

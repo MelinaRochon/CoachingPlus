@@ -17,33 +17,21 @@ import GameFrameIOSShared
 /// - Navigates to the detailed key moment view when a moment is selected.
 struct SearchKeyMomentsView: View {
     
-    /// The text entered by the user in the search bar.
-    @State private var searchText: String = ""
-    
-    /// The game for which key moments are being searched.
-    @State var game: DBGame
-    
-    /// The team associated with the game.
-    @State var team: DBTeam
-    
-    /// A list of key moments retrieved for the given game.
-    @State var keyMoments: [keyMomentTranscript]
-    
-    /// The user type (e.g., Coach or Player) to customize the experience.
-    @State var userType: UserType
-    
+    let keyMoments: [keyMomentTranscript]
     let prefix: Int?
-    let destinationBuilder: (keyMomentTranscript?) -> AnyView
-    
+    let game: DBGame
+    let team: DBTeam
     @State private var thumbnails: [String: UIImage] = [:]
     @State var videoUrl: URL
+    
+    let destinationBuilder: (keyMomentTranscript?) -> AnyView
     
     var body: some View {
         
         let recordings = prefix.map { Array(keyMoments.prefix($0)) } ?? keyMoments
         ForEach(recordings, id: \.id) { recording in
-            HStack(alignment: .top) {
-                NavigationLink(destination: destinationBuilder(recording)) {
+            NavigationLink(destination: destinationBuilder(recording)) {
+                VStack {
                     HStack {
                         if let image = thumbnails[recording.keyMomentId] {
                             Image(uiImage: image)
@@ -54,14 +42,27 @@ struct SearchKeyMomentsView: View {
                                 .cornerRadius(10)
                         } else {
                             Rectangle()
-                                .fill(Color.gray.opacity(0.3))
+                                .fill(Color(uiColor: .systemFill))
                                 .frame(width: 110, height: 60)
                                 .cornerRadius(10)
+                                .overlay(
+                                    Image(systemName: "video.slash")
+                                        .font(.title)   // size of icon
+                                        .foregroundColor(.gray)
+                                )
                         }
                         
                         keyMomentRow(for: recording)
+                        
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                            .padding(.leading)
+                            .padding(.trailing, 5)
                     }
+                    Divider()
                 }
+                .padding(.horizontal, 15)
             }
         }
         .task {
@@ -75,7 +76,7 @@ struct SearchKeyMomentsView: View {
             }
         }
     }
-
+    
     
     /// Generates a thumbnail image from a video at a specified time.
     /// - Parameters:
@@ -102,7 +103,7 @@ struct SearchKeyMomentsView: View {
             }
         }
     }
-
+    
     
     /// Creates a view representing a single key moment row in the list of key moments.
     /// - Parameter recording: A `keyMomentTranscript` object containing the key moment's details (start time and transcript).
@@ -114,11 +115,19 @@ struct SearchKeyMomentsView: View {
             if let startTime = game.startTime {
                 HStack {
                     let durationInSeconds = recording.frameStart.timeIntervalSince(startTime)
-                    Text(formatDuration(durationInSeconds)).bold().font(.headline)
+                    Text(formatDuration(durationInSeconds))
+                        .bold()
+                        .font(.headline)
+                        .foregroundStyle(.black)
                     Spacer()
                 }
             }
-            Text(recording.transcript).font(.caption).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).lineLimit(2)
+            Text(recording.transcript)
+                .font(.caption)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineLimit(2)
+                .foregroundStyle(.black)
         }
     }
 }

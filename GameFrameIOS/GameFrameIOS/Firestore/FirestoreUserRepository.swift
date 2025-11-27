@@ -42,6 +42,13 @@ public final class FirestoreUserRepository: UserRepository {
         return try doc.data(as: DBUser.self)
     }
     
+    public func getAllUsers(userIds: [String]) async throws -> [DBUser]? {
+        guard !userIds.isEmpty else { return [] }
+        let snapshot = try await userCollection.whereField("user_id", in: userIds).getDocuments()
+
+        return snapshot.documents.compactMap { try? $0.data(as: DBUser.self) }
+    }
+    
     public func getUserWithDocId(id: String) async throws -> DBUser? {
         // Directly fetch a user document by its document ID
         return try await userDocument(id: id).getDocument(as: DBUser.self)

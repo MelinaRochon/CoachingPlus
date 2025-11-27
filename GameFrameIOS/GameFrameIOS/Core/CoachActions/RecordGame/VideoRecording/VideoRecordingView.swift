@@ -23,6 +23,7 @@ struct VideoRecordingView: View {
 
     @StateObject private var audioRecordingModel = AudioRecordingModel()
     @StateObject private var fgVideoRecordingModel = FGVideoRecordingModel()
+    @StateObject private var playerModel = PlayerModel()
     @StateObject private var camera = CameraViewModel()
     
     @EnvironmentObject private var dependencies: DependencyContainer
@@ -137,8 +138,9 @@ struct VideoRecordingView: View {
                             print("error. Could not get the recording id")
                             return
                         }
-                        
                         self.fullGameId = fgRecordingId
+                        
+//                        try await audioRecordingModel.loadAllPlayersInfo(teamId: teamId)
                         
                         if isUsingWatch {
                             // Set the game session context in case watchOS is used to record audio feedback
@@ -183,6 +185,7 @@ struct VideoRecordingView: View {
                 }
                 fgVideoRecordingModel.setDependencies(dependencies)
                 audioRecordingModel.setDependencies(dependencies)
+                playerModel.setDependencies(dependencies)
             }
         }
         .onDisappear {

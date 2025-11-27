@@ -32,17 +32,14 @@ struct PlayerFullGameTranscriptView: View {
     var body: some View {
         ZStack {
             VStack(alignment: .leading) {
-                   Text("Full Game Transcript").bold()
-                       .frame(maxWidth: .infinity, alignment: .center)
-
                 if videoFileRetrieved {
                     let localAudioURL = FileManager.default
                         .urls(for: .documentDirectory, in: .userDomainMask)[0]
                         .appendingPathComponent("downloaded_video.mov")
-                    let ratio = videoAspectRatio(for: localAudioURL)
+                    
                     VideoPlayerView(url: localAudioURL)
-                        .aspectRatio(ratio, contentMode: .fit)
-                                .frame(maxWidth: .infinity)
+                        .aspectRatio(16/9, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
                         .onAppear {
                             AVAudioSession.sharedInstance().setPlaybackCategory()
                         }
@@ -63,6 +60,8 @@ struct PlayerFullGameTranscriptView: View {
                 CustomUIFields.loadingSpinner("Loading full game...") //.frame(alignment: .center)
             }
         }
+        .navigationTitle("Full Game Recording")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             do {
                 // Get full game transcript video url

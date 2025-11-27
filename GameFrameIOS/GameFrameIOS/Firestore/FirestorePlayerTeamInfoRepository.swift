@@ -13,15 +13,15 @@ public final class FirestorePlayerTeamInfoRepository: PlayerTeamInfoRepository {
     private let playerCollection = Firestore.firestore().collection("players") // user collection
     
     private func playerDocument(id: String) -> DocumentReference {
-        playerCollection.document(id)
+        return playerCollection.document(id)
     }
     
     private func teamInfoCollection(playerDocId: String) -> CollectionReference {
-        playerDocument(id: playerDocId).collection("playerTeamInfo")
+        return playerDocument(id: playerDocId).collection("playerTeamInfo")
     }
     
     private func teamInfoDocument(playerDocId: String, teamId: String) -> DocumentReference {
-        teamInfoCollection(playerDocId: playerDocId).document(teamId)
+        return teamInfoCollection(playerDocId: playerDocId).document(teamId)
     }
     
     /// Creates/updates players/{playerDocId}/playerTeamInfo/{dto.id}
@@ -65,6 +65,15 @@ public final class FirestorePlayerTeamInfoRepository: PlayerTeamInfoRepository {
         return try await teamInfoDocument(playerDocId: playerDocId, teamId: teamId).getDocument(as: DBPlayerTeamInfo.self)
     }
     
+    public func getPlayerTeamInfoWithPlayerId(playerId: String, teamId: String) async throws -> DBPlayerTeamInfo? {
+        let snapshot = try await playerCollection.whereField("player_id", isEqualTo: playerId).getDocuments()
+        
+        // Return the first document if available
+        guard let doc = snapshot.documents.first else { return nil }
+        let subCollectionRef = doc.reference.collection("playerTeamInfo").document(teamId)
+        return try await subCollectionRef.getDocument(as: DBPlayerTeamInfo.self)
+            
+    }
     
     /// Updates only the jersey number and/or nickname fields for a player's team info.
     ///

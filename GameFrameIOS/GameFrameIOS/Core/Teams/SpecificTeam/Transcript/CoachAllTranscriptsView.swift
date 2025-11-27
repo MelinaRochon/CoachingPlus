@@ -60,15 +60,25 @@ struct CoachAllTranscriptsView: View {
     /// - Declared as `@StateObject` to ensure it's created once and retained during the view’s lifecycle.
     /// - Used to fetch, store, and interact with players' data (e.g., names, selection, filtering).
     @StateObject private var playerModel = PlayerModel()
+        
+    @State private var isLoadingTranscripts: Bool = false
+    
 
     var body: some View {
         NavigationStack {
             VStack {
-                if let recordings = transcripts {
-                    List {
-                        // Checks if there are any transcripts available.
-                        
-                        if !recordings.isEmpty {
+                
+                if isLoadingTranscripts {
+                    ProgressView("Loading transcripts…")
+                        .padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    CustomUIFields.customDivider("Transcripts")
+                        .padding(.top, 15)
+                        .padding(.horizontal, 15)
+                    
+                    if let recordings = transcripts, !recordings.isEmpty {
+                        ScrollView {
                             SearchTranscriptView(
                                 transcripts: filteredTranscripts,
                                 prefix: nil,
@@ -79,14 +89,20 @@ struct CoachAllTranscriptsView: View {
                                     AnyView(CoachSpecificTranscriptView(game: game, team: team, transcript: recording))
                                 }
                             )
-                        } else {
-                            Text("No transcripts found.").font(.caption).foregroundStyle(.secondary)
                         }
-                        
+                    } else {
+                        VStack(alignment: .center) {
+                            Image(systemName: "microphone.slash.fill")
+                                .font(.system(size: 30))
+                                .foregroundColor(.gray)
+                                .padding(.bottom, 2)
+                            
+                            Text("No transcripts found at this time.").font(.headline).foregroundStyle(.secondary)
+                        }
+                        .padding(.top, 10)
                     }
-                    .listStyle(PlainListStyle())
-                } else {
-                    CustomUIFields.loadingSpinner("Loading transcripts...")
+                    
+                    Spacer()
                 }
             }
             // Show filters
@@ -101,18 +117,14 @@ struct CoachAllTranscriptsView: View {
                         playerSelectedIndex: $playerSelectedIndex,
                         userType: .coach
                     )
-                    .presentationDetents([.medium])
+                    .presentationDetents([.height(340)])
                     .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button (action: {
-                                showFilterSelector = false // Close the filter options
-                            }) {
-                                Text("Done")
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel", systemImage: "xmark") {
+                                showFilterSelector = false
                             }
                         }
                     }
-                    .navigationTitle("Filter Options")
-                    .navigationBarTitleDisplayMode(.inline)
                 }
             })
             .toolbar {
@@ -151,8 +163,10 @@ struct CoachAllTranscriptsView: View {
             .onChange(of: searchText) {
                 if let recordings = transcripts {
                     if !recordings.isEmpty && searchText != "" {
+                        isLoadingTranscripts = true
                         print("Filtering: \(searchText)")
                         self.filteredTranscripts = filterTranscripts(filteredTranscripts, game, with: searchText)
+                        isLoadingTranscripts = false
                     }
                     else {
                         self.filteredTranscripts = recordings
@@ -179,6 +193,7 @@ struct CoachAllTranscriptsView: View {
                 transcriptModel.setDependencies(dependencies)
             }
         }.task {
+            isLoadingTranscripts = true
             do {
                 let tmpTranscripts = try await transcriptModel.getAllTranscripts(gameId: game.gameId, teamDocId: team.id)
                 self.transcripts = tmpTranscripts
@@ -191,6 +206,7 @@ struct CoachAllTranscriptsView: View {
             } catch {
                 print("Error. Aborting...")
             }
+            isLoadingTranscripts = false
         }
     }
     

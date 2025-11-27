@@ -75,12 +75,13 @@ struct CoachMyTeamView: View {
     @State private var isLoadingMoreFootage: Bool = false
     @State private var hasTriggeredLoadFor: Set<String> = []
     
+    @State private var gameName: String = ""
+    
     // MARK: - View
     
     var body: some View {
         VStack {
-//            Divider()
-
+            // Page title
             VStack(alignment: .leading, spacing: 6) {
                 Text(selectedTeam.teamNickname).font(Font.largeTitle.bold()).padding(.horizontal, 15)
                 Divider()
@@ -118,7 +119,8 @@ struct CoachMyTeamView: View {
                                     selectedTeam: selectedTeam,
                                     showUpcomingGames: showUpcomingGames,
                                     showRecentGames: showRecentGames,
-                                    userType: .coach
+                                    userType: .coach,
+                                    gameModel: gameModel
                                 )
                                 
                                 if let last = groupedFootage.last {
@@ -165,6 +167,7 @@ struct CoachMyTeamView: View {
                     .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
                         Color.clear.frame(height: 75)
                     }
+                    
                 }
             } else {
                 List {
@@ -205,15 +208,16 @@ struct CoachMyTeamView: View {
             
             Spacer()
         }
-//        .navigationTitle(Text(selectedTeam.teamNickname))
-//        .navigationBarTitleDisplayMode(.large)
-//        .navigationBarTitleDisplayMode(.automatic)
-
         .onAppear {
             teamModel.setDependencies(dependencies)
             gameModel.setDependencies(dependencies)
             playerModel.setDependencies(dependencies)
-            refreshData() // Refresh data when the view appears
+            
+            if gameModel.lastDoc != nil {
+                Task { await loadMoreFootage() }
+            } else {
+                refreshData() // Refresh data when the view appears
+            }
         }
         .safeAreaInset(edge: .bottom){ // Adding padding space for nav bar
             Color.clear.frame(height: 75)
@@ -231,69 +235,38 @@ struct CoachMyTeamView: View {
         }
         .toolbar {
             // Toolbar item for accessing team settings
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    Button(action: {
-                        isTeamSettingsEnabled.toggle() // Toggle team settings visibility
-                    }) {
-                        Label("Settings", systemImage: "gear")
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button(action: {
+                    isTeamSettingsEnabled.toggle() // Toggle team settings visibility
+                }) {
+                    Label("Settings", systemImage: "gear")
+                }
+                .tint(.red)
+                
+                Button(action: {
+                    isGamesSettingsEnabled.toggle()
+                }) {
+                    Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
+                }
+                .tint(.red)
+            }
+            
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                if selectedSegmentIndex == 0 {
+                    Button{
+                        addGameEnabled.toggle()
+                    } label: {
+                        Label("Add Game", systemImage: "calendar.badge.plus")
                     }
-                    .tint(.red)
-                    
-                    Button(action: {
-                        isGamesSettingsEnabled.toggle()
-                    }) {
-                        Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
+                } else {
+                    Button{
+                        addPlayerEnabled.toggle()
+                    } label: {
+                        Label("Add Player", systemImage: "person.fill.badge.plus")
                     }
-                    .tint(.red)
-                    
-                    if selectedSegmentIndex == 0 {
-                        Button{
-                            addGameEnabled.toggle()
-                        } label: {
-                            Label("Add Game", systemImage: "calendar.badge.plus")
-                        }
-                        
-
-                    } else {
-                        Button{
-                            addPlayerEnabled.toggle()
-                        } label: {
-                            Label("Add Player", systemImage: "person.fill.badge.plus")
-                        }
-                    }
-//                    Menu {
-//                        Button{
-//                            addGameEnabled.toggle()
-//                        } label: {
-//                            Label("Add Game", systemImage: "calendar.badge.plus")
-//                        }
-//                        Button{
-//                            addPlayerEnabled.toggle()
-//                        } label: {
-//                            Label("Add Player", systemImage: "person.fill.badge.plus")
-//                        }
-//                        
-//                    } label: {
-//                        Label("Plus", systemImage: "plus")
-//                    }
-                    
-//                    Menu {
-//                        Button(action: { addGameEnabled.toggle() }) {
-//                            Label("Add Game", systemImage: "calendar.badge.plus")
-//                        }
-//                        Button(action: { addPlayerEnabled.toggle() }) {
-//                            Label("Add Player", systemImage: "person.fill.badge.plus")
-//                        }
-//                    } label: {
-//                        Label("Plus", systemImage: "plus")
-//                    }
-//                    Menu {
-//                                toolbarMenuContent
-//                    } label: {
-//                        Label("Plus", systemImage: "plus")
-//                    }
-//                    .tint(.red)
                 }
             }
         }
@@ -363,6 +336,8 @@ struct CoachMyTeamView: View {
     private func refreshData() {
         Task {
             do {
+                gameModel.games = []
+                groupedFootage = []
                 // Load games and players associated with the team
                 print("selected them = \(selectedTeam)")
                 isLoadingFootage = true
@@ -427,7 +402,7 @@ struct CoachMyTeamView: View {
     func loadMoreFootage() async {
         guard !isLoadingMoreFootage else { return }
         isLoadingMoreFootage = true
-
+        
         await gameModel.loadMore(teamDocId: selectedTeam.id)
 
         await withTaskGroup(of: IndexedFootage?.self) { group in

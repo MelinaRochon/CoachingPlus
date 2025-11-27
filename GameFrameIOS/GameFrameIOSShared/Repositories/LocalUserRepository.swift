@@ -41,6 +41,17 @@ public final class LocalUserRepository: UserRepository {
         return user
     }
     
+    public func getAllUsers(userIds: [String]) async throws -> [DBUser]? {
+        var tmpUsers: [DBUser] = []
+        for userId in userIds {
+            let tmp = try await getUser(userId: userId)
+            if tmp != nil {
+                tmpUsers.append(tmp!)
+            }
+        }
+        return tmpUsers
+    }
+    
     
     /// Retrieves a user by their Firestore document ID.
     /// - Parameter id: The Firestore document ID.
