@@ -107,7 +107,7 @@ struct PlayerNotificationView: View {
         .task {
             // inject deps and load notifications when the view appears
             notifModel.setDependencies(dependencies)
-            await loadCoachNotifications()
+            await loadPlayerNotifications()
         }
     }
     
@@ -137,12 +137,14 @@ struct PlayerNotificationView: View {
         return f.localizedString(for: date, relativeTo: Date())
     }
     
-    private func loadCoachNotifications() async {
+    private func loadPlayerNotifications() async {
         do {
             isLoadingMyNotifs = true
             try await notifModel.loadNotifications(userId: playerId)
             notifications = notifModel.notifications
             print("🔔 View copying \(notifModel.notifications.count) notifications into state")
+            dependencies.hasUnreadNotifications = notifications.contains { !$0.isRead }
+
             isLoadingMyNotifs = false
         } catch {
             isLoadingMyNotifs = false
@@ -168,6 +170,8 @@ struct PlayerNotificationView: View {
                     copy[idx].isRead = true
                 }
                 notifications = copy
+                dependencies.hasUnreadNotifications = notifications.contains { !$0.isRead }
+
             } catch {
                 print("❌ Failed to mark notification as read: \(error)")
             }

@@ -126,13 +126,13 @@ struct CoachMainTabView: View {
 //                    .foregroundColor(selectedTab == tabIndex ? Color(.darkGray) : Color(.darkGray))// Highlight selected tab
                 
                     .overlay(alignment: .topTrailing) {
-                                        if tabIndex == 1 && dependencies.hasUnreadNotifications {
-                                            Circle()
-                                                .fill(Color.red)
-                                                .frame(width: 8, height: 8)
-                                                .offset(x: 4, y: -4) // tweak until it looks nice
-                                        }
-                                    }
+                        if tabIndex == 1 && dependencies.hasUnreadNotifications {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 8, height: 8)
+                                .offset(x: 4, y: -4)
+                        }
+                    }
                 
                 Text(label)
                     .font(.caption)

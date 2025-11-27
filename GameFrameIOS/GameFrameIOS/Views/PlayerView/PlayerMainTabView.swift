@@ -14,7 +14,8 @@ import SwiftUI
 struct PlayerMainTabView: View {
     
     let playerId: String
-    
+    @EnvironmentObject private var dependencies: DependencyContainer
+
     @State private var selectedTab: Int = 3
     @Binding var showLandingPageView: Bool
     
@@ -68,6 +69,9 @@ struct PlayerMainTabView: View {
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .task {
+                await preloadUnreadNotificationsOnLaunch()
+            }
     }
     
     // MARK: - Tab content
@@ -102,6 +106,15 @@ struct PlayerMainTabView: View {
                 .frame(width: 24, height: 24)
                 .foregroundStyle(Color(.darkGray))
             
+                .overlay(alignment: .topTrailing) {
+                    if tabIndex == 1 && dependencies.hasUnreadNotifications {
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 8, height: 8)
+                            .offset(x: 4, y: -4)
+                    }
+                }
+            
             Text(label)
                 .font(.caption)
                 .foregroundStyle(Color(.darkGray))
@@ -109,6 +122,27 @@ struct PlayerMainTabView: View {
         .padding()
         .onTapGesture {
             selectedTab = tabIndex
+        }
+    }
+    private func preloadUnreadNotificationsOnLaunch() async {
+        do {
+            // Map from coachId (auth uid) to domain user doc id
+            guard let user = try await dependencies.userManager.getUser(userId: playerId) else {
+                print("⚠️ Could not resolve user for coachId \(playerId)")
+                return
+            }
+            let userDocId = user.id
+            print("🔍 Preloading notifications for userDocId: \(userDocId)")
+
+            let recent = try await dependencies.notificationManager
+                .getNotificationsForUser(userDocId: userDocId, limit: 20)
+
+            await MainActor.run {
+                dependencies.hasUnreadNotifications = recent.contains { !$0.isRead }
+                print("🔴 hasUnreadNotifications on launch = \(dependencies.hasUnreadNotifications)")
+            }
+        } catch {
+            print("❌ Failed to preload notifications: \(error)")
         }
     }
 }
