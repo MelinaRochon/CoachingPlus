@@ -191,7 +191,7 @@ struct PlayerSpecificKeyMomentView: View {
                     teamDocId: team.id,
                     keyMomentId: String(specificKeyMoment.id),
                     gameId: game.gameId,
-                    transcriptId: String(specificKeyMoment.transcript)
+                    transcriptId: String(specificKeyMoment.transcriptId)
                 )
             }
         }
