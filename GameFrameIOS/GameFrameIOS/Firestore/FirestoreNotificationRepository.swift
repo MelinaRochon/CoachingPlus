@@ -47,6 +47,8 @@ public final class FirestoreNotificationRepository: NotificationRepository {
             .limit(to: 1)
             .getDocuments()
         
+        print("Found notification with id \(id)")
+        
         return snapshot.documents.first
     }
     
@@ -178,16 +180,19 @@ public final class FirestoreNotificationRepository: NotificationRepository {
      - Parameter id: The Firestore document ID of the notification to update.
      - Throws: An error if the update fails.
      */
-    public func markNotificationAsRead(id: String) async throws {
-        guard let doc = try await findNotificationDocument(id: id) else {
-            return
-        }
+    public func markNotificationAsRead(
+        userDocId: String,
+        id: String
+    ) async throws {
+        print("✅ Marking notification \(id) as read for user \(userDocId)")
         
-        let data: [String: Any] = [
-            DBNotification.CodingKeys.isRead.rawValue: true
-        ]
+        // Assuming this exists already:
+        // func notificationsCollection(for userDocId: String) -> CollectionReference
+        let docRef = notificationsCollection(for: userDocId).document(id)
         
-        try await doc.reference.updateData(data as [AnyHashable: Any])
+        try await docRef.updateData([
+            "is_read": true
+        ])
     }
     
     /**

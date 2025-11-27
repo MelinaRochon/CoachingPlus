@@ -31,10 +31,10 @@ struct CoachSpecificKeyMomentLoaderView: View {
         self.gameId = gameId
         self.keyMomentId = keyMomentId
         
-        print("CoachSpecificKeyMomentLoaderView init")
-        print("   teamId: \(teamId)")
-        print("   gameId: \(gameId)")
-        print("   keyMomentId: \(keyMomentId)")
+//        print("CoachSpecificKeyMomentLoaderView init")
+//        print("   teamId: \(teamId)")
+//        print("   gameId: \(gameId)")
+//        print("   keyMomentId: \(keyMomentId)")
     }
     
     var body: some View {

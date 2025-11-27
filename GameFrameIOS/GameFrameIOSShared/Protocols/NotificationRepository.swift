@@ -42,7 +42,7 @@ public protocol NotificationRepository {
     /// Marks a specific notification as read.
     /// - Parameter id: The Firestore document ID of the notification to update.
     /// - Throws: An error if the update fails.
-    func markNotificationAsRead(id: String) async throws
+    func markNotificationAsRead(userDocId: String, id: String) async throws
     
     
     /// Marks all notifications as read for a given user.

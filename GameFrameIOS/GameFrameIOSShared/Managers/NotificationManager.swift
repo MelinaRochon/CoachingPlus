@@ -83,8 +83,8 @@ public final class NotificationManager {
      - Parameter id: The ID of the notification to update.
      - Throws: An error if the update process fails.
      */
-    public func markNotificationAsRead(id: String) async throws {
-        try await repo.markNotificationAsRead(id: id)
+    public func markNotificationAsRead(userDocId: String, id: String) async throws {
+        try await repo.markNotificationAsRead(userDocId: userDocId, id: id)
     }
     
     

@@ -69,7 +69,7 @@ public final class LocalNotificationRepository: NotificationRepository {
     
     /// Marks a specific notification as read.
     /// - Parameter id: The ID of the notification to update.
-    public func markNotificationAsRead(id: String) async throws {
+    public func markNotificationAsRead(userDocId: String, id: String) async throws {
         guard let index = notifications.firstIndex(where: { $0.id == id }) else {
             throw NSError(domain: "LocalNotificationRepository",
                           code: 404,
