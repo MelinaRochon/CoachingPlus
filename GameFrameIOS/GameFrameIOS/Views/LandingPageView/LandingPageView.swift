@@ -76,12 +76,12 @@ struct LandingPageView: View {
                     }
                     .accessibilityIdentifier("aboutPageNavLink")
                     
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(height: 150)
+                    Image("How_we_roll")
+                        .resizable()
+                        .frame(height: 200)
                         .cornerRadius(10)
                         .padding(.horizontal)
-                    
+                                    
                     Spacer().frame(height: 20)
                     
                     // CALL TO ACTION
