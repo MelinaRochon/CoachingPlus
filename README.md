@@ -11,5 +11,6 @@ Caterina Bosi - 300214914
 
 
 ## Project Details
-See [Wiki](https://github.com/MelinaRochon/Capstone_Group24/wiki/About).
+See [Wiki](https://github.com/MelinaRochon/Capstone_Group24/wiki).
 <br/>See [Recap of Winter Semester 2025](https://github.com/MelinaRochon/CoachingPlus/wiki/Recap-of-Winter-Semester-2025).
+<br/>See [Recap of Fall Semester 2025](https://github.com/MelinaRochon/CoachingPlus/wiki/Recap-of-Fall-Semester-2025).
